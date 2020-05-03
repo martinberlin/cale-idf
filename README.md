@@ -5,6 +5,10 @@ It will take some weeks to have a working example. The reason is that we would l
 
 ### Compile this 
 
+Make sure first to do this in cale directory:
+    
+    cd cale
+
 If you have ESP32S2BETA (The ones that Espressif sent before official release)
 
     idf.py -D IDF_TARGET=esp32s2beta menuconfig
