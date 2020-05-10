@@ -19,13 +19,11 @@ And after this steps we could finally have a CALE-IDF version that could be comp
 
 ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they link to GitHub. If ESP-IDF is forked to a Git repository which is not on GitHub, you will need to run the script tools/set-submodules-to-github.sh after git clone. The script sets absolute URLs for all submodules, allowing:
 
-    git submodule update --init --recursive to complete
+    git submodule update --init --recursive
+    
+to download the submodules (components) for this project.
 
 ### Compile this 
-
-Make sure first to do this in cale directory:
-    
-    cd cale
 
 If you have ESP32S2BETA (The ones that Espressif sent before official release)
 
@@ -34,6 +32,8 @@ If you have ESP32S2BETA (The ones that Espressif sent before official release)
 If it's an ESP32S2
 
     idf.py -D IDF_TARGET=esp32s2 menuconfig
+
+Make sure to edit "CALE configuration" in the Kconfig menuoptions.
 
 And then just build and flash
 
