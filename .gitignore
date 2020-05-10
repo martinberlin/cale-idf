@@ -1,8 +1,4 @@
 build
 .pio
 .vscode
-cale/sdkconfig.h
-cale/main/sdkconfig*
-cale/build/
-cale/sdkconfig.old
-cale/sdkconfig.h
+sdkconfig.old

@@ -1,0 +1,12 @@
+menu "CALE Configuration"
+
+    config LEDBUILTIN_GPIO
+        int "Internal LED GPIO number"
+        range 0 34
+        default 25
+        help
+            GPIO number for the internal LED of your board (If it has one)
+
+            GPIOs 35-39 are input-only so cannot be used as outputs.
+
+endmenu
