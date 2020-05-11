@@ -18,7 +18,7 @@ Please [register in CALE.es](https://cale.es/register) to receive our weekly new
 
 ### Submodules
 
-ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they link to GitHub. If ESP-IDF is forked to a Git repository which is not on GitHub, you will need to run the script tools/set-submodules-to-github.sh after git clone. The script sets absolute URLs for all submodules, allowing:
+ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they link to GitHub. To update the submodules once you **git clone** this repository:
 
     git submodule update --init --recursive
     
