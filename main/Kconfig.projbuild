@@ -6,7 +6,30 @@ menu "CALE Configuration"
         default 25
         help
             GPIO number for the internal LED of your board (If it has one)
-
+            Using 0 will disable the use of internal LED.
             GPIOs 35-39 are input-only so cannot be used as outputs.
-
+    config EINK_SPI_MOSI
+        int "EPD SPI: GPIO for MOSI (DIN in epaper)"
+        range 0 34
+        default 12
+    config EINK_SPI_CLK
+        int "EPD SPI: GPIO for Clock"
+        range 0 34
+        default 15
+    config EINK_SPI_CS
+        int "EPD SPI: GPIO for Chip Select"
+        range 0 34
+        default 14
+    config EINK_DC
+        int "EPD: GPIO for DC"
+        range 0 34
+        default 10
+    config EINK_RST
+        int "EPD: GPIO for Reset"
+        range 0 34
+        default 11
+    config EINK_BUSY
+        int "EPD: GPIO for Busy signal"
+        range 0 39
+        default 16  
 endmenu

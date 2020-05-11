@@ -14,6 +14,7 @@ This will be created slowly since I know only basic concepts of the IDF framewor
 5. Make all the above work together
 
 And after this steps we could finally have a CALE-IDF version that could be compiled on this new framework. The good news is that if it works stable then it will also work on the ESP32-S2 that has only one LX7 Core but is as fast as the ESP32 consuming almost half. 
+Please [register in CALE.es](https://cale.es/register) to receive our weekly news and get aware when the ESP-IDF version is ready to be tested.
 
 ### Submodules
 
@@ -24,6 +25,10 @@ ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they li
 to download the submodules (components) for this project.
 
 ### Compile this 
+
+If it's an ESP32
+
+    idf.py -D IDF_TARGET=esp32 menuconfig
 
 If you have ESP32S2BETA (The ones that Espressif sent before official release)
 
@@ -39,6 +44,10 @@ And then just build and flash
 
     idf.py build
     idf.py flash
+
+To clean and start again in case you change target
+
+    idf.py fullclean
 
 To open the serial monitor
 
