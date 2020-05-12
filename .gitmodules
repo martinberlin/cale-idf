@@ -1,3 +1,6 @@
 [submodule "components/Adafruit-GFX"]
 	path = components/Adafruit-GFX
 	url = https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF.git
+[submodule "components/cpp-utils"]
+	path = components/cpp-utils
+	url = https://github.com/martinberlin/cpp-utils.git
