@@ -23,6 +23,10 @@ ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they li
     git submodule update --init --recursive
     
 to download the submodules (components) for this project.
+Reminder for myself, in case you update the module library just execute:
+
+    # pull all changes for the submodules
+    git submodule update --remote
 
 ### Compile this 
 
