@@ -12,7 +12,7 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
-#include "Adafruit_GFX.h"
+//#include "Adafruit_GFX.h"
 
 extern "C" {
    void app_main();
