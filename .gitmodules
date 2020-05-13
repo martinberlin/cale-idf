@@ -1,3 +1,6 @@
 [submodule "components/GxEPD"]
 	path = components/GxEPD
 	url = https://github.com/martinberlin/GxEPD-config-spi.git
+[submodule "components/arduino"]
+	path = components/arduino
+	url = https://github.com/espressif/arduino-esp32.git
