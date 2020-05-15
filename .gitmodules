@@ -5,3 +5,6 @@
 	path = components/arduino
 	url = https://github.com/espressif/arduino-esp32.git
 	branch = idf-release/v4.0
+[submodule "Adafruit-GFX-Library"]
+	path = Adafruit-GFX-Library
+	url = https://github.com/adafruit/Adafruit-GFX-Library.git
