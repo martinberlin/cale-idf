@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include "Arduino.h"
 #include "SPI.h"
-
-
+#include "GxEPD.h"
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
