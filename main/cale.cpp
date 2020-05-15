@@ -7,6 +7,10 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <stdio.h>
+#include "Arduino.h"
+#include "SPI.h"
+
+
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,6 +24,7 @@ extern "C" {
 
 void app_main(void)
 {
+    initArduino();
     printf("Hello world!\n");
 
     /* Print chip information */
