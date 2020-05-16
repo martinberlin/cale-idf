@@ -22,7 +22,7 @@
 #include <GxIO/GxIO.cpp>
 // FONT used for title / message body
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-#include <Fonts/FreeMono9pt7b.h>
+#include <FreeMono9pt7b.h>
 // SPI interface GPIOs defined in Config.h  
 GxIO_Class io(SPI, CONFIG_EINK_SPI_CS, CONFIG_EINK_DC, CONFIG_EINK_RST);
 
