@@ -8,15 +8,35 @@
 */
 #include <stdio.h>
 #include "Arduino.h"
-#include "SPI.h"
-#include "GxEPD.h"
+
+//#include "GxEPD.h"
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
-//#include "Adafruit_GFX.h"
 
+#include <GxGDEW042T2.h>
+
+#include <GxIO/GxIO_SPI/GxIO_SPI.cpp>
+#include <GxIO/GxIO.cpp>
+// FONT used for title / message body
+//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
+#include <Fonts/FreeMono9pt7b.h>
+// SPI interface GPIOs defined in Config.h  
+GxIO_Class io(SPI, CONFIG_EINK_SPI_CS, CONFIG_EINK_DC, CONFIG_EINK_RST);
+
+// This line is returning:
+// cale.cpp:31: undefined reference to `GxGDEW042T2::GxGDEW042T2(GxIO&, signed char, signed char)
+GxEPD_Class display(&io, (int8_t)CONFIG_EINK_RST, (int8_t)CONFIG_EINK_BUSY); // (GxIO& io, uint8_t rst = D4, uint8_t busy = D2);
+// Writing it this way: 
+// GxEPD_Class display(&io, (int8_t)CONFIG_EINK_RST, (int8_t)CONFIG_EINK_BUSY);
+/* 
+../components/GxEPD/src/GxGDEW042T2/GxGDEW042T2.h:40:5: note: candidate: 'GxGDEW042T2::GxGDEW042T2(GxIO&, int8_t, int8_t)'
+     GxGDEW042T2(GxIO& io, int8_t rst = 9, int8_t busy = 7);
+     ^~~~~~~~~~~
+../components/GxEPD/src/GxGDEW042T2/GxGDEW042T2.h:40:5: note:   no known conversion for argument 1 from 'GxIO_SPI*' to 'GxIO&'
+ */
 extern "C" {
    void app_main();
 }
