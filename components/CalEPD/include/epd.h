@@ -8,6 +8,13 @@
 #include "driver/gpio.h"
 #include <stdint.h>
 #include "pretty_effect.h"
+// pretty effect
+#include "decode_image.h"
+#include <math.h>
+#include "sdkconfig.h"
+#include "tjpgd.h"
+#include "esp_log.h"
+#include <string.h>
 
 class Epd
 {

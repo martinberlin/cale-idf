@@ -151,6 +151,180 @@ DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
     {0, {0}, 0xff},
 };
 
+uint16_t **pixels;
+//This variable is used to detect the next frame.
+static int prev_frame=-1;
+
+//Instead of calculating the offsets for each pixel we grab, we pre-calculate the valueswhenever a frame changes, then re-use
+//these as we go through all the pixels in the frame. This is much, much faster.
+static int8_t xofs[320], yofs[240];
+static int8_t xcomp[320], ycomp[240];
+//Grab a rgb16 pixel from the esp32_tiles image
+static inline uint16_t get_bgnd_pixel(int x, int y)
+{
+    //Image has an 8x8 pixel margin, so we can also resolve e.g. [-3, 243]
+    x+=8;
+    y+=8;
+    return pixels[y][x];
+}
+//Calculate the pixel data for a set of lines (with implied line size of 320). Pixels go in dest, line is the Y-coordinate of the
+//first line to be calculated, linect is the amount of lines to calculate. Frame increases by one every time the entire image
+//is displayed; this is used to go to the next frame of animation.
+void pretty_effect_calc_lines(uint16_t *dest, int line, int frame, int linect)
+{
+    if (frame!=prev_frame) {
+        //We need to calculate a new set of offset coefficients. Take some random sines as offsets to make everything
+        //look pretty and fluid-y.
+        for (int x=0; x<320; x++) xofs[x]=sin(frame*0.15+x*0.06)*4;
+        for (int y=0; y<240; y++) yofs[y]=sin(frame*0.1+y*0.05)*4;
+        for (int x=0; x<320; x++) xcomp[x]=sin(frame*0.11+x*0.12)*4;
+        for (int y=0; y<240; y++) ycomp[y]=sin(frame*0.07+y*0.15)*4;
+        prev_frame=frame;
+    }
+    for (int y=line; y<line+linect; y++) {
+        for (int x=0; x<320; x++) {
+            *dest++=get_bgnd_pixel(x+yofs[y]+xcomp[x], y+xofs[x]+ycomp[y]);
+        }
+    }
+}
+
+
+esp_err_t pretty_effect_init(void)
+{
+#ifdef CONFIG_IDF_TARGET_ESP32
+    return decode_image(&pixels);
+#elif defined CONFIG_IDF_TARGET_ESP32S2
+    //esp32s2 doesn't have enough memory to hold the decoded image, calculate instead
+    return ESP_OK;
+#endif
+}
+// Decode image
+//Reference the binary-included jpeg file
+extern const uint8_t image_jpg_start[] asm("_binary_image_jpg_start");
+extern const uint8_t image_jpg_end[] asm("_binary_image_jpg_end");
+//Define the height and width of the jpeg file. Make sure this matches the actual jpeg
+//dimensions.
+#define IMAGE_W 336
+#define IMAGE_H 256
+
+const char *TAG = "ImageDec";
+
+//Data that is passed from the decoder function to the infunc/outfunc functions.
+typedef struct {
+    const unsigned char *inData; //Pointer to jpeg data
+    uint16_t inPos;              //Current position in jpeg data
+    uint16_t **outData;          //Array of IMAGE_H pointers to arrays of IMAGE_W 16-bit pixel values
+    int outW;                    //Width of the resulting file
+    int outH;                    //Height of the resulting file
+} JpegDev;
+
+//Input function for jpeg decoder. Just returns bytes from the inData field of the JpegDev structure.
+static uint16_t infunc(JDEC *decoder, uint8_t *buf, uint16_t len)
+{
+    //Read bytes from input file
+    JpegDev *jd = (JpegDev *)decoder->device;
+    if (buf != NULL) {
+        memcpy(buf, jd->inData + jd->inPos, len);
+    }
+    jd->inPos += len;
+    return len;
+}
+
+//Output function. Re-encodes the RGB888 data from the decoder as big-endian RGB565 and
+//stores it in the outData array of the JpegDev structure.
+static uint16_t outfunc(JDEC *decoder, void *bitmap, JRECT *rect)
+{
+    JpegDev *jd = (JpegDev *)decoder->device;
+    uint8_t *in = (uint8_t *)bitmap;
+    for (int y = rect->top; y <= rect->bottom; y++) {
+        for (int x = rect->left; x <= rect->right; x++) {
+            //We need to convert the 3 bytes in `in` to a rgb565 value.
+            uint16_t v = 0;
+            v |= ((in[0] >> 3) << 11);
+            v |= ((in[1] >> 2) << 5);
+            v |= ((in[2] >> 3) << 0);
+            //The LCD wants the 16-bit value in big-endian, so swap bytes
+            v = (v >> 8) | (v << 8);
+            jd->outData[y][x] = v;
+            in += 3;
+        }
+    }
+    return 1;
+}
+
+//Size of the work space for the jpeg decoder.
+#define WORKSZ 3100
+
+//Decode the embedded image into pixel lines that can be used with the rest of the logic.
+esp_err_t decode_image(uint16_t ***pixels)
+{
+    char *work = NULL;
+    int r;
+    JDEC decoder;
+    JpegDev jd;
+    *pixels = NULL;
+    esp_err_t ret = ESP_OK;
+
+    //Alocate pixel memory. Each line is an array of IMAGE_W 16-bit pixels; the `*pixels` array itself contains pointers to these lines.
+    *pixels = (uint16_t **)calloc(IMAGE_H, sizeof(uint16_t *));
+    if (*pixels == NULL) {
+        ESP_LOGE(TAG, "Error allocating memory for lines");
+        ret = ESP_ERR_NO_MEM;
+        goto err;
+    }
+    for (int i = 0; i < IMAGE_H; i++) {
+        (*pixels)[i] = (uint16_t *)malloc(IMAGE_W * sizeof(uint16_t));
+        if ((*pixels)[i] == NULL) {
+            ESP_LOGE(TAG, "Error allocating memory for line %d", i);
+            ret = ESP_ERR_NO_MEM;
+            goto err;
+        }
+    }
+
+    //Allocate the work space for the jpeg decoder.
+    work = (char *)calloc(WORKSZ, 1);
+    if (work == NULL) {
+        ESP_LOGE(TAG, "Cannot allocate workspace");
+        ret = ESP_ERR_NO_MEM;
+        goto err;
+    }
+
+    //Populate fields of the JpegDev struct.
+    jd.inData = image_jpg_start;
+    jd.inPos = 0;
+    jd.outData = *pixels;
+    jd.outW = IMAGE_W;
+    jd.outH = IMAGE_H;
+
+    //Prepare and decode the jpeg.
+    r = jd_prepare(&decoder, infunc, work, WORKSZ, (void *)&jd);
+    if (r != JDR_OK) {
+        ESP_LOGE(TAG, "Image decoder: jd_prepare failed (%d)", r);
+        ret = ESP_ERR_NOT_SUPPORTED;
+        goto err;
+    }
+    r = jd_decomp(&decoder, outfunc, 0);
+    if (r != JDR_OK && r != JDR_FMT1) {
+        ESP_LOGE(TAG, "Image decoder: jd_decode failed (%d)", r);
+        ret = ESP_ERR_NOT_SUPPORTED;
+        goto err;
+    }
+
+    //All done! Free the work area (as we don't need it anymore) and return victoriously.
+    free(work);
+    return ret;
+err:
+    //Something went wrong! Exit cleanly, de-allocating everything we allocated.
+    if (*pixels != NULL) {
+        for (int i = 0; i < IMAGE_H; i++) {
+            free((*pixels)[i]);
+        }
+        free(*pixels);
+    }
+    free(work);
+    return ret;
+}
+
 //Constructor
 Epd::Epd(){} 
 

@@ -8,7 +8,7 @@ extern "C" {
    void app_main();
 }
 
-//Epd display;
+Epd display;
 
 void app_main(void)
 {
@@ -22,4 +22,5 @@ void app_main(void)
 
     printf("Silicon revision %d, ", chip_info.revision);
     printf("Free heap: %d\n", esp_get_free_heap_size());
+    display.init();
 }
