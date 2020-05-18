@@ -60,3 +60,9 @@ To open the serial monitor
 Please note that to exit the monitor in Espressif documentation says Ctrl+] but in Linux this key combination is:
 
     Ctrl+5
+
+
+## References
+
+https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
+[esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
