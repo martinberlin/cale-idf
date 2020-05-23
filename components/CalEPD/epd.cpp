@@ -173,10 +173,10 @@ void Epd::cmd(const uint8_t cmd)
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&cmd;               //The data is the cmd itself
     t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
+    ret=spi_device_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
 
-    vTaskDelay(10 / portTICK_RATE_MS);
+    //vTaskDelay(10 / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
     
 }
@@ -190,7 +190,7 @@ void Epd::data(uint8_t data)
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;              //The data is the cmd itself
     t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
+    ret=spi_device_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
 }
@@ -213,7 +213,7 @@ void Epd::data(const uint8_t *data, int len)
     t.length=len*8;                 //Len is in bytes, transaction length is in bits.
     t.tx_buffer=data;               //Data
     t.user=(void*)1;                //D/C needs to be set to 1
-    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
+    ret=spi_device_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
@@ -240,7 +240,6 @@ void Epd::initFullUpdate(){
     cmd(0X50); //VCOM AND DATA INTERVAL SETTING
     data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
-    printf("lut_20_vcomDC CMD:%d Len:%d\n",lut_20_vcomDC.cmd,lut_20_vcomDC.databytes);
     cmd(lut_20_vcomDC.cmd);
     data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
    
@@ -275,14 +274,14 @@ void Epd::spi_init()
 
     //Reset the display
     spi_reset();
-
+    fillScreen(GxEPD_WHITE);
     _using_partial_mode = false;
 }
 
 void Epd::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
-  
+  //uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
+  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -333,21 +332,15 @@ void Epd::update()
   _wakeUp();
 
   cmd(0x10);
-
-  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
+  // No more single data loops
+  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
     data(0xFF); // 0xFF is white
-  }
+  } */
   cmd(0x13);
 
-  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
-  {
-      if (i==0) {
-          printf("First pix color:%d\n",_buffer[i]);
-      }
-    data((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
-  } 
-  cmd(0x12); //display refresh
+  data(_buffer,sizeof(_buffer));
 
+  cmd(0x12); //display refresh
 
   //_waitWhileBusy("update");
 }
