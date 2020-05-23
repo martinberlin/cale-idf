@@ -156,8 +156,11 @@ const unsigned char Epd::lut_24_bb_partial[] =
 //DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
  
 //Constructor
-Epd::Epd(){} 
-
+Epd::Epd():Adafruit_GFX(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT){
+  
+  printf("Epd() constructor extends Adafruit_GFX(%d,%d)\n",
+  GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT);  
+  }
 /* Send a command to the LCD. Uses spi_device_polling_transmit, which waits
  * until the transfer is complete.
  *
@@ -310,7 +313,7 @@ void Epd::_wakeUp(){
 
    cmd(0x04);
    vTaskDelay(50 / portTICK_RATE_MS);
-   _waitBusy("Powering on");
+   _waitBusy();
 
    cmd(0x00); //panel setting
    data(0xbf);    //LUT from register, 128x296
@@ -342,7 +345,7 @@ void Epd::update()
   data(_buffer,sizeof(_buffer));
 
   cmd(0x12); //display refresh
-  _waitBusy("update");
+  _waitBusy();
   _sleep();
 }
 
@@ -384,8 +387,8 @@ void Epd::init(bool debug)
     ESP_ERROR_CHECK(ret);
 }
 
-void Epd::_waitBusy(char* message){
-  ESP_LOGI(TAG, "_waitBusy for %s", message);
+void Epd::_waitBusy(){
+  //ESP_LOGI(TAG, "_waitBusy for %s", message);
   int64_t time_since_boot = esp_timer_get_time();
 
     while (1){
@@ -401,7 +404,11 @@ void Epd::_waitBusy(char* message){
 
 void Epd::_sleep(){
   cmd(0x02); // power off display
-  _waitBusy("_sleep Power Off");
+  _waitBusy();
   cmd(0x07); // deep sleep
   data(0xa5);
+}
+
+void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
+  printf("Epd drawPixel(%d,%d)\n",x,y);
 }

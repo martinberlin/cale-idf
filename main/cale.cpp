@@ -1,8 +1,10 @@
-
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <epd.h>
+// FONT used for title / message body
+//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
+#include <Fonts/FreeMono9pt7b.h>
 
 extern "C" {
    void app_main();

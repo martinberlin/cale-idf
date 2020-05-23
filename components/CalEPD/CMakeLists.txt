@@ -9,6 +9,7 @@ set(srcs
 #endif()
 
 idf_component_register(SRCS ${srcs}
+                    REQUIRES "Adafruit-GFX"
                     INCLUDE_DIRS "include"
 )
 

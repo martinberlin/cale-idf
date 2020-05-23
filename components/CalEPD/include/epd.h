@@ -11,6 +11,8 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include <string.h>
+
+#include <Adafruit_GFX.h>
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000
 #define GxEPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
@@ -27,18 +29,18 @@
 #define GxGDEW0213I5F_PAGE_SIZE (GxGDEW0213I5F_BUFFER_SIZE / GxGDEW0213I5F_PAGES)
 
 // Note: GxGDEW0213I5F is our test display that will be the default initializing this class
-class Epd
+class Epd : public virtual Adafruit_GFX
 {
-    public:
+  public:
     const char* TAG = "Epd driver";
+    spi_device_handle_t spi;
     Epd();
 
-    spi_device_handle_t spi;
-  
     void cmd(const uint8_t cmd);
     void data(uint8_t data);
     void data(const uint8_t *data, int len);
-    
+      
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  
 
     void send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata);
 
@@ -56,7 +58,7 @@ class Epd
 
     void _wakeUp();
     void _sleep();
-    void _waitBusy(char* message);
+    void _waitBusy();
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
