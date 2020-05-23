@@ -227,40 +227,40 @@ void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, dc);
 }
 
-void Epd::reset() {
+void Epd::spi_reset() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
     vTaskDelay(20 / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
     vTaskDelay(20 / portTICK_RATE_MS);
 }
 
-void Epd::fullUpdate(){
-    Epd::cmd(0x82);  //vcom_DC setting
-    Epd::data(0x08); //data
+void Epd::initFullUpdate(){
+    cmd(0x82);  //vcom_DC setting
+    data(0x08); //data
 
-    Epd::cmd(0X50); //VCOM AND DATA INTERVAL SETTING
-    Epd::data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+    cmd(0X50); //VCOM AND DATA INTERVAL SETTING
+    data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
     printf("lut_20_vcomDC CMD:%d Len:%d\n",lut_20_vcomDC.cmd,lut_20_vcomDC.databytes);
-    Epd::cmd(lut_20_vcomDC.cmd);
-    Epd::data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
+    cmd(lut_20_vcomDC.cmd);
+    data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
    
-    Epd::cmd(lut_21_ww.cmd);
-    Epd::data(lut_21_ww.data,42);
+    cmd(lut_21_ww.cmd);
+    data(lut_21_ww.data,42);
 
-    Epd::cmd(lut_22_bw.cmd);
-    Epd::data(lut_22_bw.data,42);
+    cmd(lut_22_bw.cmd);
+    data(lut_22_bw.data,42);
 
-    Epd::cmd(lut_23_wb.cmd);
-    Epd::data(lut_23_wb.data,42);
+    cmd(lut_23_wb.cmd);
+    data(lut_23_wb.data,42);
 
-    Epd::cmd(lut_24_bb.cmd);
-    Epd::data(lut_24_bb.data,42);
+    cmd(lut_24_bb.cmd);
+    data(lut_24_bb.data,42);
     printf("epd_init() SPI _Init_FullUpdate DONE\n");
 }
 
 //Initialize the display
-void Epd::epd_init()
+void Epd::spi_init()
 {
     printf("epd_init()\n");
     //Initialize non-SPI GPIOs
@@ -274,7 +274,7 @@ void Epd::epd_init()
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
 
     //Reset the display
-    Epd::reset();
+    spi_reset();
     _current_page = -1;
     _using_partial_mode = false;
 }
@@ -288,29 +288,69 @@ void Epd::fillScreen(uint16_t color)
   }
 }
 
+void Epd::_wakeUp(){
+    if (_rst >= 0) {
+      spi_reset();
+    }
+
+   cmd(0x01);     //POWER SETTING
+
+   cmd(0x01);     //POWER SETTING
+   data(0x03);
+   data(0x00);
+   data(0x2b);
+   data(0x2b);
+   data(0x03);
+
+   cmd(0x06);         //boost soft start
+   data(0x17);   //A
+   data(0x17);   //B
+   data(0x17);   //C
+
+   cmd(0x04);
+   //_waitWhileBusy("_wakeUp Power On");
+
+   cmd(0x00); //panel setting
+   data(0xbf);    //LUT from register, 128x296
+   data(0x0d);    //VCOM to 0V fast
+
+   cmd(0x30); //PLL setting
+   data(0x3a);   // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
+
+   cmd(0x61); //resolution setting
+   data(GxGDEW0213I5F_WIDTH);
+   data(GxGDEW0213I5F_HEIGHT >> 8);
+   data(GxGDEW0213I5F_HEIGHT & 0xFF);
+
+   initFullUpdate();
+}
+
 void Epd::update()
 {
   if (_current_page != -1) return;
   _using_partial_mode = false;
-  //_wakeUp();
-  Epd::cmd(0x10);
-  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
-  {
-    Epd::data(0xFF, 1); // 0xFF is white
-  } */
-  Epd::cmd(0x13);
+  _wakeUp();
 
-  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
+  cmd(0x10);
+
+  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
+    data(0xFF); // 0xFF is white
+  }
+  cmd(0x13);
+
+  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
   {
-    _writeData((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
-  } */
-  Epd::cmd(0x12); //display refresh
+    data((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
+  }
+  cmd(0x12); //display refresh
+
+  //_waitWhileBusy("update");
 }
 
 void Epd::init(bool debug)
 {
     //Initialize the Epaper and reset it
-    Epd::epd_init();
+    spi_init();
      if (debug_enabled) {
         printf("EPD SPI initialized. MOSI:%d CLK:%d CS:%d\n",
         CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
@@ -344,8 +384,4 @@ void Epd::init(bool debug)
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 
-    //Send test commands
-    Epd::fullUpdate();
-
-   
 }

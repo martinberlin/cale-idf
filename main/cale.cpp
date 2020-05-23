@@ -12,7 +12,7 @@ Epd display;
 
 void app_main(void)
 {
-    printf("Hello world!\n");
+    printf("CALE-IDF epaper research\n");
     /* Print chip information */
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
@@ -24,8 +24,8 @@ void app_main(void)
     printf("Free heap: %d\n", esp_get_free_heap_size());
        
        display.init(true);
-       //display.fillScreen(GxEPD_BLACK);
-       //display.update();
+       display.fillScreen(GxEPD_BLACK);
+       display.update();
 
        // Do nothing loop
        uint16_t counter = 0;

@@ -47,12 +47,12 @@ class Epd
     
     // EPD tests 
     void init(bool debug);
-    void fullUpdate();
-    void reset();
-    void epd_init();
+    void initFullUpdate();
+    void spi_reset();
+    void spi_init();
     void fillScreen(uint16_t color);
     void update();
-
+    void _wakeUp();
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
