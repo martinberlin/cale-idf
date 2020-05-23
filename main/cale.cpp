@@ -25,6 +25,6 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.fillScreen(GxEPD_WHITE);
+   display.fillScreen(GxEPD_BLACK);
    display.update();
 }

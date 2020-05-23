@@ -30,7 +30,7 @@
 class Epd
 {
     public:
-    const char* TAG = "ePaper Driver";
+    const char* TAG = "Epd driver";
     Epd();
 
     spi_device_handle_t spi;
@@ -53,7 +53,10 @@ class Epd
     void spi_init();
     void fillScreen(uint16_t color);
     void update();
+
     void _wakeUp();
+    void _sleep();
+    void _waitBusy(char* message);
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];

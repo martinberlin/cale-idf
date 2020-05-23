@@ -2,6 +2,7 @@
 #include "epd.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "esp_log.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define LCD_HOST    HSPI_HOST
 #define DMA_CHAN    2
@@ -309,7 +310,7 @@ void Epd::_wakeUp(){
 
    cmd(0x04);
    vTaskDelay(50 / portTICK_RATE_MS);
-   //_waitWhileBusy("_wakeUp Power On");
+   _waitBusy("Powering on");
 
    cmd(0x00); //panel setting
    data(0xbf);    //LUT from register, 128x296
@@ -341,8 +342,8 @@ void Epd::update()
   data(_buffer,sizeof(_buffer));
 
   cmd(0x12); //display refresh
-
-  //_waitWhileBusy("update");
+  _waitBusy("update");
+  _sleep();
 }
 
 void Epd::init(bool debug)
@@ -381,4 +382,26 @@ void Epd::init(bool debug)
     //Attach the EPD to the SPI bus
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
+}
+
+void Epd::_waitBusy(char* message){
+  ESP_LOGI(TAG, "_waitBusy for %s", message);
+  int64_t time_since_boot = esp_timer_get_time();
+
+    while (1){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+    vTaskDelay(1);
+    if (esp_timer_get_time()-time_since_boot>2000000)
+    {
+      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      break;
+    }
+  }
+}
+
+void Epd::_sleep(){
+  cmd(0x02); // power off display
+  _waitBusy("_sleep Power Off");
+  cmd(0x07); // deep sleep
+  data(0xa5);
 }
