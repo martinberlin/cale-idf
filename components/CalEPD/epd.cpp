@@ -10,6 +10,125 @@
 #define DMA_CHAN    LCD_HOST
 #endif
 
+//full screen update LUT
+const unsigned char Epd::lut_20_vcomDC[] =
+{
+  0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
+  0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
+  0x00, 0x14, 0x00, 0x00, 0x00, 0x01,
+  0x00, 0x12, 0x12, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00,
+};
+
+const unsigned char Epd::lut_21_ww[] =
+{
+  0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
+  0x40, 0x14, 0x00, 0x00, 0x00, 0x01,
+  0xA0, 0x12, 0x12, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_22_bw[] =
+{
+  0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
+  0x40, 0x14, 0x00, 0x00, 0x00, 0x01,
+  0xA0, 0x12, 0x12, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_23_wb[] =
+{
+  0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
+  0x80, 0x14, 0x00, 0x00, 0x00, 0x01,
+  0x50, 0x12, 0x12, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_24_bb[] =
+{
+  0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
+  0x80, 0x14, 0x00, 0x00, 0x00, 0x01,
+  0x50, 0x12, 0x12, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+//partial screen update LUT
+//#define Tx19 0x19 // original value is 25 (phase length)
+#define Tx19 0x28   // new value for test is 40 (phase length)
+const unsigned char Epd::lut_20_vcomDC_partial[] =
+{
+  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00,
+};
+
+const unsigned char Epd::lut_21_ww_partial[] =
+{
+  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_22_bw_partial[] =
+{
+  0x80, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_23_wb_partial[] =
+{
+  0x40, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+const unsigned char Epd::lut_24_bb_partial[] =
+{
+  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+// Partial Update Delay, may have an influence on degradation
+#define GxGDEW0213I5F_PU_DELAY 100
+
 //To speed up transfers, every SPI transfer sends a bunch of lines. This define specifies how many. More means more memory use,
 //but less overhead for setting up / finishing transfers. Make sure 240 is dividable by this.
 #define PARALLEL_LINES 16
@@ -42,7 +161,7 @@ Epd::Epd(){}
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void Epd::lcd_cmd(spi_device_handle_t spi, const uint8_t cmd)
+void Epd::cmd(const uint8_t cmd)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -54,6 +173,18 @@ void Epd::lcd_cmd(spi_device_handle_t spi, const uint8_t cmd)
     assert(ret==ESP_OK);            //Should have had no issues.
 }
 
+void Epd::data(uint8_t data)
+{
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=sizeof(data);          //Len is in bytes, transaction length is in bits.
+    t.cmd =data;                    //Data
+    t.user=(void*)1;                //D/C needs to be set to 1
+    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
+    assert(ret==ESP_OK);            //Should have had no issues.
+}
+
 /* Send data to the LCD. Uses spi_device_polling_transmit, which waits until the
  * transfer is complete.
  *
@@ -61,7 +192,7 @@ void Epd::lcd_cmd(spi_device_handle_t spi, const uint8_t cmd)
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void Epd::lcd_data(spi_device_handle_t spi, const uint8_t *data, int len)
+void Epd::data(const uint8_t *data, int len)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -82,8 +213,55 @@ void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, dc);
 }
 
+void Epd::reset() {
+    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
+    vTaskDelay(20 / portTICK_RATE_MS);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    vTaskDelay(20 / portTICK_RATE_MS);
+}
+
+void Epd::fullUpdate(){
+    Epd::cmd(0x82);//vcom_DC setting
+    Epd::data (0x08);
+    Epd::cmd(0X50); //VCOM AND DATA INTERVAL SETTING
+    Epd::data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+    unsigned int count = 0;
+
+    Epd::cmd(0x20);  //vcom
+    for (count = 0; count < 44; count++)
+    {
+      Epd::data(lut_20_vcomDC[count]);
+    }
+
+    Epd::cmd(0x21);  //ww --
+    for (count = 0; count < 42; count++)
+    {
+      Epd::data(lut_21_ww[count]);
+    }
+
+    Epd::cmd(0x22);  //bw r
+    for (count = 0; count < 42; count++)
+    {
+      Epd::data(lut_23_wb[count]);
+    }
+    
+    Epd::cmd(0x23);  //wb w
+    for (count = 0; count < 42; count++)
+    {
+      Epd::data(lut_22_bw[count]);
+    }
+
+    Epd::cmd(0x24);  //bb b
+    for (count = 0; count < 42; count++)
+    {
+      Epd::data(lut_24_bb[count]);
+    }
+
+    printf("epd_init() SPI _Init_FullUpdate DONE\n");
+}
+
 //Initialize the display
-void Epd::lcd_init(spi_device_handle_t spi)
+void Epd::epd_init()
 {
     int cmd=0;
     const lcd_init_cmd_t* lcd_init_cmds;
@@ -91,100 +269,48 @@ void Epd::lcd_init(spi_device_handle_t spi)
     //Initialize non-SPI GPIOs
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_RST, GPIO_MODE_OUTPUT);
-    
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_BUSY, GPIO_MODE_INPUT);
+
     //Reset the display
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
-    vTaskDelay(100 / portTICK_RATE_MS);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
-    vTaskDelay(100 / portTICK_RATE_MS);
+    Epd::reset();
+    _current_page = -1;
+    _using_partial_mode = false;
 
-
-    //Send all the commands
-    /* while (lcd_init_cmds[cmd].databytes!=0xff) {
-        Epd::lcd_cmd(spi, lcd_init_cmds[cmd].cmd);
-        Epd::lcd_data(spi, lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes&0x1F);
-        if (lcd_init_cmds[cmd].databytes&0x80) {
-            vTaskDelay(100 / portTICK_RATE_MS);
-        }
-        cmd++;
-    } */
-
+    //Send test commands
+    //Epd::fullUpdate();
 }
 
-
-/* To send a set of lines we have to send a command, 2 data bytes, another command, 2 more data bytes and another command
- * before sending the line data itself; a total of 6 transactions. (We can't put all of this in just one transaction
- * because the D/C line needs to be toggled in the middle.)
- * This routine queues these commands up as interrupt transactions so they get
- * sent faster (compared to calling spi_device_transmit several times), and at
- * the mean while the lines for next transactions can get calculated.
- */
-void Epd::send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata)
+void Epd::fillScreen(uint16_t color)
 {
-    esp_err_t ret;
-    int x;
-    //Transaction descriptors. Declared static so they're not allocated on the stack; we need this memory even when this
-    //function is finished because the SPI driver needs access to it even while we're already calculating the next line.
-    static spi_transaction_t trans[6];
-
-    //In theory, it's better to initialize trans and data only once and hang on to the initialized
-    //variables. We allocate them on the stack, so we need to re-init them each call.
-    for (x=0; x<6; x++) {
-        memset(&trans[x], 0, sizeof(spi_transaction_t));
-        if ((x&1)==0) {
-            //Even transfers are commands
-            trans[x].length=8;
-            trans[x].user=(void*)0;
-        } else {
-            //Odd transfers are data
-            trans[x].length=8*4;
-            trans[x].user=(void*)1;
-        }
-        trans[x].flags=SPI_TRANS_USE_TXDATA;
-    }
-    trans[0].tx_data[0]=0x2A;           //Column Address Set
-    trans[1].tx_data[0]=0;              //Start Col High
-    trans[1].tx_data[1]=0;              //Start Col Low
-    trans[1].tx_data[2]=(320)>>8;       //End Col High
-    trans[1].tx_data[3]=(320)&0xff;     //End Col Low
-    trans[2].tx_data[0]=0x2B;           //Page address set
-    trans[3].tx_data[0]=ypos>>8;        //Start page high
-    trans[3].tx_data[1]=ypos&0xff;      //start page low
-    trans[3].tx_data[2]=(ypos+PARALLEL_LINES)>>8;    //end page high
-    trans[3].tx_data[3]=(ypos+PARALLEL_LINES)&0xff;  //end page low
-    trans[4].tx_data[0]=0x2C;           //memory write
-    trans[5].tx_buffer=linedata;        //finally send the line data
-    trans[5].length=320*2*8*PARALLEL_LINES;          //Data length, in bits
-    trans[5].flags=0; //undo SPI_TRANS_USE_TXDATA flag
-
-    //Queue all transactions.
-    for (x=0; x<6; x++) {
-        ret=spi_device_queue_trans(spi, &trans[x], portMAX_DELAY);
-        assert(ret==ESP_OK);
-    }
-
-    //When we are here, the SPI driver is busy (in the background) getting the transactions sent. That happens
-    //mostly using DMA, so the CPU doesn't have much to do here. We're not going to wait for the transaction to
-    //finish because we may as well spend the time calculating the next line. When that is done, we can call
-    //send_line_finish, which will wait for the transfers to be done and check their status.
+  uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
+  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+  {
+    _buffer[x] = data;
+  }
 }
 
-void Epd::send_line_finish(spi_device_handle_t spi)
+void Epd::update()
 {
-    spi_transaction_t *rtrans;
-    esp_err_t ret;
-    //Wait for all 6 transactions to be done and get back the results.
-    for (int x=0; x<6; x++) {
-        ret=spi_device_get_trans_result(spi, &rtrans, portMAX_DELAY);
-        assert(ret==ESP_OK);
-        //We could inspect rtrans now if we received any info back. The LCD is treated as write-only, though.
-    }
+  if (_current_page != -1) return;
+  _using_partial_mode = false;
+  //_wakeUp();
+  Epd::cmd(0x10);
+  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
+  {
+    Epd::data(0xFF, 1); // 0xFF is white
+  } */
+  Epd::cmd(0x13);
+
+  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++)
+  {
+    _writeData((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
+  } */
+  Epd::cmd(0x12); //display refresh
 }
 
-
-
-void Epd::init(void)
+void Epd::init(bool debug)
 {
+    debug_enabled = debug;
     esp_err_t ret;
     spi_device_handle_t spi;
     spi_bus_config_t buscfg={
@@ -192,9 +318,10 @@ void Epd::init(void)
         .miso_io_num=CONFIG_EINK_SPI_MISO,
         .sclk_io_num=CONFIG_EINK_SPI_CLK,
         .quadwp_io_num=-1,
-        .quadhd_io_num=-1,
-        .max_transfer_sz=PARALLEL_LINES*320*2+8
+        .quadhd_io_num=-1
     };
+    // .max_transfer_sz=PARALLEL_LINES*320*2+8
+
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
         .clock_speed_hz=4*1000*1000,           //Clock out at 4 MHz
@@ -209,8 +336,11 @@ void Epd::init(void)
     //Attach the LCD to the SPI bus
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-    //Initialize the LCD
-    Epd::lcd_init(spi);
 
-    printf("EPD initialized\n");
+    //Initialize the Epaper
+    Epd::epd_init();
+    if (debug_enabled) {
+        printf("EPD SPI initialized. MOSI:%d CLK:%d CS:%d\n",
+        CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
+    }
 }
