@@ -30,6 +30,7 @@
 class Epd
 {
     public:
+    const char* TAG = "ePaper Driver";
     Epd();
 
     spi_device_handle_t spi;
@@ -56,11 +57,9 @@ class Epd
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
-    int16_t _current_page;
+    int16_t _current_page = 1;
     bool _using_partial_mode;
     bool debug_enabled;
-    int8_t _rst;
-    int8_t _busy;
-   
-   //const unsigned char lut_20_vcomDC_partial[];
+    // Probably this LUT commands should be private members of Epd 
+    //const unsigned char lut_20_vcomDC_partial[];
 };

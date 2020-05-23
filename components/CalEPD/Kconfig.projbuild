@@ -3,10 +3,6 @@ menu "Display Configuration"
         int "EPD SPI: GPIO for MOSI (DIN in epaper)"
         range 0 34
         default 23
-    config EINK_SPI_MISO
-        int "EPD SPI: GPIO for MISO * Not required (DOUT does not apply in most Epapers)"
-        range 0 34
-        default 19
     config EINK_SPI_CLK
         int "EPD SPI: GPIO for Clock"
         range 0 34
@@ -27,5 +23,4 @@ menu "Display Configuration"
         int "EPD: GPIO for Busy signal"
         range 0 39
         default 35  
-
 endmenu

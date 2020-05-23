@@ -23,16 +23,8 @@ void app_main(void)
     printf("Silicon revision %d, ", chip_info.revision);
     printf("Free heap: %d\n", esp_get_free_heap_size());
        
-       display.init(true);
-       display.fillScreen(GxEPD_BLACK);
-       display.update();
-
-       // Do nothing loop
-       uint16_t counter = 0;
-       while(1) {
-	    printf("Loop test %d\n", counter);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        ++counter;
-       }
-    
+   // Test Epd class
+   display.init(true);
+   display.fillScreen(GxEPD_WHITE);
+   display.update();
 }
