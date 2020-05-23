@@ -1,6 +1,7 @@
 /* SPI Master example refactored for epaper */
 #include "epd.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define LCD_HOST    HSPI_HOST
 #define DMA_CHAN    2
@@ -10,9 +11,26 @@
 #define DMA_CHAN    LCD_HOST
 #endif
 
+/*
+ The EPD needs a bunch of command/argument values to be initialized.
+ They are stored in this struct.
+*/
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[42];
+    uint8_t databytes; //No of data in data; 0xFF = end of cmds.
+} epd_init_42;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[44];
+    uint8_t databytes;
+} epd_init_44;
+
+//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
-const unsigned char Epd::lut_20_vcomDC[] =
-{
+DRAM_ATTR static const epd_init_44 lut_20_vcomDC={
+0x20, {
   0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x00, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -21,10 +39,10 @@ const unsigned char Epd::lut_20_vcomDC[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00,
-};
+},44};
 
-const unsigned char Epd::lut_21_ww[] =
-{
+DRAM_ATTR static const epd_init_42 lut_21_ww={
+0x21, {
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x40, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -32,10 +50,10 @@ const unsigned char Epd::lut_21_ww[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_22_bw[] =
-{
+DRAM_ATTR static const epd_init_42 lut_22_bw={
+0x22,{
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x40, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -43,10 +61,10 @@ const unsigned char Epd::lut_22_bw[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_23_wb[] =
-{
+DRAM_ATTR static const epd_init_42 lut_23_wb ={
+0x23,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x80, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -54,10 +72,10 @@ const unsigned char Epd::lut_23_wb[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_24_bb[] =
-{
+DRAM_ATTR static const epd_init_42 lut_24_bb ={
+0x24,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x80, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -65,12 +83,12 @@ const unsigned char Epd::lut_24_bb[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
 //partial screen update LUT
 //#define Tx19 0x19 // original value is 25 (phase length)
 #define Tx19 0x28   // new value for test is 40 (phase length)
-const unsigned char Epd::lut_20_vcomDC_partial[] =
+/* const unsigned char Epd::lut_20_vcomDC_partial[] =
 {
   0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -124,7 +142,7 @@ const unsigned char Epd::lut_24_bb_partial[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+}; */
 
 // Partial Update Delay, may have an influence on degradation
 #define GxGDEW0213I5F_PU_DELAY 100
@@ -132,21 +150,6 @@ const unsigned char Epd::lut_24_bb_partial[] =
 //To speed up transfers, every SPI transfer sends a bunch of lines. This define specifies how many. More means more memory use,
 //but less overhead for setting up / finishing transfers. Make sure 240 is dividable by this.
 #define PARALLEL_LINES 16
-
-/*
- The LCD needs a bunch of command/argument values to be initialized. They are stored in this struct.
-*/
-typedef struct {
-    uint8_t cmd;
-    uint8_t data[16];
-    uint8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
-} lcd_init_cmd_t;
-
-typedef enum {
-    LCD_TYPE_ILI = 1,
-    LCD_TYPE_ST,
-    LCD_TYPE_MAX,
-} type_lcd_t;
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
@@ -173,19 +176,7 @@ void Epd::cmd(const uint8_t cmd)
     assert(ret==ESP_OK);            //Should have had no issues.
 }
 
-void Epd::data(uint8_t data)
-{
-    esp_err_t ret;
-    spi_transaction_t t;
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=sizeof(data);          //Len is in bytes, transaction length is in bits.
-    t.cmd =data;                    //Data
-    t.user=(void*)1;                //D/C needs to be set to 1
-    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
-    assert(ret==ESP_OK);            //Should have had no issues.
-}
-
-/* Send data to the LCD. Uses spi_device_polling_transmit, which waits until the
+/* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the
  * transfer is complete.
  *
  * Since data transactions are usually small, they are handled in polling
@@ -223,43 +214,27 @@ void Epd::reset() {
 void Epd::fullUpdate(){
     Epd::cmd(0x82);  //vcom_DC setting
     
-    
-    Epd::data (0x08);
+    //
+    Epd::cmd(0x08); //data
     Epd::cmd(0X50); //VCOM AND DATA INTERVAL SETTING
-    Epd::data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
-    
-    unsigned int count = 0;
+    //
+    Epd::cmd(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
-    Epd::cmd(0x20);  //vcom
-    for (count = 0; count < 44; count++)
-    {
-      Epd::data(lut_20_vcomDC[count]);
-    }
+    printf("lut_20_vcomDC CMD:%d Len:%d\n",lut_20_vcomDC.cmd,lut_20_vcomDC.databytes);
+    Epd::cmd(lut_20_vcomDC.cmd);
+    Epd::data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
+   
+    Epd::cmd(lut_21_ww.cmd);
+    Epd::data(lut_21_ww.data,42);
 
-    Epd::cmd(0x21);  //ww --
-    for (count = 0; count < 42; count++)
-    {
-      Epd::data(lut_21_ww[count]);
-    }
+    Epd::cmd(lut_22_bw.cmd);
+    Epd::data(lut_22_bw.data,42);
 
-    Epd::cmd(0x22);  //bw r
-    for (count = 0; count < 42; count++)
-    {
-      Epd::data(lut_23_wb[count]);
-    }
-    
-    Epd::cmd(0x23);  //wb w
-    for (count = 0; count < 42; count++)
-    {
-      Epd::data(lut_22_bw[count]);
-    }
+    Epd::cmd(lut_23_wb.cmd);
+    Epd::data(lut_23_wb.data,42);
 
-    Epd::cmd(0x24);  //bb b
-    for (count = 0; count < 42; count++)
-    {
-      Epd::data(lut_24_bb[count]);
-    }
-
+    Epd::cmd(lut_24_bb.cmd);
+    Epd::data(lut_24_bb.data,42);
     printf("epd_init() SPI _Init_FullUpdate DONE\n");
 }
 
@@ -267,7 +242,6 @@ void Epd::fullUpdate(){
 void Epd::epd_init()
 {
     int cmd=0;
-    const lcd_init_cmd_t* lcd_init_cmds;
 
     //Initialize non-SPI GPIOs
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
