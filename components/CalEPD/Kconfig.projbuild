@@ -1,26 +1,31 @@
-menu "LCD Configuration"
-
-    choice LCD_TYPE
-        prompt "LCD module type"
-        default LCD_TYPE_AUTO
-        help
-            The type of LCD on the evaluation board.
-
-        config LCD_TYPE_AUTO
-            bool "Auto detect"
-        config LCD_TYPE_ST7789V
-            bool "ST7789V (WROVER Kit v2 or v3)"
-        config LCD_TYPE_ILI9341
-            bool "ILI9341 (WROVER Kit v1 or DevKitJ v1)"
-    endchoice
-
-    config LCD_OVERCLOCK
-        bool
-        prompt "Run LCD at higher clock speed than allowed"
-        default "n"
-        help
-            The ILI9341 and ST7789 specify that the maximum clock speed for the SPI interface is 10MHz. However,
-            in practice the driver chips work fine with a higher clock rate, and using that gives a better framerate.
-            Select this to try using the out-of-spec clock rate.
+menu "Display Configuration"
+    config EINK_SPI_MOSI
+        int "EPD SPI: GPIO for MOSI (DIN in epaper)"
+        range 0 34
+        default 23
+    config EINK_SPI_MISO
+        int "EPD SPI: GPIO for MISO * Not required (DOUT does not apply in most Epapers)"
+        range 0 34
+        default 19
+    config EINK_SPI_CLK
+        int "EPD SPI: GPIO for Clock"
+        range 0 34
+        default 18
+    config EINK_SPI_CS
+        int "EPD SPI: GPIO for Chip Select"
+        range 0 34
+        default 32
+    config EINK_DC
+        int "EPD: GPIO for DC"
+        range 0 34
+        default 27
+    config EINK_RST
+        int "EPD: GPIO for Reset"
+        range 0 34
+        default 26
+    config EINK_BUSY
+        int "EPD: GPIO for Busy signal"
+        range 0 39
+        default 35  
 
 endmenu

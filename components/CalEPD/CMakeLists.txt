@@ -1,5 +1,4 @@
 set(srcs 
-    "tjpgd.c"
     "epd.cpp"
     )
 
@@ -11,5 +10,5 @@ set(srcs
 
 idf_component_register(SRCS ${srcs}
                     INCLUDE_DIRS "include"
-                    EMBED_FILES image.jpg)
+)
 
