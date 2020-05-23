@@ -166,6 +166,8 @@ Epd::Epd(){}
  */
 void Epd::cmd(const uint8_t cmd)
 {
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
@@ -174,6 +176,25 @@ void Epd::cmd(const uint8_t cmd)
     t.user=(void*)0;                //D/C needs to be set to 0
     ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
+
+    vTaskDelay(10 / portTICK_RATE_MS);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+    
+}
+
+void Epd::data(uint8_t data)
+{
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;              //The data is the cmd itself
+    t.user=(void*)0;                //D/C needs to be set to 0
+    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
+    assert(ret==ESP_OK);            //Should have had no issues.
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
 /* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the
@@ -185,6 +206,7 @@ void Epd::cmd(const uint8_t cmd)
  */
 void Epd::data(const uint8_t *data, int len)
 {
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
     if (len==0) return;             //no need to send anything
@@ -194,6 +216,7 @@ void Epd::data(const uint8_t *data, int len)
     t.user=(void*)1;                //D/C needs to be set to 1
     ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
 //This function is called (in irq context!) just before a transmission starts. It will
@@ -213,12 +236,10 @@ void Epd::reset() {
 
 void Epd::fullUpdate(){
     Epd::cmd(0x82);  //vcom_DC setting
-    
-    //
-    Epd::cmd(0x08); //data
+    Epd::data(0x08); //data
+
     Epd::cmd(0X50); //VCOM AND DATA INTERVAL SETTING
-    //
-    Epd::cmd(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+    Epd::data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
     printf("lut_20_vcomDC CMD:%d Len:%d\n",lut_20_vcomDC.cmd,lut_20_vcomDC.databytes);
     Epd::cmd(lut_20_vcomDC.cmd);
@@ -241,20 +262,21 @@ void Epd::fullUpdate(){
 //Initialize the display
 void Epd::epd_init()
 {
-    int cmd=0;
-
+    printf("epd_init()\n");
     //Initialize non-SPI GPIOs
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_RST, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_BUSY, GPIO_MODE_INPUT);
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
 
     //Reset the display
     Epd::reset();
     _current_page = -1;
     _using_partial_mode = false;
-
-    //Send test commands
-    Epd::fullUpdate();
 }
 
 void Epd::fillScreen(uint16_t color)
@@ -287,6 +309,13 @@ void Epd::update()
 
 void Epd::init(bool debug)
 {
+    //Initialize the Epaper and reset it
+    Epd::epd_init();
+     if (debug_enabled) {
+        printf("EPD SPI initialized. MOSI:%d CLK:%d CS:%d\n",
+        CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
+    }
+
     debug_enabled = debug;
     esp_err_t ret;
     
@@ -315,10 +344,8 @@ void Epd::init(bool debug)
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 
-    //Initialize the Epaper
-    Epd::epd_init();
-    if (debug_enabled) {
-        printf("EPD SPI initialized. MOSI:%d CLK:%d CS:%d\n",
-        CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
-    }
+    //Send test commands
+    Epd::fullUpdate();
+
+   
 }
