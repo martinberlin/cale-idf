@@ -221,10 +221,13 @@ void Epd::reset() {
 }
 
 void Epd::fullUpdate(){
-    Epd::cmd(0x82);//vcom_DC setting
+    Epd::cmd(0x82);  //vcom_DC setting
+    
+    
     Epd::data (0x08);
     Epd::cmd(0X50); //VCOM AND DATA INTERVAL SETTING
     Epd::data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+    
     unsigned int count = 0;
 
     Epd::cmd(0x20);  //vcom
@@ -277,7 +280,7 @@ void Epd::epd_init()
     _using_partial_mode = false;
 
     //Send test commands
-    //Epd::fullUpdate();
+    Epd::fullUpdate();
 }
 
 void Epd::fillScreen(uint16_t color)
@@ -312,15 +315,15 @@ void Epd::init(bool debug)
 {
     debug_enabled = debug;
     esp_err_t ret;
-    spi_device_handle_t spi;
+    
     spi_bus_config_t buscfg={
         .mosi_io_num=CONFIG_EINK_SPI_MOSI,
         .miso_io_num=CONFIG_EINK_SPI_MISO,
         .sclk_io_num=CONFIG_EINK_SPI_CLK,
         .quadwp_io_num=-1,
-        .quadhd_io_num=-1
+        .quadhd_io_num=-1,
+        .max_transfer_sz=PARALLEL_LINES*212*2+8
     };
-    // .max_transfer_sz=PARALLEL_LINES*320*2+8
 
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
@@ -333,7 +336,8 @@ void Epd::init(bool debug)
     //Initialize the SPI bus
     ret=spi_bus_initialize(LCD_HOST, &buscfg, DMA_CHAN);
     ESP_ERROR_CHECK(ret);
-    //Attach the LCD to the SPI bus
+
+    //Attach the EPD to the SPI bus
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 

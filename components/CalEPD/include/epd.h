@@ -30,9 +30,10 @@
 class Epd
 {
     public:
-    spi_device_handle_t spi;
-
     Epd();
+
+    spi_device_handle_t spi;
+  
     void cmd(const uint8_t cmd);
     void data(uint8_t data);
     void data(const uint8_t *data, int len);
