@@ -62,7 +62,17 @@ class Epd : public virtual Adafruit_GFX
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
-    int16_t _current_page = 1;
+    // Very smart template from GxEPD to swap x,y:
+    template <typename T> static inline void
+    swap(T& a, T& b)
+    {
+      T t = a;
+      a = b;
+      b = t;
+    }
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    // _current_page we are not using pages
+    int16_t _current_page = -1;
     bool _using_partial_mode;
     bool debug_enabled;
     // Probably this LUT commands should be private members of Epd 

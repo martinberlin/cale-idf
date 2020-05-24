@@ -28,5 +28,13 @@ void app_main(void)
    // Test Epd class
    display.init(true);
    display.fillScreen(GxEPD_BLACK);
+
+   for (int i = 0; i < 200; i++) {
+     display.drawPixel(i,20,GxEPD_WHITE);
+     /* display.drawPixel(i,11,GxEPD_WHITE);
+
+     display.drawPixel(i,20,GxEPD_WHITE);
+     display.drawPixel(i,23,GxEPD_WHITE); */
+   }
    display.update();
 }

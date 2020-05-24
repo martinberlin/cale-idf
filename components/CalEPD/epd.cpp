@@ -410,5 +410,40 @@ void Epd::_sleep(){
 }
 
 void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  printf("Epd drawPixel(%d,%d)\n",x,y);
+  //printf("Epd drawPixel(%d,%d)\n",x,y);
+  if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
+
+  // check rotation, move pixel around if necessary
+  switch (getRotation())
+  {
+    case 1:
+      swap(x, y);
+      x = GxGDEW0213I5F_WIDTH - x - 1;
+      break;
+    case 2:
+      x = GxGDEW0213I5F_WIDTH - x - 1;
+      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      break;
+    case 3:
+      swap(x, y);
+      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      break;
+  }
+  uint16_t i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
+  // Todo research what is for _current_page
+  if (_current_page < 1)
+  {
+    if (i >= sizeof(_buffer)) return;
+  }
+  else
+  {
+    y -= _current_page * GxGDEW0213I5F_PAGE_HEIGHT;
+    if ((y < 0) || (y >= GxGDEW0213I5F_PAGE_HEIGHT)) return;
+    i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
+  }
+
+  if (!color)
+    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
+  else
+    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
