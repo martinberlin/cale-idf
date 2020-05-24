@@ -30,9 +30,11 @@ void app_main(void)
    display.fillScreen(GxEPD_BLACK);
 
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,20,GxEPD_WHITE);
-     /* display.drawPixel(i,11,GxEPD_WHITE);
-
+     display.drawPixel(i,85,GxEPD_BLACK);
+     display.drawPixel(i,90,GxEPD_BLACK);
+     display.drawPixel(i,105,GxEPD_BLACK);
+     display.drawPixel(i,110,GxEPD_BLACK);
+     /*
      display.drawPixel(i,20,GxEPD_WHITE);
      display.drawPixel(i,23,GxEPD_WHITE); */
    }

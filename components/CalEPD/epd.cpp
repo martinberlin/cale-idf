@@ -28,6 +28,26 @@ typedef struct {
     uint8_t databytes;
 } epd_init_44;
 
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[1];
+} epd_init_1;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[2];
+} epd_init_2;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[3];
+} epd_init_3;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[5];
+} epd_power_5;
+
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
 DRAM_ATTR static const epd_init_44 lut_20_vcomDC={
@@ -85,6 +105,28 @@ DRAM_ATTR static const epd_init_42 lut_24_bb ={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
+
+DRAM_ATTR static const epd_power_5 epd_wakeup_power ={
+0x01,{0x03,0x00,0x2b,0x2b,0x03}
+};
+
+DRAM_ATTR static const epd_init_3 epd_soft_start ={
+0x06,{0x17,0x17,0x17}
+};
+
+DRAM_ATTR static const epd_init_2 epd_panel_setting ={
+0x00,{0xbf,0x0d}
+};
+
+DRAM_ATTR static const epd_init_1 epd_pll ={
+0x30,{0x3a}
+};
+
+DRAM_ATTR static const epd_init_3 epd_resolution ={
+0x61,{GxGDEW0213I5F_WIDTH,
+GxGDEW0213I5F_HEIGHT >> 8,
+GxGDEW0213I5F_HEIGHT & 0xFF
+}};
 
 //partial screen update LUT
 //#define Tx19 0x19 // original value is 25 (phase length)
@@ -299,33 +341,27 @@ void Epd::_wakeUp(){
       spi_reset();
     //}
 
-   cmd(0x01);     //POWER SETTING
-   data(0x03);
-   data(0x00);
-   data(0x2b);
-   data(0x2b);
-   data(0x03);
-
-   cmd(0x06);         //boost soft start
-   data(0x17);   //A
-   data(0x17);   //B
-   data(0x17);   //C
-
-   cmd(0x04);
-   vTaskDelay(50 / portTICK_RATE_MS);
+   
+    cmd(epd_wakeup_power.cmd);
+    data(epd_wakeup_power.data,5);
+   
+    cmd(epd_soft_start.cmd);
+    data(epd_soft_start.data,3);
+    cmd(0x04);
    _waitBusy();
 
-   cmd(0x00); //panel setting
-   data(0xbf);    //LUT from register, 128x296
-   data(0x0d);    //VCOM to 0V fast
+  // [1] LUT from register, 128x296
+  // [2] VCOM to 0V fast
+    cmd(epd_panel_setting.cmd);
+    data(epd_panel_setting.data,2);
 
-   cmd(0x30); //PLL setting
-   data(0x3a);   // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
+  // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
+   cmd(epd_pll.cmd);
+   data(epd_pll.data,1);   
 
-   cmd(0x61); //resolution setting
-   data(GxGDEW0213I5F_WIDTH);
-   data(GxGDEW0213I5F_HEIGHT >> 8);
-   data(GxGDEW0213I5F_HEIGHT & 0xFF);
+  //resolution setting
+    cmd(epd_resolution.cmd);
+    data(epd_resolution.data,3);
 
    initFullUpdate();
 }
@@ -336,10 +372,11 @@ void Epd::update()
   _wakeUp();
 
   cmd(0x10);
-  // No more single data loops
-  /* for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
-    data(0xFF); // 0xFF is white
-  } */
+  uint8_t wBuffer[GxGDEW0213I5F_BUFFER_SIZE];
+  // Todo: No more single data loops
+  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
+    wBuffer[i] = 0xFF; // 0xFF is white
+  }
   cmd(0x13);
 
   data(_buffer,sizeof(_buffer));
