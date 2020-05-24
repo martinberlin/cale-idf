@@ -58,7 +58,7 @@ class Epd : public virtual Adafruit_GFX
 
     void _wakeUp();
     void _sleep();
-    void _waitBusy();
+    void _waitBusy(const char* message);
 
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];

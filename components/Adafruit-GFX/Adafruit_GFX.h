@@ -9,7 +9,7 @@ typedef bool boolean;
 
 #include "gfxfont.h"
 
-class Adafruit_GFX  {
+class Adafruit_GFX {
 
  public:
 

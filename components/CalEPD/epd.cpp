@@ -281,7 +281,7 @@ void Epd::spi_reset() {
 
 void Epd::initFullUpdate(){
     cmd(0x82);  //vcom_DC setting
-    data(0x08); //data
+    data(0x08);
 
     cmd(0X50); //VCOM AND DATA INTERVAL SETTING
     data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
@@ -300,7 +300,7 @@ void Epd::initFullUpdate(){
 
     cmd(lut_24_bb.cmd);
     data(lut_24_bb.data,lut_24_bb.databytes);
-    printf("SPI initFullUpdate() DONE\n");
+    printf("initFullUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -326,7 +326,6 @@ void Epd::spi_init()
 
 void Epd::fillScreen(uint16_t color)
 {
-  //uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
   uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
@@ -348,7 +347,7 @@ void Epd::_wakeUp(){
     cmd(epd_soft_start.cmd);
     data(epd_soft_start.data,3);
     cmd(0x04);
-   _waitBusy();
+   _waitBusy("epd_wakeup_power");
 
   // [1] LUT from register, 128x296
   // [2] VCOM to 0V fast
@@ -372,17 +371,13 @@ void Epd::update()
   _wakeUp();
 
   cmd(0x10);
-  uint8_t wBuffer[GxGDEW0213I5F_BUFFER_SIZE];
-  // Todo: No more single data loops
-  for (uint32_t i = 0; i < GxGDEW0213I5F_BUFFER_SIZE; i++){
-    wBuffer[i] = 0xFF; // 0xFF is white
-  }
+  // In GxEPD here it wrote the full buffer with 0xFF
   cmd(0x13);
 
   data(_buffer,sizeof(_buffer));
 
-  cmd(0x12); //display refresh
-  _waitBusy();
+  cmd(0x12);
+  _waitBusy("display refresh");
   _sleep();
 }
 
@@ -424,14 +419,14 @@ void Epd::init(bool debug)
     ESP_ERROR_CHECK(ret);
 }
 
-void Epd::_waitBusy(){
-  //ESP_LOGI(TAG, "_waitBusy for %s", message);
+void Epd::_waitBusy(const char* message){
+  ESP_LOGI(TAG, "_waitBusy for %s", message);
   int64_t time_since_boot = esp_timer_get_time();
 
     while (1){
     if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>2000000)
+    if (esp_timer_get_time()-time_since_boot>1000000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
@@ -441,7 +436,7 @@ void Epd::_waitBusy(){
 
 void Epd::_sleep(){
   cmd(0x02); // power off display
-  _waitBusy();
+  _waitBusy("power_off");
   cmd(0x07); // deep sleep
   data(0xa5);
 }
@@ -479,7 +474,7 @@ void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
     i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
   }
 
-  if (!color)
+  if (color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   else
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));

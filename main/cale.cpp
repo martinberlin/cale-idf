@@ -27,16 +27,20 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.fillScreen(GxEPD_BLACK);
+   display.setFont(&FreeMono9pt7b);
+   display.setTextColor(GxEPD_WHITE);
+   
+   //display.print("HELLO CALE-IDF");
 
+   display.setRotation(1);
+   display.fillScreen(GxEPD_BLACK); 
+
+   display.drawCircle(30, 30, 10,GxEPD_WHITE); // Adafruit works
+
+   
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,85,GxEPD_BLACK);
-     display.drawPixel(i,90,GxEPD_BLACK);
-     display.drawPixel(i,105,GxEPD_BLACK);
-     display.drawPixel(i,110,GxEPD_BLACK);
-     /*
-     display.drawPixel(i,20,GxEPD_WHITE);
-     display.drawPixel(i,23,GxEPD_WHITE); */
+     display.drawPixel(i,15,GxEPD_WHITE);
+     //display.drawPixel(i,90,GxEPD_WHITE);
    }
    display.update();
 }
