@@ -3,18 +3,13 @@
 This is the beginning, and a very raw try, to make CALE compile in the Espressif IOT Development Framework. At the moment to explore how difficult it can be to pass an existing ESP32 Arduino framework project to a ESP-IDF based one and to measure how far we can go compiling this with Espressif's own dev framework. 
 It will take some weeks to have a working example. The reason is that we would like to explore alternative libraries like [ESP32 IDF Epaper example](https://github.com/loboris/ESP32_ePaper_example) and to make a version that is compatible with the recently released ESP32-S2
 
-## ESP-IDF learning
+## Branches
 
-This will be created slowly since I know only basic concepts of the IDF framework. So there is probably nothing to run except a few tests. Next steps are: 
+**tft_test**  Is the original SPI master example from ESP-IDF 4 just refactored as a C++ class.
+**master**   -> Nothing for now, will be merged only when v1.0 is testeable
+**idf-base** -> Making the components base, most actual branch
 
-1. Port Adafruit GFX to IDF - Fonts
-2. Port GxEPD to IDF - Epaper display library
-3. Research about Bluetooth in ESP-IDF
-4. Refactor and migrate [eink-calendar espressif32-arduino](https://github.com/martinberlin/eink-calendar) Bitmap to GxEPD Buffering functions to this new version
-5. Make all the above work together
-
-And after this steps we could finally have a CALE-IDF version that could be compiled on this new framework. The good news is that if it works stable then it will also work on the ESP32-S2 that has only one LX7 Core but is as fast as the ESP32 consuming almost half. 
-Please [register in CALE.es](https://cale.es/register) to receive our weekly news and get aware when the ESP-IDF version is ready to be tested.
+The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
 ### Submodules
 
@@ -65,4 +60,9 @@ Please note that to exit the monitor in Espressif documentation says Ctrl+] but 
 ## References
 
 https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
+
 [esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
+
+[CALE.es Web-service](https://CALE.es)
+
+[CALE.es Arduino-espressif32 firmware](https://github.com/martinberlin/eink-calendar)

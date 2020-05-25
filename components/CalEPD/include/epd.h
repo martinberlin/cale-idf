@@ -7,27 +7,73 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include <stdint.h>
-#include "pretty_effect.h"
+#include <math.h>
+#include "sdkconfig.h"
+#include "esp_log.h"
+#include <string.h>
+#include <string>
+#include <Adafruit_GFX.h>
+// the only colors supported by any of these displays; mapping of other colors is class specific
+#define GxEPD_BLACK     0x0000
+#define GxEPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
+#define GxEPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
+#define GxEPD_WHITE     0xFFFF
+#define GxEPD_RED       0xF800      /* 255,   0,   0 */
 
-class Epd
+#define GxGDEW0213I5F_WIDTH 104
+#define GxGDEW0213I5F_HEIGHT 212
+#define GxGDEW0213I5F_BUFFER_SIZE (uint32_t(GxGDEW0213I5F_WIDTH) * uint32_t(GxGDEW0213I5F_HEIGHT) / 8)
+// divisor for AVR, should be factor of GxGDEW0213I5F_HEIGHT
+#define GxGDEW0213I5F_PAGES 4
+#define GxGDEW0213I5F_PAGE_HEIGHT (GxGDEW0213I5F_HEIGHT / GxGDEW0213I5F_PAGES)
+#define GxGDEW0213I5F_PAGE_SIZE (GxGDEW0213I5F_BUFFER_SIZE / GxGDEW0213I5F_PAGES)
+
+// Note: GxGDEW0213I5F is our test display that will be the default initializing this class
+class Epd : public virtual Adafruit_GFX
 {
-    public:
+  public:
+    const char* TAG = "Epd driver";
+    spi_device_handle_t spi;
     Epd();
-void lcd_cmd(spi_device_handle_t spi, const uint8_t cmd);
 
-void lcd_data(spi_device_handle_t spi, const uint8_t *data, int len);
+    void cmd(const uint8_t cmd);
+    void data(uint8_t data);
+    void data(const uint8_t *data, int len);
+      
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  
+    
+    // EPD tests 
+    void init(bool debug);
+    void initFullUpdate();
+    void spi_reset();
+    void spi_init();
+    void fillScreen(uint16_t color);
+    void update();
 
-//void lcd_spi_pre_transfer_callback(spi_transaction_t *t);
+    void _wakeUp();
+    void _sleep();
+    void _waitBusy(const char* message);
+    // Extending Print owns write that is a virtual member
+    size_t write(uint8_t);
+    // Epd print 
+    void print(const std::string& text);
+    void println(const std::string& text);
 
-uint32_t lcd_get_id(spi_device_handle_t spi);
-
-void lcd_init(spi_device_handle_t spi);
-
- void send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata);
-
- void send_line_finish(spi_device_handle_t spi);
-
- void display_pretty_colors(spi_device_handle_t spi);
-
-void init();
+  private:
+    uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
+    // Very smart template from GxEPD to swap x,y:
+    template <typename T> static inline void
+    swap(T& a, T& b)
+    {
+      T t = a;
+      a = b;
+      b = t;
+    }
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    // _current_page we are not using pages
+    int16_t _current_page = -1;
+    bool _using_partial_mode;
+    bool debug_enabled;
+    // Probably this LUT commands should be private members of Epd 
+    //const unsigned char lut_20_vcomDC_partial[];
 };
