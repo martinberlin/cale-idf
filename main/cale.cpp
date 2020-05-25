@@ -50,11 +50,11 @@ void app_main(void)
    display.println("HOLA PAPA");
    
    // Test 
-   display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
-   display.drawCircle(50, 50, 22, GxEPD_BLACK);
+   display.drawCircle(50, 50, 20, GxEPD_WHITE); // Adafruit works!
+   display.drawCircle(50, 50, 22, GxEPD_WHITE);
    
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,15,GxEPD_BLACK);
+     display.drawPixel(i,15,GxEPD_WHITE);
      display.drawPixel(i,90,GxEPD_WHITE);
    }
    display.update();

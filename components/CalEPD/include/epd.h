@@ -41,12 +41,6 @@ class Epd : public virtual Adafruit_GFX
     void data(const uint8_t *data, int len);
       
     void drawPixel(int16_t x, int16_t y, uint16_t color);  
-
-    void send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata);
-
-    void send_line_finish(spi_device_handle_t spi);
-
-    void display_pretty_colors(spi_device_handle_t spi);
     
     // EPD tests 
     void init(bool debug);
