@@ -27,13 +27,15 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.setFont(&FreeMono9pt7b);
+   //display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_WHITE);
+   display.setCursor(20,20);
+   // Try to print one character
+   //display.write(0x3E); // Does not work
 
-   display.drawChar(40, 40, 64,
-   GxEPD_WHITE, GxEPD_BLACK, 10);
-   
-   //display.print("HELLO CALE-IDF");
+   const char c[4] = "abc";
+   //display.println(c);  // Does not work
+
 
    display.setRotation(1);
    display.fillScreen(GxEPD_BLACK); 

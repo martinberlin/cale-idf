@@ -59,7 +59,9 @@ class Epd : public virtual Adafruit_GFX
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
-
+    // Extending Print owns write that is a virtual member
+    size_t write(uint8_t);
+    
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
     // Very smart template from GxEPD to swap x,y:

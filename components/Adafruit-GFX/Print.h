@@ -64,7 +64,9 @@ public:
         }
         return write((const uint8_t *) str, strlen(str));
     }
-    virtual size_t write(const uint8_t *buffer, size_t size);
+    // [vtable for Adafruit_GFX]+0x14): undefined reference to `Print::write(unsigned char const*, unsigned int)'
+    // was: virtual
+    size_t write(const uint8_t *buffer, size_t size);
     size_t write(const char *buffer, size_t size)
     {
         return write((const uint8_t *) buffer, size);

@@ -479,3 +479,9 @@ void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
   else
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
+
+size_t Epd::write(uint8_t v)
+{
+  Adafruit_GFX::write(v);
+  return 1;
+}
