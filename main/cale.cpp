@@ -31,10 +31,10 @@ void app_main(void)
 
 
    display.setRotation(1);
-   display.fillScreen(GxEPD_BLACK); 
+   display.fillScreen(GxEPD_WHITE); 
 
    display.setFont(&FreeMono9pt7b);
-   display.setTextColor(GxEPD_WHITE);
+   display.setTextColor(GxEPD_BLACK);
    display.setCursor(20,20);
 
 // Print all character from an Adafruit Font
@@ -43,19 +43,26 @@ void app_main(void)
       display.write(i); // Needs to be >32 (first character definition)
    }
    }
+   // Test fonts
    display.println("HELLO CALE-IDF");  // Todo: Add print and println
-   
    display.setFont(&FreeMono18pt7b);
    display.setCursor(10,40);
-   display.println("HOLA PAPA");
+   display.println("Adafruit GFX");
+   display.setCursor(10,100);
+   display.println("F O N T S");
+   // Test  shapes
+   display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
+   display.drawCircle(50, 50, 22, GxEPD_BLACK);
    
-   // Test 
-   display.drawCircle(50, 50, 20, GxEPD_WHITE); // Adafruit works!
-   display.drawCircle(50, 50, 22, GxEPD_WHITE);
-   
+   display.drawRect(90, 50, 40, 20, GxEPD_BLACK);
+   display.drawRect(90, 50, 38, 22, GxEPD_BLACK);
+
+   display.drawRoundRect(134, 50, 20, 20, 5, GxEPD_BLACK);
+
+   display.drawTriangle(174, 50, 184, 60, 194, 20, GxEPD_BLACK);
+
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,15,GxEPD_WHITE);
-     display.drawPixel(i,90,GxEPD_WHITE);
+     display.drawPixel(i,79,GxEPD_BLACK);
    }
    display.update();
 }
