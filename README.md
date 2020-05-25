@@ -5,9 +5,11 @@ It will take some weeks to have a working example. The reason is that we would l
 
 ## Branches
 
-**tft_test**  Is the original SPI master example from ESP-IDF 4 just refactored as a C++ class.
-**master**   -> Nothing for now, will be merged only when v1.0 is testeable
-**idf-base** -> Making the components base, most actual branch
+**master**...    -> stable version - v.0.9.1 First testeable version with a 2.13" b/w epaper display
+**refactor/oop** -> Making the components base, most actual branch
+
+tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. WIll be kept for historic reasons
+
 
 The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
