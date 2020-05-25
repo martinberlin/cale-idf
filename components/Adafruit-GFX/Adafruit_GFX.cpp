@@ -183,6 +183,7 @@ void Adafruit_GFX::startWrite() {}
 */
 /**************************************************************************/
 void Adafruit_GFX::writePixel(int16_t x, int16_t y, uint16_t color) {
+  //printf("wPixel:%d,%d,%d ",x,y,color);
   drawPixel(x, y, color);
 }
 
@@ -1168,7 +1169,7 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
     endWrite();
 
   } else { // Custom font
-
+    //printf("draw(%d) Custom font in x:%d y:%d\n",c,x,y);
     // Character is assumed previously filtered by write() to eliminate
     // newlines, returns, non-printable characters, etc.  Calling
     // drawChar() directly with 'bad' characters of font may cause mayhem!
@@ -1236,7 +1237,7 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
 /**************************************************************************/
 size_t Adafruit_GFX::write(uint8_t c) {
   if (!gfxFont) { // 'Classic' built-in font
-
+    printf("write(%d) Custom font\n",c);
     if (c == '\n') {              // Newline?
       cursor_x = 0;               // Reset x to zero,
       cursor_y += textsize_y * 8; // advance y one line
@@ -1251,14 +1252,17 @@ size_t Adafruit_GFX::write(uint8_t c) {
     }
 
   } else { // Custom font
-
+    //printf("write(%d) Custom font\n",c);
     if (c == '\n') {
       cursor_x = 0;
       cursor_y +=
           (int16_t)textsize_y * (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
     } else if (c != '\r') {
       uint8_t first = pgm_read_byte(&gfxFont->first);
+
       if ((c >= first) && (c <= (uint8_t)pgm_read_byte(&gfxFont->last))) {
+        //printf("write() >=%d <=%d CHAR is in range\n",first, (uint8_t)pgm_read_byte(&gfxFont->last));
+
         GFXglyph *glyph = pgm_read_glyph_ptr(gfxFont, c - first);
         uint8_t w = pgm_read_byte(&glyph->width),
                 h = pgm_read_byte(&glyph->height);

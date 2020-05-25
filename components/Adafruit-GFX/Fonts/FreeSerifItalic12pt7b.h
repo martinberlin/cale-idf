@@ -1,4 +1,4 @@
-const uint8_t FreeSerifItalic12pt7bBitmaps[] PROGMEM = {
+const uint8_t FreeSerifItalic12pt7bBitmaps[] = {
   0x0C, 0x31, 0xC6, 0x18, 0x43, 0x0C, 0x20, 0x84, 0x10, 0x03, 0x0C, 0x30,
   0x66, 0xCD, 0x12, 0x24, 0x51, 0x00, 0x03, 0x10, 0x11, 0x80, 0x8C, 0x0C,
   0x40, 0x46, 0x1F, 0xFC, 0x21, 0x01, 0x18, 0x18, 0x80, 0x84, 0x3F, 0xF8,
@@ -166,7 +166,7 @@ const uint8_t FreeSerifItalic12pt7bBitmaps[] PROGMEM = {
   0x60, 0x40, 0x60, 0x30, 0x10, 0x18, 0x0C, 0x06, 0x06, 0x06, 0x00, 0x78,
   0x18, 0x8C, 0x0F, 0x00 };
 
-const GFXglyph FreeSerifItalic12pt7bGlyphs[] PROGMEM = {
+const GFXglyph FreeSerifItalic12pt7bGlyphs[] = {
   {     0,   0,   0,   6,    0,    1 },   // 0x20 ' '
   {     0,   6,  16,   8,    1,  -15 },   // 0x21 '!'
   {    12,   7,   6,   8,    3,  -15 },   // 0x22 '"'
@@ -263,7 +263,7 @@ const GFXglyph FreeSerifItalic12pt7bGlyphs[] PROGMEM = {
   {  1955,   9,  21,  10,    0,  -16 },   // 0x7D '}'
   {  1979,  11,   3,  13,    1,   -6 } }; // 0x7E '~'
 
-const GFXfont FreeSerifItalic12pt7b PROGMEM = {
+const GFXfont FreeSerifItalic12pt7b = {
   (uint8_t  *)FreeSerifItalic12pt7bBitmaps,
   (GFXglyph *)FreeSerifItalic12pt7bGlyphs,
   0x20, 0x7E, 29 };

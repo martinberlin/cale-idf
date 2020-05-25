@@ -11,7 +11,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include <string.h>
-
+#include <string>
 #include <Adafruit_GFX.h>
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000
@@ -61,7 +61,10 @@ class Epd : public virtual Adafruit_GFX
     void _waitBusy(const char* message);
     // Extending Print owns write that is a virtual member
     size_t write(uint8_t);
-    
+    // Epd print 
+    void print(const std::string& text);
+    void println(const std::string& text);
+
   private:
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
     // Very smart template from GxEPD to swap x,y:

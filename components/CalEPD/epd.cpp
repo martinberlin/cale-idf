@@ -435,7 +435,7 @@ void Epd::_waitBusy(const char* message){
     while (1){
     if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>1000000)
+    if (esp_timer_get_time()-time_since_boot>1800000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
@@ -489,8 +489,21 @@ void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
 
-size_t Epd::write(uint8_t v)
-{
+size_t Epd::write(uint8_t v){
   Adafruit_GFX::write(v);
   return 1;
 }
+
+void Epd::print(const std::string& text){
+   for(auto c : text) {
+     write(uint8_t(c));
+   }
+}
+
+void Epd::println(const std::string& text){
+   for(auto c : text) {
+     write(uint8_t(c));
+   }
+   write(10); // newline
+}
+
