@@ -371,13 +371,22 @@ void Epd::update()
   _wakeUp();
 
   cmd(0x10);
+
   // In GxEPD here it wrote the full buffer with 0xFF
+  // Note doing it like this is not refreshing
+  /* uint8_t _wbuffer[GxGDEW0213I5F_BUFFER_SIZE];
+    for (uint16_t x = 0; x < GxGDEW0213I5F_BUFFER_SIZE; x++)
+  {
+    _wbuffer[x] = 0xFF;
+  }
+  data(_wbuffer, sizeof(_wbuffer)); */
+  
   cmd(0x13);
 
   data(_buffer,sizeof(_buffer));
 
   cmd(0x12);
-  _waitBusy("display refresh");
+  _waitBusy("update");
   _sleep();
 }
 

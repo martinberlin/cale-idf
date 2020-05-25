@@ -28,23 +28,26 @@ void app_main(void)
    // Test Epd class
    display.init(true);
    //display.setFont(&FreeMono9pt7b);
-   display.setTextColor(GxEPD_WHITE);
+   display.setTextColor(GxEPD_BLACK);
    display.setCursor(20,20);
-   // Try to print one character
-   //display.write(0x3E); // Does not work
+   
+   // Try to print characters
+   for (int i = 0; i < 80; i++) {
+      display.write(i); // Does not work
+   }
 
    const char c[4] = "abc";
    //display.println(c);  // Does not work
 
 
    display.setRotation(1);
-   display.fillScreen(GxEPD_BLACK); 
+   display.fillScreen(GxEPD_WHITE); 
 
-   display.drawCircle(30, 30, 10,GxEPD_WHITE); // Adafruit works
-
+   display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
+   display.drawCircle(50, 50, 22, GxEPD_BLACK);
    
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,15,GxEPD_WHITE);
+     display.drawPixel(i,15,GxEPD_BLACK);
      //display.drawPixel(i,90,GxEPD_WHITE);
    }
    display.update();
