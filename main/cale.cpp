@@ -29,6 +29,9 @@ void app_main(void)
    display.init(true);
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_WHITE);
+
+   display.drawChar(40, 40, 64,
+   GxEPD_WHITE, GxEPD_BLACK, 10);
    
    //display.print("HELLO CALE-IDF");
 
