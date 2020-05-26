@@ -30,8 +30,9 @@ void app_main(void)
 
 
    display.setRotation(1);
-   display.fillScreen(GxEPD_WHITE); 
-
+   display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
+   //display.update();return; // Clean screen and stop test
+   
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_BLACK);
    display.setCursor(20,20);
@@ -63,5 +64,8 @@ void app_main(void)
    for (int i = 0; i < 200; i++) {
      display.drawPixel(i,79,GxEPD_BLACK);
    }
+   // Partial updates are not working in this display
+   //display.updateWindow(10,20,80,100);
+
    display.update();
 }

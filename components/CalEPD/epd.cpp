@@ -10,7 +10,7 @@
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
-DRAM_ATTR static const epd_init_44 lut_20_vcomDC={
+DRAM_ATTR const epd_init_44 Epd::lut_20_vcomDC={
 0x20, {
   0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -22,7 +22,7 @@ DRAM_ATTR static const epd_init_44 lut_20_vcomDC={
   0x00, 0x00,
 },44};
 
-DRAM_ATTR static const epd_init_42 lut_21_ww={
+DRAM_ATTR const epd_init_42 Epd::lut_21_ww={
 0x21, {
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -33,7 +33,7 @@ DRAM_ATTR static const epd_init_42 lut_21_ww={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 
-DRAM_ATTR static const epd_init_42 lut_22_bw={
+DRAM_ATTR const epd_init_42 Epd::lut_22_bw={
 0x22,{
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -44,7 +44,7 @@ DRAM_ATTR static const epd_init_42 lut_22_bw={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 
-DRAM_ATTR static const epd_init_42 lut_23_wb ={
+DRAM_ATTR const epd_init_42 Epd::lut_23_wb={
 0x23,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -55,7 +55,7 @@ DRAM_ATTR static const epd_init_42 lut_23_wb ={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 
-DRAM_ATTR static const epd_init_42 lut_24_bb ={
+DRAM_ATTR const epd_init_42 Epd::lut_24_bb={
 0x24,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -66,23 +66,23 @@ DRAM_ATTR static const epd_init_42 lut_24_bb ={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 
-static const epd_power_5 epd_wakeup_power ={
+DRAM_ATTR const epd_power_5 Epd::epd_wakeup_power={
 0x01,{0x03,0x00,0x2b,0x2b,0x03}
 };
 
-static const epd_init_3 epd_soft_start ={
+DRAM_ATTR const epd_init_3 Epd::epd_soft_start={
 0x06,{0x17,0x17,0x17}
 };
 
-static const epd_init_2 epd_panel_setting ={
+DRAM_ATTR const epd_init_2 Epd::epd_panel_setting={
 0x00,{0xbf,0x0d}
 };
 
-static const epd_init_1 epd_pll ={
+DRAM_ATTR const epd_init_1 Epd::epd_pll={
 0x30,{0x3a}
 };
 
-static const epd_init_3 epd_resolution ={
+DRAM_ATTR const epd_init_3 Epd::epd_resolution={
 0x61,{GxGDEW0213I5F_WIDTH,
 GxGDEW0213I5F_HEIGHT >> 8,
 GxGDEW0213I5F_HEIGHT & 0xFF
@@ -91,8 +91,9 @@ GxGDEW0213I5F_HEIGHT & 0xFF
 //partial screen update LUT
 //#define Tx19 0x19 // original value is 25 (phase length)
 #define Tx19 0x28   // new value for test is 40 (phase length)
-/* const unsigned char Epd::lut_20_vcomDC_partial[] =
-{
+
+DRAM_ATTR const epd_init_44 Epd::lut_20_vcomDC_partial={
+0x20, {
   0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -101,10 +102,10 @@ GxGDEW0213I5F_HEIGHT & 0xFF
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00,
-};
+},44};
 
-const unsigned char Epd::lut_21_ww_partial[] =
-{
+DRAM_ATTR const epd_init_42 Epd::lut_21_ww_partial={
+0x21, {
   0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -112,10 +113,10 @@ const unsigned char Epd::lut_21_ww_partial[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_22_bw_partial[] =
-{
+DRAM_ATTR const epd_init_42 Epd::lut_22_bw_partial={
+0x22, {
   0x80, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -123,10 +124,10 @@ const unsigned char Epd::lut_22_bw_partial[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_23_wb_partial[] =
-{
+DRAM_ATTR const epd_init_42 Epd::lut_23_wb_partial={
+0x23, {
   0x40, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -134,10 +135,10 @@ const unsigned char Epd::lut_23_wb_partial[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+},42};
 
-const unsigned char Epd::lut_24_bb_partial[] =
-{
+DRAM_ATTR const epd_init_42 Epd::lut_24_bb_partial={
+0x24, {
   0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -145,7 +146,7 @@ const unsigned char Epd::lut_24_bb_partial[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-}; */
+},42};
 
 // Partial Update Delay, may have an influence on degradation
 #define GxGDEW0213I5F_PU_DELAY 100
@@ -181,6 +182,30 @@ void Epd::initFullUpdate(){
     IO.cmd(lut_24_bb.cmd);
     IO.data(lut_24_bb.data,lut_24_bb.databytes);
     printf("initFullUpdate() LUT\n");
+}
+
+void Epd::initPartialUpdate(){
+    IO.cmd(0x82);  //vcom_DC setting
+    IO.data(0x08);
+
+    IO.cmd(0X50); //VCOM AND DATA INTERVAL SETTING
+    IO.data(0x17);
+
+    IO.cmd(lut_20_vcomDC_partial.cmd);
+    IO.data(lut_20_vcomDC_partial.data,lut_20_vcomDC_partial.databytes);
+   
+    IO.cmd(lut_21_ww_partial.cmd);
+    IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
+
+    IO.cmd(lut_22_bw_partial.cmd);
+    IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
+
+    IO.cmd(lut_23_wb_partial.cmd);
+    IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
+
+    IO.cmd(lut_24_bb_partial.cmd);
+    IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
+    printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -267,6 +292,132 @@ void Epd::update()
   _sleep();
 }
 
+uint16_t Epd::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+{
+  x &= 0xFFF8; // byte boundary
+  xe = (xe - 1) | 0x0007; // byte boundary - 1
+  IO.cmd(0x90); // partial window
+  IO.data(x % 256);
+  IO.data(xe % 256);
+  IO.data(y / 256);
+  IO.data(y % 256);
+  IO.data(ye / 256);
+  IO.data(ye % 256);
+  IO.data(0x01);
+  IO.data(0x00);
+  return (7 + xe - x) / 8; // number of bytes to transfer per line
+}
+
+void Epd::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+{
+  printf("deprecated: updateWindow does not work\n");
+  if (using_rotation) _rotate(x, y, w, h);
+  if (x >= GxGDEW0213I5F_WIDTH) return;
+  if (y >= GxGDEW0213I5F_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GxGDEW0213I5F_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GxGDEW0213I5F_HEIGHT, y + h) - 1;
+  // x &= 0xFFF8; // byte boundary, not needed here
+  uint16_t xs_bx = x / 8;
+  uint16_t xe_bx = (xe + 7) / 8;
+  if (!_using_partial_mode) _wakeUp();
+  _using_partial_mode = true;
+  initPartialUpdate();
+  for (uint16_t twice = 0; twice < 2; twice++)
+  { // leave both controller buffers equal
+    IO.cmd(0x91); // partial in
+    _setPartialRamArea(x, y, xe, ye);
+    IO.cmd(0x13);
+
+    uint16_t counter = 0;
+    uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    for (int16_t y1 = y; y1 <= ye; y1++)
+    {
+      for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+      {
+        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+        //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
+        //IO.data(~data); // white is 0xFF on device
+        ++counter;
+      }
+    }
+    IO.data(data, counter);
+    IO.cmd(0x12);      // display refresh
+    _waitBusy("updateWindow");
+    IO.cmd(0x92);      // partial out
+  } // leave both controller buffers equal
+  vTaskDelay(GxGDEW0213I5F_PU_DELAY);
+}
+
+void Epd::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
+{
+  printf("deprecated: updateToWindow does not work\n");
+  if (using_rotation)
+  {
+    switch (getRotation())
+    {
+      case 1:
+        swap(xs, ys);
+        swap(xd, yd);
+        swap(w, h);
+        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
+        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
+        break;
+      case 2:
+        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
+        ys = GxGDEW0213I5F_HEIGHT - ys - h - 1;
+        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
+        yd = GxGDEW0213I5F_HEIGHT - yd - h - 1;
+        break;
+      case 3:
+        swap(xs, ys);
+        swap(xd, yd);
+        swap(w, h);
+        ys = GxGDEW0213I5F_HEIGHT - ys  - h - 1;
+        yd = GxGDEW0213I5F_HEIGHT - yd  - h - 1;
+        break;
+    }
+  }
+  if (xs >= GxGDEW0213I5F_WIDTH) return;
+  if (ys >= GxGDEW0213I5F_HEIGHT) return;
+  if (xd >= GxGDEW0213I5F_WIDTH) return;
+  if (yd >= GxGDEW0213I5F_HEIGHT) return;
+  // the screen limits are the hard limits
+  uint16_t xde = gx_uint16_min(GxGDEW0213I5F_WIDTH, xd + w) - 1;
+  uint16_t yde = gx_uint16_min(GxGDEW0213I5F_HEIGHT, yd + h) - 1;
+  if (!_using_partial_mode) _wakeUp();
+  _using_partial_mode = true;
+  initPartialUpdate();
+
+  for (uint16_t twice = 0; twice < 2; twice++)
+  { // leave both controller buffers equal
+    IO.cmd(0x91); // partial in
+    // soft limits, must send as many bytes as set by _SetRamArea
+    uint16_t yse = ys + yde - yd;
+    uint16_t xss_d8 = xs / 8;
+    uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
+    IO.cmd(0x13);
+    uint16_t counter = 0;
+    //uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    for (int16_t y1 = ys; y1 <= yse; y1++)
+    {
+      for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
+      {
+        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
+        IO.data(data);
+        counter++;
+      }
+    }
+    //IO.data(data, counter); // white is 0xFF on device
+
+    IO.cmd(0x12);      //display refresh
+    _waitBusy("updateToWindow");
+    IO.cmd(0x92); // partial out
+  } // leave both controller buffers equal
+  vTaskDelay(GxGDEW0213I5F_PU_DELAY); 
+}
+
 void Epd::_waitBusy(const char* message){
   ESP_LOGI(TAG, "_waitBusy for %s", message);
   int64_t time_since_boot = esp_timer_get_time();
@@ -287,6 +438,27 @@ void Epd::_sleep(){
   _waitBusy("power_off");
   IO.cmd(0x07); // deep sleep
   IO.data(0xa5);
+}
+
+void Epd::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+{
+  switch (getRotation())
+  {
+    case 1:
+      swap(x, y);
+      swap(w, h);
+      x = GxGDEW0213I5F_WIDTH - x - w - 1;
+      break;
+    case 2:
+      x = GxGDEW0213I5F_WIDTH - x - w - 1;
+      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      break;
+    case 3:
+      swap(x, y);
+      swap(w, h);
+      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      break;
+  }
 }
 
 void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -310,17 +482,6 @@ void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   uint16_t i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
-  // Todo research what is for _current_page
-  if (_current_page < 1)
-  {
-    if (i >= sizeof(_buffer)) return;
-  }
-  else
-  {
-    y -= _current_page * GxGDEW0213I5F_PAGE_HEIGHT;
-    if ((y < 0) || (y >= GxGDEW0213I5F_PAGE_HEIGHT)) return;
-    i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
-  }
 
   if (color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
