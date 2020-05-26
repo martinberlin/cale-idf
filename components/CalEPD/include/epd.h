@@ -2,17 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "esp_system.h"
-#include "driver/spi_master.h"
-#include "driver/gpio.h"
 #include <stdint.h>
 #include <math.h>
 #include "sdkconfig.h"
 #include "esp_log.h"
-#include <string.h>
 #include <string>
 #include <Adafruit_GFX.h>
+#include <espspi.h>
+
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000
 #define GxEPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
@@ -28,25 +26,52 @@
 #define GxGDEW0213I5F_PAGE_HEIGHT (GxGDEW0213I5F_HEIGHT / GxGDEW0213I5F_PAGES)
 #define GxGDEW0213I5F_PAGE_SIZE (GxGDEW0213I5F_BUFFER_SIZE / GxGDEW0213I5F_PAGES)
 
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[42];
+    uint8_t databytes; //No of data in data; 0xFF = end of cmds.
+} epd_init_42;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[44];
+    uint8_t databytes;
+} epd_init_44;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[1];
+} epd_init_1;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[2];
+} epd_init_2;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[3];
+} epd_init_3;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[5];
+} epd_power_5;
+
 // Note: GxGDEW0213I5F is our test display that will be the default initializing this class
 class Epd : public virtual Adafruit_GFX
 {
   public:
     const char* TAG = "Epd driver";
-    spi_device_handle_t spi;
-    Epd();
-
-    void cmd(const uint8_t cmd);
-    void data(uint8_t data);
-    void data(const uint8_t *data, int len);
+    
+    Epd(EspSpi& IO);
       
     void drawPixel(int16_t x, int16_t y, uint16_t color);  
     
     // EPD tests 
     void init(bool debug);
     void initFullUpdate();
-    void spi_reset();
-    void spi_init();
+
     void fillScreen(uint16_t color);
     void update();
 
@@ -60,6 +85,7 @@ class Epd : public virtual Adafruit_GFX
     void println(const std::string& text);
 
   private:
+    EspSpi& IO;
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
     // Very smart template from GxEPD to swap x,y:
     template <typename T> static inline void
@@ -76,4 +102,5 @@ class Epd : public virtual Adafruit_GFX
     bool debug_enabled;
     // Probably this LUT commands should be private members of Epd 
     //const unsigned char lut_20_vcomDC_partial[];
+
 };

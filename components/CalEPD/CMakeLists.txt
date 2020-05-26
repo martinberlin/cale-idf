@@ -1,5 +1,6 @@
 set(srcs 
     "epd.cpp"
+    "epdspi.cpp"
     )
 
 # Leave as an example of how to add target only for ESP32

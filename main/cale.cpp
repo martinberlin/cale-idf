@@ -9,9 +9,8 @@
 extern "C" {
    void app_main();
 }
-
-Epd display;
-
+EspSpi io;
+Epd display(io);
 
 void app_main(void)
 {

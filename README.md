@@ -65,6 +65,12 @@ https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
 
 [esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
 
-[CALE.es Web-service](https://CALE.es)
+[GxEPD Epaper library](https://CALE.es) GxEPD is to use with Espressif Arduino Framework. 
+
+[CALE.es Web-service](https://CALE.es) a Web-Service that prepares BMP & JPG Screens with the right size for your displays
 
 [CALE.es Arduino-espressif32 firmware](https://github.com/martinberlin/eink-calendar)
+
+### Credits 
+
+GxEPD has been a great resource to start with. For CalEPD component, we mantain same Constants and use the same driver nomenclature as GxEPD, just in small case.  Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays.
