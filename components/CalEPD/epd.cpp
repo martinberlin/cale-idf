@@ -212,7 +212,7 @@ void Epd::initPartialUpdate(){
 void Epd::init(bool debug)
 {
     //Initialize the Epaper and reset it
-    IO.init();
+    IO.init(5); // 4MHz frequency
    
     //Initialize the Epaper and reset it
         debug_enabled = debug;

@@ -11,5 +11,5 @@ class EspSpi
     void data(uint8_t data);
     void data(const uint8_t *data, int len);
     void reset();
-    void init();
+    void init(uint8_t frequency);
 };

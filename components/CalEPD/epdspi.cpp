@@ -23,7 +23,7 @@ void spi_pre_transfer_callback(spi_transaction_t *t)
 
 EspSpi::EspSpi(){}
 
-void EspSpi::init(){
+void EspSpi::init(uint8_t frequency=4){
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
@@ -49,7 +49,7 @@ void EspSpi::init(){
 
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
-        .clock_speed_hz=4*1000*1000,           //Clock out at 4 MHz
+        .clock_speed_hz=frequency*1000*1000,  // As default 4 MHz
         .input_delay_ns = 0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),

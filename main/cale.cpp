@@ -44,28 +44,29 @@ void app_main(void)
    }
    }
    // Test fonts
-   display.println("HELLO CALE-IDF");  // Todo: Add print and println
+   display.println("CALE-IDF");  // Todo: Add print and println
    display.setFont(&FreeMono18pt7b);
    display.setCursor(10,40);
-   display.println("Adafruit GFX");
+   display.println("Te quiero");
    display.setCursor(10,100);
-   display.println("F O N T S");
+   display.println("MACHO");
    // Test  shapes
-   display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
-   display.drawCircle(50, 50, 22, GxEPD_BLACK);
+   //display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
+   //display.drawCircle(50, 50, 22, GxEPD_BLACK);
    
-   display.drawRect(90, 50, 40, 20, GxEPD_BLACK);
+   //display.drawRect(90, 50, 40, 20, GxEPD_BLACK);
    display.drawRect(90, 50, 38, 22, GxEPD_BLACK);
 
    display.drawRoundRect(134, 50, 20, 20, 5, GxEPD_BLACK);
 
-   display.drawTriangle(174, 50, 184, 60, 194, 20, GxEPD_BLACK);
+   display.drawTriangle(174, 50, 184, 60, 200, 50, GxEPD_BLACK);
 
    for (int i = 0; i < 200; i++) {
      display.drawPixel(i,79,GxEPD_BLACK);
    }
-   // Partial updates are not working in this display
-   //display.updateWindow(10,20,80,100);
 
    display.update();
+
+   // Partial updates are not working in this display
+   //display.updateWindow(10,20,80,100);
 }
