@@ -33,16 +33,20 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   //display.update();
-   //return; // Clean screen and stop test
+
+   display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
+
+   display.update();
+   return; // Clean screen and stop test
+
+
+
+
 
    display.setRotation(1);
-   display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
-   
-   
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_BLACK);
-   display.setCursor(20,20);
+   display.setCursor(30,20);
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -51,7 +55,7 @@ void app_main(void)
    }
    }
    // Test fonts
-   display.println("CALE-IDF");  // Todo: Add print and println
+   display.println("HELLLLOO");  // Todo: Add print and println
    display.setFont(&FreeMono18pt7b);
    display.setCursor(10,40);
    display.println("Te quiero");

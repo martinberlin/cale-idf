@@ -225,7 +225,7 @@ void Gdew027w3::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew027w3::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
-    IO.init(3, debug); // 4MHz frequency, debug
+    IO.init(4, debug); // 4MHz frequency, debug
     //Reset the display
     IO.reset();
     printf("Free heap:%d\n",xPortGetFreeHeapSize());
@@ -247,13 +247,10 @@ void Gdew027w3::fillScreen(uint16_t color)
 void Gdew027w3::_wakeUp(){
   printf("wakeup() start\n");
   IO.reset();
-  vTaskDelay(2);
 
   IO.cmd(epd_wakeup_power.cmd);
   IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
-  vTaskDelay(2);
   
-
   IO.cmd(epd_soft_start.cmd);
   IO.data(epd_soft_start.data,epd_soft_start.databytes);
   IO.cmd(epd_extra_setting.cmd);
@@ -274,7 +271,7 @@ void Gdew027w3::_wakeUp(){
   IO.data(epd_resolution.data,epd_resolution.databytes);
   IO.cmd(epd_vcom1.cmd);
   IO.data(epd_vcom1.data,1);
-  vTaskDelay(1);
+
   IO.cmd(epd_vcom2.cmd);
   IO.data(epd_vcom2.data,1);
 
@@ -284,8 +281,8 @@ void Gdew027w3::_wakeUp(){
 void Gdew027w3::update()
 {
   _wakeUp();
+  uint8_t _wbuffer[GxGDEW027W3_BUFFER_SIZE];
 
-  printf("Fill _wbuffer with 0xFF\n");
   if (_initial) { // init old data
     IO.cmd(0x10);
     for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
@@ -300,10 +297,10 @@ void Gdew027w3::update()
   IO.cmd(0x12);        // display refresh
   _waitBusy("update"); // update old data
 
-  /* IO.cmd(0x10);
+  IO.cmd(0x10);
     for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
      IO.data(0xFF);
-    } */
+    }
 
   _sleep();
 }
@@ -443,7 +440,7 @@ void Gdew027w3::_waitBusy(const char* message){
   while (1){
     if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>1800000)
+    if (esp_timer_get_time()-time_since_boot>2800000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;

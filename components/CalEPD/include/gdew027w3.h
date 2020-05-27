@@ -31,7 +31,6 @@ class Gdew027w3 : public Epd
 
     void fillScreen(uint16_t color);
     void update();
-    void eraseDisplay(bool using_partial_update = false);
 
     // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
     // Partial update of rectangle from buffer to screen, does not power off
@@ -44,7 +43,7 @@ class Gdew027w3 : public Epd
   private:
     EpdSpi& IO;
     uint8_t _buffer[GxGDEW027W3_BUFFER_SIZE];
-    bool _initial = false; 
+    bool _initial = true; 
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();

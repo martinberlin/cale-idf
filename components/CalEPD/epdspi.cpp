@@ -64,8 +64,8 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
 
     if (debug_enabled) {
-      printf("EpdSpi::init() SPI initialized. MOSI:%d CLK:%d CS:%d\n",
-        CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
+      printf("EpdSpi::init() SPI initialized at %d Mhz. MOSI:%d CLK:%d CS:%d\n",
+      frequency, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
         }
     }
 
