@@ -46,13 +46,11 @@ class Gdew0213i5f : public Epd
     void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
 
     // This are already provided in Epd Abstract 
-    //size_t write(uint8_t);
-    //void print(const std::string& text);
-    //void println(const std::string& text);
+    // write(uint8_t); print(const std::string& text);println(same);
+
 
   private:
     EspSpi& IO;
-    //Epd& epd(int16_t w, int16_t h);
 
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
 
@@ -61,9 +59,6 @@ class Gdew0213i5f : public Epd
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-
-    //bool _using_partial_mode = false;
-    //bool debug_enabled = true;
 
     // Command & data structs
     static const epd_init_44 lut_20_vcomDC;

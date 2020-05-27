@@ -103,6 +103,7 @@ inline uint8_t *pgm_read_bitmap_ptr(const GFXfont *gfxFont) {
 */
 /**************************************************************************/
 Adafruit_GFX::Adafruit_GFX(int16_t w, int16_t h) : WIDTH(w), HEIGHT(h) {
+  //printf("Adafruit_GFX(%d,%d) constructor called\n", WIDTH, HEIGHT);  
   _width = WIDTH;
   _height = HEIGHT;
   rotation = 0;

@@ -213,16 +213,15 @@ void Gdew0213i5f::initPartialUpdate(){
 void Gdew0213i5f::init(bool debug)
 {
     debug_enabled = debug;
-
+    if (debug_enabled) printf("Gdew0213i5f::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
     IO.init(5, debug); // 4MHz frequency, debug
 
     //Reset the display
     IO.reset();
 
-    fillScreen(GxEPD_WHITE);
-
-    if (debug_enabled) printf("Gdew0213i5f::init(%d), reset, and fillScreen(WHITE)\n", debug);
+    //Commenting fillScreen since it's alredy called. I still didn't discovered from where
+    //fillScreen(GxEPD_WHITE);
 }
 
 void Gdew0213i5f::fillScreen(uint16_t color)
@@ -486,23 +485,3 @@ void Gdew0213i5f::drawPixel(int16_t x, int16_t y, uint16_t color) {
   else
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
-
-// Shall we make hooks or are already accesible
-/* size_t Epd::write(uint8_t v){
-  Adafruit_GFX::write(v);
-  return 1;
-}
-
-void Epd::print(const std::string& text){
-   for(auto c : text) {
-     write(uint8_t(c));
-   }
-}
-
-void Epd::println(const std::string& text){
-   for(auto c : text) {
-     write(uint8_t(c));
-   }
-   write(10); // newline
-}
- */
