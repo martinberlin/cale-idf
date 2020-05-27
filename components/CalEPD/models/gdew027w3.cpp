@@ -1,4 +1,4 @@
-#include "gdew0213i5f.h"
+#include "gdew027w3.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
@@ -10,19 +10,19 @@
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
-DRAM_ATTR const epd_init_44 Gdew0213i5f::lut_20_vcomDC={
+DRAM_ATTR const epd_init_44 Gdew027w3::lut_20_vcomDC={
 0x20, {
+  0x00, 0x00,
   0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
   0x00, 0x14, 0x00, 0x00, 0x00, 0x01,
   0x00, 0x12, 0x12, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },44};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_21_ww={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_21_ww={
 0x21, {
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -30,10 +30,10 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_21_ww={
   0xA0, 0x12, 0x12, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_22_bw={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_22_bw={
 0x22,{
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -41,10 +41,10 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_22_bw={
   0xA0, 0x12, 0x12, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_23_wb={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_23_wb={
 0x23,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -52,10 +52,10 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_23_wb={
   0x50, 0x12, 0x12, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_24_bb={
 0x24,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -63,105 +63,104 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb={
   0x50, 0x12, 0x12, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_power_5 Gdew0213i5f::epd_wakeup_power={
-0x01,{0x03,0x00,0x2b,0x2b,0x03},5
+DRAM_ATTR const epd_power_4 Gdew027w3::epd_wakeup_power={
+0x01,{0x03,0x00,0x2b,0x2b},4
 };
 
-DRAM_ATTR const epd_init_3 Gdew0213i5f::epd_soft_start={
-0x06,{0x17,0x17,0x17},3
+DRAM_ATTR const epd_init_3 Gdew027w3::epd_soft_start={
+0x06,{0x07,0x07,0x17},3
 };
 
-DRAM_ATTR const epd_init_2 Gdew0213i5f::epd_panel_setting={
-0x00,{0xbf,0x0d},2
+DRAM_ATTR const epd_init_1 Gdew027w3::epd_extra_setting={
+0x16,{0x00},1
 };
 
-DRAM_ATTR const epd_init_1 Gdew0213i5f::epd_pll={
+DRAM_ATTR const epd_init_1 Gdew027w3::epd_panel_setting={
+0x00,{0xbf},1
+};
+
+DRAM_ATTR const epd_init_1 Gdew027w3::epd_pll={
 0x30,{0x3a},1
 };
 
-DRAM_ATTR const epd_init_3 Gdew0213i5f::epd_resolution={
-0x61,{GxGDEW0213I5F_WIDTH,
-GxGDEW0213I5F_HEIGHT >> 8,
-GxGDEW0213I5F_HEIGHT & 0xFF
-},3};
+DRAM_ATTR const epd_init_4 Gdew027w3::epd_resolution={
+0x61,{0x00, 0xb0, /*176*/ 0x01, 0x08 // 264
+},4};
 
 //partial screen update LUT
-//#define Tx19 0x19 // original value is 25 (phase length)
-#define Tx19 0x28   // new value for test is 40 (phase length)
-
-DRAM_ATTR const epd_init_44 Gdew0213i5f::lut_20_vcomDC_partial={
+DRAM_ATTR const epd_init_44 Gdew027w3::lut_20_vcomDC_partial={
 0x20, {
-  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00,
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },44};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_21_ww_partial={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_21_ww_partial={
 0x21, {
-  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_22_bw_partial={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_22_bw_partial={
 0x22, {
-  0x80, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x80, 0x19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_23_wb_partial={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_23_wb_partial={
 0x23, {
-  0x40, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x40, 0x19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb_partial={
+DRAM_ATTR const epd_init_42 Gdew027w3::lut_24_bb_partial={
 0x24, {
-  0x00, Tx19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
 // Partial Update Delay, may have an influence on degradation
-#define GxGDEW0213I5F_PU_DELAY 100
+#define GxGDEW027W3_PU_DELAY 100
 
 
 // Constructor
-Gdew0213i5f::Gdew0213i5f(EpdSpi& dio): 
-  Adafruit_GFX(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT),
-  Epd(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT), IO(dio)
+Gdew027w3::Gdew027w3(EpdSpi& dio): 
+  Adafruit_GFX(GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT),
+  Epd(GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT), IO(dio)
 {
-  printf("Gdew0213i5f() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT);  
+  printf("Gdew027w3() injects IO and extends Adafruit_GFX(%d,%d)\n",
+  GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT);  
 }
 
-void Gdew0213i5f::initFullUpdate(){
+void Gdew027w3::initFullUpdate(){
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
 
@@ -185,7 +184,7 @@ void Gdew0213i5f::initFullUpdate(){
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
 
-void Gdew0213i5f::initPartialUpdate(){
+void Gdew027w3::initPartialUpdate(){
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
 
@@ -210,19 +209,19 @@ void Gdew0213i5f::initPartialUpdate(){
 }
 
 //Initialize the display
-void Gdew0213i5f::init(bool debug)
+void Gdew027w3::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Gdew0213i5f::init(%d) and reset EPD\n", debug);
+    if (debug_enabled) printf("Gdew027w3::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
-    IO.init(5, debug); // 4MHz frequency, debug
+    IO.init(4, debug); // 4MHz frequency, debug
 
     //Reset the display
     IO.reset();
     fillScreen(GxEPD_WHITE);
 }
 
-void Gdew0213i5f::fillScreen(uint16_t color)
+void Gdew027w3::fillScreen(uint16_t color)
 {
   uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
@@ -233,36 +232,41 @@ void Gdew0213i5f::fillScreen(uint16_t color)
   if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
-void Gdew0213i5f::_wakeUp(){
-    //if (_rst >= 0) {
-      IO.reset();
-    //}
+void Gdew027w3::_wakeUp(){
+  IO.reset();
 
   IO.cmd(epd_wakeup_power.cmd);
-  IO.data(epd_wakeup_power.data,5);
+  IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
   
   IO.cmd(epd_soft_start.cmd);
-  IO.data(epd_soft_start.data,3);
+  IO.data(epd_soft_start.data,epd_soft_start.databytes);
+  IO.cmd(epd_extra_setting.cmd);
+  IO.data(epd_extra_setting.data,epd_extra_setting.databytes);
+
   IO.cmd(0x04);
   _waitBusy("epd_wakeup_power");
 
   // [1] LUT from register, 128x296
   // [2] VCOM to 0V fast
   IO.cmd(epd_panel_setting.cmd);
-  IO.data(epd_panel_setting.data,2);
+  IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
 
   // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
   IO.cmd(epd_pll.cmd);
-  IO.data(epd_pll.data,1);   
+  IO.data(epd_pll.data,epd_pll.databytes);   
 
   //resolution setting
   IO.cmd(epd_resolution.cmd);
-  IO.data(epd_resolution.data,3);
-
+  IO.data(epd_resolution.data,epd_resolution.databytes);
+  IO.cmd(0x82);
+  IO.data(0x08);
+  vTaskDelay(1);
+  IO.cmd(0x50);
+  IO.data(0x97);
   initFullUpdate();
 }
 
-void Gdew0213i5f::update()
+void Gdew027w3::update()
 {
   _using_partial_mode = false;
   _wakeUp();
@@ -270,8 +274,8 @@ void Gdew0213i5f::update()
   IO.cmd(0x10);
 
   // In GxEPD here it wrote the full buffer with 0xFF. Note doing it like this is not refreshing. Todo: Check epaper tech specs
-  /* uint8_t _wbuffer[GxGDEW0213I5F_BUFFER_SIZE];
-    for (uint16_t x = 0; x < GxGDEW0213I5F_BUFFER_SIZE; x++){
+  /* uint8_t _wbuffer[GxGDEW027W3_BUFFER_SIZE];
+    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
     _wbuffer[x] = 0xFF;
   }
   IO.data(_wbuffer, sizeof(_wbuffer)); */
@@ -285,7 +289,7 @@ void Gdew0213i5f::update()
   _sleep();
 }
 
-uint16_t Gdew0213i5f::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+uint16_t Gdew027w3::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
   x &= 0xFFF8; // byte boundary
   xe = (xe - 1) | 0x0007; // byte boundary - 1
@@ -301,14 +305,14 @@ uint16_t Gdew0213i5f::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, ui
   return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
-void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Gdew027w3::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   printf("deprecated: updateWindow does not work\n");
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GxGDEW0213I5F_WIDTH) return;
-  if (y >= GxGDEW0213I5F_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GxGDEW0213I5F_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GxGDEW0213I5F_HEIGHT, y + h) - 1;
+  if (x >= GxGDEW027W3_WIDTH) return;
+  if (y >= GxGDEW027W3_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GxGDEW027W3_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GxGDEW027W3_HEIGHT, y + h) - 1;
   // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
@@ -322,12 +326,12 @@ void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     IO.cmd(0x13);
 
     uint16_t counter = 0;
-    uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    uint8_t data[GxGDEW027W3_WIDTH*GxGDEW027W3_HEIGHT];
     for (int16_t y1 = y; y1 <= ye; y1++)
     {
       for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GxGDEW027W3_WIDTH / 8) + x1;
         data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
         //IO.data(~data); // white is 0xFF on device
@@ -339,10 +343,10 @@ void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     _waitBusy("updateWindow");
     IO.cmd(0x92);      // partial out
   } // leave both controller buffers equal
-  vTaskDelay(GxGDEW0213I5F_PU_DELAY);
+  vTaskDelay(GxGDEW027W3_PU_DELAY);
 }
 
-void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
+void Gdew027w3::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
 {
   printf("deprecated: updateToWindow does not work\n");
   if (using_rotation)
@@ -353,31 +357,31 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
         swap(xs, ys);
         swap(xd, yd);
         swap(w, h);
-        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
-        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
+        xs = GxGDEW027W3_WIDTH - xs - w - 1;
+        xd = GxGDEW027W3_WIDTH - xd - w - 1;
         break;
       case 2:
-        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
-        ys = GxGDEW0213I5F_HEIGHT - ys - h - 1;
-        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
-        yd = GxGDEW0213I5F_HEIGHT - yd - h - 1;
+        xs = GxGDEW027W3_WIDTH - xs - w - 1;
+        ys = GxGDEW027W3_HEIGHT - ys - h - 1;
+        xd = GxGDEW027W3_WIDTH - xd - w - 1;
+        yd = GxGDEW027W3_HEIGHT - yd - h - 1;
         break;
       case 3:
         swap(xs, ys);
         swap(xd, yd);
         swap(w, h);
-        ys = GxGDEW0213I5F_HEIGHT - ys  - h - 1;
-        yd = GxGDEW0213I5F_HEIGHT - yd  - h - 1;
+        ys = GxGDEW027W3_HEIGHT - ys  - h - 1;
+        yd = GxGDEW027W3_HEIGHT - yd  - h - 1;
         break;
     }
   }
-  if (xs >= GxGDEW0213I5F_WIDTH) return;
-  if (ys >= GxGDEW0213I5F_HEIGHT) return;
-  if (xd >= GxGDEW0213I5F_WIDTH) return;
-  if (yd >= GxGDEW0213I5F_HEIGHT) return;
+  if (xs >= GxGDEW027W3_WIDTH) return;
+  if (ys >= GxGDEW027W3_HEIGHT) return;
+  if (xd >= GxGDEW027W3_WIDTH) return;
+  if (yd >= GxGDEW027W3_HEIGHT) return;
   // the screen limits are the hard limits
-  uint16_t xde = gx_uint16_min(GxGDEW0213I5F_WIDTH, xd + w) - 1;
-  uint16_t yde = gx_uint16_min(GxGDEW0213I5F_HEIGHT, yd + h) - 1;
+  uint16_t xde = gx_uint16_min(GxGDEW027W3_WIDTH, xd + w) - 1;
+  uint16_t yde = gx_uint16_min(GxGDEW027W3_HEIGHT, yd + h) - 1;
   if (!_using_partial_mode) _wakeUp();
   _using_partial_mode = true;
   initPartialUpdate();
@@ -391,12 +395,12 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
     uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
     IO.cmd(0x13);
     uint16_t counter = 0;
-    //uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    //uint8_t data[GxGDEW027W3_WIDTH*GxGDEW027W3_HEIGHT];
     for (int16_t y1 = ys; y1 <= yse; y1++)
     {
       for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GxGDEW027W3_WIDTH / 8) + x1;
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
         IO.data(data);
         counter++;
@@ -408,10 +412,10 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
     _waitBusy("updateToWindow");
     IO.cmd(0x92); // partial out
   } // leave both controller buffers equal
-  vTaskDelay(GxGDEW0213I5F_PU_DELAY); 
+  vTaskDelay(GxGDEW027W3_PU_DELAY); 
 }
 
-void Gdew0213i5f::_waitBusy(const char* message){
+void Gdew027w3::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -428,36 +432,36 @@ void Gdew0213i5f::_waitBusy(const char* message){
   }
 }
 
-void Gdew0213i5f::_sleep(){
+void Gdew027w3::_sleep(){
   IO.cmd(0x02); // power off display
   _waitBusy("power_off");
   IO.cmd(0x07); // deep sleep
   IO.data(0xa5);
 }
 
-void Gdew0213i5f::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void Gdew027w3::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GxGDEW0213I5F_WIDTH - x - w - 1;
+      x = GxGDEW027W3_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GxGDEW0213I5F_WIDTH - x - w - 1;
-      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      x = GxGDEW027W3_WIDTH - x - w - 1;
+      y = GxGDEW027W3_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      y = GxGDEW027W3_HEIGHT - y - h - 1;
       break;
   }
 }
 
 
-void Gdew0213i5f::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void Gdew027w3::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -465,18 +469,18 @@ void Gdew0213i5f::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = GxGDEW0213I5F_WIDTH - x - 1;
+      x = GxGDEW027W3_WIDTH - x - 1;
       break;
     case 2:
-      x = GxGDEW0213I5F_WIDTH - x - 1;
-      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      x = GxGDEW027W3_WIDTH - x - 1;
+      y = GxGDEW027W3_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      y = GxGDEW027W3_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
+  uint16_t i = x / 8 + y * GxGDEW027W3_WIDTH / 8;
 
   if (color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));

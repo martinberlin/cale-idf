@@ -33,21 +33,37 @@ typedef struct {
 typedef struct {
     uint8_t cmd;
     uint8_t data[1];
+    uint8_t databytes;
 } epd_init_1;
 
 typedef struct {
     uint8_t cmd;
     uint8_t data[2];
+    uint8_t databytes;
 } epd_init_2;
 
 typedef struct {
     uint8_t cmd;
     uint8_t data[3];
+    uint8_t databytes;
 } epd_init_3;
 
 typedef struct {
     uint8_t cmd;
+    uint8_t data[4];
+    uint8_t databytes;
+} epd_init_4;
+
+typedef struct {
+    uint8_t cmd;
     uint8_t data[5];
+    uint8_t databytes;
+} epd_power_4;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[5];
+    uint8_t databytes;
 } epd_power_5;
 
 // Note: GxGDEW0213I5F is our test display that will be the default initializing this class

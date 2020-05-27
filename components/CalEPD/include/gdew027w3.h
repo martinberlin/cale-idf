@@ -11,18 +11,16 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-// Controller: IL0373
-#define GxGDEW0213I5F_WIDTH 104
-#define GxGDEW0213I5F_HEIGHT 212
-#define GxGDEW0213I5F_BUFFER_SIZE (uint32_t(GxGDEW0213I5F_WIDTH) * uint32_t(GxGDEW0213I5F_HEIGHT) / 8)
+// Controller: IL91874  Note: This is the display that the T5S from TTGO use
+#define GxGDEW027W3_WIDTH 176
+#define GxGDEW027W3_HEIGHT 264
+#define GxGDEW027W3_BUFFER_SIZE (uint32_t(GxGDEW027W3_WIDTH) * uint32_t(GxGDEW027W3_HEIGHT) / 8)
 
-
-// Note: GxGDEW0213I5F is our test display that will be the default initializing this class
-class Gdew0213i5f : public Epd
+class Gdew027w3 : public Epd
 {
   public:
    
-    Gdew0213i5f(EpdSpi& IO);
+    Gdew027w3(EpdSpi& IO);
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -46,8 +44,8 @@ class Gdew0213i5f : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
-
+    uint8_t _buffer[GxGDEW027W3_BUFFER_SIZE];
+    bool _initial = false;
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();
@@ -67,9 +65,10 @@ class Gdew0213i5f : public Epd
     static const epd_init_42 lut_23_wb_partial;
     static const epd_init_42 lut_24_bb_partial;
 
-    static const epd_power_5 epd_wakeup_power;
+    static const epd_power_4 epd_wakeup_power;
     static const epd_init_3 epd_soft_start;
-    static const epd_init_2 epd_panel_setting;
+    static const epd_init_1 epd_panel_setting;
+    static const epd_init_1 epd_extra_setting;
     static const epd_init_1 epd_pll;
-    static const epd_init_3 epd_resolution;
+    static const epd_init_4 epd_resolution;
 };
