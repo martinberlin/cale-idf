@@ -219,9 +219,7 @@ void Gdew0213i5f::init(bool debug)
 
     //Reset the display
     IO.reset();
-
-    //Commenting fillScreen since it's alredy called. I still didn't discovered from where
-    //fillScreen(GxEPD_WHITE);
+    fillScreen(GxEPD_WHITE);
 }
 
 void Gdew0213i5f::fillScreen(uint16_t color)
