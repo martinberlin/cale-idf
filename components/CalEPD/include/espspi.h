@@ -1,7 +1,9 @@
+/* Implement IoInterface for SPI communication */
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
+#include "iointerface.h"
 
-class EspSpi
+class EspSpi : IoInterface
 {
   public:
     spi_device_handle_t spi;
