@@ -67,7 +67,11 @@ void app_main(void)
    }
 
    display.update();
-
+   vTaskDelay(100);
+   
+   display.fillScreen(GxEPD_WHITE);
+   display.update();
+   
    // Partial updates are not working in this display
    //display.updateWindow(10,20,80,100);
 }
