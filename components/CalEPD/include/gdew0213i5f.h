@@ -10,7 +10,7 @@
 #include <string>
 #include <epd.h>
 #include <Adafruit_GFX.h>
-#include <espspi.h>
+#include <epdspi.h>
 
 #define GxGDEW0213I5F_WIDTH 104
 #define GxGDEW0213I5F_HEIGHT 212
@@ -26,7 +26,7 @@ class Gdew0213i5f : public Epd
 {
   public:
    
-    Gdew0213i5f(EspSpi& IO);
+    Gdew0213i5f(EpdSpi& IO);
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -40,17 +40,15 @@ class Gdew0213i5f : public Epd
     void eraseDisplay(bool using_partial_update = false);
 
     // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
-    // partial update of rectangle from buffer to screen, does not power off
+    // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    // partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
+    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
     void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
 
-    // This are already provided in Epd Abstract 
-    // write(uint8_t); print(const std::string& text);println(same);
-
+    // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
 
   private:
-    EspSpi& IO;
+    EpdSpi& IO;
 
     uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
 

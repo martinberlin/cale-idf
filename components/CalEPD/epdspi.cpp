@@ -1,5 +1,5 @@
 /* SPI Master IO class */
-#include <espspi.h>
+#include <epdspi.h>
 #include <string.h>
 #include "freertos/task.h"
 
@@ -21,9 +21,7 @@ void spi_pre_transfer_callback(spi_transaction_t *t)
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, dc);
 }
 
-EspSpi::EspSpi(){}
-
-void EspSpi::init(uint8_t frequency=4,bool debug=false){
+void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
@@ -66,7 +64,7 @@ void EspSpi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
 
     if (debug_enabled) {
-      printf("EspSpi::init() SPI initialized. MOSI:%d CLK:%d CS:%d\n",
+      printf("EpdSpi::init() SPI initialized. MOSI:%d CLK:%d CS:%d\n",
         CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
         }
     }
@@ -78,7 +76,7 @@ void EspSpi::init(uint8_t frequency=4,bool debug=false){
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void EspSpi::cmd(const uint8_t cmd)
+void EpdSpi::cmd(const uint8_t cmd)
 {
     if (debug_enabled) {
         printf("cmd(%d)\n",cmd);
@@ -95,7 +93,7 @@ void EspSpi::cmd(const uint8_t cmd)
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);   
 }
 
-void EspSpi::data(uint8_t data)
+void EpdSpi::data(uint8_t data)
 {
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
@@ -116,7 +114,7 @@ void EspSpi::data(uint8_t data)
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void EspSpi::data(const uint8_t *data, int len)
+void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
@@ -132,7 +130,7 @@ void EspSpi::data(const uint8_t *data, int len)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
-void EspSpi::reset() {
+void EpdSpi::reset() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
     vTaskDelay(20 / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);

@@ -10,7 +10,7 @@
 extern "C" {
    void app_main();
 }
-EspSpi io;
+EpdSpi io;
 Gdew0213i5f display(io);
 
 void app_main(void)

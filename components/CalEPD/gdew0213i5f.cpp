@@ -153,7 +153,7 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb_partial={
 
 
 // Constructor
-Gdew0213i5f::Gdew0213i5f(EspSpi& dio): 
+Gdew0213i5f::Gdew0213i5f(EpdSpi& dio): 
   Adafruit_GFX(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT),
   Epd(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT), IO(dio)
 {

@@ -9,7 +9,7 @@
 #include "esp_log.h"
 #include <string>
 #include <Adafruit_GFX.h>
-#include <espspi.h>
+#include <epdspi.h>
 
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000

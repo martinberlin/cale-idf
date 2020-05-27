@@ -5,12 +5,11 @@
 
 #ifndef epdspi_h
 #define epdspi_h
-class EspSpi : IoInterface
+class EpdSpi : IoInterface
 {
   public:
     spi_device_handle_t spi;
-    
-    EspSpi();
+
     void cmd(const uint8_t cmd) override;
     void data(uint8_t data) override;
     void data(const uint8_t *data, int len) override;
