@@ -5,7 +5,8 @@
 #include "freertos/task.h"
 
 /*
- The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
+DO NOT USE: https://twitter.com/martinfasani/status/1265762052880175107
+Could not get it to work correctly yet
 */
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
@@ -90,6 +91,14 @@ DRAM_ATTR const epd_init_4 Gdew027w3::epd_resolution={
 0x61,{0x00, 0xb0, /*176*/ 0x01, 0x08 // 264
 },4};
 
+DRAM_ATTR const epd_init_1 Gdew027w3::epd_vcom1={
+0x82,{0x08},1
+};
+
+DRAM_ATTR const epd_init_1 Gdew027w3::epd_vcom2={
+0x50,{0x97},1
+};
+
 //partial screen update LUT
 DRAM_ATTR const epd_init_44 Gdew027w3::lut_20_vcomDC_partial={
 0x20, {
@@ -158,6 +167,8 @@ Gdew027w3::Gdew027w3(EpdSpi& dio):
 {
   printf("Gdew027w3() injects IO and extends Adafruit_GFX(%d,%d)\n",
   GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT);  
+
+  printf("\n\n\n____________DO NOT USE: https://twitter.com/martinfasani/status/1265762052880175107");
 }
 
 void Gdew027w3::initFullUpdate(){
@@ -214,10 +225,11 @@ void Gdew027w3::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew027w3::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
-    IO.init(4, debug); // 4MHz frequency, debug
-
+    IO.init(3, debug); // 4MHz frequency, debug
     //Reset the display
     IO.reset();
+    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+
     fillScreen(GxEPD_WHITE);
 }
 
@@ -233,11 +245,15 @@ void Gdew027w3::fillScreen(uint16_t color)
 }
 
 void Gdew027w3::_wakeUp(){
+  printf("wakeup() start\n");
   IO.reset();
+  vTaskDelay(2);
 
   IO.cmd(epd_wakeup_power.cmd);
   IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
+  vTaskDelay(2);
   
+
   IO.cmd(epd_soft_start.cmd);
   IO.data(epd_soft_start.data,epd_soft_start.databytes);
   IO.cmd(epd_extra_setting.cmd);
@@ -246,8 +262,6 @@ void Gdew027w3::_wakeUp(){
   IO.cmd(0x04);
   _waitBusy("epd_wakeup_power");
 
-  // [1] LUT from register, 128x296
-  // [2] VCOM to 0V fast
   IO.cmd(epd_panel_setting.cmd);
   IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
 
@@ -258,34 +272,39 @@ void Gdew027w3::_wakeUp(){
   //resolution setting
   IO.cmd(epd_resolution.cmd);
   IO.data(epd_resolution.data,epd_resolution.databytes);
-  IO.cmd(0x82);
-  IO.data(0x08);
+  IO.cmd(epd_vcom1.cmd);
+  IO.data(epd_vcom1.data,1);
   vTaskDelay(1);
-  IO.cmd(0x50);
-  IO.data(0x97);
+  IO.cmd(epd_vcom2.cmd);
+  IO.data(epd_vcom2.data,1);
+
   initFullUpdate();
 }
 
 void Gdew027w3::update()
 {
-  _using_partial_mode = false;
   _wakeUp();
 
-  IO.cmd(0x10);
-
-  // In GxEPD here it wrote the full buffer with 0xFF. Note doing it like this is not refreshing. Todo: Check epaper tech specs
-  /* uint8_t _wbuffer[GxGDEW027W3_BUFFER_SIZE];
-    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
-    _wbuffer[x] = 0xFF;
+  printf("Fill _wbuffer with 0xFF\n");
+  if (_initial) { // init old data
+    IO.cmd(0x10);
+    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
+     IO.data(0xFF);
+    }
+    _initial=false;
   }
-  IO.data(_wbuffer, sizeof(_wbuffer)); */
-  
-  IO.cmd(0x13);
 
+  IO.cmd(0x13);         // update current data
   IO.data(_buffer,sizeof(_buffer));
 
-  IO.cmd(0x12);
-  _waitBusy("update");
+  IO.cmd(0x12);        // display refresh
+  _waitBusy("update"); // update old data
+
+  /* IO.cmd(0x10);
+    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
+     IO.data(0xFF);
+    } */
+
   _sleep();
 }
 

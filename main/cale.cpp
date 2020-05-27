@@ -33,9 +33,8 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   //display.fillScreen(GxEPD_BLACK); 
-   display.update();
-   return; // Clean screen and stop test
+   //display.update();
+   //return; // Clean screen and stop test
 
    display.setRotation(1);
    display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
