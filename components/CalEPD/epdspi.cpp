@@ -23,7 +23,8 @@ void spi_pre_transfer_callback(spi_transaction_t *t)
 
 EspSpi::EspSpi(){}
 
-void EspSpi::init(uint8_t frequency=4){
+void EspSpi::init(uint8_t frequency=4,bool debug=false){
+    debug_enabled = debug;
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
@@ -64,8 +65,10 @@ void EspSpi::init(uint8_t frequency=4){
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 
-    printf("EspSpi::init() SPI initialized. MOSI:%d CLK:%d CS:%d\n",
+    if (debug_enabled) {
+      printf("EspSpi::init() SPI initialized. MOSI:%d CLK:%d CS:%d\n",
         CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
+        }
     }
 
 /* Send a command to the LCD. Uses spi_device_polling_transmit, which waits
@@ -77,7 +80,7 @@ void EspSpi::init(uint8_t frequency=4){
  */
 void EspSpi::cmd(const uint8_t cmd)
 {
-    printf("cmd(%d)\n",cmd);
+    if (debug_enabled) printf("cmd(%d)\n",cmd);
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
     spi_transaction_t t;

@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 
 /*
- The EPD needs a bunch of command/argument values to be initialized.
+ The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
@@ -153,10 +153,9 @@ DRAM_ATTR const epd_init_42 Epd::lut_24_bb_partial={
 
 spi_device_handle_t spi;
 
-//Constructor
+// Constructor
 Epd::Epd(EspSpi& dio):Adafruit_GFX(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT), IO(dio) {
-  IO = dio;
-  printf("Epd() constructor extends Adafruit_GFX(%d,%d)\n",
+  printf("Epd() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
   GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT);  
 }
 
@@ -164,8 +163,8 @@ void Epd::initFullUpdate(){
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
 
-    IO.cmd(0X50); //VCOM AND DATA INTERVAL SETTING
-    IO.data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+    IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING
+    IO.data(0x97); //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
     IO.cmd(lut_20_vcomDC.cmd);
     IO.data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
@@ -181,14 +180,14 @@ void Epd::initFullUpdate(){
 
     IO.cmd(lut_24_bb.cmd);
     IO.data(lut_24_bb.data,lut_24_bb.databytes);
-    printf("initFullUpdate() LUT\n");
+    if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
 
 void Epd::initPartialUpdate(){
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
 
-    IO.cmd(0X50); //VCOM AND DATA INTERVAL SETTING
+    IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING
     IO.data(0x17);
 
     IO.cmd(lut_20_vcomDC_partial.cmd);
@@ -205,26 +204,23 @@ void Epd::initPartialUpdate(){
 
     IO.cmd(lut_24_bb_partial.cmd);
     IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
-    printf("initPartialUpdate() LUT\n");
+    if (debug_enabled) printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
 void Epd::init(bool debug)
 {
+    debug_enabled = debug;
+
     //Initialize the Epaper and reset it
-    IO.init(5); // 4MHz frequency
-   
-    //Initialize the Epaper and reset it
-        debug_enabled = debug;
-     if (debug_enabled) {
-        printf("Epd::init(%d)\n", debug);
-    } 
+    IO.init(5, false); // 4MHz frequency, debug
 
     //Reset the display
     IO.reset();
 
     fillScreen(GxEPD_WHITE);
-    _using_partial_mode = false;
+
+    if (debug_enabled) printf("Epd::init(%d), reset, and fillScreen(WHITE)\n", debug);
 }
 
 void Epd::fillScreen(uint16_t color)
@@ -235,7 +231,7 @@ void Epd::fillScreen(uint16_t color)
     _buffer[x] = data;
   }
 
-  printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
 void Epd::_wakeUp(){
@@ -274,11 +270,9 @@ void Epd::update()
 
   IO.cmd(0x10);
 
-  // In GxEPD here it wrote the full buffer with 0xFF
-  // Note doing it like this is not refreshing
+  // In GxEPD here it wrote the full buffer with 0xFF. Note doing it like this is not refreshing. Todo: Check epaper tech specs
   /* uint8_t _wbuffer[GxGDEW0213I5F_BUFFER_SIZE];
-    for (uint16_t x = 0; x < GxGDEW0213I5F_BUFFER_SIZE; x++)
-  {
+    for (uint16_t x = 0; x < GxGDEW0213I5F_BUFFER_SIZE; x++){
     _wbuffer[x] = 0xFF;
   }
   data(_wbuffer, sizeof(_wbuffer)); */
@@ -419,7 +413,9 @@ void Epd::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uin
 }
 
 void Epd::_waitBusy(const char* message){
-  ESP_LOGI(TAG, "_waitBusy for %s", message);
+  if (debug_enabled) {
+    ESP_LOGI(TAG, "_waitBusy for %s", message);
+  }
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
@@ -461,8 +457,8 @@ void Epd::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
+
 void Epd::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  //printf("Epd drawPixel(%d,%d)\n",x,y);
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary

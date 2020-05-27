@@ -65,8 +65,8 @@ class Epd : public virtual Adafruit_GFX
     const char* TAG = "Epd driver";
     
     Epd(EspSpi& IO);
-      
-    void drawPixel(int16_t x, int16_t y, uint16_t color);  
+    
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
     // EPD tests 
     void init(bool debug);

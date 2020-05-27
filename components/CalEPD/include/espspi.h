@@ -13,5 +13,7 @@ class EspSpi : IoInterface
     void data(uint8_t data);
     void data(const uint8_t *data, int len);
     void reset();
-    void init(uint8_t frequency);
+    void init(uint8_t frequency,bool debug);
+  private:
+    bool debug_enabled = false;
 };

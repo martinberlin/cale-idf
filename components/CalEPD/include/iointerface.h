@@ -7,5 +7,5 @@ class IoInterface
     virtual void data(uint8_t data);
     virtual void data(const uint8_t *data, int len);
     virtual void reset();
-    virtual void init(uint8_t frequency);
+    virtual void init(uint8_t frequency,bool debug);
 };
