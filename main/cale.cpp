@@ -34,14 +34,10 @@ void app_main(void)
    // Test Epd class
    display.init(true);
 
+   // This should be first test run!
    display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
-
    display.update();
    return; // Clean screen and stop test
-
-
-
-
 
    display.setRotation(1);
    display.setFont(&FreeMono9pt7b);

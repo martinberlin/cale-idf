@@ -281,26 +281,25 @@ void Gdew027w3::_wakeUp(){
 void Gdew027w3::update()
 {
   _wakeUp();
-  uint8_t _wbuffer[GxGDEW027W3_BUFFER_SIZE];
-
-  if (_initial) { // init old data
-    IO.cmd(0x10);
-    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
-     IO.data(0xFF);
-    }
-    _initial=false;
+  
+  uint8_t *_wbuffer = new uint8_t[GxGDEW027W3_BUFFER_SIZE];
+    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+    _wbuffer[x] = 0xFF;
   }
+  if (_initial) {       // init clean old data
+    IO.cmd(0x10);
+    IO.data(_wbuffer,GxGDEW027W3_BUFFER_SIZE);
+    _initial=false;
+  } 
 
-  IO.cmd(0x13);         // update current data
+  IO.cmd(0x13);        // update current data
   IO.data(_buffer,sizeof(_buffer));
 
   IO.cmd(0x12);        // display refresh
   _waitBusy("update"); // update old data
 
   IO.cmd(0x10);
-    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){ // Make 0xFF buffer
-     IO.data(0xFF);
-    }
+  IO.data(_buffer,sizeof(_buffer));
 
   _sleep();
 }
