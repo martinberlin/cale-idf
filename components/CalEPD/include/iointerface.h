@@ -1,5 +1,6 @@
 /* Interface that should be implemented by IO classes */
-
+#ifndef iointerface_h
+#define iointerface_h
 class IoInterface
 {
   public:
@@ -9,3 +10,4 @@ class IoInterface
     virtual void reset();
     virtual void init(uint8_t frequency,bool debug);
 };
+#endif

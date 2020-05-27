@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <epd.h>
+// Should match with your epaper module, size
+#include <gdew0213i5f.h>
 // FONT used for title / message body
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/FreeMono9pt7b.h>
@@ -10,7 +11,7 @@ extern "C" {
    void app_main();
 }
 EspSpi io;
-Epd display(io);
+Gdew0213i5f display(io);
 
 void app_main(void)
 {
@@ -27,11 +28,11 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-
+   //display.update();return; // Clean screen and stop test
 
    display.setRotation(1);
    display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
-   //display.update();return; // Clean screen and stop test
+   
    
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_BLACK);

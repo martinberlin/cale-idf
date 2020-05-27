@@ -1,4 +1,6 @@
+# Add only the display srcs you are going to use:
 set(srcs 
+    "gdew0213i5f.cpp"
     "epd.cpp"
     "epdspi.cpp"
     )

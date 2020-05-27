@@ -80,7 +80,9 @@ void EspSpi::init(uint8_t frequency=4,bool debug=false){
  */
 void EspSpi::cmd(const uint8_t cmd)
 {
-    if (debug_enabled) printf("cmd(%d)\n",cmd);
+    if (debug_enabled) {
+        printf("cmd(%d)\n",cmd);
+    }
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
     spi_transaction_t t;

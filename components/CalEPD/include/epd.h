@@ -18,14 +18,6 @@
 #define GxEPD_WHITE     0xFFFF
 #define GxEPD_RED       0xF800      /* 255,   0,   0 */
 
-#define GxGDEW0213I5F_WIDTH 104
-#define GxGDEW0213I5F_HEIGHT 212
-#define GxGDEW0213I5F_BUFFER_SIZE (uint32_t(GxGDEW0213I5F_WIDTH) * uint32_t(GxGDEW0213I5F_HEIGHT) / 8)
-// divisor for AVR, should be factor of GxGDEW0213I5F_HEIGHT
-#define GxGDEW0213I5F_PAGES 4
-#define GxGDEW0213I5F_PAGE_HEIGHT (GxGDEW0213I5F_HEIGHT / GxGDEW0213I5F_PAGES)
-#define GxGDEW0213I5F_PAGE_SIZE (GxGDEW0213I5F_BUFFER_SIZE / GxGDEW0213I5F_PAGES)
-
 typedef struct {
     uint8_t cmd;
     uint8_t data[42];
@@ -64,38 +56,44 @@ class Epd : public virtual Adafruit_GFX
   public:
     const char* TAG = "Epd driver";
     
-    Epd(EspSpi& IO);
-    
-    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-    
-    // EPD tests 
-    void init(bool debug);
-    void initFullUpdate();
-    void initPartialUpdate();
+    Epd(int16_t w, int16_t h) : Adafruit_GFX(w,h) {};
 
-    void fillScreen(uint16_t color);
-    void update();
-    void eraseDisplay(bool using_partial_update = false);
+    /* @iotPanic
+    Help needed:
+       Can you please check the OOP consistency of this Classes?
+
+     * Basically I want this Epd to provide general methods
+       that need to be implemented like this ones
+     * Another ones like write, print, println should be inherited
+       so we avoid rewriting them on every MODELX class
+    */
+    // Every display model should implement this public methods
+    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method
+    virtual void init(bool debug) = 0;
+    virtual void initFullUpdate() = 0;
+    virtual void initPartialUpdate() = 0;
+    virtual void fillScreen(uint16_t color) = 0;
+    virtual void update() = 0; 
 
     // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
     // partial update of rectangle from buffer to screen, does not power off
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
+    //virtual void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
+    //virtual void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
 
+    // This are common methods every MODELX will inherit
     // hook to Adafruit_GFX::write
     size_t write(uint8_t);
     void print(const std::string& text);
     void println(const std::string& text);
 
+  // Methods that should be accesible by inheriting this abstract class
   protected: 
-    // This should be inherited from abstract class so we don't repeat in every model
+    // This should be inherited from this abstract class so we don't repeat in every model
     static inline uint16_t gx_uint16_min(uint16_t a, uint16_t b) {return (a < b ? a : b);};
     static inline uint16_t gx_uint16_max(uint16_t a, uint16_t b) {return (a > b ? a : b);};
-
-  private:
-    EspSpi& IO;
-    uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
+    bool _using_partial_mode = false;
+    bool debug_enabled = true;
     // Very smart template from GxEPD to swap x,y:
     template <typename T> static inline void
     swap(T& a, T& b)
@@ -104,31 +102,14 @@ class Epd : public virtual Adafruit_GFX
       a = b;
       b = t;
     }
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
-    void _wakeUp();
-    void _sleep();
-    void _waitBusy(const char* message);
-    void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
-    bool _using_partial_mode = false;
-    bool debug_enabled = true;
-
-    // Command & data structs
-    static const epd_init_44 lut_20_vcomDC;
-    static const epd_init_42 lut_21_ww;
-    static const epd_init_42 lut_22_bw;
-    static const epd_init_42 lut_23_wb;
-    static const epd_init_42 lut_24_bb;
-
-    static const epd_init_44 lut_20_vcomDC_partial;
-    static const epd_init_42 lut_21_ww_partial;
-    static const epd_init_42 lut_22_bw_partial;
-    static const epd_init_42 lut_23_wb_partial;
-    static const epd_init_42 lut_24_bb_partial;
-
-    static const epd_power_5 epd_wakeup_power;
-    static const epd_init_3 epd_soft_start;
-    static const epd_init_2 epd_panel_setting;
-    static const epd_init_1 epd_pll;
-    static const epd_init_3 epd_resolution;
+  private:
+    // Every display model should implement this private methods
+    virtual uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) = 0;
+    virtual void _wakeUp() = 0;
+    virtual void _sleep() = 0;
+    virtual void _waitBusy(const char* message) = 0;
+    virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
+ 
+    // Command & data structs should be implemented by every MODELX display
 };
