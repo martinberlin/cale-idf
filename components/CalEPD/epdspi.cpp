@@ -12,14 +12,27 @@
 #define DMA_CHAN    LCD_HOST
 #endif
 
-
-//This function is called (in irq context!) just before a transmission starts. 
-//It will set the D/C line to the value indicated in the user field.
+// This function is called (in irq context!) just before a transmission starts. 
+// It will set the D/C line to the value indicated in the user field.
+// Disabled Callback. Check init()
 void spi_pre_transfer_callback(spi_transaction_t *t)
 {
-    int dc=(int)t->user;
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, dc);
+    int cs=(int)t->user;
+    if (cs) {
+      gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
 }
+// Disabled Callback. Check init()
+void spi_post_transfer_callback(spi_transaction_t *t)
+{
+    int cs=(int)t->user;
+    if (cs) {
+      gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+}
+
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
@@ -42,19 +55,20 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
         .sclk_io_num=CONFIG_EINK_SPI_CLK,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=4094
+        .max_transfer_sz=0
     };
     //max_transfer_sz set to the bigger test display
-
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
         .clock_speed_hz=frequency*1000*1000,  // As default 4 MHz
         .input_delay_ns = 0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
-        .queue_size=10,                        //We want to be able to queue 7 transactions at a time
-        .pre_cb=spi_pre_transfer_callback,     //Specify pre-transfer callback to handle D/C line
+        .queue_size=10
     };
+    // DISABLED Callbacks pre_cb/post_cb. SPI does not seem to behave the same
+    // CS / DC GPIO states the usual way
+
     //Initialize the SPI bus
     ret=spi_bus_initialize(LCD_HOST, &buscfg, DMA_CHAN);
     ESP_ERROR_CHECK(ret);
@@ -82,15 +96,21 @@ void EpdSpi::cmd(const uint8_t cmd)
         printf("cmd(%d)\n",cmd);
     }
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&cmd;               //The data is the cmd itself
-    t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_transmit(spi, &t);  //Transmit!
+    t.user=(void*)1;                //CS needs to be set to 0. Note callback is disabled
+    // Now set in transaction_cb_t: pre_cb / post_cb hooks
+    
+    ret=spi_device_transmit(spi, &t);
+
     assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);   
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
 void EpdSpi::data(uint8_t data)
@@ -102,7 +122,10 @@ void EpdSpi::data(uint8_t data)
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;              //The data is the cmd itself
     t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_transmit(spi, &t);  //Transmit!
+
+    
+    ret=spi_device_transmit(spi, &t);
+    
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
 }
@@ -130,9 +153,9 @@ void EpdSpi::data(const uint8_t *data, int len)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
-void EpdSpi::reset() {
+void EpdSpi::reset(uint8_t millis=20) {
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
-    vTaskDelay(10 / portTICK_RATE_MS);
+    vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
-    vTaskDelay(10 / portTICK_RATE_MS);
+    vTaskDelay(millis / portTICK_RATE_MS);
 }

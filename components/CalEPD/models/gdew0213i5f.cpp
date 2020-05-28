@@ -215,10 +215,10 @@ void Gdew0213i5f::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0213i5f::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
-    IO.init(5, debug); // 4MHz frequency, debug
+    IO.init(4, debug); // 4MHz frequency, debug
 
     //Reset the display
-    IO.reset();
+    IO.reset(20);
     fillScreen(GxEPD_WHITE);
 }
 
@@ -234,9 +234,7 @@ void Gdew0213i5f::fillScreen(uint16_t color)
 }
 
 void Gdew0213i5f::_wakeUp(){
-    //if (_rst >= 0) {
-      IO.reset();
-    //}
+  IO.reset(20);
 
   IO.cmd(epd_wakeup_power.cmd);
   IO.data(epd_wakeup_power.data,5);

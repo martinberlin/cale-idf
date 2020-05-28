@@ -3,12 +3,12 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdew027w3.h>
-//#include <gdew0213i5f.h>
+//#include <gdew027w3.h>
+#include <gdew0213i5f.h>
 
 EpdSpi io;
-Gdew027w3 display(io);
-//Gdew0213i5f display(io);
+//Gdew027w3 display(io);
+Gdew0213i5f display(io);
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
@@ -33,17 +33,18 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-
-   // This should be first test run!
-   display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
    display.setRotation(1);
    display.setFont(&FreeMono9pt7b);
-   display.setTextColor(GxEPD_WHITE);
-   display.setCursor(0,10);
+   display.setTextColor(GxEPD_BLACK);
+   // This should be first test run!
+   //display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
+   
+   //
+   display.setCursor(5,20);
 
-   display.println("HELLO");
-   display.update();
-   return; // Clean screen and stop test
+   //display.println("HELLO");
+   //display.update();
+   //return; // Clean screen and stop test
 
    
 
@@ -54,12 +55,12 @@ void app_main(void)
    }
    }
    // Test fonts
-   display.println("HELLLLOO");  // Todo: Add print and println
+   display.println("CALE Screen manager");  // Todo: Add print and println
    display.setFont(&FreeMono18pt7b);
    display.setCursor(10,40);
-   display.println("Te quiero");
+   display.println("- - - We love - - -");
    display.setCursor(10,100);
-   display.println("MACHO");
+   display.println("BERLIN");
    // Test  shapes
    //display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
    //display.drawCircle(50, 50, 22, GxEPD_BLACK);
@@ -78,8 +79,8 @@ void app_main(void)
    display.update();
    vTaskDelay(100);
    
-   display.fillScreen(GxEPD_WHITE);
-   display.update();
+   //display.fillScreen(GxEPD_WHITE);
+   //display.update();
    
    // Partial updates are not working in this display
    //display.updateWindow(10,20,80,100);

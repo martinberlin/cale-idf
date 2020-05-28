@@ -1,3 +1,5 @@
+#ifndef epd_h
+#define epd_h
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +12,7 @@
 #include <string>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
+
 
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000
@@ -129,3 +132,4 @@ class Epd : public virtual Adafruit_GFX
  
     // Command & data structs should be implemented by every MODELX display
 };
+#endif

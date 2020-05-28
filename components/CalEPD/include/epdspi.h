@@ -13,7 +13,7 @@ class EpdSpi : IoInterface
     void cmd(const uint8_t cmd) override;
     void data(uint8_t data) override;
     void data(const uint8_t *data, int len) override;
-    void reset() override;
+    void reset(uint8_t millis) override;
     void init(uint8_t frequency, bool debug) override;
   private:
     bool debug_enabled = true;

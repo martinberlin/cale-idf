@@ -227,9 +227,9 @@ void Gdew027w3::init(bool debug)
     //Initialize the Epaper and reset it
     IO.init(4, debug); // 4MHz frequency, debug
     //Reset the display
-    IO.reset();
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    IO.reset(20);
 
+    printf("Free heap:%d\n",xPortGetFreeHeapSize());
     fillScreen(GxEPD_WHITE);
 }
 
@@ -246,7 +246,7 @@ void Gdew027w3::fillScreen(uint16_t color)
 
 void Gdew027w3::_wakeUp(){
   printf("wakeup() start commands\n");
-  //IO.reset();
+  IO.reset(20);
 
   IO.cmd(epd_wakeup_power.cmd);   // power setting
   IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
