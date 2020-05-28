@@ -245,35 +245,37 @@ void Gdew027w3::fillScreen(uint16_t color)
 }
 
 void Gdew027w3::_wakeUp(){
-  printf("wakeup() start\n");
-  IO.reset();
+  printf("wakeup() start commands\n");
+  //IO.reset();
 
-  IO.cmd(epd_wakeup_power.cmd);
+  IO.cmd(epd_wakeup_power.cmd);   // power setting
   IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
   
-  IO.cmd(epd_soft_start.cmd);
+  IO.cmd(epd_soft_start.cmd);     // boost
   IO.data(epd_soft_start.data,epd_soft_start.databytes);
-  IO.cmd(epd_extra_setting.cmd);
+  IO.cmd(epd_extra_setting.cmd);  // CMD: 0x16 DATA: 0x00
   IO.data(epd_extra_setting.data,epd_extra_setting.databytes);
 
   IO.cmd(0x04);
-  _waitBusy("epd_wakeup_power");
+  _waitBusy("epd_wakeup_power:ON");
 
-  IO.cmd(epd_panel_setting.cmd);
+  IO.cmd(epd_panel_setting.cmd);  // CMD: 0x00 DATA: 0xbf
   IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
-
-  // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
-  IO.cmd(epd_pll.cmd);
+                                  // >3a 100HZ   29 150Hz 39 200HZ 31 171HZ GxEPD RE
+  IO.cmd(epd_pll.cmd);            // CMD: 0x30 DATA: 0xbf
   IO.data(epd_pll.data,epd_pll.databytes);   
 
   //resolution setting
   IO.cmd(epd_resolution.cmd);
   IO.data(epd_resolution.data,epd_resolution.databytes);
-  IO.cmd(epd_vcom1.cmd);
-  IO.data(epd_vcom1.data,1);
+  IO.cmd(epd_vcom1.cmd);          // vcom_DC 0x28:-2.0V,0x12:-0.9V
+  IO.data(epd_vcom1.data,1);      // CMD: 0x82 DATA: 0x08 
 
-  IO.cmd(epd_vcom2.cmd);
-  IO.data(epd_vcom2.data,1);
+  vTaskDelay(2/portTICK_RATE_MS); // delay(2)
+
+  //WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
+  IO.cmd(epd_vcom2.cmd);          // vcom and data interval
+  IO.data(epd_vcom2.data,1);      // CMD: 0x50 DATA: 0x97 
 
   initFullUpdate();
 }
@@ -281,11 +283,26 @@ void Gdew027w3::_wakeUp(){
 void Gdew027w3::update()
 {
   _wakeUp();
-  
-  uint8_t *_wbuffer = new uint8_t[GxGDEW027W3_BUFFER_SIZE];
+  printf("BUFF Size:%d\n",sizeof(_buffer));
+  // Output buffer contents
+  if (_debug_buffer) {
+    for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+      printf("%d ",_buffer[x]);
+      if (x % GxGDEW027W3_WIDTH == 0) {
+        // Jump line
+        printf("\n");
+      }
+    }
+  }
+
+   uint8_t *_wbuffer = new uint8_t[GxGDEW027W3_BUFFER_SIZE];
     for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
     _wbuffer[x] = 0xFF;
   }
+  // YES _wbuffer is as expected: 255 255 255...
+  /* for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+    printf("%d ",_wbuffer[x]);
+  } */
   if (_initial) {       // init clean old data
     IO.cmd(0x10);
     IO.data(_wbuffer,GxGDEW027W3_BUFFER_SIZE);
@@ -294,6 +311,7 @@ void Gdew027w3::update()
 
   IO.cmd(0x13);        // update current data
   IO.data(_buffer,sizeof(_buffer));
+
 
   IO.cmd(0x12);        // display refresh
   _waitBusy("update"); // update old data

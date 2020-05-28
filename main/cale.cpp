@@ -36,13 +36,16 @@ void app_main(void)
 
    // This should be first test run!
    display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
+   display.setRotation(1);
+   display.setFont(&FreeMono9pt7b);
+   display.setTextColor(GxEPD_WHITE);
+   display.setCursor(0,10);
+
+   display.println("HELLO");
    display.update();
    return; // Clean screen and stop test
 
-   display.setRotation(1);
-   display.setFont(&FreeMono9pt7b);
-   display.setTextColor(GxEPD_BLACK);
-   display.setCursor(30,20);
+   
 
 // Print all character from an Adafruit Font
   if (false) {

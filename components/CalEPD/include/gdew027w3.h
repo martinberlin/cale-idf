@@ -43,7 +43,9 @@ class Gdew027w3 : public Epd
   private:
     EpdSpi& IO;
     uint8_t _buffer[GxGDEW027W3_BUFFER_SIZE];
-    bool _initial = true; 
+    bool _initial = true;
+    bool _debug_buffer = false;
+    
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();
