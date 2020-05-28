@@ -11,15 +11,27 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-// Controller: IL91874  Note: This is the display that the T5S from TTGO use
-#define GxGDEW027W3_WIDTH 176
-#define GxGDEW027W3_HEIGHT 264
-#define GxGDEW027W3_BUFFER_SIZE (uint32_t(GxGDEW027W3_WIDTH) * uint32_t(GxGDEW027W3_HEIGHT) / 8)
 
-class Gdew027w3 : public Epd
+// Controller: SSD1675B 
+// All comments below are from J-M Zingg (Ref. GxEPD)
+// The physical number of pixels (for controller parameter)
+#define GxGDEH0213B73_X_PIXELS 128
+#define GxGDEH0213B73_Y_PIXELS 250
+
+// The logical width and height of the display
+#define GxGDEH0213B73_WIDTH GxGDEH0213B73_X_PIXELS
+#define GxGDEH0213B73_HEIGHT GxGDEH0213B73_Y_PIXELS
+
+// Note: the visible number of display pixels is 122*250, see GDEH0213B72 V1.1 Specification.pdf
+#define GxGDEH0213B73_VISIBLE_WIDTH 122
+
+#define GxGDEH0213B73_BUFFER_SIZE (uint32_t(GxGDEH0213B73_WIDTH) * uint32_t(GxGDEH0213B73_HEIGHT) / 8)
+
+class Gdeh0213b73 : public Epd
 {
   public:
-    Gdew027w3(EpdSpi& IO);
+   
+    Gdeh0213b73(EpdSpi& IO);
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -30,6 +42,7 @@ class Gdew027w3 : public Epd
 
     void fillScreen(uint16_t color);
     void update();
+    void eraseDisplay(bool using_partial_update = false);
 
     // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
     // Partial update of rectangle from buffer to screen, does not power off
@@ -41,35 +54,20 @@ class Gdew027w3 : public Epd
 
   private:
     EpdSpi& IO;
-    uint8_t _buffer[GxGDEW027W3_BUFFER_SIZE];
-    bool _initial = true;
-    bool _debug_buffer = false;
-    
+
+    uint8_t _buffer[GxGDEH0213B73_BUFFER_SIZE];
+
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    void _powerOn();
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-
+    // Ram data entry mode methods
+    void _setRamDataEntryMode(uint8_t em);
+    void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
+    void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
     // Command & data structs
-    static const epd_init_44 lut_20_vcomDC;
-    static const epd_init_42 lut_21_ww;
-    static const epd_init_42 lut_22_bw;
-    static const epd_init_42 lut_23_wb;
-    static const epd_init_42 lut_24_bb;
-
-    static const epd_init_44 lut_20_vcomDC_partial;
-    static const epd_init_42 lut_21_ww_partial;
-    static const epd_init_42 lut_22_bw_partial;
-    static const epd_init_42 lut_23_wb_partial;
-    static const epd_init_42 lut_24_bb_partial;
-
-    static const epd_power_4 epd_wakeup_power;
-    static const epd_init_3 epd_soft_start;
-    static const epd_init_1 epd_panel_setting;
-    static const epd_init_1 epd_extra_setting;
-    static const epd_init_1 epd_pll;
-    static const epd_init_4 epd_resolution;
-    static const epd_init_1 epd_vcom1;
-    static const epd_init_1 epd_vcom2;
+    static const epd_lut_100 lut_data_full;
+    static const epd_lut_100 lut_data_part;
 };

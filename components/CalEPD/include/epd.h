@@ -23,6 +23,12 @@
 
 typedef struct {
     uint8_t cmd;
+    uint8_t data[100];
+    uint8_t databytes;
+} epd_lut_100;
+
+typedef struct {
+    uint8_t cmd;
     uint8_t data[42];
     uint8_t databytes; //No of data in data; 0xFF = end of cmds.
 } epd_init_42;

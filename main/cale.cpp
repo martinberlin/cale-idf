@@ -3,12 +3,13 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-//#include <gdew027w3.h>
-#include <gdew0213i5f.h>
+#include <gdeh0213b73.h>
+//#include <gdew027w3.h> // Does not work
+//#include <gdew0213i5f.h>
 
 EpdSpi io;
-//Gdew027w3 display(io);
-Gdew0213i5f display(io);
+Gdeh0213b73 display(io);
+//Gdew0213i5f display(io);
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
@@ -38,13 +39,14 @@ void app_main(void)
    display.setTextColor(GxEPD_BLACK);
    // This should be first test run!
    //display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
-   
-   //
+   //display.update();
+   //return; // Clean screen and stop test
+
+
    display.setCursor(5,20);
 
    //display.println("HELLO");
-   //display.update();
-   //return; // Clean screen and stop test
+
 
    
 
