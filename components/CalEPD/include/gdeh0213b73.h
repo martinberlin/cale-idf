@@ -44,13 +44,10 @@ class Gdeh0213b73 : public Epd
     void update();
     void eraseDisplay(bool using_partial_update = false);
 
-    // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
-    // Partial update of rectangle from buffer to screen, does not power off
+    // Partial update test status please check repository Wiki
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
     void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
-
-    // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
 
   private:
     EpdSpi& IO;
