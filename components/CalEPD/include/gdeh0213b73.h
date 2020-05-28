@@ -58,6 +58,7 @@ class Gdeh0213b73 : public Epd
     void _powerOn();
     void _wakeUp();
     void _sleep();
+    void cmd(uint8_t command);
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     // Ram data entry mode methods

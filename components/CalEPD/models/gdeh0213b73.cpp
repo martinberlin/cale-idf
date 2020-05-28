@@ -48,7 +48,7 @@ DRAM_ATTR const epd_lut_100 Gdeh0213b73::lut_data_part={
   0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00,
-},42};
+},100};
 
 // Constructor GxGDEH0213B73
 Gdeh0213b73::Gdeh0213b73(EpdSpi& dio): 
@@ -62,7 +62,7 @@ Gdeh0213b73::Gdeh0213b73(EpdSpi& dio):
 void Gdeh0213b73::initFullUpdate(){
     _wakeUp();
 
-    IO.cmd(lut_data_full.cmd); 
+    cmd(lut_data_full.cmd); 
     IO.data(lut_data_full.data,lut_data_full.databytes);
 
     _powerOn();
@@ -104,7 +104,7 @@ void Gdeh0213b73::update()
 {
   _using_partial_mode = false;
   initFullUpdate(); // _InitDisplay
-  /* uint8_t *dataFull = new uint8_t[GxGDEH0213B73_BUFFER_SIZE];
+  uint8_t *dataFull = new uint8_t[GxGDEH0213B73_BUFFER_SIZE];
   uint16_t c = 0;
   for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
   {
@@ -115,41 +115,35 @@ void Gdeh0213b73::update()
       dataFull[c] = data;
       ++c;
     }
-  } */
+  } 
   //printf("Data buffer size: %d\n",c); // 4000
 
-  IO.cmd(0x24);
+  cmd(0x24);
+ 
+ //IO.data(dataFull,c);
+
+  cmd(0x26);
+
+ //IO.data(dataFull,c);
+  /* for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
+  {
+    for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
+    {
+      uint16_t idx = y * (GxGDEH0213B73_WIDTH / 8) + x;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(data);
+    }
+  } */
   
-  for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
-  {
-    for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (GxGDEH0213B73_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
-    }
-  }
-
-  IO.cmd(0x26);
-
-  for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
-  {
-    for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (GxGDEH0213B73_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
-    }
-  }
-  //IO.data(dataFull,c);
-  //delete(dataFull);
+  delete(dataFull);
   // Update full display
-  IO.cmd(0x22);
+  cmd(0x22);
   IO.data(0xc7);
-  IO.cmd(0x20);
+  cmd(0x20);
   _waitBusy("update full");
   _sleep(); // power off
 }
+
 
 uint16_t Gdeh0213b73::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
@@ -176,9 +170,9 @@ void Gdeh0213b73::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>2800000)
+    if (esp_timer_get_time()-time_since_boot>1000000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
@@ -186,10 +180,19 @@ void Gdeh0213b73::_waitBusy(const char* message){
   }
 }
 
+void Gdeh0213b73::cmd(uint8_t command){
+  char buffer[3];
+  sprintf(buffer,"%x",command);
+  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) {
+    _waitBusy(buffer);
+  }
+  IO.cmd(command);
+}
+
 void Gdeh0213b73::_sleep(){
-  IO.cmd(0x22); // power off display
+  cmd(0x22); // power off display
   IO.data(0xc0);
-  IO.cmd(0x20);
+  cmd(0x20);
   _waitBusy("power_off");
 }
 
@@ -242,44 +245,44 @@ void Gdeh0213b73::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 // _InitDisplay generalizing names here
 void Gdeh0213b73::_wakeUp(){
-  IO.cmd(0x74); //set analog block control
+  cmd(0x74); //set analog block control
   IO.data(0x54);
-  IO.cmd(0x7E); //set digital block control
+  cmd(0x7E); //set digital block control
   IO.data(0x3B);
 
-  IO.cmd(0x01); //Driver output control
+  cmd(0x01); //Driver output control
   IO.data(0xF9);
   IO.data(0x00);
   IO.data(0x00);
-  IO.cmd(0x11); //data entry mode
+  cmd(0x11); //data entry mode
   IO.data(0x01);
-  IO.cmd(0x44); //set Ram-X address start/end position
+  cmd(0x44); //set Ram-X address start/end position
   IO.data(0x00);
   IO.data(0x0F);//0x0C-->(15+1)*8=128
-  IO.cmd(0x45); //set Ram-Y address start/end position
+  cmd(0x45); //set Ram-Y address start/end position
   IO.data(0xF9);//0xF9-->(249+1)=250
   IO.data(0x00);
   IO.data(0x00);
   IO.data(0x00);
-  IO.cmd(0x3C); //BorderWavefrom 
+  cmd(0x3C); //BorderWavefrom 
   IO.data(0x03);
 
-  IO.cmd(0x2C); //VCOM Voltage
+  cmd(0x2C); //VCOM Voltage
   IO.data(0x50);    
-  IO.cmd(0x03);     //Gate Driving voltage Control
+  cmd(0x03);     //Gate Driving voltage Control
   IO.data(0x15);    // 19V
-  IO.cmd(0x04);     //Source Driving voltage Control
+  cmd(0x04);     //Source Driving voltage Control
   IO.data(0x41);    // VSH1 15V
   IO.data(0xA8);    // VSH2 5V
   IO.data(0x32);    // VSL -15V
 
-  IO.cmd(0x3A); //Dummy Line
+  cmd(0x3A); //Dummy Line
   IO.data(0x2C);
-  IO.cmd(0x3B); //Gate time
+  cmd(0x3B); //Gate time
   IO.data(0x0B);
-  IO.cmd(0x4E); // set RAM x address count to 0;
+  cmd(0x4E); // set RAM x address count to 0;
   IO.data(0x00);
-  IO.cmd(0x4F); // set RAM y address count to 0X127;
+  cmd(0x4F); // set RAM y address count to 0X127;
   IO.data(0xF9);
   IO.data(0x00);
 
@@ -290,10 +293,10 @@ void Gdeh0213b73::_wakeUp(){
 void Gdeh0213b73::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
   printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
-  IO.cmd(0x44);
+  cmd(0x44);
   IO.data(Xstart);
   IO.data(Xend);
-  IO.cmd(0x45);
+  cmd(0x45);
   IO.data(Ystart);
   IO.data(Ystart1);
   IO.data(Yend);
@@ -303,9 +306,9 @@ void Gdeh0213b73::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint
 void Gdeh0213b73::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
   printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
-  IO.cmd(0x4e);
+  cmd(0x4e);
   IO.data(addrX);
-  IO.cmd(0x4f);
+  cmd(0x4f);
   IO.data(addrY);
   IO.data(addrY1);
 }
@@ -321,7 +324,7 @@ void Gdeh0213b73::_setRamDataEntryMode(uint8_t em)
   const uint16_t xPixelsPar = GxGDEH0213B73_X_PIXELS - 1;
   const uint16_t yPixelsPar = GxGDEH0213B73_Y_PIXELS - 1;
   em = gx_uint16_min(em, 0x03);
-  IO.cmd(0x11);
+  cmd(0x11);
   IO.data(em);
   switch (em)
   {
@@ -346,8 +349,8 @@ void Gdeh0213b73::_setRamDataEntryMode(uint8_t em)
 
 void Gdeh0213b73::_powerOn()
 {
-  IO.cmd(0x22);
+  cmd(0x22);
   IO.data(0xc0);
-  IO.cmd(0x20);
+  cmd(0x20);
   _waitBusy("_powerOn");
 }
