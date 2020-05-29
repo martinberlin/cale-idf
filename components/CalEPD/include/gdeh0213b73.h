@@ -54,6 +54,7 @@ class Gdeh0213b73 : public Epd
 
     uint8_t _buffer[GxGDEH0213B73_BUFFER_SIZE];
 
+    bool debug_enabled = false;
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _powerOn();
     void _wakeUp();
