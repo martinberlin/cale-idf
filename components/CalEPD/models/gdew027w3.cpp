@@ -165,7 +165,7 @@ Gdew027w3::Gdew027w3(EpdSpi& dio):
   Adafruit_GFX(GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT),
   Epd(GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT), IO(dio)
 {
-  printf("Gdew027w3() injects IO and extends Adafruit_GFX(%d,%d)\n",
+  printf("Gdew027w3() %d*%d\n",
   GxGDEW027W3_WIDTH, GxGDEW027W3_HEIGHT);  
 
   printf("\n\n\n____________DO NOT USE: https://twitter.com/martinfasani/status/1265762052880175107");
@@ -306,18 +306,23 @@ void Gdew027w3::update()
   if (_initial) {       // init clean old data
     IO.cmd(0x10);
     IO.data(_wbuffer,GxGDEW027W3_BUFFER_SIZE);
+    
     _initial=false;
   } 
 
   IO.cmd(0x13);        // update current data
-  IO.data(_buffer,sizeof(_buffer));
-
+  //IO.data(_buffer,sizeof(_buffer));
+for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+    IO.data(_buffer[x]);
+  } 
 
   IO.cmd(0x12);        // display refresh
   _waitBusy("update"); // update old data
 
   IO.cmd(0x10);
-  IO.data(_buffer,sizeof(_buffer));
+  for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+    IO.data(_buffer[x]);
+  }
 
   _sleep();
 }

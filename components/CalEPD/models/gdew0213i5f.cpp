@@ -164,10 +164,12 @@ Gdew0213i5f::Gdew0213i5f(EpdSpi& dio):
 void Gdew0213i5f::initFullUpdate(){
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
-
+    
+    // Works also commenting this two. Has default? (Check specs)
     IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING
     IO.data(0x97); //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
+    // Every next cmd/data seems to be essential for initialization
     IO.cmd(lut_20_vcomDC.cmd);
     IO.data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
    
