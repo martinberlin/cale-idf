@@ -12,7 +12,8 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-// Controller: IL0398
+// Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
+
 #define GxGDEW042T2_WIDTH 400
 #define GxGDEW042T2_HEIGHT 300
 #define GxGDEW042T2_BUFFER_SIZE (uint32_t(GxGDEW042T2_WIDTH) * uint32_t(GxGDEW042T2_HEIGHT) / 8)
@@ -30,7 +31,7 @@ class Gdew042t2 : public Epd
     // EPD tests 
     void init(bool debug);
     void initFullUpdate();
-
+    void initPartialUpdate();
     void fillScreen(uint16_t color);
     void update();
 
@@ -40,6 +41,8 @@ class Gdew042t2 : public Epd
     EpdSpi& IO;
 
     uint8_t _buffer[GxGDEW042T2_BUFFER_SIZE];
+    bool _using_partial_mode = false;
+    bool _initial = true;
 
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
@@ -48,11 +51,11 @@ class Gdew042t2 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
     // Command & data structs
-    static const epd_init_44 lut_20_vcomDC;
-    static const epd_init_42 lut_21_ww;
-    static const epd_init_42 lut_22_bw;
-    static const epd_init_42 lut_23_wb;
-    static const epd_init_42 lut_24_bb;
+    static const epd_init_44 lut_vcom0_full;
+    static const epd_init_42 lut_ww_full;
+    static const epd_init_42 lut_bw_full;
+    static const epd_init_42 lut_wb_full;
+    static const epd_init_42 lut_bb_full;
 
     static const epd_init_44 lut_20_vcomDC_partial;
     static const epd_init_42 lut_21_ww_partial;
@@ -60,9 +63,9 @@ class Gdew042t2 : public Epd
     static const epd_init_42 lut_23_wb_partial;
     static const epd_init_42 lut_24_bb_partial;
 
-    static const epd_power_5 epd_wakeup_power;
+    static const epd_power_4 epd_wakeup_power;
     static const epd_init_3 epd_soft_start;
-    static const epd_init_2 epd_panel_setting;
+    static const epd_init_1 epd_panel_setting;
     static const epd_init_1 epd_pll;
-    static const epd_init_3 epd_resolution;
+    static const epd_init_4 epd_resolution;
 };
