@@ -2,7 +2,7 @@
 #include <epdspi.h>
 #include <string.h>
 #include "freertos/task.h"
-
+#include "esp_log.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define LCD_HOST    HSPI_HOST
 #define DMA_CHAN    2
@@ -11,28 +11,6 @@
 #define LCD_HOST    SPI2_HOST
 #define DMA_CHAN    LCD_HOST
 #endif
-
-// This function is called (in irq context!) just before a transmission starts. 
-// It will set the D/C line to the value indicated in the user field.
-// Disabled Callback. Check init()
-void spi_pre_transfer_callback(spi_transaction_t *t)
-{
-    int cs=(int)t->user;
-    if (cs) {
-      gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
-    }
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
-}
-// Disabled Callback. Check init()
-void spi_post_transfer_callback(spi_transaction_t *t)
-{
-    int cs=(int)t->user;
-    if (cs) {
-      gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
-    }
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
-}
-
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
@@ -80,8 +58,9 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
 
     if (debug_enabled) {
-      printf("EpdSpi::init() SPI initialized at %d Mhz. MOSI:%d CLK:%d CS:%d\n",
-      frequency, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS);
+      printf("EpdSpi::init() SPI initialized at %d Mhz. MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
+      frequency, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
+      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
         }
     }
 
@@ -103,10 +82,8 @@ void EpdSpi::cmd(const uint8_t cmd)
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
-    t.tx_buffer=&cmd;               //The data is the cmd itself
-    t.user=(void*)1;                //CS needs to be set to 0. Note callback is disabled
-    // Now set in transaction_cb_t: pre_cb / post_cb hooks
-    
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+ 
     ret=spi_device_transmit(spi, &t);
 
     assert(ret==ESP_OK);            //Should have had no issues.
@@ -126,9 +103,6 @@ void EpdSpi::data(uint8_t data)
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;              //The data is the cmd itself
-    t.user=(void*)0;                //D/C needs to be set to 0
-
-    
     ret=spi_device_transmit(spi, &t);
     
     assert(ret==ESP_OK);            //Should have had no issues.
@@ -152,7 +126,6 @@ void EpdSpi::data(const uint8_t *data, int len)
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=len*8;                 //Len is in bytes, transaction length is in bits.
     t.tx_buffer=data;               //Data
-    t.user=(void*)1;                //D/C needs to be set to 1
     ret=spi_device_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
