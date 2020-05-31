@@ -202,6 +202,12 @@ void Gdew042t2::_wakeUp(){
   IO.cmd(epd_resolution.cmd);
   IO.data(epd_resolution.data,epd_resolution.databytes);
 
+  IO.cmd(0x82); // vcom_DC setting
+  IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
+  IO.cmd(0x50); // VCOM AND DATA INTERVAL SETTING
+  IO.data(0xd7);    // border floating to avoid flashing
+  IO.cmd(0x04);
+
   _waitBusy("epd_wakeup_power");
   initFullUpdate();
 }
@@ -213,11 +219,11 @@ void Gdew042t2::update()
 
   IO.cmd(0x13);
 
-  for (uint32_t i = 0; i < GxGDEW042T2_BUFFER_SIZE; i++)
+  /* for (uint32_t i = 0; i < GxGDEW042T2_BUFFER_SIZE; i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
-  }
+  } */
 
   IO.cmd(0x12);
   _waitBusy("update");
@@ -291,7 +297,7 @@ void Gdew042t2::_waitBusy(const char* message){
   while (1){
     if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>1800000)
+    if (esp_timer_get_time()-time_since_boot>2000000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
@@ -300,10 +306,12 @@ void Gdew042t2::_waitBusy(const char* message){
 }
 
 void Gdew042t2::_sleep(){
-  IO.cmd(0x02); // power off display
+  IO.cmd(0x50); // border floating
+  IO.cmd(0x17);
+  IO.data(0x02);// power off
   _waitBusy("power_off");
-  IO.cmd(0x07); // deep sleep
-  IO.data(0xa5);
+  IO.cmd(0x07);
+  IO.data(0xA5);// power off
 }
 
 void Gdew042t2::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)

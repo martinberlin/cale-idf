@@ -74,7 +74,7 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
 void EpdSpi::cmd(const uint8_t cmd)
 {
     if (debug_enabled) {
-        printf("cmd %x\n",cmd);
+        printf("C %x\n",cmd);
     }
 
     esp_err_t ret;
@@ -95,9 +95,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    /* if (debug_enabled) {
-        printf("dat %x\n",data);
-    } */
+    if (debug_enabled) {
+        printf("D %x\n",data);
+    }
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
     spi_transaction_t t;
@@ -120,6 +120,11 @@ void EpdSpi::data(uint8_t data)
 void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
+    if (debug_enabled) {
+        for (int i = 0; i < len; i++)  {
+            printf("D %x\n",data[i]);
+        }
+    }
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
