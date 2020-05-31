@@ -120,11 +120,11 @@ void Gdeh0213b73::update()
 
   cmd(0x24);
  
- //IO.data(dataFull,c);
+ IO.data(dataFull,c);
 
   cmd(0x26);
 
- //IO.data(dataFull,c);
+ IO.data(dataFull,c);
   /* for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
   {
     for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
@@ -245,6 +245,7 @@ void Gdeh0213b73::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 // _InitDisplay generalizing names here
 void Gdeh0213b73::_wakeUp(){
+  IO.reset(15);
   cmd(0x74); //set analog block control
   IO.data(0x54);
   cmd(0x7E); //set digital block control

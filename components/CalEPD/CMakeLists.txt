@@ -2,7 +2,7 @@
 set(srcs 
     "models/gdew042t2.cpp"
     "models/fix/gdeh0213b73.cpp"
- #   "models/gdew0213i5f.cpp"
+    "models/gdew0213i5f.cpp"
  #   "models/gdew027w3.cpp"
     "epd.cpp"
     "epdspi.cpp"

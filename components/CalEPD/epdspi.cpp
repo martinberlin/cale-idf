@@ -44,7 +44,7 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
         .input_delay_ns = 0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
-        .queue_size=10
+        .queue_size=5
     };
     // DISABLED Callbacks pre_cb/post_cb. SPI does not seem to behave the same
     // CS / DC GPIO states the usual way
@@ -76,34 +76,35 @@ void EpdSpi::cmd(const uint8_t cmd)
     if (debug_enabled) {
         printf("cmd %x\n",cmd);
     }
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&cmd;               //The data is the cmd itself 
- 
-    ret=spi_device_transmit(spi, &t);
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);            //Should have had no issues.
-
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+    
 }
 
 void EpdSpi::data(uint8_t data)
 {
-    if (debug_enabled) {
+    /* if (debug_enabled) {
         printf("dat %x\n",data);
-    }
+    } */
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;              //The data is the cmd itself
-    ret=spi_device_transmit(spi, &t);
+    ret=spi_device_polling_transmit(spi, &t);
     
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
@@ -126,7 +127,7 @@ void EpdSpi::data(const uint8_t *data, int len)
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=len*8;                 //Len is in bytes, transaction length is in bits.
     t.tx_buffer=data;               //Data
-    ret=spi_device_transmit(spi, &t);  //Transmit!
+    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }

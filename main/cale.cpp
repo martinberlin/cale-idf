@@ -3,12 +3,13 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdeh0213b73.h>
-//#include <gdew027w3.h> // Does not work
-//#include <gdew0213i5f.h>
+#include <gdew042t2.h>
+//#include <gdeh0213b73.h>
+//#include <gdeh0213b73.h>
 
 EpdSpi io;
-Gdeh0213b73 display(io);
+Gdew042t2 display(io);
+//Gdeh0213b73 display(io);
 //Gdew0213i5f display(io);
 
 // FONT used for title / message body - Only after display library
@@ -37,18 +38,13 @@ void app_main(void)
    display.setRotation(1);
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_BLACK);
+   display.setCursor(5,20);
+   display.println("HELLO");
    // This should be first test run!
-   //display.fillScreen(GxEPD_WHITE);  // GxEPD_BLACK  GxEPD_WHITE
+   //display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
    //display.update();
    //return; // Clean screen and stop test
-
-
-   display.setCursor(5,20);
-
-   //display.println("HELLO");
-
-
-   
+ 
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -57,10 +53,10 @@ void app_main(void)
    }
    }
    // Test fonts
-   display.println("CALE Screen manager");  // Todo: Add print and println
+   display.println("CALE ESP-IDF");  // Todo: Add print and println
    display.setFont(&FreeMono18pt7b);
    display.setCursor(10,40);
-   display.println("- - - We love - - -");
+   display.println("Says hello");
    display.setCursor(10,100);
    display.println("BERLIN");
    // Test  shapes
