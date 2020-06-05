@@ -18,8 +18,43 @@ Gdew027w3 display(io);
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/FreeSerif12pt7b.h>
+#include <Fonts/FreeSerifBoldItalic18pt7b.h>
 extern "C" {
    void app_main();
+}
+
+void demo(uint16_t bkcolor,uint16_t fgcolor){
+   display.fillScreen(bkcolor);
+   
+   display.setTextColor(fgcolor);
+
+   display.setCursor(1,30);
+   display.setFont(&FreeMono9pt7b);
+   display.println("MonoBold18pt7b");
+   display.setFont(&FreeMonoBold18pt7b);
+   display.println("CalEPD");
+
+   display.setFont(&FreeMono9pt7b);
+   display.println("Serif12pt7b");
+
+   display.setFont(&FreeSerif12pt7b);
+   display.println("AbcdeFghiJklm");
+
+   display.setFont(&FreeSerifBoldItalic18pt7b);
+   display.println("BERLIN");
+
+   // Test  shapes
+   display.drawCircle(50, 190, 20, fgcolor); 
+   display.drawCircle(50, 190, 22, fgcolor);
+
+   display.drawRect(90, 200, 38, 22, fgcolor);
+
+   display.drawTriangle(174, 150, 100, 60, 200, 50, fgcolor);
+
+   for (int i = 0; i < 200; i++) {
+     display.drawPixel(i,279,fgcolor);
+     display.drawPixel(i,280,fgcolor);
+   } 
 }
 
 void app_main(void)
@@ -37,23 +72,9 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.fillScreen(GxEPD_BLACK);
    display.setRotation(0);
-   display.setFont(&FreeMonoBold18pt7b);
-   
-   display.setTextColor(GxEPD_WHITE); // Needs to invert color
-   display.setCursor(5,30);
-   display.println("CalEPD");
-   display.println("MonoBold18pt7b");
 
-   display.setFont(&FreeSerif12pt7b);
-   display.println("");
-   display.println("AbcdeFghiJklm");
-   // This should be first test run!
-   //display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
-  display.update();
-   return; 
- 
+   
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -61,33 +82,12 @@ void app_main(void)
       display.write(i); // Needs to be >32 (first character definition)
    }
    }
-   // Test fonts
-   display.setFont(&FreeMonoBold18pt7b);
-   display.setCursor(100,50);
-   display.println("Says hello BERLIN");
-
-   // Test  shapes
-   display.drawCircle(50, 150, 20, GxEPD_BLACK); // Adafruit works!
-   display.drawCircle(50, 150, 22, GxEPD_BLACK);
    
-   //display.drawRect(90, 50, 40, 20, GxEPD_BLACK);
-   display.drawRect(90, 250, 38, 22, GxEPD_BLACK);
-
-   display.drawRoundRect(134, 250, 20, 20, 5, GxEPD_BLACK);
-
-   //display.drawTriangle(174, 50, 184, 60, 200, 50, GxEPD_BLACK);
-
-   for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,279,GxEPD_BLACK);
-     display.drawPixel(i,280,GxEPD_BLACK);
-   }
-
+   demo(GxEPD_BLACK,GxEPD_WHITE);
    display.update();
-   vTaskDelay(100);
-   
-   //display.fillScreen(GxEPD_WHITE);
-   //display.update();
-   
-   // Partial updates are not working in this display
-   //display.updateWindow(10,20,80,100);
+
+   vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+   demo(GxEPD_WHITE,GxEPD_BLACK);
+   display.update();
 }
