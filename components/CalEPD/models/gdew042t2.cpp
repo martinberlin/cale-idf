@@ -186,21 +186,37 @@ void Gdew042t2::fillScreen(uint16_t color)
 void Gdew042t2::_wakeUp(){
   IO.reset(10);
 
-  IO.cmd(epd_wakeup_power.cmd);
-  IO.data(epd_wakeup_power.data,5);
+ IO.cmd(epd_wakeup_power.cmd);
+for (int i=0;i<epd_wakeup_power.databytes;++i) {
+  IO.data(epd_wakeup_power.data[i]);
+}
+ 
+  //IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
   
   IO.cmd(epd_soft_start.cmd);
-  IO.data(epd_soft_start.data,3);
+for (int i=0;i<epd_soft_start.databytes;++i) {
+  IO.data(epd_soft_start.data[i]);
+}
+  //IO.data(epd_soft_start.data,epd_soft_start.databytes);
 
   IO.cmd(epd_panel_setting.cmd);
-  IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
+  for (int i=0;i<epd_panel_setting.databytes;++i) {
+  IO.data(epd_panel_setting.data[i]);
+}
+  //IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
 
   IO.cmd(epd_pll.cmd);
-  IO.data(epd_pll.data,epd_pll.databytes);   
+  for (int i=0;i<epd_pll.databytes;++i) {
+  IO.data(epd_pll.data[i]);
+}
+  //IO.data(epd_pll.data,epd_pll.databytes);   
 
   //resolution setting
   IO.cmd(epd_resolution.cmd);
-  IO.data(epd_resolution.data,epd_resolution.databytes);
+  for (int i=0;i<epd_resolution.databytes;++i) {
+  IO.data(epd_resolution.data[i]);
+}
+  //IO.data(epd_resolution.data,epd_resolution.databytes);
 
   IO.cmd(0x82); // vcom_DC setting
   IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
