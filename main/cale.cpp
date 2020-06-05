@@ -35,15 +35,15 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.setRotation(1);
+   display.setRotation(0);
    display.setFont(&FreeMono9pt7b);
    display.setTextColor(GxEPD_BLACK);
    display.setCursor(5,20);
    display.println("HELLO");
    // This should be first test run!
-   //display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
-   //display.update();
-   //return; // Clean screen and stop test
+   /* display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
+   display.update();
+   return; */
  
 
 // Print all character from an Adafruit Font
@@ -60,18 +60,19 @@ void app_main(void)
    display.setCursor(10,100);
    display.println("BERLIN");
    // Test  shapes
-   //display.drawCircle(50, 50, 20, GxEPD_BLACK); // Adafruit works!
-   //display.drawCircle(50, 50, 22, GxEPD_BLACK);
+   display.drawCircle(50, 150, 20, GxEPD_BLACK); // Adafruit works!
+   display.drawCircle(50, 150, 22, GxEPD_BLACK);
    
    //display.drawRect(90, 50, 40, 20, GxEPD_BLACK);
-   display.drawRect(90, 50, 38, 22, GxEPD_BLACK);
+   display.drawRect(90, 250, 38, 22, GxEPD_BLACK);
 
-   display.drawRoundRect(134, 50, 20, 20, 5, GxEPD_BLACK);
+   display.drawRoundRect(134, 250, 20, 20, 5, GxEPD_BLACK);
 
-   display.drawTriangle(174, 50, 184, 60, 200, 50, GxEPD_BLACK);
+   //display.drawTriangle(174, 50, 184, 60, 200, 50, GxEPD_BLACK);
 
    for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,79,GxEPD_BLACK);
+     display.drawPixel(i,279,GxEPD_BLACK);
+     display.drawPixel(i,280,GxEPD_BLACK);
    }
 
    display.update();

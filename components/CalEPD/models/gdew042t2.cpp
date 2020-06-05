@@ -185,38 +185,35 @@ void Gdew042t2::fillScreen(uint16_t color)
 
 void Gdew042t2::_wakeUp(){
   IO.reset(10);
-
- IO.cmd(epd_wakeup_power.cmd);
-for (int i=0;i<epd_wakeup_power.databytes;++i) {
-  IO.data(epd_wakeup_power.data[i]);
-}
- 
-  //IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
+//IMPORTANT: Some EPD controllers like to receive data byte per byte
+//So this won't work:
+//IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
   
-  IO.cmd(epd_soft_start.cmd);
-for (int i=0;i<epd_soft_start.databytes;++i) {
-  IO.data(epd_soft_start.data[i]);
-}
-  //IO.data(epd_soft_start.data,epd_soft_start.databytes);
 
+  IO.cmd(epd_wakeup_power.cmd);
+  for (int i=0;i<epd_wakeup_power.databytes;++i) {
+    IO.data(epd_wakeup_power.data[i]);
+  }
+ 
+  IO.cmd(epd_soft_start.cmd);
+  for (int i=0;i<epd_soft_start.databytes;++i) {
+    IO.data(epd_soft_start.data[i]);
+  }
+  
   IO.cmd(epd_panel_setting.cmd);
   for (int i=0;i<epd_panel_setting.databytes;++i) {
-  IO.data(epd_panel_setting.data[i]);
-}
-  //IO.data(epd_panel_setting.data,epd_panel_setting.databytes);
-
+    IO.data(epd_panel_setting.data[i]);
+  }
+  
   IO.cmd(epd_pll.cmd);
   for (int i=0;i<epd_pll.databytes;++i) {
-  IO.data(epd_pll.data[i]);
-}
-  //IO.data(epd_pll.data,epd_pll.databytes);   
-
+    IO.data(epd_pll.data[i]);
+  }
   //resolution setting
   IO.cmd(epd_resolution.cmd);
   for (int i=0;i<epd_resolution.databytes;++i) {
-  IO.data(epd_resolution.data[i]);
-}
-  //IO.data(epd_resolution.data,epd_resolution.databytes);
+    IO.data(epd_resolution.data[i]);
+  }
 
   IO.cmd(0x82); // vcom_DC setting
   IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
@@ -235,11 +232,11 @@ void Gdew042t2::update()
 
   IO.cmd(0x13);
 
-  /* for (uint32_t i = 0; i < GxGDEW042T2_BUFFER_SIZE; i++)
+  for (uint32_t i = 0; i < GxGDEW042T2_BUFFER_SIZE; i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
-  } */
+  }
 
   IO.cmd(0x12);
   _waitBusy("update");
