@@ -11,7 +11,7 @@ Could not get it to work correctly yet
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
-DRAM_ATTR const epd_init_44 Gdew027w3::lut_20_vcomDC={
+const epd_init_44 Gdew027w3::lut_20_vcomDC={
 0x20, {
   0x00, 0x00,
   0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
@@ -23,7 +23,7 @@ DRAM_ATTR const epd_init_44 Gdew027w3::lut_20_vcomDC={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },44};
 
-DRAM_ATTR const epd_init_42 Gdew027w3::lut_21_ww={
+const epd_init_42 Gdew027w3::lut_21_ww={
 0x21, {
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -34,7 +34,7 @@ DRAM_ATTR const epd_init_42 Gdew027w3::lut_21_ww={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew027w3::lut_22_bw={
+const epd_init_42 Gdew027w3::lut_22_bw={
 0x22,{
   0x40, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -45,7 +45,7 @@ DRAM_ATTR const epd_init_42 Gdew027w3::lut_22_bw={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew027w3::lut_23_wb={
+const epd_init_42 Gdew027w3::lut_23_wb={
 0x23,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -56,7 +56,7 @@ DRAM_ATTR const epd_init_42 Gdew027w3::lut_23_wb={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-DRAM_ATTR const epd_init_42 Gdew027w3::lut_24_bb={
+const epd_init_42 Gdew027w3::lut_24_bb={
 0x24,{
   0x80, 0x08, 0x00, 0x00, 0x00, 0x02,
   0x90, 0x28, 0x28, 0x00, 0x00, 0x01,
@@ -179,19 +179,32 @@ void Gdew027w3::initFullUpdate(){
     IO.data(0x97); //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
 
     IO.cmd(lut_20_vcomDC.cmd);
-    IO.data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
+    // Sending LUTs like this for this controller was making all arrive with 0's
+    //IO.data(lut_20_vcomDC.data,lut_20_vcomDC.databytes);
+    for (int i=0;i<lut_20_vcomDC.databytes;++i) {
+      IO.data(lut_20_vcomDC.data[i]);
+     }
    
     IO.cmd(lut_21_ww.cmd);
-    IO.data(lut_21_ww.data,lut_21_ww.databytes);
+    for (int i=0;i<lut_21_ww.databytes;++i) {
+      IO.data(lut_21_ww.data[i]);
+     }
 
     IO.cmd(lut_22_bw.cmd);
-    IO.data(lut_22_bw.data,lut_22_bw.databytes);
-
+    for (int i=0;i<lut_22_bw.databytes;++i) {
+      IO.data(lut_22_bw.data[i]);
+     }
     IO.cmd(lut_23_wb.cmd);
-    IO.data(lut_23_wb.data,lut_23_wb.databytes);
+    for (int i=0;i<lut_23_wb.databytes;++i) {
+      IO.data(lut_23_wb.data[i]);
+     }
+     
 
     IO.cmd(lut_24_bb.cmd);
-    IO.data(lut_24_bb.data,lut_24_bb.databytes);
+    for (int i=0;i<lut_24_bb.databytes;++i) {
+      IO.data(lut_24_bb.data[i]);
+     }
+     
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
 
@@ -226,9 +239,9 @@ void Gdew027w3::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew027w3::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
-    IO.init(4, debug); // 4MHz frequency, debug
-    //Reset the display
-    IO.reset(20);
+    IO.init(3, debug); // 4MHz frequency, debug
+    //Reset the display - No need in this model
+    //IO.reset(20);
 
     printf("Free heap:%d\n",xPortGetFreeHeapSize());
     fillScreen(GxEPD_WHITE);
@@ -281,7 +294,7 @@ void Gdew027w3::_wakeUp(){
   IO.cmd(epd_vcom1.cmd);          // vcom_DC 0x28:-2.0V,0x12:-0.9V
   IO.data(epd_vcom1.data[0]);     // CMD: 0x82 DATA: 0x08 
 
-  vTaskDelay(4/portTICK_RATE_MS); // delay(2)
+  vTaskDelay(2/portTICK_RATE_MS); // delay(2)
 
   //WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
   IO.cmd(epd_vcom2.cmd);          // vcom and data interval
@@ -304,7 +317,7 @@ void Gdew027w3::update()
   } 
 
   IO.cmd(0x13);        // update current data
-for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+  for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
     uint8_t pixel = sizeof(_buffer) ? ~_buffer[x] : 0xFF;
     IO.data(pixel);
   } 
@@ -456,7 +469,7 @@ void Gdew027w3::_waitBusy(const char* message){
   while (1){
     if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>2800000)
+    if (esp_timer_get_time()-time_since_boot>7000000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
