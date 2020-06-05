@@ -117,7 +117,7 @@ class Epd : public virtual Adafruit_GFX
     size_t write(uint8_t);
     void print(const std::string& text);
     void println(const std::string& text);
-
+    void invertTextColor(uint16_t color);
   // Methods that should be accesible by inheriting this abstract class
   protected: 
     // This should be inherited from this abstract class so we don't repeat in every model

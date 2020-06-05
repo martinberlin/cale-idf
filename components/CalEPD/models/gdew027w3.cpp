@@ -249,7 +249,8 @@ void Gdew027w3::init(bool debug)
 
 void Gdew027w3::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
+  // Invert colors for this display 0xFF = black
+  uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -527,8 +528,16 @@ void Gdew027w3::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GxGDEW027W3_WIDTH / 8;
 
-  if (color)
+  if (color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-  else
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  } else {
+    int color = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+    _buffer[i] = color;
+    // Invert color for this display interesting effect super bold fonts
+    //_buffer[i] = (color==0xFF) ? ~0x00 : 0xFF;
+  }
+}
+
+void Gdew027w3::setTextColor(uint16_t c) {
+  invertTextColor(c);
 }

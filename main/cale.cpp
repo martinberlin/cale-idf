@@ -3,19 +3,21 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdew042t2.h>
-//#include <gdeh0213b73.h>
+//#include <gdew042t2.h>
+#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
 EpdSpi io;
-Gdew042t2 display(io);
+Gdew027w3 display(io);
+//Gdew042t2 display(io);
 //Gdeh0213b73 display(io);
-//Gdew0213i5f display(io);
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
+
+#include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
-#include <Fonts/FreeMono18pt7b.h>
+#include <Fonts/FreeSerif12pt7b.h>
 extern "C" {
    void app_main();
 }
@@ -35,15 +37,22 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
+   display.fillScreen(GxEPD_BLACK);
    display.setRotation(0);
-   display.setFont(&FreeMono9pt7b);
-   display.setTextColor(GxEPD_BLACK);
-   display.setCursor(5,20);
-   display.println("HELLO");
+   display.setFont(&FreeMonoBold18pt7b);
+   
+   display.setTextColor(GxEPD_WHITE); // Needs to invert color
+   display.setCursor(5,30);
+   display.println("CalEPD");
+   display.println("MonoBold18pt7b");
+
+   display.setFont(&FreeSerif12pt7b);
+   display.println("");
+   display.println("AbcdeFghiJklm");
    // This should be first test run!
-   /* display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
-   display.update();
-   return; */
+   //display.fillScreen(GxEPD_BLACK);  // GxEPD_BLACK  GxEPD_WHITE
+  display.update();
+   return; 
  
 
 // Print all character from an Adafruit Font
@@ -53,12 +62,10 @@ void app_main(void)
    }
    }
    // Test fonts
-   display.println("CALE ESP-IDF");  // Todo: Add print and println
-   display.setFont(&FreeMono18pt7b);
-   display.setCursor(10,40);
-   display.println("Says hello");
-   display.setCursor(10,100);
-   display.println("BERLIN");
+   display.setFont(&FreeMonoBold18pt7b);
+   display.setCursor(100,50);
+   display.println("Says hello BERLIN");
+
    // Test  shapes
    display.drawCircle(50, 150, 20, GxEPD_BLACK); // Adafruit works!
    display.drawCircle(50, 150, 22, GxEPD_BLACK);

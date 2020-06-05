@@ -40,7 +40,7 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     //Config Frequency and SS GPIO
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
-        .clock_speed_hz=frequency*1000*1000,  // DEBUG: 50000 . As default 4 MHz
+        .clock_speed_hz=50000,  // DEBUG: 50000 . As default 4 MHz: frequency*1000*1000
         .input_delay_ns = 0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
@@ -122,7 +122,7 @@ void EpdSpi::data(const uint8_t *data, int len)
   if (len==0) return; 
     if (debug_enabled) {
         for (int i = 0; i < len; i++)  {
-            printf("D %x\n",data[i]);
+            //printf("D %x\n",data[i]);
         }
     }
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
