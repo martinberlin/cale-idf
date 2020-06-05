@@ -35,12 +35,12 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
         .quadhd_io_num=-1,
         .max_transfer_sz=4094
     };
-    
     //.max_transfer_sz=4094 // 4Kb is the defaut SPI transfer size if 0
-    //frequency*1000*1000
+    
+    //Config Frequency and SS GPIO
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
-        .clock_speed_hz=50000,  // As default 4 MHz
+        .clock_speed_hz=frequency*1000*1000,  // DEBUG: 50000 . As default 4 MHz
         .input_delay_ns = 0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
@@ -95,9 +95,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    if (debug_enabled) {
+    /* if (debug_enabled) {
         printf("D %x\n",data);
-    }
+    } */
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
