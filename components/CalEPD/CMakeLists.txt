@@ -1,5 +1,6 @@
 # Add only the display srcs you are going to use:
 set(srcs 
+    "models/gdew075T7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdew027w3.cpp"

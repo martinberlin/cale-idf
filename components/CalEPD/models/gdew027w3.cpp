@@ -316,8 +316,10 @@ void Gdew027w3::update()
 
   IO.cmd(0x13);        // update current data
   for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
-    if (x < 40) {
-      printf("%x ",_buffer[x]);
+    if (debug_enabled){
+      if (x < 40) {
+        printf("%x ",_buffer[x]);
+      }
     }
     uint8_t pixel = sizeof(_buffer) ? ~_buffer[x] : 0xFF;
     IO.data(pixel);

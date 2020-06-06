@@ -67,7 +67,7 @@ class Gdew0213i5f : public Epd
     static const epd_init_42 lut_23_wb_partial;
     static const epd_init_42 lut_24_bb_partial;
 
-    static const epd_power_5 epd_wakeup_power;
+    static const epd_init_5 epd_wakeup_power;
     static const epd_init_3 epd_soft_start;
     static const epd_init_2 epd_panel_setting;
     static const epd_init_1 epd_pll;

@@ -66,7 +66,7 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 
-DRAM_ATTR const epd_power_5 Gdew0213i5f::epd_wakeup_power={
+DRAM_ATTR const epd_init_5 Gdew0213i5f::epd_wakeup_power={
 0x01,{0x03,0x00,0x2b,0x2b,0x03},5
 };
 

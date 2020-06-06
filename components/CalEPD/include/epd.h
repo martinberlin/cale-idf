@@ -73,13 +73,20 @@ typedef struct {
     uint8_t cmd;
     uint8_t data[5];
     uint8_t databytes;
-} epd_power_4;
+} epd_init_5;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[6];
+    uint8_t databytes;
+} epd_init_6;
 
 typedef struct {
     uint8_t cmd;
     uint8_t data[5];
     uint8_t databytes;
-} epd_power_5;
+} epd_power_4;
+
 
 // Note: GxGDEW0213I5F is our test display that will be the default initializing this class
 class Epd : public virtual Adafruit_GFX
@@ -89,15 +96,6 @@ class Epd : public virtual Adafruit_GFX
     
     Epd(int16_t w, int16_t h) : Adafruit_GFX(w,h) {};
 
-    /* @iotPanic
-    Help needed:
-       Can you please check the OOP consistency of this Classes?
-
-     * Basically I want this Epd to provide general methods
-       that need to be implemented like this ones
-     * Another ones like write, print, println should be inherited
-       so we avoid rewriting them on every MODELX class
-    */
     // Every display model should implement this public methods
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method
     virtual void init(bool debug) = 0;
@@ -106,7 +104,8 @@ class Epd : public virtual Adafruit_GFX
     virtual void fillScreen(uint16_t color) = 0;
     virtual void update() = 0; 
 
-    // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
+    // Both partial updates DO NOT work as expected, need further research
+    // What happens in some EPDs: Is turning all screen black or making strange effects
     // partial update of rectangle from buffer to screen, does not power off
     //virtual void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off

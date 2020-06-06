@@ -370,8 +370,9 @@ void Gdew042t2::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GxGDEW042T2_WIDTH / 8;
 
-  if (color)
+  if (color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-  else
+    } else {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+    }
 }

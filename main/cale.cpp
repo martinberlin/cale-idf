@@ -3,14 +3,16 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-//#include <gdew042t2.h>
-#include <gdew027w3.h>
+#include <gdew075T7.h>
+//#include <gdew042t2.h>  // Tested correctly 06.06.20
+//#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
 EpdSpi io;
-Gdew027w3 display(io);
+Gdew075T7 display(io);
 //Gdew042t2 display(io);
-//Gdeh0213b73 display(io);
+//Gdew027w3 display(io);
+//Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
