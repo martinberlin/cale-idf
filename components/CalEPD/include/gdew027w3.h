@@ -36,7 +36,7 @@ class Gdew027w3 : public Epd
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
     void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
-    void setTextColor(uint16_t c);
+  
     // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
 
   private:

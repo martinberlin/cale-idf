@@ -24,15 +24,23 @@ extern "C" {
 }
 
 void demo(uint16_t bkcolor,uint16_t fgcolor){
-   display.fillScreen(bkcolor);
-   
-   display.setTextColor(fgcolor);
 
+   display.fillScreen(bkcolor);
+   display.setTextColor(fgcolor);
    display.setCursor(1,30);
    display.setFont(&FreeMono9pt7b);
    display.println("MonoBold18pt7b");
+   // Short test:
+   /* for (int i = 0; i < 10; i++) {
+     display.drawPixel(i,0,fgcolor);
+   } 
+   return; */
+   display.setCursor(6,62);
+   display.fillRect(1, 40, display.width(), 30, fgcolor);
+   display.setTextColor(bkcolor);
    display.setFont(&FreeMonoBold18pt7b);
    display.println("CalEPD");
+   display.setTextColor(fgcolor);
 
    display.setFont(&FreeMono9pt7b);
    display.println("Serif12pt7b");

@@ -41,11 +41,5 @@ void Epd::println(const std::string& text){
    write(10); // newline
 }
 
-void Epd::invertTextColor(uint16_t color){
-  if (color==GxEPD_BLACK) {
-    color=GxEPD_WHITE;
-  } else {
-    color=GxEPD_BLACK;
-  }
-  Adafruit_GFX::setTextColor(color);
-}
+// Optionally if we would need to access GFX
+// Adafruit_GFX::setTextColor(color);

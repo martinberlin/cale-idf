@@ -237,11 +237,8 @@ void Gdew027w3::initPartialUpdate(){
 void Gdew027w3::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Gdew027w3::init(%d) and reset EPD\n", debug);
-    //Initialize the Epaper and reset it
-    IO.init(3, debug); // 4MHz frequency, debug
-    //Reset the display - No need in this model
-    //IO.reset(20);
+    if (debug_enabled) printf("Gdew027w3::init(%d)\n", debug);
+    IO.init(4, debug); // 4MHz frequency
 
     printf("Free heap:%d\n",xPortGetFreeHeapSize());
     fillScreen(GxEPD_WHITE);
@@ -249,7 +246,7 @@ void Gdew027w3::init(bool debug)
 
 void Gdew027w3::fillScreen(uint16_t color)
 {
-  // Invert colors for this display 0xFF = black
+  // Invert colors for this display 0xFF = pure black, 0x00 = white
   uint8_t data = (color == GxEPD_BLACK) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
@@ -319,6 +316,9 @@ void Gdew027w3::update()
 
   IO.cmd(0x13);        // update current data
   for (uint16_t x = 0; x < GxGDEW027W3_BUFFER_SIZE; x++){
+    if (x < 40) {
+      printf("%x ",_buffer[x]);
+    }
     uint8_t pixel = sizeof(_buffer) ? ~_buffer[x] : 0xFF;
     IO.data(pixel);
   } 
@@ -528,16 +528,10 @@ void Gdew027w3::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GxGDEW027W3_WIDTH / 8;
 
+  // This is the trick to draw colors right. Genious Jean-Marc
   if (color) {
+    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+    } else {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-  } else {
-    int color = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    _buffer[i] = color;
-    // Invert color for this display interesting effect super bold fonts
-    //_buffer[i] = (color==0xFF) ? ~0x00 : 0xFF;
-  }
-}
-
-void Gdew027w3::setTextColor(uint16_t c) {
-  invertTextColor(c);
+    }
 }
