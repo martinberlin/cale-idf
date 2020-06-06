@@ -35,13 +35,18 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
         .quadhd_io_num=-1,
         .max_transfer_sz=4094
     };
-    //.max_transfer_sz=4094 // 4Kb is the defaut SPI transfer size if 0
-    
+    // max_transfer_sz   4Kb is the defaut SPI transfer size if 0
+    // debug: 50000  0.5 Mhz so we can sniff the SPI commands with a Slave
+    uint16_t multiplier = 1000;
+    if (debug_enabled) {
+        frequency = 50;
+        multiplier = 1;
+    }
     //Config Frequency and SS GPIO
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
-        .clock_speed_hz=50000,  // DEBUG: 50000 . As default 4 MHz: frequency*1000*1000
-        .input_delay_ns = 0,
+        .clock_speed_hz=frequency*multiplier*1000,  // DEBUG: 50000 - No debug usually 4 Mhz
+        .input_delay_ns=0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
         .queue_size=5
@@ -56,10 +61,10 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     //Attach the EPD to the SPI bus
     ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-
-    if (debug_enabled) {
-      printf("EpdSpi::init() SPI initialized at %d Mhz. MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
-      frequency, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
+    // debug_enabled
+    if (true) {
+      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
+      frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
       CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
         }
     }

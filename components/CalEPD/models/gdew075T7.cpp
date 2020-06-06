@@ -144,7 +144,7 @@ void Gdew075T7::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew075T7::init(%d) and reset EPD\n", debug);
     //Initialize SPI at 4MHz frequency
-    IO.init(4, debug);
+    IO.init(4, false); // true
     fillScreen(GxEPD_WHITE);
 }
 
@@ -155,8 +155,6 @@ void Gdew075T7::fillScreen(uint16_t color)
   {
     _buffer[x] = data;
   }
-
-  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
 void Gdew075T7::_wakeUp(){
@@ -200,12 +198,18 @@ void Gdew075T7::update()
   _wakeUp();
 
   IO.cmd(0x13);
-
-  /* for (uint32_t i = 0; i < GDEW075T7_BUFFER_SIZE; i++)
+  printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
+  for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
-  } */
+    // Let CPU breath. Withouth delay watchdog will jump in your neck
+    if (i%8==0) {
+       rtc_wdt_feed();
+       vTaskDelay(pdMS_TO_TICKS(1));
+     }
+    if (i%500==0 && debug_enabled) printf("%d ",i);
+  }
 
   IO.cmd(0x12);
   _waitBusy("update");

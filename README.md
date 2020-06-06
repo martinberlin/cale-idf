@@ -15,6 +15,7 @@ The aim is to learn good how to code and link classes as git submodules in order
 
 ### Submodules
 
+Not being used at the moment since all test and development happens here. When [CalEPD epaper component](https://github.com/martinberlin/CalEPD) is ready it will be moved to it's own repository. So later this will apply, but now there is no need to do it, since all code is here.
 ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they link to GitHub. To update the submodules once you **git clone** this repository:
 
     git submodule update --init --recursive
@@ -58,6 +59,42 @@ Please note that to exit the monitor in Espressif documentation says Ctrl+] but 
 
     Ctrl+5
 
+## SPI speed
+
+If you instantiate display.init(true) it activates verbose debug and also lowers SPI frequency to 50000. Most epapers accept a frequency up to 4 Mhz. 
+We did this on debug to be able to sniff with an ESP32 SPI slave "man in the middle" what commands are sent to the display so we can detect mistakes. Even if you print it, is not the same as to hear on the line, this is the real way to reverse engineer something. Hear what the master is saying in a library that works.
+
+    +    uint16_t multiplier = 1000;
+    +    if (debug_enabled) {
+    +        frequency = 50;
+    +        multiplier = 1;
+    +    }
+
+Due to restrictions in C++ that I'm not so aware about there is a limitation when using big integers in the structs { }
+So SPI frequency is calculated like:
+
+    spi_device_interface_config_t devcfg={
+        .mode=0,  //SPI mode 0
+        .clock_speed_hz=frequency*multiplier*1000,  // --> Like this being the default 4 Mhz
+        .input_delay_ns=0,
+        .spics_io_num=CONFIG_EINK_SPI_CS,
+        .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
+        .queue_size=5
+    };
+
+Feel free to play with Espressif IDF SPI settings if you know what you are doing ;)
+
+## Watchdogs feeding for large buffers
+
+In Buffers for big displays like 800*480 where the size is about 48000 bytes long is necessary to feed the watchdog timer and also make a small delay. I'm doing it this way:
+
+    +    // Let CPU breath. Withouth delay watchdog will jump in your neck
+    +    if (i%8==0) {
+    +       rtc_wdt_feed();
+    +       vTaskDelay(pdMS_TO_TICKS(1));
+    +     }
+
+Again, if you know more about this than me, feel free to suggest a faster way. It's possible to disable also the [watchdogs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/wdts.html) but of course that is not a good practice to do so.
 
 ## References
 

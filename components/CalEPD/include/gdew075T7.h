@@ -12,7 +12,7 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-
+#include "soc/rtc_wdt.h"       // Watchdog control the dogs
 #define GxGDEW075T7_WIDTH 800
 #define GxGDEW075T7_HEIGHT 480
 
