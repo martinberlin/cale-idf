@@ -83,9 +83,9 @@ DRAM_ATTR const epd_init_1 Gdew0213i5f::epd_pll={
 };
 
 DRAM_ATTR const epd_init_3 Gdew0213i5f::epd_resolution={
-0x61,{GxGDEW0213I5F_WIDTH,
-GxGDEW0213I5F_HEIGHT >> 8,
-GxGDEW0213I5F_HEIGHT & 0xFF
+0x61,{GDEW0213I5F_WIDTH,
+GDEW0213I5F_HEIGHT >> 8,
+GDEW0213I5F_HEIGHT & 0xFF
 },3};
 
 //partial screen update LUT
@@ -149,16 +149,16 @@ DRAM_ATTR const epd_init_42 Gdew0213i5f::lut_24_bb_partial={
 },42};
 
 // Partial Update Delay, may have an influence on degradation
-#define GxGDEW0213I5F_PU_DELAY 100
+#define GDEW0213I5F_PU_DELAY 100
 
 
 // Constructor
 Gdew0213i5f::Gdew0213i5f(EpdSpi& dio): 
-  Adafruit_GFX(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT),
-  Epd(GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT), IO(dio)
+  Adafruit_GFX(GDEW0213I5F_WIDTH, GDEW0213I5F_HEIGHT),
+  Epd(GDEW0213I5F_WIDTH, GDEW0213I5F_HEIGHT), IO(dio)
 {
   printf("Gdew0213i5f() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GxGDEW0213I5F_WIDTH, GxGDEW0213I5F_HEIGHT);  
+  GDEW0213I5F_WIDTH, GDEW0213I5F_HEIGHT);  
 }
 
 void Gdew0213i5f::initFullUpdate(){
@@ -221,12 +221,12 @@ void Gdew0213i5f::init(bool debug)
 
     //Reset the display
     IO.reset(20);
-    fillScreen(GxEPD_WHITE);
+    fillScreen(EPD_WHITE);
 }
 
 void Gdew0213i5f::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -269,9 +269,9 @@ void Gdew0213i5f::update()
 
   IO.cmd(0x10);
 
-  // In GxEPD here it wrote the full buffer with 0xFF. Note doing it like this is not refreshing. Todo: Check epaper tech specs
-  /* uint8_t _wbuffer[GxGDEW0213I5F_BUFFER_SIZE];
-    for (uint16_t x = 0; x < GxGDEW0213I5F_BUFFER_SIZE; x++){
+  // In EPD here it wrote the full buffer with 0xFF. Note doing it like this is not refreshing. Todo: Check epaper tech specs
+  /* uint8_t _wbuffer[GDEW0213I5F_BUFFER_SIZE];
+    for (uint16_t x = 0; x < GDEW0213I5F_BUFFER_SIZE; x++){
     _wbuffer[x] = 0xFF;
   }
   IO.data(_wbuffer, sizeof(_wbuffer)); */
@@ -305,10 +305,10 @@ void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
 {
   printf("deprecated: updateWindow does not work\n");
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GxGDEW0213I5F_WIDTH) return;
-  if (y >= GxGDEW0213I5F_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GxGDEW0213I5F_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GxGDEW0213I5F_HEIGHT, y + h) - 1;
+  if (x >= GDEW0213I5F_WIDTH) return;
+  if (y >= GDEW0213I5F_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GDEW0213I5F_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEW0213I5F_HEIGHT, y + h) - 1;
   // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
@@ -322,12 +322,12 @@ void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     IO.cmd(0x13);
 
     uint16_t counter = 0;
-    uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    uint8_t data[GDEW0213I5F_WIDTH*GDEW0213I5F_HEIGHT];
     for (int16_t y1 = y; y1 <= ye; y1++)
     {
       for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GDEW0213I5F_WIDTH / 8) + x1;
         data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
         //IO.data(~data); // white is 0xFF on device
@@ -339,7 +339,7 @@ void Gdew0213i5f::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     _waitBusy("updateWindow");
     IO.cmd(0x92);      // partial out
   } // leave both controller buffers equal
-  vTaskDelay(GxGDEW0213I5F_PU_DELAY);
+  vTaskDelay(GDEW0213I5F_PU_DELAY);
 }
 
 void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
@@ -353,31 +353,31 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
         swap(xs, ys);
         swap(xd, yd);
         swap(w, h);
-        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
-        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
+        xs = GDEW0213I5F_WIDTH - xs - w - 1;
+        xd = GDEW0213I5F_WIDTH - xd - w - 1;
         break;
       case 2:
-        xs = GxGDEW0213I5F_WIDTH - xs - w - 1;
-        ys = GxGDEW0213I5F_HEIGHT - ys - h - 1;
-        xd = GxGDEW0213I5F_WIDTH - xd - w - 1;
-        yd = GxGDEW0213I5F_HEIGHT - yd - h - 1;
+        xs = GDEW0213I5F_WIDTH - xs - w - 1;
+        ys = GDEW0213I5F_HEIGHT - ys - h - 1;
+        xd = GDEW0213I5F_WIDTH - xd - w - 1;
+        yd = GDEW0213I5F_HEIGHT - yd - h - 1;
         break;
       case 3:
         swap(xs, ys);
         swap(xd, yd);
         swap(w, h);
-        ys = GxGDEW0213I5F_HEIGHT - ys  - h - 1;
-        yd = GxGDEW0213I5F_HEIGHT - yd  - h - 1;
+        ys = GDEW0213I5F_HEIGHT - ys  - h - 1;
+        yd = GDEW0213I5F_HEIGHT - yd  - h - 1;
         break;
     }
   }
-  if (xs >= GxGDEW0213I5F_WIDTH) return;
-  if (ys >= GxGDEW0213I5F_HEIGHT) return;
-  if (xd >= GxGDEW0213I5F_WIDTH) return;
-  if (yd >= GxGDEW0213I5F_HEIGHT) return;
+  if (xs >= GDEW0213I5F_WIDTH) return;
+  if (ys >= GDEW0213I5F_HEIGHT) return;
+  if (xd >= GDEW0213I5F_WIDTH) return;
+  if (yd >= GDEW0213I5F_HEIGHT) return;
   // the screen limits are the hard limits
-  uint16_t xde = gx_uint16_min(GxGDEW0213I5F_WIDTH, xd + w) - 1;
-  uint16_t yde = gx_uint16_min(GxGDEW0213I5F_HEIGHT, yd + h) - 1;
+  uint16_t xde = gx_uint16_min(GDEW0213I5F_WIDTH, xd + w) - 1;
+  uint16_t yde = gx_uint16_min(GDEW0213I5F_HEIGHT, yd + h) - 1;
   if (!_using_partial_mode) _wakeUp();
   _using_partial_mode = true;
   initPartialUpdate();
@@ -391,12 +391,12 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
     uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
     IO.cmd(0x13);
     uint16_t counter = 0;
-    //uint8_t data[GxGDEW0213I5F_WIDTH*GxGDEW0213I5F_HEIGHT];
+    //uint8_t data[GDEW0213I5F_WIDTH*GDEW0213I5F_HEIGHT];
     for (int16_t y1 = ys; y1 <= yse; y1++)
     {
       for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW0213I5F_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GDEW0213I5F_WIDTH / 8) + x1;
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
         IO.data(data);
         counter++;
@@ -408,7 +408,7 @@ void Gdew0213i5f::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t
     _waitBusy("updateToWindow");
     IO.cmd(0x92); // partial out
   } // leave both controller buffers equal
-  vTaskDelay(GxGDEW0213I5F_PU_DELAY); 
+  vTaskDelay(GDEW0213I5F_PU_DELAY); 
 }
 
 void Gdew0213i5f::_waitBusy(const char* message){
@@ -442,16 +442,16 @@ void Gdew0213i5f::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GxGDEW0213I5F_WIDTH - x - w - 1;
+      x = GDEW0213I5F_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GxGDEW0213I5F_WIDTH - x - w - 1;
-      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      x = GDEW0213I5F_WIDTH - x - w - 1;
+      y = GDEW0213I5F_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GxGDEW0213I5F_HEIGHT - y - h - 1;
+      y = GDEW0213I5F_HEIGHT - y - h - 1;
       break;
   }
 }
@@ -465,18 +465,18 @@ void Gdew0213i5f::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = GxGDEW0213I5F_WIDTH - x - 1;
+      x = GDEW0213I5F_WIDTH - x - 1;
       break;
     case 2:
-      x = GxGDEW0213I5F_WIDTH - x - 1;
-      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      x = GDEW0213I5F_WIDTH - x - 1;
+      y = GDEW0213I5F_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GxGDEW0213I5F_HEIGHT - y - 1;
+      y = GDEW0213I5F_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GxGDEW0213I5F_WIDTH / 8;
+  uint16_t i = x / 8 + y * GDEW0213I5F_WIDTH / 8;
 
   if (color)
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));

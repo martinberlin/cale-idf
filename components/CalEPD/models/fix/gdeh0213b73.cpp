@@ -50,13 +50,13 @@ DRAM_ATTR const epd_lut_100 Gdeh0213b73::lut_data_part={
   0x00, 0x00, 0x00, 0x00, 0x00,
 },100};
 
-// Constructor GxGDEH0213B73
+// Constructor GDEH0213B73
 Gdeh0213b73::Gdeh0213b73(EpdSpi& dio): 
-  Adafruit_GFX(GxGDEH0213B73_WIDTH, GxGDEH0213B73_HEIGHT),
-  Epd(GxGDEH0213B73_WIDTH, GxGDEH0213B73_HEIGHT), IO(dio)
+  Adafruit_GFX(GDEH0213B73_WIDTH, GDEH0213B73_HEIGHT),
+  Epd(GDEH0213B73_WIDTH, GDEH0213B73_HEIGHT), IO(dio)
 {
   printf("Gdeh0213b73() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GxGDEH0213B73_WIDTH, GxGDEH0213B73_HEIGHT);  
+  GDEH0213B73_WIDTH, GDEH0213B73_HEIGHT);  
 }
 
 void Gdeh0213b73::initFullUpdate(){
@@ -85,12 +85,12 @@ void Gdeh0213b73::init(bool debug)
 
     //Reset the display
     IO.reset(20);
-    fillScreen(GxEPD_WHITE);
+    fillScreen(EPD_WHITE);
 }
 
 void Gdeh0213b73::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -104,13 +104,13 @@ void Gdeh0213b73::update()
 {
   _using_partial_mode = false;
   initFullUpdate(); // _InitDisplay
-  uint8_t *dataFull = new uint8_t[GxGDEH0213B73_BUFFER_SIZE];
+  uint8_t *dataFull = new uint8_t[GDEH0213B73_BUFFER_SIZE];
   uint16_t c = 0;
-  for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
+  for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++)
   {
-    for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
+    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
     {
-      uint16_t idx = y * (GxGDEH0213B73_WIDTH / 8) + x;
+      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
       dataFull[c] = data;
       ++c;
@@ -125,11 +125,11 @@ void Gdeh0213b73::update()
   cmd(0x26);
 
  IO.data(dataFull,c);
-  /* for (uint16_t y = 0; y < GxGDEH0213B73_HEIGHT; y++)
+  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++)
   {
-    for (uint16_t x = 0; x < GxGDEH0213B73_WIDTH / 8; x++)
+    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
     {
-      uint16_t idx = y * (GxGDEH0213B73_WIDTH / 8) + x;
+      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
       IO.data(data);
     }
@@ -203,16 +203,16 @@ void Gdeh0213b73::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GxGDEH0213B73_WIDTH - x - w - 1;
+      x = GDEH0213B73_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GxGDEH0213B73_WIDTH - x - w - 1;
-      y = GxGDEH0213B73_HEIGHT - y - h - 1;
+      x = GDEH0213B73_WIDTH - x - w - 1;
+      y = GDEH0213B73_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GxGDEH0213B73_HEIGHT - y - h - 1;
+      y = GDEH0213B73_HEIGHT - y - h - 1;
       break;
   }
 }
@@ -226,18 +226,18 @@ void Gdeh0213b73::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = GxGDEH0213B73_VISIBLE_WIDTH - x - 1;
+      x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
       break;
     case 2:
-      x = GxGDEH0213B73_VISIBLE_WIDTH - x - 1;
-      y = GxGDEH0213B73_HEIGHT - y - 1;
+      x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
+      y = GDEH0213B73_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GxGDEH0213B73_HEIGHT - y - 1;
+      y = GDEH0213B73_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GxGDEH0213B73_WIDTH / 8;
+  uint16_t i = x / 8 + y * GDEH0213B73_WIDTH / 8;
  
   _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
@@ -322,8 +322,8 @@ void Gdeh0213b73::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 void Gdeh0213b73::_setRamDataEntryMode(uint8_t em)
 {
   printf("_setRamDataEntryMode\n");
-  const uint16_t xPixelsPar = GxGDEH0213B73_X_PIXELS - 1;
-  const uint16_t yPixelsPar = GxGDEH0213B73_Y_PIXELS - 1;
+  const uint16_t xPixelsPar = GDEH0213B73_X_PIXELS - 1;
+  const uint16_t yPixelsPar = GDEH0213B73_Y_PIXELS - 1;
   em = gx_uint16_min(em, 0x03);
   cmd(0x11);
   IO.data(em);

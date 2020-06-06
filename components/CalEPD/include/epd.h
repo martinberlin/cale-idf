@@ -17,11 +17,11 @@
 #include <epdspi.h>
 
 // the only colors supported by any of these displays; mapping of other colors is class specific
-#define GxEPD_BLACK     0x0000
-#define GxEPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
-#define GxEPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
-#define GxEPD_WHITE     0xFFFF
-#define GxEPD_RED       0xF800      /* 255,   0,   0 */
+#define EPD_BLACK     0x0000
+#define EPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
+#define EPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
+#define EPD_WHITE     0xFFFF
+#define EPD_RED       0xF800      /* 255,   0,   0 */
 
 typedef struct {
     uint8_t cmd;
@@ -90,7 +90,7 @@ typedef struct {
 } epd_power_4;
 
 
-// Note: GxGDEW0213I5F is our test display that will be the default initializing this class
+// Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Epd : public virtual Adafruit_GFX
 {
   public:
@@ -128,7 +128,7 @@ class Epd : public virtual Adafruit_GFX
     static inline uint16_t gx_uint16_max(uint16_t a, uint16_t b) {return (a > b ? a : b);};
     bool _using_partial_mode = false;
     bool debug_enabled = true;
-    // Very smart template from GxEPD to swap x,y:
+    // Very smart template from EPD to swap x,y:
     template <typename T> static inline void
     swap(T& a, T& b)
     {

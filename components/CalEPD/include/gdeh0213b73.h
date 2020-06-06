@@ -13,19 +13,19 @@
 #include <epdspi.h>
 
 // Controller: SSD1675B 
-// All comments below are from J-M Zingg (Ref. GxEPD)
+// All comments below are from J-M Zingg (Ref. EPD)
 // The physical number of pixels (for controller parameter)
-#define GxGDEH0213B73_X_PIXELS 128
-#define GxGDEH0213B73_Y_PIXELS 250
+#define GDEH0213B73_X_PIXELS 128
+#define GDEH0213B73_Y_PIXELS 250
 
 // The logical width and height of the display
-#define GxGDEH0213B73_WIDTH GxGDEH0213B73_X_PIXELS
-#define GxGDEH0213B73_HEIGHT GxGDEH0213B73_Y_PIXELS
+#define GDEH0213B73_WIDTH GDEH0213B73_X_PIXELS
+#define GDEH0213B73_HEIGHT GDEH0213B73_Y_PIXELS
 
 // Note: the visible number of display pixels is 122*250, see GDEH0213B72 V1.1 Specification.pdf
-#define GxGDEH0213B73_VISIBLE_WIDTH 122
+#define GDEH0213B73_VISIBLE_WIDTH 122
 
-#define GxGDEH0213B73_BUFFER_SIZE (uint32_t(GxGDEH0213B73_WIDTH) * uint32_t(GxGDEH0213B73_HEIGHT) / 8)
+#define GDEH0213B73_BUFFER_SIZE (uint32_t(GDEH0213B73_WIDTH) * uint32_t(GDEH0213B73_HEIGHT) / 8)
 
 class Gdeh0213b73 : public Epd
 {
@@ -52,7 +52,7 @@ class Gdeh0213b73 : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GxGDEH0213B73_BUFFER_SIZE];
+    uint8_t _buffer[GDEH0213B73_BUFFER_SIZE];
 
     bool debug_enabled = false;
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);

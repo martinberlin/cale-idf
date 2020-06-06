@@ -118,19 +118,19 @@ DRAM_ATTR const epd_init_1 Gdew042t2::epd_pll={
 };
 
 DRAM_ATTR const epd_init_4 Gdew042t2::epd_resolution={
-0x61,{GxGDEW042T2_WIDTH/256,
-GxGDEW042T2_WIDTH%256,
-GxGDEW042T2_HEIGHT/256,
-GxGDEW042T2_HEIGHT%256
+0x61,{GDEW042T2_WIDTH/256,
+GDEW042T2_WIDTH%256,
+GDEW042T2_HEIGHT/256,
+GDEW042T2_HEIGHT%256
 },4};
 
 // Constructor
 Gdew042t2::Gdew042t2(EpdSpi& dio): 
-  Adafruit_GFX(GxGDEW042T2_WIDTH, GxGDEW042T2_HEIGHT),
-  Epd(GxGDEW042T2_WIDTH, GxGDEW042T2_HEIGHT), IO(dio)
+  Adafruit_GFX(GDEW042T2_WIDTH, GDEW042T2_HEIGHT),
+  Epd(GDEW042T2_WIDTH, GDEW042T2_HEIGHT), IO(dio)
 {
   printf("Gdew042t2() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GxGDEW042T2_WIDTH, GxGDEW042T2_HEIGHT);  
+  GDEW042T2_WIDTH, GDEW042T2_HEIGHT);  
 }
 
 void Gdew042t2::initFullUpdate(){
@@ -169,12 +169,12 @@ void Gdew042t2::init(bool debug)
 
     //Reset the display
     IO.reset(20);
-    fillScreen(GxEPD_WHITE);
+    fillScreen(EPD_WHITE);
 }
 
 void Gdew042t2::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -232,7 +232,7 @@ void Gdew042t2::update()
 
   IO.cmd(0x13);
 
-  for (uint32_t i = 0; i < GxGDEW042T2_BUFFER_SIZE; i++)
+  for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
@@ -263,10 +263,10 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
 {
   printf("deprecated: updateWindow does not work\n");
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GxGDEW042T2_WIDTH) return;
-  if (y >= GxGDEW042T2_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GxGDEW042T2_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GxGDEW042T2_HEIGHT, y + h) - 1;
+  if (x >= GDEW042T2_WIDTH) return;
+  if (y >= GDEW042T2_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GDEW042T2_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEW042T2_HEIGHT, y + h) - 1;
   // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
@@ -280,12 +280,12 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     IO.cmd(0x13);
 
     uint16_t counter = 0;
-    uint8_t data[GxGDEW042T2_WIDTH*GxGDEW042T2_HEIGHT];
+    uint8_t data[GDEW042T2_WIDTH*GDEW042T2_HEIGHT];
     for (int16_t y1 = y; y1 <= ye; y1++)
     {
       for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW042T2_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
         data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
         //IO.data(~data); // white is 0xFF on device
@@ -298,7 +298,7 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     IO.cmd(0x92);      // partial out
   } // leave both controller buffers equal
   
-  //vTaskDelay(GxGDEW042T2_PU_DELAY);
+  //vTaskDelay(GDEW042T2_PU_DELAY);
 }
 
 void Gdew042t2::_waitBusy(const char* message){
@@ -334,16 +334,16 @@ void Gdew042t2::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GxGDEW042T2_WIDTH - x - w - 1;
+      x = GDEW042T2_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GxGDEW042T2_WIDTH - x - w - 1;
-      y = GxGDEW042T2_HEIGHT - y - h - 1;
+      x = GDEW042T2_WIDTH - x - w - 1;
+      y = GDEW042T2_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GxGDEW042T2_HEIGHT - y - h - 1;
+      y = GDEW042T2_HEIGHT - y - h - 1;
       break;
   }
 }
@@ -357,18 +357,18 @@ void Gdew042t2::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = GxGDEW042T2_WIDTH - x - 1;
+      x = GDEW042T2_WIDTH - x - 1;
       break;
     case 2:
-      x = GxGDEW042T2_WIDTH - x - 1;
-      y = GxGDEW042T2_HEIGHT - y - 1;
+      x = GDEW042T2_WIDTH - x - 1;
+      y = GDEW042T2_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GxGDEW042T2_HEIGHT - y - 1;
+      y = GDEW042T2_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GxGDEW042T2_WIDTH / 8;
+  uint16_t i = x / 8 + y * GDEW042T2_WIDTH / 8;
 
   if (color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));

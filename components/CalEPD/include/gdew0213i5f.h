@@ -12,12 +12,12 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 // Controller: IL0373
-#define GxGDEW0213I5F_WIDTH 104
-#define GxGDEW0213I5F_HEIGHT 212
-#define GxGDEW0213I5F_BUFFER_SIZE (uint32_t(GxGDEW0213I5F_WIDTH) * uint32_t(GxGDEW0213I5F_HEIGHT) / 8)
+#define GDEW0213I5F_WIDTH 104
+#define GDEW0213I5F_HEIGHT 212
+#define GDEW0213I5F_BUFFER_SIZE (uint32_t(GDEW0213I5F_WIDTH) * uint32_t(GDEW0213I5F_HEIGHT) / 8)
 
 
-// Note: GxGDEW0213I5F is our test display that will be the default initializing this class
+// Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdew0213i5f : public Epd
 {
   public:
@@ -46,7 +46,7 @@ class Gdew0213i5f : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GxGDEW0213I5F_BUFFER_SIZE];
+    uint8_t _buffer[GDEW0213I5F_BUFFER_SIZE];
 
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();

@@ -13,40 +13,58 @@
 #define T4  5 // optional extension for one color
 
 // Partial Update Delay, may have an influence on degradation
-#define GxGDEW075T7_PU_DELAY 100
+#define GDEW075T7_PU_DELAY 100
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-//full screen update LUT . Filled with 0 at the end using writeLuts()
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_20_LUTC_partial={
+
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_20_LUTC_partial={
 0x20, {
-  0x00, T1, T2, T3, T4, 1 // 00 00 00 00
+  0x00, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 },42};
 
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_21_LUTWW_partial={
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_21_LUTWW_partial={
 0x21, { // 10 w
-  0x00, T1, T2, T3, T4, 1
+  0x00, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 },42};
 
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_22_LUTKW_partial={
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_22_LUTKW_partial={
 0x22,{ // 10 w
   //0x48, T1, T2, T3, T4, 1, // 01 00 10 00
-  0x5A, T1, T2, T3, T4, 1, // 01 01 10 10 more white
+  0x5A, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 },42};
 
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_23_LUTWK_partial={
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_23_LUTWK_partial={
 0x23,{ // 01 b
-  0x84, T1, T2, T3, T4, 1, // 10 00 01 00
+  0x84, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
   //0xA5, T1, T2, T3, T4, 1, // 10 10 01 01 more black
 },42};
 
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_24_LUTKK_partial={
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_24_LUTKK_partial={
 0x24,{ // 01 b
-  0x00, T1, T2, T3, T4, 1
+  0x00, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 },42};
 
-DRAM_ATTR const epd_init_6 Gdew075T7::lut_25_LUTBD_partial={
+DRAM_ATTR const epd_init_42 Gdew075T7::lut_25_LUTBD_partial={
 0x25,{ // 01 b
-  0x00, T1, T2, T3, T4, 1
+  0x00, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 },42};
 
 // 0x07 (2nd) VGH=20V,VGL=-20V
@@ -68,30 +86,19 @@ DRAM_ATTR const epd_init_1 Gdew075T7::epd_panel_setting_partial={
 
 DRAM_ATTR const epd_init_4 Gdew075T7::epd_resolution={
 0x61,{
-  GxGDEW075T7_WIDTH / 256, //source 800
-  GxGDEW075T7_WIDTH % 256,
-  GxGDEW075T7_HEIGHT / 256,//gate 480
-  GxGDEW075T7_HEIGHT % 256
+  GDEW075T7_WIDTH / 256, //source 800
+  GDEW075T7_WIDTH % 256,
+  GDEW075T7_HEIGHT / 256,//gate 480
+  GDEW075T7_HEIGHT % 256
 },4};
 
 // Constructor
 Gdew075T7::Gdew075T7(EpdSpi& dio): 
-  Adafruit_GFX(GxGDEW075T7_WIDTH, GxGDEW075T7_HEIGHT),
-  Epd(GxGDEW075T7_WIDTH, GxGDEW075T7_HEIGHT), IO(dio)
+  Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIGHT),
+  Epd(GDEW075T7_WIDTH, GDEW075T7_HEIGHT), IO(dio)
 {
   printf("Gdew075T7() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GxGDEW075T7_WIDTH, GxGDEW075T7_HEIGHT);  
-}
-
-void Gdew075T7::_writeLuts(const uint8_t* data, uint16_t n, int16_t fill_with_zeroes){
-  for (uint16_t i = 0; i < n; i++){
-    IO.data(data[i]);
-    i++;
-  }
-  while (fill_with_zeroes > 0) {
-    IO.data(0x00);
-    fill_with_zeroes--;
-  }
+  GDEW075T7_WIDTH, GDEW075T7_HEIGHT);  
 }
 
 void Gdew075T7::initFullUpdate(){
@@ -112,30 +119,37 @@ void Gdew075T7::initPartialUpdate(){
   IO.data(0x07);
 
   // LUT Tables for partial update
-  printf("Lut 20 data:%d should be 6\n\n",sizeof(lut_20_LUTC_partial.data));
+  printf("LUT 20\n\n");
   IO.cmd(lut_20_LUTC_partial.cmd);
-  _writeLuts(lut_20_LUTC_partial.data,lut_20_LUTC_partial.databytes,
-            lut_20_LUTC_partial.databytes-sizeof(lut_20_LUTC_partial.data));
-
+  for (int i=0;i<lut_20_LUTC_partial.databytes;++i) {
+      IO.data(lut_20_LUTC_partial.data[i]);
+  }
+  
+  printf("LUT 21\n\n");
   IO.cmd(lut_21_LUTWW_partial.cmd);
-  _writeLuts(lut_21_LUTWW_partial.data,lut_21_LUTWW_partial.databytes,
-            lut_21_LUTWW_partial.databytes-sizeof(lut_21_LUTWW_partial.data));
-
+  for (int i=0;i<lut_21_LUTWW_partial.databytes;++i) {
+    IO.data(lut_21_LUTWW_partial.data[i]);
+  }
+  printf("LUT 22\n\n");
   IO.cmd(lut_22_LUTKW_partial.cmd);
-  _writeLuts(lut_22_LUTKW_partial.data,lut_22_LUTKW_partial.databytes,
-            lut_22_LUTKW_partial.databytes-sizeof(lut_22_LUTKW_partial.data));
-
+  for (int i=0;i<lut_22_LUTKW_partial.databytes;++i) {
+    IO.data(lut_22_LUTKW_partial.data[i]);
+  }
+  printf("LUT 23\n\n");
   IO.cmd(lut_23_LUTWK_partial.cmd);
-  _writeLuts(lut_23_LUTWK_partial.data,lut_23_LUTWK_partial.databytes,
-            lut_23_LUTWK_partial.databytes-sizeof(lut_23_LUTWK_partial.data));
+  for (int i=0;i<lut_23_LUTWK_partial.databytes;++i) {
+    IO.data(lut_23_LUTWK_partial.data[i]);
+  }
 
   IO.cmd(lut_24_LUTKK_partial.cmd);
-  _writeLuts(lut_24_LUTKK_partial.data,lut_24_LUTKK_partial.databytes,
-            lut_24_LUTKK_partial.databytes-sizeof(lut_24_LUTKK_partial.data));
+  for (int i=0;i<lut_24_LUTKK_partial.databytes;++i) {
+    IO.data(lut_24_LUTKK_partial.data[i]);
+  }
 
   IO.cmd(lut_25_LUTBD_partial.cmd);
-  _writeLuts(lut_25_LUTBD_partial.data,lut_25_LUTBD_partial.databytes,
-            lut_25_LUTBD_partial.databytes-sizeof(lut_25_LUTBD_partial.data));
+  for (int i=0;i<lut_25_LUTBD_partial.databytes;++i) {
+    IO.data(lut_25_LUTBD_partial.data[i]);
+  }
  }
 
 //Initialize the display
@@ -144,13 +158,13 @@ void Gdew075T7::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew075T7::init(%d) and reset EPD\n", debug);
     //Initialize SPI at 4MHz frequency
-    IO.init(4, false); // true
-    fillScreen(GxEPD_WHITE);
+    IO.init(4, true);
+    fillScreen(EPD_WHITE);
 }
 
 void Gdew075T7::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == GxEPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -236,12 +250,12 @@ uint16_t Gdew075T7::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint
 
 void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("trying updateWindow: Still in test mode\n");
+  printf("updateWindow: Still in test mode\n");
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GxGDEW075T7_WIDTH) return;
-  if (y >= GxGDEW075T7_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GxGDEW075T7_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GxGDEW075T7_HEIGHT, y + h) - 1;
+  if (x >= GDEW075T7_WIDTH) return;
+  if (y >= GDEW075T7_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GDEW075T7_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEW075T7_HEIGHT, y + h) - 1;
   // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
@@ -259,11 +273,15 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     {
       for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
       {
-        uint16_t idx = y1 * (GxGDEW075T7_WIDTH / 8) + x1;
+        uint16_t idx = y1 * (GDEW075T7_WIDTH / 8) + x1;
         // white is 0x00 in buffer
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         // white is 0xFF on device
-        IO.data(~data);
+        IO.data(data);
+        if (idx%8==0) {
+          rtc_wdt_feed();
+          vTaskDelay(pdMS_TO_TICKS(1));
+        }
       }
     }
     IO.cmd(0x12); // display refresh
@@ -271,7 +289,7 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     IO.cmd(0x92); // partial out
   } // leave both controller buffers equal
   
-  vTaskDelay(GxGDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
+  vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
 }
 
 void Gdew075T7::_waitBusy(const char* message){
@@ -305,16 +323,16 @@ void Gdew075T7::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GxGDEW075T7_WIDTH - x - w - 1;
+      x = GDEW075T7_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GxGDEW075T7_WIDTH - x - w - 1;
-      y = GxGDEW075T7_HEIGHT - y - h - 1;
+      x = GDEW075T7_WIDTH - x - w - 1;
+      y = GDEW075T7_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GxGDEW075T7_HEIGHT - y - h - 1;
+      y = GDEW075T7_HEIGHT - y - h - 1;
       break;
   }
 }
@@ -326,18 +344,18 @@ void Gdew075T7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = GxGDEW075T7_WIDTH - x - 1;
+      x = GDEW075T7_WIDTH - x - 1;
       break;
     case 2:
-      x = GxGDEW075T7_WIDTH - x - 1;
-      y = GxGDEW075T7_HEIGHT - y - 1;
+      x = GDEW075T7_WIDTH - x - 1;
+      y = GDEW075T7_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GxGDEW075T7_HEIGHT - y - 1;
+      y = GDEW075T7_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GxGDEW075T7_WIDTH / 8;
+  uint16_t i = x / 8 + y * GDEW075T7_WIDTH / 8;
 
   if (color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));

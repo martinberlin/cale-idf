@@ -14,12 +14,12 @@
 #include <epdspi.h>
 // Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
 
-#define GxGDEW042T2_WIDTH 400
-#define GxGDEW042T2_HEIGHT 300
-#define GxGDEW042T2_BUFFER_SIZE (uint32_t(GxGDEW042T2_WIDTH) * uint32_t(GxGDEW042T2_HEIGHT) / 8)
+#define GDEW042T2_WIDTH 400
+#define GDEW042T2_HEIGHT 300
+#define GDEW042T2_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 8)
 
 
-// Note: GxGDEW0213I5F is our test display that will be the default initializing this class
+// Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdew042t2 : public Epd
 {
   public:
@@ -41,7 +41,7 @@ class Gdew042t2 : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GxGDEW042T2_BUFFER_SIZE];
+    uint8_t _buffer[GDEW042T2_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
 

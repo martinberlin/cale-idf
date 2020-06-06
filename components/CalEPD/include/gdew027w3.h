@@ -12,9 +12,9 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 // Controller: IL91874  Note: This is the display that the T5S from TTGO use
-#define GxGDEW027W3_WIDTH 176
-#define GxGDEW027W3_HEIGHT 264
-#define GxGDEW027W3_BUFFER_SIZE (uint32_t(GxGDEW027W3_WIDTH) * uint32_t(GxGDEW027W3_HEIGHT) / 8)
+#define GDEW027W3_WIDTH 176
+#define GDEW027W3_HEIGHT 264
+#define GDEW027W3_BUFFER_SIZE (uint32_t(GDEW027W3_WIDTH) * uint32_t(GDEW027W3_HEIGHT) / 8)
 
 class Gdew027w3 : public Epd
 {
@@ -41,7 +41,7 @@ class Gdew027w3 : public Epd
 
   private:
     EpdSpi& IO;
-    uint8_t _buffer[GxGDEW027W3_BUFFER_SIZE];
+    uint8_t _buffer[GDEW027W3_BUFFER_SIZE];
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
