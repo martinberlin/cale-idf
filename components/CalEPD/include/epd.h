@@ -1,5 +1,8 @@
 #ifndef epd_h
 #define epd_h
+
+#define CALEPD_VERSION "0.9"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +15,6 @@
 #include <string>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-
 
 // the only colors supported by any of these displays; mapping of other colors is class specific
 #define GxEPD_BLACK     0x0000
@@ -94,7 +96,9 @@ class Epd : public virtual Adafruit_GFX
   public:
     const char* TAG = "Epd driver";
     
-    Epd(int16_t w, int16_t h) : Adafruit_GFX(w,h) {};
+    Epd(int16_t w, int16_t h) : Adafruit_GFX(w,h) {
+        printf("CalEPD component version %s\n",CALEPD_VERSION);
+    };
 
     // Every display model should implement this public methods
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method

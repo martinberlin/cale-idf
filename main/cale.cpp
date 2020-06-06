@@ -17,6 +17,8 @@ Gdew075T7 display(io);
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 
+#include <Fonts/FreeMonoBold24pt7b.h>
+#include <Fonts/FreeSansOblique24pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/FreeSerif12pt7b.h>
@@ -31,16 +33,16 @@ void demo(uint16_t bkcolor,uint16_t fgcolor){
    display.setTextColor(fgcolor);
    display.setCursor(1,30);
    display.setFont(&FreeMono9pt7b);
-   display.println("MonoBold18pt7b");
+   display.println("FreeMonoBold24pt7b:");
    // Short test:
    /* for (int i = 0; i < 10; i++) {
      display.drawPixel(i,0,fgcolor);
    } 
    return; */
-   display.setCursor(6,62);
-   display.fillRect(1, 40, display.width(), 30, fgcolor);
+   display.setCursor(6,66);
+   display.fillRect(1, 40, display.width(), 34, fgcolor);
    display.setTextColor(bkcolor);
-   display.setFont(&FreeMonoBold18pt7b);
+   display.setFont(&FreeMonoBold24pt7b);
    display.println("CalEPD");
    display.setTextColor(fgcolor);
 
@@ -53,17 +55,21 @@ void demo(uint16_t bkcolor,uint16_t fgcolor){
    display.setFont(&FreeSerifBoldItalic18pt7b);
    display.println("BERLIN");
 
+   display.setFont(&FreeSansOblique24pt7b);
+   display.println("is a very");
+   display.println("nice city");
    // Test  shapes
-   display.drawCircle(50, 190, 20, fgcolor); 
-   display.drawCircle(50, 190, 22, fgcolor);
+   display.fillCircle(400, 200, 180, fgcolor); 
+   display.drawCircle(400, 200, 190, fgcolor);
 
-   display.drawRect(90, 200, 38, 22, fgcolor);
+   display.drawRect(1, 350, 400, 42, fgcolor);
+   display.drawRect(2, 351, 410, 52, fgcolor);
 
-   display.drawTriangle(174, 150, 100, 60, 200, 50, fgcolor);
+   display.fillTriangle(574, 350, 400, 260, 600, 470, fgcolor);
 
-   for (int i = 0; i < 200; i++) {
-     display.drawPixel(i,279,fgcolor);
-     display.drawPixel(i,280,fgcolor);
+   for (int i = 0; i < display.width(); i++) {
+     display.drawPixel(i,379,fgcolor);
+     display.drawPixel(i,380,fgcolor);
    } 
 }
 
@@ -82,7 +88,7 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.setRotation(0);
+   display.setRotation(2); // 2 for 7.5
 
    
 
