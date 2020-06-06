@@ -78,11 +78,11 @@ void demoPartialUpdate(uint16_t bkcolor,uint16_t fgcolor,uint16_t box_x,uint16_t
   display.setTextColor(fgcolor);
   
   uint16_t box_w = display.width()-box_x-10;
-  uint16_t box_h = 200;
+  uint16_t box_h = 100;
   printf("Partial update box x:%d y:%d width:%d height:%d\n",box_x,box_y,box_w,box_h);
   uint16_t cursor_y = box_y + 26;
   display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
-  display.setCursor(box_x, cursor_y);
+  display.setCursor(box_x, cursor_y+40);
   display.print("PARTIAL REFRESH TEST");
   
   display.updateWindow(box_x, box_y, box_w, box_h, true);
@@ -123,10 +123,11 @@ void app_main(void)
    
    vTaskDelay(2000 / portTICK_PERIOD_MS);
    // Partial update tests:
-  // Note: Prints the test font, does not seem to write a white rectangle
-  // demoPartialUpdate(GxEPD_WHITE,GxEPD_BLACK);
-
   // Note: Prints the background but not full black
-  // As a side effect also turns white the whole vertical area of the box
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50, 50);
+  // As a side effect also affects the top and bottom parts minimally
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 200, 50);
+
+   vTaskDelay(3000 / portTICK_PERIOD_MS);
+   // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
+   demoPartialUpdate(EPD_WHITE, EPD_BLACK, 300, 300);
 }

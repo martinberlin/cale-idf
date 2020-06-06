@@ -102,8 +102,8 @@ Gdew075T7::Gdew075T7(EpdSpi& dio):
 }
 
 void Gdew075T7::initFullUpdate(){
-  IO.cmd(epd_panel_setting_full.cmd);       // panel setting
-  IO.data(epd_panel_setting_full.data[0]);  // full update LUT from OTP
+  IO.cmd(epd_panel_setting_full.cmd);          // panel setting
+  IO.data(epd_panel_setting_full.data[0]);     // full update LUT from OTP
 }
 
 void Gdew075T7::initPartialUpdate(){
@@ -118,47 +118,33 @@ void Gdew075T7::initPartialUpdate(){
   IO.data(0x39);   // LUTBD, N2OCP: copy new to old
   IO.data(0x07);
 
-  // LUT Tables for partial update
-  printf("LUT 20\n\n");
+  // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
   IO.cmd(lut_20_LUTC_partial.cmd);
-  for (int i=0;i<lut_20_LUTC_partial.databytes;++i) {
-      IO.data(lut_20_LUTC_partial.data[i]);
-  }
-  
-  printf("LUT 21\n\n");
+  IO.data(lut_20_LUTC_partial.data,lut_20_LUTC_partial.databytes);
+
   IO.cmd(lut_21_LUTWW_partial.cmd);
-  for (int i=0;i<lut_21_LUTWW_partial.databytes;++i) {
-    IO.data(lut_21_LUTWW_partial.data[i]);
-  }
-  printf("LUT 22\n\n");
+  IO.data(lut_21_LUTWW_partial.data,lut_21_LUTWW_partial.databytes);
+
   IO.cmd(lut_22_LUTKW_partial.cmd);
-  for (int i=0;i<lut_22_LUTKW_partial.databytes;++i) {
-    IO.data(lut_22_LUTKW_partial.data[i]);
-  }
-  printf("LUT 23\n\n");
+  IO.data(lut_22_LUTKW_partial.data,lut_22_LUTKW_partial.databytes);
+
   IO.cmd(lut_23_LUTWK_partial.cmd);
-  for (int i=0;i<lut_23_LUTWK_partial.databytes;++i) {
-    IO.data(lut_23_LUTWK_partial.data[i]);
-  }
+  IO.data(lut_23_LUTWK_partial.data,lut_23_LUTWK_partial.databytes);
 
   IO.cmd(lut_24_LUTKK_partial.cmd);
-  for (int i=0;i<lut_24_LUTKK_partial.databytes;++i) {
-    IO.data(lut_24_LUTKK_partial.data[i]);
-  }
+  IO.data(lut_24_LUTKK_partial.data,lut_24_LUTKK_partial.databytes);
 
   IO.cmd(lut_25_LUTBD_partial.cmd);
-  for (int i=0;i<lut_25_LUTBD_partial.databytes;++i) {
-    IO.data(lut_25_LUTBD_partial.data[i]);
-  }
+  IO.data(lut_25_LUTBD_partial.data,lut_25_LUTBD_partial.databytes);
  }
 
 //Initialize the display
 void Gdew075T7::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Gdew075T7::init(%d) and reset EPD\n", debug);
-    //Initialize SPI at 4MHz frequency
-    IO.init(4, true);
+    if (debug_enabled) printf("Gdew075T7::init(debug:%d)\n", debug);
+    //Initialize SPI at 4MHz frequency. true for debug
+    IO.init(4, false);
     fillScreen(EPD_WHITE);
 }
 
@@ -336,7 +322,6 @@ void Gdew075T7::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
       break;
   }
 }
-
 
 void Gdew075T7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
