@@ -71,35 +71,51 @@ DRAM_ATTR const epd_init_42 Gdew042t2::lut_bb_full={
 #define T3  2 // color change or sustain phase
 #define T4 25 // color change phase
 
-DRAM_ATTR const epd_init_12 Gdew042t2::lut_20_vcom0_partial={
+DRAM_ATTR const epd_init_44 Gdew042t2::lut_20_vcom0_partial={
 0x20,{
   0x00, T1, T2, T3, T4, 1, // 00 00 00 00
   0x00,  1,  0,  0,  0, 1, // gnd phase
-},12};
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00
+},44};
 
-DRAM_ATTR const epd_init_12 Gdew042t2::lut_21_ww_partial={
+DRAM_ATTR const epd_init_42 Gdew042t2::lut_21_ww_partial={
 0x21,{
   0x18, T1, T2, T3, T4, 1, // 00 01 10 00
-  0x00,  1,  0,  0,  0, 1, // gnd phase
-},12};
+  0x00,  1,  0,  0,  0, 1, // gnd phase - 12 till here
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
 
-DRAM_ATTR const epd_init_12 Gdew042t2::lut_22_bw_partial={
+DRAM_ATTR const epd_init_42 Gdew042t2::lut_22_bw_partial={
 0x22,{ // 10 w
   0x5A, T1, T2, T3, T4, 1, // 01 01 10 10
   0x00,  1,  0,  0,  0, 1, // gnd phase
-},12};
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
 
-DRAM_ATTR const epd_init_12 Gdew042t2::lut_23_wb_partial={
+DRAM_ATTR const epd_init_42 Gdew042t2::lut_23_wb_partial={
 0x23,{
   0xA5, T1, T2, T3, T4, 1, // 10 10 01 01
   0x00,  1,  0,  0,  0, 1, // gnd phase
-},12};
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
 
-DRAM_ATTR const epd_init_12 Gdew042t2::lut_24_bb_partial={
+DRAM_ATTR const epd_init_42 Gdew042t2::lut_24_bb_partial={
 0x24,{
   0x24, T1, T2, T3, T4, 1, // 00 10 01 00
   0x00,  1,  0,  0,  0, 1, // gnd phase
-},12};
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
 
 DRAM_ATTR const epd_power_4 Gdew042t2::epd_wakeup_power={
 0x01,{0x03,0x00,0x2b,0x2b},4
@@ -156,7 +172,36 @@ void Gdew042t2::initFullUpdate(){
 }
 
 void Gdew042t2::initPartialUpdate(){
- //TODO
+  IO.cmd(0x00);
+  IO.data(0x3F); //300x400 B/W mode, LUT set by register
+
+  // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
+  
+  IO.cmd(lut_20_vcom0_partial.cmd);
+  for (uint8_t i = 0;i < sizeof(lut_20_vcom0_partial.data); i++) {
+   IO.data(lut_20_vcom0_partial.data[i]);
+  }
+
+  IO.cmd(lut_21_ww_partial.cmd);
+  for (uint8_t i = 0;i < sizeof(lut_21_ww_partial.data); i++) {
+   IO.data(lut_21_ww_partial.data[i]);
+  }
+
+  IO.cmd(lut_22_bw_partial.cmd);
+  for (uint8_t i = 0;i < sizeof(lut_22_bw_partial.data); i++) {
+   IO.data(lut_22_bw_partial.data[i]);
+  }
+
+  IO.cmd(lut_23_wb_partial.cmd);
+  for (uint8_t i = 0;i < sizeof(lut_23_wb_partial.data); i++) {
+   IO.data(lut_23_wb_partial.data[i]);
+  }
+
+  IO.cmd(lut_24_bb_partial.cmd);
+  for (uint8_t i = 0;i < sizeof(lut_24_bb_partial.data); i++) {
+   IO.data(lut_24_bb_partial.data[i]);
+  }
+  //IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
  }
 
 //Initialize the display
@@ -245,24 +290,44 @@ void Gdew042t2::update()
 
 uint16_t Gdew042t2::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
-  x &= 0xFFF8; // byte boundary
+  x &= 0xFFF8;            // byte boundary
   xe = (xe - 1) | 0x0007; // byte boundary - 1
-  IO.cmd(0x90); // partial window
+  IO.cmd(0x90);           // partial window
+  IO.data(x / 256);
   IO.data(x % 256);
+  IO.data(xe / 256);
   IO.data(xe % 256);
   IO.data(y / 256);
   IO.data(y % 256);
   IO.data(ye / 256);
   IO.data(ye % 256);
-  IO.data(0x01);
-  IO.data(0x00);
+  IO.data(0x01);           // Not any visual difference
+
   return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
 void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("deprecated: updateWindow does not work\n");
-  if (using_rotation) _rotate(x, y, w, h);
+  printf("updateWindow is still being tested\n\n");
+  if (using_rotation) {
+    switch (getRotation())
+    {
+      case 1:
+        swap(x, y);
+        swap(w, h);
+        x = GDEW042T2_WIDTH - x - w - 1;
+        break;
+      case 2:
+        x = GDEW042T2_WIDTH - x - w - 1;
+        y = GDEW042T2_HEIGHT - y - h - 1;
+        break;
+      case 3:
+        swap(x, y);
+        swap(w, h);
+        y = GDEW042T2_HEIGHT - y  - h - 1;
+        break;
+    }
+  }
   if (x >= GDEW042T2_WIDTH) return;
   if (y >= GDEW042T2_HEIGHT) return;
   uint16_t xe = gx_uint16_min(GDEW042T2_WIDTH, x + w) - 1;
@@ -273,32 +338,41 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
   if (!_using_partial_mode) _wakeUp();
   _using_partial_mode = true;
   initPartialUpdate();
-  for (uint16_t twice = 0; twice < 2; twice++)
-  { // leave both controller buffers equal
-    IO.cmd(0x91); // partial in
-    _setPartialRamArea(x, y, xe, ye);
-    IO.cmd(0x13);
 
-    uint16_t counter = 0;
-    uint8_t data[GDEW042T2_WIDTH*GDEW042T2_HEIGHT];
-    for (int16_t y1 = y; y1 <= ye; y1++)
-    {
-      for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
-      {
-        uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
-        data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-        //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
-        //IO.data(~data); // white is 0xFF on device
-        ++counter;
-      }
-    }
-    IO.data(data, counter);
-    IO.cmd(0x12);      // display refresh
-    _waitBusy("updateWindow");
-    IO.cmd(0x92);      // partial out
-  } // leave both controller buffers equal
+  IO.cmd(0x91); // partial in
+  _setPartialRamArea(x, y, xe, ye);
+  IO.cmd(0x13);
   
-  //vTaskDelay(GDEW042T2_PU_DELAY);
+
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+    {
+      uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
+      IO.data(~data); // white is 0xFF on device
+    }
+  }
+
+
+  IO.cmd(0x92);      // partial out
+  IO.cmd(0x12);      // display refresh
+  _waitBusy("updateWindow");
+
+
+  IO.cmd(0x91);      // partial out
+  _setPartialRamArea(x, y, xe, ye);
+  IO.cmd(0x13);
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+    {
+      uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(~data);
+    }
+  }
+  IO.cmd(0x92); // partial out
 }
 
 void Gdew042t2::_waitBusy(const char* message){
