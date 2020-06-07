@@ -1,0 +1,2 @@
+Adafruit-GFX-Library-ESP-IDF=master
+CalEPD=master
