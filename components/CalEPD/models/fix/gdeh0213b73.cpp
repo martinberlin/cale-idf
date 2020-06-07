@@ -7,7 +7,7 @@
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
-
+#define GDEH0213B73_PU_DELAY 300
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
 DRAM_ATTR const epd_lut_100 Gdeh0213b73::lut_data_full={
@@ -27,11 +27,11 @@ DRAM_ATTR const epd_lut_100 Gdeh0213b73::lut_data_full={
   0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00
 },100};
 
 DRAM_ATTR const epd_lut_100 Gdeh0213b73::lut_data_part={
-0x21, {
+0x32, {
   0x40,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -62,17 +62,29 @@ Gdeh0213b73::Gdeh0213b73(EpdSpi& dio):
 void Gdeh0213b73::initFullUpdate(){
     _wakeUp();
 
-    cmd(lut_data_full.cmd); 
-    IO.data(lut_data_full.data,lut_data_full.databytes);
+    cmd(lut_data_full.cmd);
+    for (uint16_t i = 0; i < sizeof(lut_data_full.data); i++) {
+      IO.data(lut_data_full.data[i]);
+    }
 
     _powerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
 
 void Gdeh0213b73::initPartialUpdate(){
+  _wakeUp();
 
-// TODO
-    if (debug_enabled) printf("initPartialUpdate() Not impemented \n");
+  cmd(0x2C);      // VCOM Voltage
+  IO.data(0x26);  // ???
+
+  // Send partial update LUT table 0x32 -> LUT data
+  cmd(lut_data_part.cmd);
+  for (uint16_t i = 0; i < sizeof(lut_data_part.data); i++) {
+    IO.data(lut_data_part.data[i]);
+  }
+
+  _powerOn();
+  if (debug_enabled) printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -103,47 +115,35 @@ void Gdeh0213b73::fillScreen(uint16_t color)
 void Gdeh0213b73::update()
 {
   _using_partial_mode = false;
-  initFullUpdate(); // _InitDisplay
-  uint8_t *dataFull = new uint8_t[GDEH0213B73_BUFFER_SIZE];
-  uint16_t c = 0;
-  for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++)
-  {
-    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      dataFull[c] = data;
-      ++c;
-    }
-  } 
-  //printf("Data buffer size: %d\n",c); // 4000
-
-  cmd(0x24);
- 
- IO.data(dataFull,c);
-
-  cmd(0x26);
-
- IO.data(dataFull,c);
-  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++)
-  {
+  initFullUpdate();
+  cmd(0x24); 
+  
+  for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
     for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
     {
       uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
       IO.data(data);
     }
-  } */
+  }
+  cmd(0x26);
+  for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
+    {
+      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(data);
+    }
+  }
   
-  delete(dataFull);
-  // Update full display
+  // Update full display - next 3 lines
   cmd(0x22);
   IO.data(0xc7);
   cmd(0x20);
   _waitBusy("update full");
+
   _sleep(); // power off
 }
-
 
 uint16_t Gdeh0213b73::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
@@ -154,8 +154,50 @@ uint16_t Gdeh0213b73::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, ui
 
 void Gdeh0213b73::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  // Not implemented
-  printf("Method not implemented\n");
+  if (using_rotation) _rotate(x, y, w, h);
+  if (x >= GDEH0213B73_WIDTH) return;
+  if (y >= GDEH0213B73_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(GDEH0213B73_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEH0213B73_HEIGHT, y + h) - 1;
+  uint16_t xs_d8 = x / 8;
+  uint16_t xe_d8 = xe / 8;
+  initPartialUpdate();
+  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
+  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
+  _waitBusy("updateWindow I");
+  cmd(0x24);
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
+    {
+      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(data);
+    }
+  }
+  //_Update_Part();
+  cmd(0x22);
+  IO.data(0x04); // use Mode 1 for GxEPD
+  cmd(0x20);
+  _waitBusy("updateWindow II");
+  vTaskDelay(GDEH0213B73_PU_DELAY / portTICK_PERIOD_MS);
+
+  // update erase buffer
+  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
+  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
+  _waitBusy("updateWindow III erase buffer");
+  cmd(0x26);
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
+    {
+      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(data);
+    }
+  }
+  vTaskDelay(GDEH0213B73_PU_DELAY / portTICK_PERIOD_MS);
+  
 }
 
 void Gdeh0213b73::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
@@ -238,14 +280,15 @@ void Gdeh0213b73::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   uint16_t i = x / 8 + y * GDEH0213B73_WIDTH / 8;
- 
-  _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  if (!color) {
+    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
+    } else {
+    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+    }
 }
-
 
 // _InitDisplay generalizing names here
 void Gdeh0213b73::_wakeUp(){
-  IO.reset(15);
   cmd(0x74); //set analog block control
   IO.data(0x54);
   cmd(0x7E); //set digital block control
@@ -265,14 +308,15 @@ void Gdeh0213b73::_wakeUp(){
   IO.data(0x00);
   IO.data(0x00);
   IO.data(0x00);
+
   cmd(0x3C); //BorderWavefrom 
   IO.data(0x03);
 
-  cmd(0x2C); //VCOM Voltage
+  cmd(0x2C);        //VCOM Voltage
   IO.data(0x50);    
-  cmd(0x03);     //Gate Driving voltage Control
+  cmd(0x03);        //Gate Driving voltage Control
   IO.data(0x15);    // 19V
-  cmd(0x04);     //Source Driving voltage Control
+  cmd(0x04);        //Source Driving voltage Control
   IO.data(0x41);    // VSH1 15V
   IO.data(0xA8);    // VSH2 5V
   IO.data(0x32);    // VSL -15V
@@ -353,5 +397,6 @@ void Gdeh0213b73::_powerOn()
   cmd(0x22);
   IO.data(0xc0);
   cmd(0x20);
+
   _waitBusy("_powerOn");
 }
