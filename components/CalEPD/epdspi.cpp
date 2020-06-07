@@ -4,12 +4,12 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
-#define LCD_HOST    HSPI_HOST
+#define EPD_HOST    HSPI_HOST
 #define DMA_CHAN    2
 
 #elif defined CONFIG_IDF_TARGET_ESP32S2
-#define LCD_HOST    SPI2_HOST
-#define DMA_CHAN    LCD_HOST
+#define EPD_HOST    SPI2_HOST
+#define DMA_CHAN    EPD_HOST
 #endif
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
@@ -55,11 +55,11 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     // CS / DC GPIO states the usual way
 
     //Initialize the SPI bus
-    ret=spi_bus_initialize(LCD_HOST, &buscfg, DMA_CHAN);
+    ret=spi_bus_initialize(EPD_HOST, &buscfg, DMA_CHAN);
     ESP_ERROR_CHECK(ret);
 
     //Attach the EPD to the SPI bus
-    ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
+    ret=spi_bus_add_device(EPD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
     // debug_enabled
     if (true) {
