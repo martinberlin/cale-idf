@@ -58,11 +58,11 @@ class Gdew042t2 : public Epd
     static const epd_init_42 lut_wb_full;
     static const epd_init_42 lut_bb_full;
 
-    static const epd_init_12 lut_20_vcom0_partial;
-    static const epd_init_12 lut_21_ww_partial;
-    static const epd_init_12 lut_22_bw_partial;
-    static const epd_init_12 lut_23_wb_partial;
-    static const epd_init_12 lut_24_bb_partial;
+    static const epd_init_44 lut_20_vcom0_partial;
+    static const epd_init_42 lut_21_ww_partial;
+    static const epd_init_42 lut_22_bw_partial;
+    static const epd_init_42 lut_23_wb_partial;
+    static const epd_init_42 lut_24_bb_partial;
 
     static const epd_power_4 epd_wakeup_power;
     static const epd_init_3 epd_soft_start;
