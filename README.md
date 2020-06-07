@@ -5,17 +5,23 @@ It will take some weeks to have a working example. The reason is that we would l
 
 ## Branches
 
-**master**...    -> stable version - v.0.9.1 First testeable version with a 2.13" b/w epaper display
-**refactor/oop** -> Making the components base, most actual branch
+**master**...    -> stable version
 
-tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. WIll be kept for historic reasons
+    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
+    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480  
+
+**refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master
+
+tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. Will be kept for historic reasons
 
 
 The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
 ### Submodules
 
-Not being used at the moment since all test and development happens here. When [CalEPD epaper component](https://github.com/martinberlin/CalEPD) is ready it will be moved to it's own repository. So later this will apply, but now there is no need to do it, since all code is here.
+Not being used at the moment since all test and development happens here. Only when there are new working models they will be pushed as new release in the component repository:
+[CalEPD epaper component](https://github.com/martinberlin/CalEPD) is published on version 0.9
+
 ESP-IDF uses relative locations as its submodules URLs (.gitmodules). So they link to GitHub. To update the submodules once you **git clone** this repository:
 
     git submodule update --init --recursive
@@ -32,22 +38,18 @@ If it's an ESP32
 
     idf.py -D IDF_TARGET=esp32 menuconfig
 
-If you have ESP32S2BETA (The ones that Espressif sent before official release)
-
-    idf.py -D IDF_TARGET=esp32s2beta menuconfig
-
 If it's an ESP32S2
 
     idf.py -D IDF_TARGET=esp32s2 menuconfig
 
-Make sure to edit "CALE configuration" in the Kconfig menuoptions.
+Make sure to edit **CALE configuration** in the Kconfig menuoptions.
 
 And then just build and flash
 
     idf.py build
     idf.py flash
 
-To clean and start again in case you change target
+To clean and start again in case you change target (But usually no need to run)
 
     idf.py fullclean
 
@@ -110,4 +112,7 @@ https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
 
 ### Credits 
 
-GxEPD has been a great resource to start with. For CalEPD component, we mantain same Constants and use the same driver nomenclature as GxEPD, just in small case.  Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays.
+GxEPD has been a great resource to start with. For CalEPD component, we mantain same Constants only without the **Gx prefix** and use the same driver nomenclature as GxEPD library, just in small case.
+Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays.
+
+Thanks to all the developers interested to test this like @IoTPanic and others that pushed me to improve my C++ skills.
