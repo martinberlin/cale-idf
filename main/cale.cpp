@@ -3,16 +3,16 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdew0583t7.h>
+//#include <gdew0583t7.h>
 //#include <gdew075T7.h>
-//#include <gdew042t2.h>  // Tested correctly 06.06.20
+#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
 EpdSpi io;
-Gdew0583T7 display(io);
+//Gdew0583T7 display(io);
 //Gdew075T7 display(io);
-//Gdew042t2 display(io);
+Gdew042t2 display(io);
 //Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
@@ -61,17 +61,12 @@ void demo(uint16_t bkcolor,uint16_t fgcolor){
    display.println("is a very");
    display.println("nice city");
    // Test  shapes
-   display.fillCircle(400, 200, 180, fgcolor); 
-   display.drawCircle(400, 200, 190, fgcolor);
-
-   display.drawRect(1, 350, 400, 42, fgcolor);
-   display.drawRect(2, 351, 410, 52, fgcolor);
-
-   display.fillTriangle(574, 350, 400, 260, 600, 470, fgcolor);
+   display.fillCircle(250, 100, 80, fgcolor); 
+   display.drawCircle(252, 100, 90, fgcolor);
 
    for (int i = 0; i < display.width(); i++) {
-     display.drawPixel(i,379,fgcolor);
-     display.drawPixel(i,380,fgcolor);
+     display.drawPixel(i,279,fgcolor);
+     display.drawPixel(i,280,fgcolor);
    } 
 }
 
@@ -80,13 +75,13 @@ void demoPartialUpdate(uint16_t bkcolor,uint16_t fgcolor,uint16_t box_x,uint16_t
   display.setTextColor(fgcolor);
   
   uint16_t box_w = display.width()-box_x-10;
-  uint16_t box_h = 100;
+  uint16_t box_h = 120;
   printf("Partial update box x:%d y:%d width:%d height:%d\n",box_x,box_y,box_w,box_h);
-  uint16_t cursor_y = box_y + 26;
+  uint16_t cursor_y = box_y + 20;
   display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
   display.setCursor(box_x, cursor_y+40);
-  display.print("PARTIAL REFRESH TEST");
-  
+  display.println("PARTIAL");
+  display.println("REFRESH");
   display.updateWindow(box_x, box_y, box_w, box_h, true);
 }
 
@@ -105,9 +100,7 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.setRotation(2); // 2 for 7.5
-
-   
+   display.setRotation(0); // 2 for 7.5
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -127,11 +120,10 @@ void app_main(void)
    // Partial update tests:
   // Note: Prints the background but not full black
   // As a side effect also affects the top and bottom parts minimally
-  if (false) {
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 200, 50);
-
+  if (true) {
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 100, 50);
    vTaskDelay(3000 / portTICK_PERIOD_MS);
    // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
-   demoPartialUpdate(EPD_WHITE, EPD_BLACK, 300, 300);
+   //demoPartialUpdate(EPD_WHITE, EPD_BLACK, 200, 100);
    }
 }
