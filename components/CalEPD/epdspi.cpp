@@ -101,7 +101,7 @@ void EpdSpi::cmd(const uint8_t cmd)
 void EpdSpi::data(uint8_t data)
 {
     if (debug_enabled) {
-        //printf("D %x\n",data);
+        printf("D %x\n",data);
     }
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;

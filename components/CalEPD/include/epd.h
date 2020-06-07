@@ -103,14 +103,10 @@ class Epd : public virtual Adafruit_GFX
     // Every display model should implement this public methods
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method
     virtual void init(bool debug) = 0;
-    virtual void initFullUpdate() = 0;
-    virtual void initPartialUpdate() = 0;
     virtual void fillScreen(uint16_t color) = 0;
     virtual void update() = 0; 
 
-    // Both partial updates DO NOT work as expected, need further research
-    // What happens in some EPDs: Is turning all screen black or making strange effects
-    // partial update of rectangle from buffer to screen, does not power off
+    // Partial methods are going to be implemented by each model clases
     //virtual void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
     //virtual void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);

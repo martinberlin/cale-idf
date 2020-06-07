@@ -4,8 +4,9 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-DRAM_ATTR const epd_init_3 Gdew0583T7::epd_wakeup_power={
-0x01,{0x01,0x37,0x00},3
+// CMD, DATA, Databytes * Optional we are going to use sizeof(data)
+DRAM_ATTR const epd_init_2 Gdew0583T7::epd_wakeup_power={
+0x01,{0x37,0x00},2
 };
 
 DRAM_ATTR const epd_init_2 Gdew0583T7::epd_panel_setting={
@@ -48,7 +49,7 @@ void Gdew0583T7::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583T7::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, false);
+    IO.init(4, true);
     fillScreen(EPD_WHITE);
 }
 
@@ -66,19 +67,21 @@ void Gdew0583T7::_wakeUp(){
 //IMPORTANT: Some EPD controllers like to receive data byte per byte
 //So this won't work, still needs to be tried out for this epaper:
 //IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
-  
+  printf("_wakeUp Power on\n");
   IO.cmd(epd_wakeup_power.cmd);
-  for (int i=0;i<epd_wakeup_power.databytes;++i) {
+  for (int i=0;i<sizeof(epd_wakeup_power.data);++i) {
+    //printf(">%d\n",i);
     IO.data(epd_wakeup_power.data[i]);
   }
  
+  printf("Panel setting\n");
   IO.cmd(epd_panel_setting.cmd);
-  for (int i=0;i<epd_panel_setting.databytes;++i) {
+  for (int i=0;i<sizeof(epd_panel_setting.data);++i) {
     IO.data(epd_panel_setting.data[i]);
   }
 
   IO.cmd(epd_boost.cmd);
-  for (int i=0;i<epd_boost.databytes;++i) {
+  for (int i=0;i<sizeof(epd_boost.data);++i) {
     IO.data(epd_boost.data[i]);
   }
 
@@ -95,7 +98,7 @@ void Gdew0583T7::_wakeUp(){
 
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
-  for (int i=0;i<epd_resolution.databytes;++i) {
+  for (int i=0;i<sizeof(epd_resolution.data);++i) {
     IO.data(epd_resolution.data[i]);
   }
 
@@ -137,7 +140,7 @@ void Gdew0583T7::update()
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
     // If this does not work please comment this:
-    _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
+    //_send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
     // And uncomment next two lines:
     // uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
