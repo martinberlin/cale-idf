@@ -178,30 +178,35 @@ void Gdew042t2::initPartialUpdate(){
   // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
   
   IO.cmd(lut_20_vcom0_partial.cmd);
-  for (uint8_t i = 0;i < sizeof(lut_20_vcom0_partial.data); i++) {
+  IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
+  /* for (uint8_t i = 0;i < sizeof(lut_20_vcom0_partial.data); i++) {
    IO.data(lut_20_vcom0_partial.data[i]);
-  }
+  } */
 
   IO.cmd(lut_21_ww_partial.cmd);
-  for (uint8_t i = 0;i < sizeof(lut_21_ww_partial.data); i++) {
+  IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
+  /* for (uint8_t i = 0;i < sizeof(lut_21_ww_partial.data); i++) {
    IO.data(lut_21_ww_partial.data[i]);
-  }
+  } */
 
   IO.cmd(lut_22_bw_partial.cmd);
-  for (uint8_t i = 0;i < sizeof(lut_22_bw_partial.data); i++) {
+  IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
+  /* for (uint8_t i = 0;i < sizeof(lut_22_bw_partial.data); i++) {
    IO.data(lut_22_bw_partial.data[i]);
-  }
+  } */
 
   IO.cmd(lut_23_wb_partial.cmd);
-  for (uint8_t i = 0;i < sizeof(lut_23_wb_partial.data); i++) {
+  IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
+  /* for (uint8_t i = 0;i < sizeof(lut_23_wb_partial.data); i++) {
    IO.data(lut_23_wb_partial.data[i]);
-  }
+  } */
 
   IO.cmd(lut_24_bb_partial.cmd);
-  for (uint8_t i = 0;i < sizeof(lut_24_bb_partial.data); i++) {
+  IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
+  /* for (uint8_t i = 0;i < sizeof(lut_24_bb_partial.data); i++) {
    IO.data(lut_24_bb_partial.data[i]);
-  }
-  //IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
+  } */
+  
  }
 
 //Initialize the display
@@ -285,6 +290,29 @@ void Gdew042t2::update()
 
   IO.cmd(0x12);
   _waitBusy("update");
+
+  // GxEPD comment: Avoid double full refresh after deep sleep wakeup
+  // if (_initial) {  // --> Original
+  // Disabled is not working correctly. Must be another way to do this
+  if (false) {
+    _initial = false;
+    // use full screen partial refresh to init second controller buffer
+    // needed for subsequent partial updates
+    initPartialUpdate();
+
+    IO.cmd(0x91); // partial in
+    _setPartialRamArea(0, 0, WIDTH, HEIGHT);
+    IO.cmd(0x13);
+    for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
+    {
+      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+      IO.data(data);
+    }
+    IO.cmd(0x12);      //display refresh
+    _waitBusy("update _initial=false");
+    IO.cmd(0x92); // partial out
+  }
+
   _sleep();
 }
 
@@ -301,33 +329,15 @@ uint16_t Gdew042t2::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint
   IO.data(y % 256);
   IO.data(ye / 256);
   IO.data(ye % 256);
-  IO.data(0x01);           // Not any visual difference
-
+  //IO.data(0x01);         // Not any visual difference
+  IO.data(0x00);           // Not any visual difference
   return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
 void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   printf("updateWindow is still being tested\n\n");
-  if (using_rotation) {
-    switch (getRotation())
-    {
-      case 1:
-        swap(x, y);
-        swap(w, h);
-        x = GDEW042T2_WIDTH - x - w - 1;
-        break;
-      case 2:
-        x = GDEW042T2_WIDTH - x - w - 1;
-        y = GDEW042T2_HEIGHT - y - h - 1;
-        break;
-      case 3:
-        swap(x, y);
-        swap(w, h);
-        y = GDEW042T2_HEIGHT - y  - h - 1;
-        break;
-    }
-  }
+  if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW042T2_WIDTH) return;
   if (y >= GDEW042T2_HEIGHT) return;
   uint16_t xe = gx_uint16_min(GDEW042T2_WIDTH, x + w) - 1;
@@ -335,6 +345,7 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
   // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
+  // _wakeUp has to be done always, since after update() it goes to sleep
   if (!_using_partial_mode) _wakeUp();
   _using_partial_mode = true;
   initPartialUpdate();
@@ -350,7 +361,7 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     {
       uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
-      IO.data(~data); // white is 0xFF on device
+      IO.data(data); // white is 0xFF on device
     }
   }
 
@@ -369,7 +380,7 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     {
       uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
+      IO.data(data);
     }
   }
   IO.cmd(0x92); // partial out
