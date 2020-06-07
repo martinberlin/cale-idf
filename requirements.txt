@@ -1,2 +1,3 @@
-Adafruit-GFX-Library-ESP-IDF=master
-CalEPD=master
+# Intent to draw dependencies on Github
+Adafruit-GFX-Library-ESP-IDF=1.7.6-idf
+#CalEPD=master
