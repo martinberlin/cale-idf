@@ -1,7 +1,8 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
-    "models/gdew0583t7.cpp"
+    "models/wave12i48.cpp"
     "models/gdew075T7.cpp"
+    "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdew027w3.cpp"
@@ -10,6 +11,7 @@ set(srcs
  #   "models/gdeh0213b73.cpp"
     "epd.cpp"
     "epdspi.cpp"
+    "epd4spi.cpp"
     )
 
 # Leave as an example of how to add target only for ESP32

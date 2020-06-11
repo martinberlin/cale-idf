@@ -3,16 +3,17 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
+#include "wave12i48.h"
+//#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
 //#include <gdew075T7.h>
-#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
-EpdSpi io;
+Epd4Spi io;
 //Gdew0583T7 display(io);
 //Gdew075T7 display(io);
-Gdew042t2 display(io);
+Wave12I48 display(io);
 //Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
