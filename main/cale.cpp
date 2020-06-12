@@ -32,26 +32,35 @@ extern "C" {
 }
 
 void demo(uint16_t bkcolor,uint16_t fgcolor){
-
    display.fillScreen(bkcolor);
-   display.setTextColor(fgcolor);
-   display.setCursor(1,30);
-   display.setFont(&FreeMono9pt7b);
-   display.println("FreeMonoBold24pt7b:");
    // Short test:
-   /* for (int i = 0; i < 10; i++) {
-     display.drawPixel(i,0,fgcolor);
-   } 
-   return; */
-   display.setCursor(6,66);
-   display.fillRect(1, 40, display.width(), 34, fgcolor);
+   for (int i = 1; i <= display.width(); i++) {
+     display.drawPixel(i,10,fgcolor);
+   }
+   display.setTextColor(fgcolor);
+   display.setCursor(10,40);
+   display.setFont(&FreeMonoBold24pt7b);
+   display.println("CalEPD testing GFX engine");
+
+   display.fillCircle(650, 400, 180, fgcolor);
+   display.fillCircle(900, 200, 40, fgcolor);
+   display.fillCircle(1100, 200, 40, fgcolor);
+   display.fillCircle(1100, 400, 40, fgcolor);
+   display.fillCircle(1100, 700, 40, fgcolor);
+    
+   display.setCursor(10,80);
+   display.setFont(&FreeMono9pt7b);
+   display.println("FreeMonoBold24pt7b test");
+   display.setFont(&FreeMonoBold24pt7b);
+   display.println("We are unable to offer you data");
+   display.println("about the IC controller of the e-paper,");
+   display.println("according to our engineer.");
+   display.setCursor(6,626);
+   display.fillRect(1, 600, display.width(), 34, fgcolor);
    display.setTextColor(bkcolor);
    display.setFont(&FreeMonoBold24pt7b);
    display.println("CalEPD");
    display.setTextColor(fgcolor);
-
-   display.setFont(&FreeMono9pt7b);
-   display.println("Serif12pt7b");
 
    display.setFont(&FreeSerif12pt7b);
    display.println("AbcdeFghiJklm");
@@ -62,14 +71,6 @@ void demo(uint16_t bkcolor,uint16_t fgcolor){
    display.setFont(&FreeSansOblique24pt7b);
    display.println("is a very");
    display.println("nice city");
-   // Test  shapes
-   display.fillCircle(250, 100, 80, fgcolor); 
-   display.drawCircle(252, 100, 90, fgcolor);
-
-   for (int i = 0; i < display.width(); i++) {
-     display.drawPixel(i,279,fgcolor);
-     display.drawPixel(i,280,fgcolor);
-   } 
 }
 
 void demoPartialUpdate(uint16_t bkcolor,uint16_t fgcolor,uint16_t box_x,uint16_t box_y)
@@ -103,7 +104,7 @@ void app_main(void)
    // Test Epd class
    display.init(true);
    
-   //display.setRotation(0); // 2 for 7.5
+   display.setRotation(0);
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -111,8 +112,9 @@ void app_main(void)
       display.write(i); // Needs to be >32 (first character definition)
    }
    }
-   
-   demo(EPD_BLACK,EPD_WHITE);
+   // Back, Foreground
+   //demo(EPD_BLACK,EPD_WHITE);
+   demo(EPD_WHITE,EPD_BLACK);
    display.update();
    
 

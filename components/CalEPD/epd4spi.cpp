@@ -107,30 +107,6 @@ void Epd4Spi::data(const uint8_t data) {
     dataM1(data);
 }
 
-/* M1 & M2 */
-void Epd4Spi::cmdM1M2(const uint8_t cmd)
-{
-    if (debug_enabled) {
-        printf("M1M2C %x\n",cmd);
-    }
-
-    esp_err_t ret;
-    spi_transaction_t t;
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=8;                     //Command is 8 bits
-    t.tx_buffer=&cmd;               //The data is the cmd itself 
-
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 0);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 0);
-    ret=spi_device_polling_transmit(spi, &t);
-
-    assert(ret==ESP_OK);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
-}
-
 /* M1 */
 void Epd4Spi::cmdM1(const uint8_t cmd)
 {

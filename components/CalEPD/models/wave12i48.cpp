@@ -4,20 +4,6 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-/*
- The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
-*/
-#define T1 30 // charge balance pre-phase
-#define T2  5 // optional extension
-#define T3 30 // color change phase (b/w)
-#define T4  5 // optional extension for one color
-
-// Partial Update Delay, may have an influence on degradation
-#define WAVE12I48_PU_DELAY 100
-
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-
-
 DRAM_ATTR const epd_init_1 Wave12I48::epd_panel_setting_full={
 0x00,{0x1f},1
 };
@@ -48,7 +34,7 @@ void Wave12I48::initPartialUpdate(){
   printf("Not implemented for this Epd\n");
  }
 
-//Initialize the display - Implemented
+// Initialize the display
 void Wave12I48::init(bool debug)
 {
     debug_enabled = debug;
@@ -57,10 +43,10 @@ void Wave12I48::init(bool debug)
     IO.init(4, false);
 
     fillScreen(EPD_WHITE);
-    //clear();
+    
+    //clear(); // No need to do this, but will leave it in the class
 }
 
-// Implemented
 void Wave12I48::fillScreen(uint16_t color)
 {
   if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
@@ -71,12 +57,12 @@ void Wave12I48::fillScreen(uint16_t color)
     _buffer[x] = data;
     lastx = x;
   }
-  printf("Filled buffer from [0] to [%d]\n",lastx);
 }
 
 void Wave12I48::_powerOn(){
     // Power on
-  IO.cmdM1M2(0x04);
+  IO.cmdM1(0x04);
+  IO.cmdM2(0x04);
   vTaskDelay(pdMS_TO_TICKS(300));
   IO.cmdM1S1M2S2(0x12);
   _waitBusyM1("display refresh");
@@ -154,15 +140,14 @@ void Wave12I48::update()
   uint32_t i = 0;
   IO.cmdM1S1M2S2(0x13);
 
-  /** DISPLAYS REF:
+  /*
+   DISPLAYS:
   __________
   | S2 | M2 |
   -----------
   | M1 | S1 |
   -----------
   */
-  bool v1data = true;
-  uint8_t counter = 0;
 
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
@@ -176,30 +161,19 @@ void Wave12I48::update()
           }
 
         } else {         // M1 & S1
-          if (v1data && data!=0xff) {
-            printf("Data=%x\n",data);
-            v1data = false;
-          }
-
           if (x <= 81) { // 648/8 -> M1
             IO.dataM1(data);
           } else {       // S1
             IO.dataS1(data);
-            // Works as expected:
-            /* if (counter<20) {
-              IO.dataS1(0x00);
-              ++counter;
-            }else{
-              IO.dataS1(data);
-            } */
           }
         }
 
           ++i;
-          if (i%8==0) {
+          // Needed?
+          /* if (i%8==0) {
             rtc_wdt_feed();
             vTaskDelay(pdMS_TO_TICKS(6));
-          }
+          } */
         }
   }
 
