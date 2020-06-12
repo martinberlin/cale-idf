@@ -10,15 +10,18 @@ class Epd4Spi : IoInterface
   public:
     spi_device_handle_t spi;
     // 4 different displays, same CLK & MOSI
+    void cmdM1M2(const uint8_t cmd);
     void cmdM1(const uint8_t cmd);
     void dataM1(uint8_t data);
-    /* void cmdS1(const uint8_t cmd);
+    void cmdS1(const uint8_t cmd);
     void dataS1(uint8_t data);
     void cmdM2(const uint8_t cmd);
     void dataM2(uint8_t data);
     void cmdS2(const uint8_t cmd);
     void dataS2(uint8_t data);
-    void readBusy(gpio_num_t pin); */
+    void cmdM1S1M2S2(uint8_t cmd);
+    void dataM1S1M2S2(uint8_t data);
+    void readBusy(gpio_num_t pin);
 
     void cmd(const uint8_t cmd) override;
     void data(uint8_t data) override;

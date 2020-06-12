@@ -17,38 +17,16 @@
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 
-DRAM_ATTR const epd_init_42 Wave12I48::lut_20_LUTC_partial={
-0x20, {
-  0x00, T1, T2, T3, T4, 1, 0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-},42};
-
-// 0x07 (2nd) VGH=20V,VGL=-20V
-// 0x3f (1st) VDH= 15V
-// 0x3f (2nd) VDH=-15V
-DRAM_ATTR const epd_power_4 Wave12I48::epd_wakeup_power={
-0x01,{0x07,0x07,0x3f,0x3f},4
-};
-
 
 DRAM_ATTR const epd_init_1 Wave12I48::epd_panel_setting_full={
 0x00,{0x1f},1
 };
 
-DRAM_ATTR const epd_init_1 Wave12I48::epd_panel_setting_partial={
-0x00,{0x3f},1
-};
+DRAM_ATTR const epd_init_4 Wave12I48::epd_resolution_m1s2={
+0x61,{0x02,0x88,0x01,0xEC},4};
 
-
-DRAM_ATTR const epd_init_4 Wave12I48::epd_resolution={
-0x61,{
-  WAVE12I48_WIDTH / 256, //source 800
-  WAVE12I48_WIDTH % 256,
-  WAVE12I48_HEIGHT / 256,//gate 480
-  WAVE12I48_HEIGHT % 256
-},4};
+DRAM_ATTR const epd_init_4 Wave12I48::epd_resolution_m2s1={
+0x61,{0x02,0x90,0x01,0xEC},4};
 
 // Constructor
 Wave12I48::Wave12I48(Epd4Spi& dio): 
@@ -63,39 +41,26 @@ Wave12I48::Wave12I48(Epd4Spi& dio):
 }
 
 void Wave12I48::initFullUpdate(){
-  IO.cmd(epd_panel_setting_full.cmd);          // panel setting
-  IO.data(epd_panel_setting_full.data[0]);     // full update LUT from OTP
+  printf("Not implemented for this Epd\n");
 }
 
 void Wave12I48::initPartialUpdate(){
-  IO.cmd(epd_panel_setting_partial.cmd);       // panel setting
-  IO.data(epd_panel_setting_partial.data[0]);  // partial update LUT from registers
-
-  IO.cmd(0x82);    // vcom_DC setting
-  //      (0x2C);  // -2.3V same value as in OTP
-  IO.data(0x26);   // -2.0V
-  //       (0x1C); // -1.5V
-  IO.cmd(0x50);    // VCOM AND DATA INTERVAL SETTING
-  IO.data(0x39);   // LUTBD, N2OCP: copy new to old
-  IO.data(0x07);
-
-  // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
-  IO.cmd(lut_20_LUTC_partial.cmd);
-  IO.data(lut_20_LUTC_partial.data,lut_20_LUTC_partial.databytes);
-
-
+  printf("Not implemented for this Epd\n");
  }
 
-//Initialize the display
+//Initialize the display - Implemented
 void Wave12I48::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Wave12I48::init(debug:%d) + fillScreen\n", debug);
+    if (debug_enabled) printf("Wave12I48::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, true);
+    IO.init(4, false);
+
     fillScreen(EPD_WHITE);
+    //clear();
 }
 
+// Implemented
 void Wave12I48::fillScreen(uint16_t color)
 {
   if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
@@ -109,149 +74,219 @@ void Wave12I48::fillScreen(uint16_t color)
   printf("Filled buffer from [0] to [%d]\n",lastx);
 }
 
+void Wave12I48::_powerOn(){
+    // Power on
+  IO.cmdM1M2(0x04);
+  vTaskDelay(pdMS_TO_TICKS(300));
+  IO.cmdM1S1M2S2(0x12);
+  _waitBusyM1("display refresh");
+  _waitBusyM2("display refresh");
+}
+
 void Wave12I48::_wakeUp(){
-IO.reset(10);
-//IMPORTANT: Some EPD controllers like to receive data byte per byte
-//So this won't work:
-//IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
-  
-  IO.cmd(epd_wakeup_power.cmd);
-  for (int i=0;i<epd_wakeup_power.databytes;++i) {
-    IO.data(epd_wakeup_power.data[i]);
-  }
- 
-  IO.cmd(0x04);
-  _waitBusy("_wakeUp power on");
-  
-  IO.cmd(epd_panel_setting_full.cmd);
-  for (int i=0;i<epd_panel_setting_full.databytes;++i) {
-    IO.data(epd_panel_setting_full.data[i]);
-  }
+  IO.reset(200);
+  // Panel setting
+  IO.cmdM1(epd_panel_setting_full.cmd);
+  IO.dataM1(epd_panel_setting_full.data[0]);
+  IO.cmdS1(epd_panel_setting_full.cmd);
+  IO.dataS1(epd_panel_setting_full.data[0]);
+  IO.cmdM2(epd_panel_setting_full.cmd);
+  IO.dataM2(0x13);
+  IO.cmdS2(epd_panel_setting_full.cmd);
+  IO.dataS2(0x13);
 
-  IO.cmd(0x61); // tres (??? Check what is)
-  // Resolution setting
-  IO.cmd(epd_resolution.cmd);
-  for (int i=0;i<epd_resolution.databytes;++i) {
-    IO.data(epd_resolution.data[i]);
-  }
-  IO.data(0x00);
-  IO.cmd(0x50);  // VCOM AND DATA INTERVAL SETTING
-  IO.data(0x29); // LUTKW, N2OCP: copy new to old
-  IO.data(0x07);
-  IO.cmd(0x60);  // TCON SETTING
-  IO.data(0x22);
+  // booster soft start
+  IO.cmdM1(0x06);
+  IO.dataM1(0x17);	//A
+  IO.dataM1(0x17);	//B
+  IO.dataM1(0x39);	//C
+  IO.dataM1(0x17);
+  IO.cmdM2(0x06);
+  IO.dataM2(0x17);
+  IO.dataM2(0x17);
+  IO.dataM2(0x39);
+  IO.dataM2(0x17);
 
-  initFullUpdate();
+  printf("Resolution setting\n");
+  IO.cmdM1(epd_resolution_m1s2.cmd);
+  for (int i=0;i<epd_resolution_m1s2.databytes;++i) {
+    IO.dataM1(epd_resolution_m1s2.data[i]);
+  }
+  IO.cmdS1(epd_resolution_m2s1.cmd);
+  for (int i=0;i<epd_resolution_m2s1.databytes;++i) {
+    IO.dataS1(epd_resolution_m2s1.data[i]);
+  }
+  IO.cmdM2(epd_resolution_m2s1.cmd);
+  for (int i=0;i<epd_resolution_m2s1.databytes;++i) {
+    IO.dataM2(epd_resolution_m2s1.data[i]);
+  }
+  IO.cmdS2(epd_resolution_m1s2.cmd);
+  for (int i=0;i<epd_resolution_m1s2.databytes;++i) {
+    IO.dataS2(epd_resolution_m1s2.data[i]);
+  }
+  
+  IO.cmdM1S1M2S2(0x15);  // DUSPI
+  IO.dataM1S1M2S2(0x20);
+
+  IO.cmdM1S1M2S2(0x50);  //Vcom and data interval setting
+  IO.dataM1S1M2S2(0x21); //Border KW
+  IO.dataM1S1M2S2(0x07);
+
+  IO.cmdM1S1M2S2(0x60);  //TCON
+  IO.dataM1S1M2S2(0x22);
+
+  IO.cmdM1S1M2S2(0xE3);
+  IO.dataM1S1M2S2(0x00);
+
+  IO.cmdM1S1M2S2(0xe0);  //Cascade setting
+  IO.dataM1S1M2S2(0x03);
+    
+  IO.cmdM1S1M2S2(0xe5);//Force temperature
+  IO.dataM1S1M2S2(0x00);
+
 }
 
 void Wave12I48::update()
 {
-  _using_partial_mode = false;
   _wakeUp();
 
-  IO.cmd(0x13);
   printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
+
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-    IO.data(data);
+    // Send the buffer to different epapers : Waveshare ex. Web_EPD_LoadA()
+    if(i == 0){           // 162 * 492 / 2
+        printf("Load S2\n");
+        IO.cmdS2(0x13);
+        rtc_wdt_feed();
+    }else if(i == 39852){ // 164 * 492 / 2
+        printf("M2\n");
+        IO.cmdM2(0x13);
+    }else if(i == 80196){ // 162 * 492 / 2
+        printf("M1\n");
+        IO.cmdM1(0x13);
+    }else if(i == 120048){ // 164 * 492 / 2
+        printf("S1\n");
+        IO.cmdS1(0x13);
+    }
+    if(i < 39852){
+      IO.dataS2(data);
+    }else if(i < 80196 && i >= 39852){
+      IO.dataM2(data);
+    }else if(i < 120048 && i >= 80196){
+      IO.dataM1(data);
+    }else if(i >= 120048){
+      IO.dataS1(data);
+    }
+    
     // Let CPU breath. Withouth delay watchdog will jump in your neck
     if (i%8==0) {
        rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(1));
+       vTaskDelay(pdMS_TO_TICKS(6));
      }
-    if (i%500==0 && debug_enabled) printf("%d ",i);
+    if (i%2000==0 && debug_enabled) printf("%d ",i);
   }
 
-  IO.cmd(0x12);
-  _waitBusy("update");
-  _sleep();
+  _powerOn();
 }
 
-uint16_t Wave12I48::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
-{
-  x &= 0xFFF8;            // byte boundary
-  xe = (xe - 1) | 0x0007; // byte boundary - 1
-  IO.cmd(0x90);           // partial window
-  IO.data(x / 256);
-  IO.data(x % 256);
-  IO.data(xe / 256);
-  IO.data(xe % 256);
-  IO.data(y / 256);
-  IO.data(y % 256);
-  IO.data(ye / 256);
-  IO.data(ye % 256);
-  IO.data(0x00);
-  return (7 + xe - x) / 8; // number of bytes to transfer per line
-
-}
-
-void Wave12I48::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
-{
-  printf("updateWindow: Still in test mode\n");
-  if (using_rotation) _rotate(x, y, w, h);
-  if (x >= WAVE12I48_WIDTH) return;
-  if (y >= WAVE12I48_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(WAVE12I48_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(WAVE12I48_HEIGHT, y + h) - 1;
-  // x &= 0xFFF8; // byte boundary, not needed here
-  uint16_t xs_bx = x / 8;
-  uint16_t xe_bx = (xe + 7) / 8;
-  if (!_using_partial_mode) _wakeUp();
-
-  _using_partial_mode = true;
-  initPartialUpdate();
-  
-  { // leave both controller buffers equal
-    IO.cmd(0x91); // partial in
-    _setPartialRamArea(x, y, xe, ye);
-    IO.cmd(0x13);
-
-    for (int16_t y1 = y; y1 <= ye; y1++)
-    {
-      for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
-      {
-        uint16_t idx = y1 * (WAVE12I48_WIDTH / 8) + x1;
-        // white is 0x00 in buffer
-        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-        // white is 0xFF on device
-        IO.data(data);
-        if (idx%8==0) {
-          rtc_wdt_feed();
-          vTaskDelay(pdMS_TO_TICKS(1));
-        }
-      }
-    }
-    IO.cmd(0x12); // display refresh
-    _waitBusy("updateWindow");
-    IO.cmd(0x92); // partial out
-  } // leave both controller buffers equal
-  
-  vTaskDelay(WAVE12I48_PU_DELAY / portTICK_PERIOD_MS);
+uint16_t Wave12I48::_setPartialRamArea(uint16_t, uint16_t, uint16_t, uint16_t){
+  printf("_setPartialRamArea not implemented in this Epd\n");
+  return 0;
 }
 
 void Wave12I48::_waitBusy(const char* message){
+  _waitBusyM1(message);
+}
+
+// Implemented
+void Wave12I48::_waitBusyM1(const char* message){
   if (debug_enabled) {
-    ESP_LOGI(TAG, "_waitBusy for %s", message);
+    ESP_LOGI(TAG, "_waitBusyM1 for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_SPI_M1_BUSY) == 1) break;
+    IO.cmdM1(0x71);
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>2000000)
+    if (esp_timer_get_time()-time_since_boot>WAVE_BUSY_TIMEOUT)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
     }
   }
+  vTaskDelay(pdMS_TO_TICKS(200));
 }
 
+// Implemented
+void Wave12I48::_waitBusyM2(const char* message){
+  if (debug_enabled) {
+    ESP_LOGI(TAG, "_waitBusyM2 for %s", message);
+  }
+  int64_t time_since_boot = esp_timer_get_time();
+
+  while (1){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_SPI_M2_BUSY) == 1) break;
+    IO.cmdM1(0x71);
+    vTaskDelay(1);
+    if (esp_timer_get_time()-time_since_boot>WAVE_BUSY_TIMEOUT)
+    {
+      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      break;
+    }
+  }
+  vTaskDelay(pdMS_TO_TICKS(200));
+}
+
+// Implemented
+void Wave12I48::_waitBusyS1(const char* message){
+  if (debug_enabled) {
+    ESP_LOGI(TAG, "_waitBusyS1 for %s", message);
+  }
+  int64_t time_since_boot = esp_timer_get_time();
+
+  while (1){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_SPI_S1_BUSY) == 1) break;
+    IO.cmdM1(0x71);
+    vTaskDelay(1);
+    if (esp_timer_get_time()-time_since_boot>WAVE_BUSY_TIMEOUT)
+    {
+      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      break;
+    }
+  }
+  vTaskDelay(pdMS_TO_TICKS(200));
+}
+
+// Implemented
+void Wave12I48::_waitBusyS2(const char* message){
+  if (debug_enabled) {
+    ESP_LOGI(TAG, "_waitBusyS2 for %s", message);
+  }
+  int64_t time_since_boot = esp_timer_get_time();
+
+  while (1){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_SPI_S2_BUSY) == 1) break;
+    IO.cmdM1(0x71);
+    vTaskDelay(1);
+    if (esp_timer_get_time()-time_since_boot>WAVE_BUSY_TIMEOUT)
+    {
+      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      break;
+    }
+  }
+  vTaskDelay(pdMS_TO_TICKS(200));
+}
+
+// Implemented - Enter sleep mode
 void Wave12I48::_sleep(){
-  IO.cmd(0x02);
-  _waitBusy("power_off");
-  IO.cmd(0x07); // Deep sleep
-  IO.data(0xA5);
+  IO.cmdM1S1M2S2(0x02); // power off
+  vTaskDelay(pdMS_TO_TICKS(300));
+  IO.cmdM1S1M2S2(0x07); // Deep sleep
+  IO.dataM1S1M2S2(0xA5);
+  vTaskDelay(pdMS_TO_TICKS(300));
 }
 
 void Wave12I48::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -299,4 +334,55 @@ void Wave12I48::drawPixel(int16_t x, int16_t y, uint16_t color) {
     } else {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
     }
+}
+
+void Wave12I48::clear(){
+  printf("EPD_12in48_Clear start ...\n");
+    //M1 part 648*492
+    IO.cmdM1(0x10);
+    for(uint16_t y =  492; y < 984; y++)
+        for(uint16_t x = 0; x < 81; x++) {
+            IO.dataM1(0xff);
+        }
+    IO.cmdM1(0x13);
+    for(uint16_t y = 492; y < 984; y++)
+        for(uint16_t x = 0; x < 81; x++) {
+            IO.dataM1(0xff);
+        }
+
+    //S1 part 656*492
+    IO.cmdS1(0x10);
+    for(uint16_t y = 492; y < 984; y++)
+        for(uint16_t x = 81; x < 163; x++) {
+            IO.dataS1(0xff);
+        }
+    IO.cmdS1(0x13);
+    for(uint16_t y = 492; y < 984; y++)
+        for(uint16_t x = 81; x < 163; x++) {
+            IO.dataS1(0xff);
+        }
+
+    //M2 part 656*492
+    IO.cmdM2(0x10);
+    for(uint16_t y = 0; y < 492; y++)
+        for(uint16_t x = 81; x < 163; x++) {
+            IO.dataM2(0xff);
+        }
+    IO.cmdM2(0x13);
+    for(uint16_t y = 0; y < 492; y++)
+        for(uint16_t x = 81; x < 163; x++) {
+            IO.dataM2(0xff);
+        }
+
+    //S2 part 648*492
+    IO.cmdS2(0x10);
+    for(uint16_t y = 0; y < 492; y++)
+        for(uint16_t x = 0; x < 81; x++) {
+            IO.dataS2(0xff);
+        }
+    IO.cmdS2(0x13);
+    for(uint16_t y = 0; y < 492; y++)
+        for(uint16_t x = 0; x < 81; x++) {
+            IO.dataS2(0xff);
+        }
 }

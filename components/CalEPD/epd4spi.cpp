@@ -57,10 +57,7 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
-    
-    // Not sure if it's important to start with this other PINs high
-    //gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
-    //gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CLK, 0);
     
     esp_err_t ret;
     // MISO not used, only Master to Slave
@@ -84,7 +81,6 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
         .mode=0,  //SPI mode 0
         .clock_speed_hz=frequency*multiplier*1000,  // DEBUG: 50000 - No debug usually 4 Mhz
         .input_delay_ns=0,
-        .spics_io_num=-1,
         .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
         .queue_size=5
     };
@@ -111,6 +107,30 @@ void Epd4Spi::data(const uint8_t data) {
     dataM1(data);
 }
 
+/* M1 & M2 */
+void Epd4Spi::cmdM1M2(const uint8_t cmd)
+{
+    if (debug_enabled) {
+        printf("M1M2C %x\n",cmd);
+    }
+
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+}
+
 /* M1 */
 void Epd4Spi::cmdM1(const uint8_t cmd)
 {
@@ -130,15 +150,14 @@ void Epd4Spi::cmdM1(const uint8_t cmd)
 
     assert(ret==ESP_OK);            //Should have had no issues.
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
-    //gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
-    
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 1); 
 }
 
 void Epd4Spi::dataM1(uint8_t data)
 {
-    /* if (debug_enabled) {
+    if (debug_enabled) {
       printf("D %x\n",data);
-    } */
+    }
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
@@ -146,8 +165,173 @@ void Epd4Spi::dataM1(uint8_t data)
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;              //The data is the cmd itself
     ret=spi_device_polling_transmit(spi, &t);
-    assert(ret==ESP_OK);            //Should have had no issues.
+    assert(ret==ESP_OK);
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
+}
+
+/* S1 */
+void Epd4Spi::cmdS1(const uint8_t cmd)
+{
+    if (debug_enabled) {
+        printf("S1C %x\n",cmd);
+    }
+
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 1);
+}
+
+void Epd4Spi::dataS1(uint8_t data)
+{
+    if (debug_enabled) {
+      printf("D %x\n",data);
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;              //The data is the cmd itself
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+}
+
+/* M2 */
+void Epd4Spi::cmdM2(const uint8_t cmd)
+{
+    if (debug_enabled) {
+        printf("M2C %x\n",cmd);
+    }
+
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 1);
+}
+
+void Epd4Spi::dataM2(uint8_t data)
+{
+    if (debug_enabled) {
+      printf("D %x\n",data);
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+}
+
+/* S2 */
+void Epd4Spi::cmdS2(const uint8_t cmd)
+{
+    if (debug_enabled) {
+        printf("S2C %x\n",cmd);
+    }
+
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 1);
+}
+
+void Epd4Spi::dataS2(uint8_t data)
+{
+    if (debug_enabled) {
+      printf("D %x\n",data);
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
+}
+
+// Send a command to all 4 displays
+void Epd4Spi::cmdM1S1M2S2(uint8_t cmd) {
+    if (debug_enabled) {
+        printf("All4 C %x\n",cmd);
+    }
+
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&cmd;               //The data is the cmd itself 
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 0);
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_DC, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_DC, 1);
+}
+
+// Send data to the 4 displays
+void Epd4Spi::dataM1S1M2S2(uint8_t data)
+{
+    /* if (debug_enabled) {
+      printf("D %x\n",data);
+    } */
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
 }
 
 /* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the
@@ -159,6 +343,7 @@ void Epd4Spi::dataM1(uint8_t data)
  */
 void Epd4Spi::data(const uint8_t *data, int len)
 {
+  // Not implemented for this Epd
   if (len==0) return; 
     if (debug_enabled) {
         printf("D\n");
@@ -180,8 +365,10 @@ void Epd4Spi::data(const uint8_t *data, int len)
 }
 
 void Epd4Spi::reset(uint8_t millis=20) {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_RST, 0);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_RST, 0);
     vTaskDelay(millis / portTICK_RATE_MS);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M1S1_RST, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_M2S2_RST, 1);
     vTaskDelay(millis / portTICK_RATE_MS);
 }

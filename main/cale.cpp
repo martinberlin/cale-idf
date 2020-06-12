@@ -112,9 +112,9 @@ void app_main(void)
    }
    }
    
-   //demo(EPD_BLACK,EPD_WHITE);
-   //display.update();
-   printf("setup() does nothing for now");
+   demo(EPD_BLACK,EPD_WHITE);
+   display.update();
+   
 
    /* demo(EPD_WHITE,EPD_BLACK);
    display.update();
