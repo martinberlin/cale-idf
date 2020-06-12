@@ -97,8 +97,9 @@ Gdew075T7::Gdew075T7(EpdSpi& dio):
   Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIGHT),
   Epd(GDEW075T7_WIDTH, GDEW075T7_HEIGHT), IO(dio)
 {
-  printf("Gdew075T7() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GDEW075T7_WIDTH, GDEW075T7_HEIGHT);  
+  printf("Gdew075T7() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
+  GDEW075T7_WIDTH, GDEW075T7_HEIGHT, GDEW075T7_BUFFER_SIZE);
+  printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());
 }
 
 void Gdew075T7::initFullUpdate(){

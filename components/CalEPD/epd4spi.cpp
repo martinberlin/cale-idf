@@ -3,6 +3,8 @@
 #include <string.h>
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "soc/rtc_wdt.h"
+
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define EPD_HOST    HSPI_HOST
 #define DMA_CHAN    2
@@ -21,12 +23,17 @@ __________
 
 void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
-    //Initialize GPIOs direction & initial states. Check that all are set
+    printf("PIN SETUP:\nSPI_M1_CS:%d <- all set as output GPIOs\nSPI_S1_CS:%d\nSPI_M2_CS:%d\nSPI_S2_CS:%d\n",
+    CONFIG_EINK_SPI_M1_CS,CONFIG_EINK_SPI_S1_CS,CONFIG_EINK_SPI_M2_CS,CONFIG_EINK_SPI_S2_CS);
+    // Initialize GPIOs direction & initial states. Check that all are set
+    // Setting 16 as output resets the ESP32 in TinyPICO (Don't use tinyPICO for this)
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M1_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S1_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M2_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S2_CS, GPIO_MODE_OUTPUT);
 
+    printf("\nSPI_M1_BUSY:%d <- all set as input,pullup GPIOs\nSPI_S1_BUSY:%d\nSPI_M2_BUSY:%d\nSPI_S2_BUSY:%d\n",
+    CONFIG_EINK_SPI_M1_BUSY,CONFIG_EINK_SPI_S1_BUSY,CONFIG_EINK_SPI_M2_BUSY,CONFIG_EINK_SPI_S2_BUSY);
     gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_M1_BUSY, GPIO_PULLUP_ONLY);
     gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_S1_BUSY, GPIO_PULLUP_ONLY);
     gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_M2_BUSY, GPIO_PULLUP_ONLY);
@@ -37,9 +44,11 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M2_BUSY, GPIO_MODE_INPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S2_BUSY, GPIO_MODE_INPUT);
 
+    printf("\nM1S1_DC:%d <- all set as output GPIOs\nM2S2_DC:%d\nM1S1_RST:%d\nM2S2_RST:%d\n",
+    CONFIG_EINK_M1S1_DC,CONFIG_EINK_M2S2_DC,CONFIG_EINK_M1S1_RST,CONFIG_EINK_M2S2_RST);
+    
     gpio_set_direction((gpio_num_t)CONFIG_EINK_M1S1_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_M2S2_DC, GPIO_MODE_OUTPUT);
-
     gpio_set_direction((gpio_num_t)CONFIG_EINK_M1S1_RST, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_M2S2_RST, GPIO_MODE_OUTPUT);
 

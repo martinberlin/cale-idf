@@ -92,8 +92,8 @@ void Wave12I48::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Wave12I48::init(debug:%d) + fillScreen\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, false);
-    //fillScreen(EPD_WHITE);
+    IO.init(4, true);
+    fillScreen(EPD_WHITE);
 }
 
 void Wave12I48::fillScreen(uint16_t color)

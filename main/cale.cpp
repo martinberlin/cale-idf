@@ -11,9 +11,10 @@
 //#include <gdeh0213b73.h>
 
 Epd4Spi io;
+Wave12I48 display(io);
+
 //Gdew0583T7 display(io);
 //Gdew075T7 display(io);
-Wave12I48 display(io);
 //Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
@@ -101,7 +102,8 @@ void app_main(void)
        
    // Test Epd class
    display.init(true);
-   display.setRotation(0); // 2 for 7.5
+   
+   //display.setRotation(0); // 2 for 7.5
 
 // Print all character from an Adafruit Font
   if (false) {
@@ -112,9 +114,9 @@ void app_main(void)
    
    //demo(EPD_BLACK,EPD_WHITE);
    //display.update();
-   
+   printf("setup() does nothing for now");
 
-   demo(EPD_WHITE,EPD_BLACK);
+   /* demo(EPD_WHITE,EPD_BLACK);
    display.update();
    
    vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -126,5 +128,5 @@ void app_main(void)
    vTaskDelay(3000 / portTICK_PERIOD_MS);
    // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
    //demoPartialUpdate(EPD_WHITE, EPD_BLACK, 200, 100);
-   }
+   } */
 }
