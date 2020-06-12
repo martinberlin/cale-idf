@@ -150,45 +150,60 @@ void Wave12I48::update()
 {
   _wakeUp();
 
-  printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
+  printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
+  uint32_t i = 0;
+  IO.cmdM1S1M2S2(0x13);
 
-  for (uint32_t i = 0; i < sizeof(_buffer); i++)
-  {
-    uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-    // Send the buffer to different epapers : Waveshare ex. Web_EPD_LoadA()
-    if(i == 0){           // 162 * 492 / 2
-        printf("Load S2\n");
-        IO.cmdS2(0x13);
-        rtc_wdt_feed();
-    }else if(i == 39852){ // 164 * 492 / 2
-        printf("M2\n");
-        IO.cmdM2(0x13);
-    }else if(i == 80196){ // 162 * 492 / 2
-        printf("M1\n");
-        IO.cmdM1(0x13);
-    }else if(i == 120048){ // 164 * 492 / 2
-        printf("S1\n");
-        IO.cmdS1(0x13);
-    }
-    if(i < 39852){
-      IO.dataS2(data);
-    }else if(i < 80196 && i >= 39852){
-      IO.dataM2(data);
-    }else if(i < 120048 && i >= 80196){
-      IO.dataM1(data);
-    }else if(i >= 120048){
-      IO.dataS1(data);
-    }
-    
-    // Let CPU breath. Withouth delay watchdog will jump in your neck
-    if (i%8==0) {
-       rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(6));
-     }
-    if (i%2000==0 && debug_enabled) printf("%d ",i);
+  /** DISPLAYS REF:
+  __________
+  | S2 | M2 |
+  -----------
+  | M1 | S1 |
+  -----------
+  */
+  bool v1data = true;
+  uint8_t counter = 0;
+
+  for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
+        for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
+          uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+
+        if (y <= 492) {  // S2 & M2 area
+          if (x <= 81) { // 648/8 -> S2
+          IO.dataS2(data);
+          } else {       // M2
+          IO.dataM2(data);
+          }
+
+        } else {         // M1 & S1
+          if (v1data && data!=0xff) {
+            printf("Data=%x\n",data);
+            v1data = false;
+          }
+
+          if (x <= 81) { // 648/8 -> M1
+            IO.dataM1(data);
+          } else {       // S1
+            IO.dataS1(data);
+            // Works as expected:
+            /* if (counter<20) {
+              IO.dataS1(0x00);
+              ++counter;
+            }else{
+              IO.dataS1(data);
+            } */
+          }
+        }
+
+          ++i;
+          if (i%8==0) {
+            rtc_wdt_feed();
+            vTaskDelay(pdMS_TO_TICKS(6));
+          }
+        }
   }
 
-  _powerOn();
+  _powerOn();  
 }
 
 uint16_t Wave12I48::_setPartialRamArea(uint16_t, uint16_t, uint16_t, uint16_t){
@@ -220,7 +235,6 @@ void Wave12I48::_waitBusyM1(const char* message){
   vTaskDelay(pdMS_TO_TICKS(200));
 }
 
-// Implemented
 void Wave12I48::_waitBusyM2(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusyM2 for %s", message);
@@ -240,7 +254,6 @@ void Wave12I48::_waitBusyM2(const char* message){
   vTaskDelay(pdMS_TO_TICKS(200));
 }
 
-// Implemented
 void Wave12I48::_waitBusyS1(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusyS1 for %s", message);
@@ -260,7 +273,6 @@ void Wave12I48::_waitBusyS1(const char* message){
   vTaskDelay(pdMS_TO_TICKS(200));
 }
 
-// Implemented
 void Wave12I48::_waitBusyS2(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusyS2 for %s", message);
@@ -280,7 +292,6 @@ void Wave12I48::_waitBusyS2(const char* message){
   vTaskDelay(pdMS_TO_TICKS(200));
 }
 
-// Implemented - Enter sleep mode
 void Wave12I48::_sleep(){
   IO.cmdM1S1M2S2(0x02); // power off
   vTaskDelay(pdMS_TO_TICKS(300));
@@ -327,7 +338,7 @@ void Wave12I48::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = WAVE12I48_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * WAVE12I48_WIDTH / 8;
+  uint32_t i = x / 8 + y * WAVE12I48_WIDTH / 8;
 
   if (color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));

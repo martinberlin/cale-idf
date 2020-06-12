@@ -21,8 +21,6 @@
 #define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)
 
 #define WAVE_BUSY_TIMEOUT 2000000
-// 50 % of the screen only GFX, just a test, since a 160Kb Buffer won't work
-//#define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 16)
 
 class Wave12I48 : public Epd
 {
