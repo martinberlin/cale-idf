@@ -98,19 +98,19 @@ void Wave12I48::init(bool debug)
 
 void Wave12I48::fillScreen(uint16_t color)
 {
+  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
   uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+  uint32_t lastx=0;
+  for (uint32_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
-    if (x%8==0) {
-      rtc_wdt_feed();
-      vTaskDelay(pdMS_TO_TICKS(1));
-   }
+    lastx = x;
   }
+  printf("Filled buffer from [0] to [%d]\n",lastx);
 }
 
 void Wave12I48::_wakeUp(){
-  IO.reset(10);
+IO.reset(10);
 //IMPORTANT: Some EPD controllers like to receive data byte per byte
 //So this won't work:
 //IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);

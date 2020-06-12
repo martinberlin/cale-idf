@@ -18,10 +18,10 @@
 
 // Not sure if this will work, since the 4 displays share the buffer. Warning! This big buffer will take all available heap
 // Ideally only the first one could work for GFX and the rest just to fill with a bitmap
-//#define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)
+#define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)
 
 // 50 % of the screen only GFX, just a test, since a 160Kb Buffer won't work
-#define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 16)
+//#define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 16)
 
 class Wave12I48 : public Epd
 {
