@@ -55,8 +55,11 @@ Wave12I48::Wave12I48(Epd4Spi& dio):
   Adafruit_GFX(WAVE12I48_WIDTH, WAVE12I48_HEIGHT),
   Epd(WAVE12I48_WIDTH, WAVE12I48_HEIGHT), IO(dio)
 {
-  printf("Wave12I48() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  WAVE12I48_WIDTH, WAVE12I48_HEIGHT);  
+  rtc_wdt_feed();
+  vTaskDelay(pdMS_TO_TICKS(1));
+  printf("Wave12I48() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
+  WAVE12I48_WIDTH, WAVE12I48_HEIGHT, WAVE12I48_BUFFER_SIZE);
+  printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());
 }
 
 void Wave12I48::initFullUpdate(){
@@ -87,10 +90,10 @@ void Wave12I48::initPartialUpdate(){
 void Wave12I48::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Wave12I48::init(debug:%d)\n", debug);
+    if (debug_enabled) printf("Wave12I48::init(debug:%d) + fillScreen\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
     IO.init(4, false);
-    fillScreen(EPD_WHITE);
+    //fillScreen(EPD_WHITE);
 }
 
 void Wave12I48::fillScreen(uint16_t color)
@@ -99,6 +102,10 @@ void Wave12I48::fillScreen(uint16_t color)
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
+    if (x%8==0) {
+      rtc_wdt_feed();
+      vTaskDelay(pdMS_TO_TICKS(1));
+   }
   }
 }
 

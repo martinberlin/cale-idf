@@ -26,14 +26,32 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S1_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M2_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S2_CS, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)CONFIG_EINK_RST, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)CONFIG_EINK_BUSY, GPIO_MODE_INPUT);
-    gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_BUSY, GPIO_PULLUP_ONLY);
 
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_M1_BUSY, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_S1_BUSY, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_M2_BUSY, GPIO_PULLUP_ONLY);
+    gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_SPI_S2_BUSY, GPIO_PULLUP_ONLY);
+
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M1_BUSY, GPIO_MODE_INPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S1_BUSY, GPIO_MODE_INPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_M2_BUSY, GPIO_MODE_INPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_S2_BUSY, GPIO_MODE_INPUT);
+
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_M1S1_DC, GPIO_MODE_OUTPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_M2S2_DC, GPIO_MODE_OUTPUT);
+
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_M1S1_RST, GPIO_MODE_OUTPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_M2S2_RST, GPIO_MODE_OUTPUT);
+
+    // Chip select starts HIGH since only on LOW transmits
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
+    
+    // Not sure if it's important to start with this other PINs high
+    //gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
+    //gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
     
     esp_err_t ret;
     // MISO not used, only Master to Slave
@@ -71,9 +89,8 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
     // debug_enabled
     if (true) {
-      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
-      frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
-      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d\n",
+      frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK);
         }
     }
 
