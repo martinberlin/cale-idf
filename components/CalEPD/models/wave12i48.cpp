@@ -39,7 +39,7 @@ void Wave12I48::init(bool debug)
 {
     debug_enabled = debug;
     if (debug_enabled) printf("Wave12I48::init(debug:%d)\n", debug);
-    //Initialize SPI at 4MHz frequency. true for debug
+    //Initialize SPI at 4MHz frequency. true for debug (Increasing up to 6 still works but no noticiable speed change)
     IO.init(4, false);
 
     fillScreen(EPD_WHITE);
@@ -51,11 +51,9 @@ void Wave12I48::fillScreen(uint16_t color)
 {
   if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
   uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
-  uint32_t lastx=0;
   for (uint32_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
-    lastx = x;
   }
 }
 
@@ -134,8 +132,9 @@ void Wave12I48::_wakeUp(){
 
 void Wave12I48::update()
 {
+  uint64_t startTime = esp_timer_get_time();
   _wakeUp();
-  gpio_set_level((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, 1);
+  
   printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
   uint32_t i = 0;
   IO.cmdM1S1M2S2(0x13);
@@ -169,17 +168,18 @@ void Wave12I48::update()
         }
 
           ++i;
-          // Needed?
+          // Watchdog feeding not needed for now:
           /* if (i%8==0) {
             rtc_wdt_feed();
             vTaskDelay(pdMS_TO_TICKS(6));
           } */
         }
   }
-
+  uint64_t endTime = esp_timer_get_time();
   _powerOn();
-  printf("\nAvailable heap after Epd update:%d\n",xPortGetFreeHeapSize());
-  gpio_set_level((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, 0);
+  uint64_t powerOnTime = esp_timer_get_time();
+  printf("\nAvailable heap after Epd update: %d bytes\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
+  xPortGetFreeHeapSize(), (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 }
 
 uint16_t Wave12I48::_setPartialRamArea(uint16_t, uint16_t, uint16_t, uint16_t){
