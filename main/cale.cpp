@@ -90,6 +90,8 @@ void demoPartialUpdate(uint16_t bkcolor,uint16_t fgcolor,uint16_t box_x,uint16_t
 
 void app_main(void)
 {
+    gpio_set_direction((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, GPIO_MODE_OUTPUT);
+   
     printf("CALE-IDF epaper research\n");
     /* Print chip information */
     esp_chip_info_t chip_info;
