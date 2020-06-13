@@ -310,6 +310,11 @@ void Epd4Spi::dataM1S1M2S2(uint8_t data)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
 }
 
+void Epd4Spi::data(const uint8_t *data, int len)
+{
+    dataM1(data, len);
+}
+
 /* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the
  * transfer is complete.
  *
@@ -317,27 +322,57 @@ void Epd4Spi::dataM1S1M2S2(uint8_t data)
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void Epd4Spi::data(const uint8_t *data, int len)
+void Epd4Spi::dataM1(const uint8_t *data, int len)
 {
-  // Not implemented for this Epd
-  if (len==0) return; 
-    if (debug_enabled) {
-        printf("D\n");
-        for (int i = 0; i < len; i++)  {
-            printf("%x ",data[i]);
-        }
-        printf("\n");
-    }
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    if (len==0) return;
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
-                
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=len*8;                 //Len is in bytes, transaction length is in bits.
     t.tx_buffer=data;               //Data
     ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M1_CS, 1);
+}
+void Epd4Spi::dataM2(const uint8_t *data, int len)
+{
+    if (len==0) return;
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));
+    t.length=len*8;
+    t.tx_buffer=data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_M2_CS, 1);
+}
+void Epd4Spi::dataS1(const uint8_t *data, int len)
+{
+    if (len==0) return;
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));
+    t.length=len*8;
+    t.tx_buffer=data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S1_CS, 1);
+}
+void Epd4Spi::dataS2(const uint8_t *data, int len)
+{
+    if (len==0) return;
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));
+    t.length=len*8;
+    t.tx_buffer=data;
+    ret=spi_device_polling_transmit(spi, &t);
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_S2_CS, 1);
 }
 
 void Epd4Spi::reset(uint8_t millis=20) {

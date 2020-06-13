@@ -25,6 +25,10 @@ class Epd4Spi : IoInterface
     void cmd(const uint8_t cmd) override;
     void data(uint8_t data) override;
     void data(const uint8_t *data, int len) override;
+    void dataM1(const uint8_t *data, int len);
+    void dataS1(const uint8_t *data, int len);
+    void dataM2(const uint8_t *data, int len);
+    void dataS2(const uint8_t *data, int len);
     void reset(uint8_t millis) override;
     void init(uint8_t frequency, bool debug) override;
   private:

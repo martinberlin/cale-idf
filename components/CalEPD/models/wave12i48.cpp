@@ -147,32 +147,39 @@ void Wave12I48::update()
   | M1 | S1 |
   -----------
   */
+  uint8_t x1buf[81];
+  uint8_t x2buf[82];
 
+  // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
           uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
 
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2
-          IO.dataS2(data);
+            x1buf[x-1] = data;
           } else {       // M2
-          IO.dataM2(data);
+            x2buf[x-82] = data;
+          }
+
+          if (x==WAVE12I48_WIDTH/8) {  // Send the complete X line for S2 & M2
+                IO.dataS2(x1buf,sizeof(x1buf));
+                IO.dataM2(x2buf,sizeof(x2buf));
           }
 
         } else {         // M1 & S1
           if (x <= 81) { // 648/8 -> M1
-            IO.dataM1(data);
+            x1buf[x-1] = data;
           } else {       // S1
-            IO.dataS1(data);
+            x2buf[x-82] = data;
+          }
+
+          if (x==WAVE12I48_WIDTH/8) { // Send the complete X line for M1 & S1
+              IO.dataM1(x1buf,sizeof(x1buf));
+              IO.dataS1(x2buf,sizeof(x2buf));
           }
         }
-
           ++i;
-          // Watchdog feeding not needed for now:
-          /* if (i%8==0) {
-            rtc_wdt_feed();
-            vTaskDelay(pdMS_TO_TICKS(6));
-          } */
         }
   }
   uint64_t endTime = esp_timer_get_time();
