@@ -8,7 +8,8 @@ It will take some weeks to have a working example. The reason is that we would l
 **master**...    -> stable version
 
     v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
-    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480  
+    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
+    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
 
 **refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master
 
@@ -42,7 +43,8 @@ If it's an ESP32S2
 
     idf.py -D IDF_TARGET=esp32s2 menuconfig
 
-Make sure to edit **CALE configuration** in the Kconfig menuoptions.
+Make sure to edit **Display configuration** in the Kconfig menuoptions.
+**CALE configuration** has for the moment only a LEDBUILTIN_GPIO setting so it's not important at all. Later will be the place to configure CALE.es image url.
 
 And then just build and flash
 
@@ -85,6 +87,11 @@ So SPI frequency is calculated like:
     };
 
 Feel free to play with Espressif IDF SPI settings if you know what you are doing ;)
+
+## Multi-SPI displays
+
+A new breed of supported displays is coming being the first the [Wave12I48 12.48" b/w epaper from Waveshare](https://github.com/martinberlin/cale-idf/wiki/Model-wave12i48.h).
+This is the first component that support this multi epaper displays abstracting their complexity so you can treat it as a normal 1304x984 single display and use all the Adafruit GFX methods and fonts to render graphics over it.
 
 ## Watchdogs feeding for large buffers
 
