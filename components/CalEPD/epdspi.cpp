@@ -125,13 +125,13 @@ void EpdSpi::data(uint8_t data)
 void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
-    if (debug_enabled) {
+    /* if (debug_enabled) {
         printf("D\n");
         for (int i = 0; i < len; i++)  {
             printf("%x ",data[i]);
         }
         printf("\n");
-    }
+    } */
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;

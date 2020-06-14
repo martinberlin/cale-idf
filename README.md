@@ -1,7 +1,11 @@
 # CALE ESP-IDF beta
 
-This is the beginning, and a very raw try, to make CALE compile in the Espressif IOT Development Framework. At the moment to explore how difficult it can be to pass an existing ESP32 Arduino framework project to a ESP-IDF based one and to measure how far we can go compiling this with Espressif's own dev framework. 
-It will take some weeks to have a working example. The reason is that we would like to explore alternative libraries like [ESP32 IDF Epaper example](https://github.com/loboris/ESP32_ePaper_example) and to make a version that is compatible with the recently released ESP32-S2
+This is the repository where CALE Firmware for the ESP-IDF framework will take form. Right now it serves as experimentation area to build CalEPD that is our own IDF component to control Epapers with ESP32 /ESP32S2. Please note that the components that are now phisically in this repository should be git submodules. We are using them this way to develop faster without the need to pull the submodules updates every time.
+
+CALE-IDF needs as components:
+
+- [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
+- [Adafruit GFX for ESP-IDF](https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF) My own fork of Adafruit display library
 
 ## Branches
 
@@ -112,17 +116,22 @@ In Buffers for big displays like 800*480 where the size is about 48000 bytes lon
 
 Again, if you know more about this than me, feel free to suggest a faster way. It's possible to disable also the [watchdogs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/wdts.html) but of course that is not a good practice to do so.
 
-## References
+### References and similar projects
 
 https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
 
 [esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
 
-[GxEPD Epaper library](https://CALE.es) GxEPD is to use with Espressif Arduino Framework. 
-
 [CALE.es Web-service](https://CALE.es) a Web-Service that prepares BMP & JPG Screens with the right size for your displays
 
 [CALE.es Arduino-espressif32 firmware](https://github.com/martinberlin/eink-calendar)
+
+[GxEPD Epaper library](https://CALE.es) GxEPD is to use with Espressif Arduino Framework. 
+
+### History
+
+This is the beginning, and a very raw try, to make CALE compile in the Espressif IOT Development Framework. At the moment to explore how difficult it can be to pass an existing ESP32 Arduino framework project to a ESP-IDF based one and to measure how far we can go compiling this with Espressif's own dev framework. 
+UPDATE: Saved for historical reasons. After starting this project I heavily adopted ESP-IDF as an IoT framework and toolsuit to build firmares. This become also the start of [CalEPD that is our own IDF component to control Epapers](https://github.com/martinberlin/CalEPD) with ESP32 / ESP32S2.
 
 ### Credits 
 
