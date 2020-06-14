@@ -176,37 +176,21 @@ void Gdew042t2::initPartialUpdate(){
   IO.data(0x3F); //300x400 B/W mode, LUT set by register
 
   // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
-  
   IO.cmd(lut_20_vcom0_partial.cmd);
   IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
-  /* for (uint8_t i = 0;i < sizeof(lut_20_vcom0_partial.data); i++) {
-   IO.data(lut_20_vcom0_partial.data[i]);
-  } */
+
 
   IO.cmd(lut_21_ww_partial.cmd);
   IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
-  /* for (uint8_t i = 0;i < sizeof(lut_21_ww_partial.data); i++) {
-   IO.data(lut_21_ww_partial.data[i]);
-  } */
 
   IO.cmd(lut_22_bw_partial.cmd);
   IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
-  /* for (uint8_t i = 0;i < sizeof(lut_22_bw_partial.data); i++) {
-   IO.data(lut_22_bw_partial.data[i]);
-  } */
 
   IO.cmd(lut_23_wb_partial.cmd);
   IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
-  /* for (uint8_t i = 0;i < sizeof(lut_23_wb_partial.data); i++) {
-   IO.data(lut_23_wb_partial.data[i]);
-  } */
 
   IO.cmd(lut_24_bb_partial.cmd);
   IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
-  /* for (uint8_t i = 0;i < sizeof(lut_24_bb_partial.data); i++) {
-   IO.data(lut_24_bb_partial.data[i]);
-  } */
-  
  }
 
 //Initialize the display
@@ -298,11 +282,7 @@ void Gdew042t2::update()
     }
 
   // v1 way to do it (Byte per byte toogling CS pin low->high)
-  /* for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
-  {
-    uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-    IO.data(data);
-  } */
+  // Check 0.9.2 version: https://github.com/martinberlin/CalEPD/blob/0.9.2/models/gdew042t2.cpp#L278
   
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
@@ -310,26 +290,8 @@ void Gdew042t2::update()
   uint64_t powerOnTime = esp_timer_get_time();
 
   // GxEPD comment: Avoid double full refresh after deep sleep wakeup
-  // if (_initial) {  // --> Original
-  // Disabled is not working correctly. Must be another way to do this
-  if (false) {
-    _initial = false;
-    // use full screen partial refresh to init second controller buffer
-    // needed for subsequent partial updates
-    initPartialUpdate();
-
-    IO.cmd(0x91); // partial in
-    _setPartialRamArea(0, 0, WIDTH, HEIGHT);
-    IO.cmd(0x13);
-    for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
-    {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-      IO.data(data);
-    }
-    IO.cmd(0x12);      //display refresh
-    _waitBusy("update _initial=false");
-    IO.cmd(0x92); // partial out
-  }
+  // if (_initial) {  // --> Original deprecated 
+  
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
@@ -374,7 +336,6 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
   _setPartialRamArea(x, y, xe, ye);
   IO.cmd(0x13);
   
-
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
@@ -385,11 +346,9 @@ void Gdew042t2::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     }
   }
 
-
   IO.cmd(0x92);      // partial out
   IO.cmd(0x12);      // display refresh
   _waitBusy("updateWindow");
-
 
   IO.cmd(0x91);      // partial out
   _setPartialRamArea(x, y, xe, ye);
