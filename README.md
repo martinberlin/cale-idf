@@ -63,6 +63,13 @@ Please note that to exit the monitor in Espressif documentation says Ctrl+] but 
 
     Ctrl+5
 
+## config-examples/
+
+In the config-examples folder we left samples of GPIO configurations. For example:
+
+- Wave12I48 has the GPIOs ready to use w/Waveshare socket for ESP32-devKitC
+- S2 has a sample GPIO config to be used after idf.py set-target esp32s2 (Only for S2 chips)
+
 ## SPI speed
 
 If you instantiate display.init(true) it activates verbose debug and also lowers SPI frequency to 50000. Most epapers accept a frequency up to 4 Mhz. 
