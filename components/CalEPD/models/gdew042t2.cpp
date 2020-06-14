@@ -282,12 +282,27 @@ void Gdew042t2::update()
   _wakeUp();
 
   IO.cmd(0x13);
+  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+  uint16_t i = 0;
+  uint8_t xLineBytes = GDEW042T2_WIDTH/8;
+  uint8_t x1buf[xLineBytes];
+    for(uint16_t y =  1; y <= GDEW042T2_HEIGHT; y++) {
+        for(uint16_t x = 1; x <= xLineBytes; x++) {
+          uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+          x1buf[x-1] = data;
+          if (x==xLineBytes) { // Flush the X line buffer to SPI
+            IO.data(x1buf,sizeof(x1buf));
+          }
+          ++i;
+        }
+    }
 
-  for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
+  // v1 way to do it (Byte per byte toogling CS pin low->high)
+  /* for (uint32_t i = 0; i < GDEW042T2_BUFFER_SIZE; i++)
   {
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
-  }
+  } */
   
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
@@ -316,7 +331,7 @@ void Gdew042t2::update()
     IO.cmd(0x92); // partial out
   }
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
-  endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
+  (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   _sleep();
 }
