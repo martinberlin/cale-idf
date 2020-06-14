@@ -277,6 +277,7 @@ void Gdew042t2::_wakeUp(){
 
 void Gdew042t2::update()
 {
+  uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
 
@@ -287,9 +288,11 @@ void Gdew042t2::update()
     uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
     IO.data(data);
   }
-
+  
+  uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
   _waitBusy("update");
+  uint64_t powerOnTime = esp_timer_get_time();
 
   // GxEPD comment: Avoid double full refresh after deep sleep wakeup
   // if (_initial) {  // --> Original
@@ -312,6 +315,8 @@ void Gdew042t2::update()
     _waitBusy("update _initial=false");
     IO.cmd(0x92); // partial out
   }
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
+  endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   _sleep();
 }
