@@ -20,58 +20,58 @@ menu "Display Configuration"
         range -1 34
         default 26
     config EINK_BUSY
-        int "EPD: GPIO for Busy signal"
+        int "EPD: GPIO for Busy signal - DONE, leave rest on 0 unless multi-SPI channels (wave12I48)"
         range -1 39
         default 35
 
     config EINK_SPI_M1_CS
-        int "* CS M1 NOTE: The config below only applies to 4 epaper module Waveshare 12.48 SPI share MOSI & CLK and has independant CS & BUSY pins"
-        range 16 23
+        int "* CS M1 NOTE: The config below only applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins"
+        range 0 23
         default 23
     config EINK_SPI_S1_CS
         int "* CS S1"
-        range 16 23
+        range 0 23
         default 22
     config EINK_SPI_M2_CS
         int "* CS M2"
-        range 14 23
+        range 0 23
         default 16
     config EINK_SPI_S2_CS
         int "* CS S2"
-        range 16 23
+        range 0 23
         default 19
 
     config EINK_SPI_M1_BUSY
         int "* BUSY M1"
-        range 4 32
+        range 0 32
         default 32
     config EINK_SPI_S1_BUSY
         int "* BUSY S1"
-        range 4 32
+        range 0 32
         default 26
     config EINK_SPI_M2_BUSY
         int "* BUSY M2"
-        range 4 32
+        range 0 32
         default 18
     config EINK_SPI_S2_BUSY
         int "* BUSY S2"
-        range 4 32
+        range 0 32
         default 4
 
     config EINK_M1S1_DC
         int "* M1S1_DC: M1 & S1 share DC & RST"
-        range 17 25
+        range 0 25
         default 25
     config EINK_M2S2_DC
         int "* M2S2_DC"
-        range 17 25
+        range 0 25
         default 17
     config EINK_M1S1_RST
         int "* M1S1_RST"
-        range 5 33
+        range 0 33
         default 33
     config EINK_M2S2_RST
         int "* M2S2_RST"
-        range 5 33
+        range 0 33
         default 5
 endmenu
