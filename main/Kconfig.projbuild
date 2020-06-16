@@ -1,12 +1,21 @@
 menu "CALE Configuration"
 
-    config LEDBUILTIN_GPIO
-        int "Internal LED GPIO number"
-        range 0 34
-        default 25
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "KabelBox-A210"
         help
-            GPIO number for the internal LED of your board (If it has one)
-            Using 0 will disable the use of internal LED.
-            GPIOs 35-39 are input-only so cannot be used as outputs.
+            SSID (network name) for the example to connect to.
+
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default ""
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+
+    config ESP_MAXIMUM_RETRY
+        int "Maximum retry"
+        default 5
+        help
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
 endmenu

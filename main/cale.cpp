@@ -1,159 +1,138 @@
-#include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
 
 // Should match with your epaper module, size
-//#include "wave12i48.h"
-//#include <gdew042t2.h>  // Tested correctly 06.06.20
-//#include <gdew0583t7.h>
 #include <gdew075T7.h>
-//#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
-
 // Multi-SPI 4 channels EPD only
 //Epd4Spi io;
 //Wave12I48 display(io);
 
 // Single SPI EPD
 EpdSpi io;
-//Gdew042t2 display(io);
-//Gdew0583T7 display(io);
 Gdew075T7 display(io);
-//Gdew027w3 display(io);
-//Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
-
-// FONT used for title / message body - Only after display library
-//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-
 #include <Fonts/FreeMonoBold24pt7b.h>
-#include <Fonts/FreeSansOblique24pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeMono9pt7b.h>
-#include <Fonts/FreeSerif12pt7b.h>
-#include <Fonts/FreeSerifBoldItalic18pt7b.h>
-extern "C"
-{
+
+extern "C" {
    void app_main();
 }
 
-void demo(uint16_t bkcolor, uint16_t fgcolor)
+/* FreeRTOS event group to signal when we are connected*/
+static EventGroupHandle_t s_wifi_event_group;
+
+/* The event group allows multiple bits for each event, but we only care about two events:
+ * - we are connected to the AP with an IP
+ * - we failed to connect after the maximum amount of retries */
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT      BIT1
+
+static const char *TAG = "wifi station";
+
+static int s_retry_num = 0;
+
+static void event_handler(void* arg, esp_event_base_t event_base,
+                                int32_t event_id, void* event_data)
 {
-   gpio_set_level((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, 1);
-   display.fillScreen(bkcolor);
-   // Short test:
-   for (int i = 1; i <= display.width(); i++)
-   {
-      display.drawPixel(i, 10, fgcolor);
-   }
-   display.setTextColor(fgcolor);
-   display.setCursor(10, 40);
-   display.setFont(&FreeMonoBold24pt7b);
-   printf("display.width() %d\n\n", display.width());
-   display.println("CalEPD display test\n");
-   // Print all character from an Adafruit Font
-   if (true)
-   {
-      for (int i = 40; i <= 126; i++)
-      {
-         display.write(i); // Needs to be >32 (first character definition)
-      }
-   }
-
-   // Cope with different Epd resolutions just for the demo
-   if (display.width() > 1000 && display.width() <= 1305)
-   {
-      display.fillCircle(650, 400, 180, fgcolor);
-      display.fillCircle(900, 200, 40, fgcolor);
-      display.fillCircle(1100, 200, 40, fgcolor);
-      display.fillCircle(1100, 400, 40, fgcolor);
-      display.fillCircle(1100, 700, 40, fgcolor);
-   }
-   else if (display.width() >= 800 && display.width() < 900)
-   {
-      display.setCursor(6, 626);
-      display.fillRect(1, 600, display.width(), 34, fgcolor);
-      display.fillCircle(100, 100, 60, fgcolor);
-      display.fillCircle(200, 200, 50, fgcolor);
-      display.fillCircle(300, 300, 40, fgcolor);
-      display.fillCircle(500, 500, 200, fgcolor);
-   }
-   else if (display.width() > 300 && display.width() <= 400)
-   {
-      display.setCursor(6, 326);
-      display.fillRect(1, 300, display.width(), 34, fgcolor);
-      display.fillCircle(100, 100, 60, fgcolor);
-      display.fillCircle(200, 200, 50, fgcolor);
-      display.fillCircle(300, 300, 40, fgcolor);
-   }
-
-   display.setTextColor(bkcolor);
-   display.setFont(&FreeMonoBold24pt7b);
-   display.println("CalEPD");
-   display.setTextColor(fgcolor);
-
-   display.setFont(&FreeSerif12pt7b);
-   display.println("AbcdeFghiJklm");
-
-   display.setFont(&FreeSerifBoldItalic18pt7b);
-   display.println("BERLIN");
-   display.setFont(&FreeSansOblique24pt7b);
-   display.println("is a very");
-   display.println("nice city");
-   return; // STOP test here
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY) {
+            esp_wifi_connect();
+            s_retry_num++;
+            ESP_LOGI(TAG, "retry to connect to the AP");
+        } else {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
+        ESP_LOGI(TAG,"connect to the AP fail");
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    }
 }
 
-void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
+void wifi_init_sta(void)
 {
-   display.setTextColor(fgcolor);
+    s_wifi_event_group = xEventGroupCreate();
 
-   uint16_t box_w = display.width() - box_x - 10;
-   uint16_t box_h = 120;
-   printf("Partial update box x:%d y:%d width:%d height:%d\n", box_x, box_y, box_w, box_h);
-   uint16_t cursor_y = box_y + 20;
-   display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
-   display.setCursor(box_x, cursor_y + 40);
-   display.println("PARTIAL");
-   display.println("REFRESH");
-   display.updateWindow(box_x, box_y, box_w, box_h, true);
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    esp_event_handler_instance_t instance_any_id;
+    esp_event_handler_instance_t instance_got_ip;
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                                                        IP_EVENT_STA_GOT_IP,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_got_ip));
+
+    
+    wifi_config_t wifi_config;
+    memset(&wifi_config, 0, sizeof(wifi_config));       
+    sprintf (reinterpret_cast<char*>(wifi_config.sta.ssid), CONFIG_ESP_WIFI_SSID );
+    sprintf (reinterpret_cast<char*>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD);
+    wifi_config.sta.pmf_cfg.capable = true;
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
+    ESP_ERROR_CHECK(esp_wifi_start() );
+
+    ESP_LOGI(TAG, "wifi_init_sta finished.");
+
+    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
+     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+            pdFALSE,
+            pdFALSE,
+            portMAX_DELAY);
+
+    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
+     * happened. */
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+    } else if (bits & WIFI_FAIL_BIT) {
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+    } else {
+        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    }
+
+    /* The event will not be processed after unregister */
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
+    vEventGroupDelete(s_wifi_event_group);
 }
 
 void app_main(void)
 {
-   gpio_set_direction((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, GPIO_MODE_OUTPUT);
+    //Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 
-   printf("CALE-IDF epaper research\n");
-   /* Print chip information */
-   esp_chip_info_t chip_info;
-   esp_chip_info(&chip_info);
-   printf("This is %s chip with %d CPU cores\n",
-          CONFIG_IDF_TARGET,
-          chip_info.cores);
-
-   printf("Silicon revision %d, ", chip_info.revision);
-   printf("Free heap: %d\n", esp_get_free_heap_size());
-
-   // Test Epd class
-   display.init(true);
-
-   display.setRotation(0);
-
-   // Back, Foreground
-   demo(EPD_WHITE, EPD_BLACK);
-   display.update();
-   gpio_set_level((gpio_num_t)CONFIG_LEDBUILTIN_GPIO, 0);
-
-   vTaskDelay(2000 / portTICK_PERIOD_MS);
-
-   demo(EPD_BLACK, EPD_WHITE);
-   display.update();
-   // Partial update tests:
-   // Note: Prints the background but not full black
-   // As a side effect also affects the top and bottom parts minimally
-   if (false)
-   {
-      demoPartialUpdate(EPD_BLACK, EPD_WHITE, 100, 50);
-      vTaskDelay(3000 / portTICK_PERIOD_MS);
-      // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
-      //demoPartialUpdate(EPD_WHITE, EPD_BLACK, 200, 100);
-   }
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    wifi_init_sta();
 }
