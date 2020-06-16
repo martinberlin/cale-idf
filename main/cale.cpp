@@ -1,4 +1,4 @@
-#include <string.h>
+#include "string.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -9,13 +9,12 @@
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
+//#include <wave12i48.h>
 // Should match with your epaper module, size
 #include <gdew075T7.h>
 // Multi-SPI 4 channels EPD only
 //Epd4Spi io;
 //Wave12I48 display(io);
-
 // Single SPI EPD
 EpdSpi io;
 Gdew075T7 display(io);
@@ -135,4 +134,14 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
+
+    printf("Free heap: %d\n",xPortGetFreeHeapSize());
+    // Test Epd class
+   display.init(true);
+   display.setRotation(2);
+   display.setCursor(10,25);
+   display.setTextColor(EPD_BLACK);
+   display.setFont(&FreeMonoBold24pt7b);
+   display.println("CalEPD");
+   display.update();
 }
