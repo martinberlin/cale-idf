@@ -32,9 +32,10 @@ extern "C" {
 
 static const char *TAG = "CALE";
 
-#define MAX_HTTP_RECV_BUFFER 512
-#define MAX_HTTP_OUTPUT_BUFFER 2048
+#define MAX_HTTP_OUTPUT_BUFFER 1024
 
+uint16_t countDataEventCalls=0;
+uint32_t countDataBytes=0;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -55,9 +56,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
         case HTTP_EVENT_ON_DATA:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+             ++countDataEventCalls;
+             countDataBytes+=evt->data_len;
+
              if (!esp_http_client_is_chunked_response(evt->client)) {
-                printf("%.*s", evt->data_len, (char*)evt->data);
+                printf("\nD:%d Tlen:%d %.*s", countDataEventCalls, countDataBytes, evt->data_len, (char*)evt->data);
             }
             /* if (!esp_http_client_is_chunked_response(evt->client)) {
                 // If user_data buffer is configured, copy the response into the buffer
@@ -109,10 +112,11 @@ static void http_post(void)
      * 
       .host = "httpbin.org",
        .path = "/get",
+       2.13 http://img.cale.es/bmp/fasani/5e793990af85d -> 1st test
      */
     esp_http_client_config_t config = {
         .host = "img.cale.es",
-        .path = "/bmp/fasani/5e5926e25a985",
+        .path = "/bmp/fasani/5e793990af85d",
         .event_handler = _http_event_handler,
         .user_data = local_response_buffer,        // Pass address of local buffer to get response
     };
@@ -121,11 +125,11 @@ static void http_post(void)
     // GET
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d\n",
+        ESP_LOGI(TAG, "\nHTTP GET Status = %d, content_length = %d\n",
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
     } else {
-        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
     ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
 }
