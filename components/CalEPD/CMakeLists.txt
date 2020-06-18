@@ -5,7 +5,7 @@ set(srcs
  #   "models/gdew0583t7.cpp"
  #   "models/gdew042t2.cpp"
  #   "models/gdew0213i5f.cpp"
- #   "models/gdew027w3.cpp"
+    "models/gdew027w3.cpp"
     
  # Pending for more testing:
  #   "models/gdeh0213b73.cpp"

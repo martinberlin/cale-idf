@@ -17,13 +17,16 @@
 #include "esp_http_client.h"
 //#include <wave12i48.h>
 // Should match with your epaper module, size
-#include <gdew075T7.h>
+//#include <gdew075T7.h>
+#include <gdew027w3.h>
+
 // Multi-SPI 4 channels EPD only
 //Epd4Spi io;
 //Wave12I48 display(io);
 // Single SPI EPD
 EpdSpi io;
-Gdew075T7 display(io);
+//Gdew075T7 display(io);
+Gdew027w3 display(io);
 #include <Fonts/FreeMonoBold24pt7b.h>
 
 extern "C" {
@@ -36,7 +39,7 @@ static const char *TAG = "CALE";
 
 uint16_t countDataEventCalls=0;
 uint32_t countDataBytes=0;
-
+bool willParse = true;
 struct BmpHeader
 {
    uint32_t fileSize;
@@ -67,6 +70,32 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
   ((uint8_t *)&result)[3] = output_buffer[startPointer+3]; // MSB
   return result;
 }
+// BMP reading flags
+bool valid = false; // valid format to be handled
+bool flip = true; // bitmap is stored bottom-to-top
+bool with_color = false; // Candidate for Kconfig
+uint32_t rowSize;
+uint16_t w;
+uint16_t h;
+uint8_t bitmask = 0xFF;
+uint8_t bitshift;
+uint16_t red, green, blue;
+bool whitish, colored;
+uint32_t rowPosition;
+uint16_t row = 0;
+uint16_t col = 0;
+uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
+uint32_t in_idx = 0;
+uint32_t in_bytes = 0;
+uint8_t in_byte = 0; // for depth <= 8
+uint8_t in_bits = 0; // for depth <= 8
+
+static const uint16_t input_buffer_pixels = 640; // may affect performance
+static const uint16_t max_palette_pixels = 256; // for depth <= 8
+uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
+uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
+
+int color = EPD_WHITE;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -87,7 +116,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             break;
         case HTTP_EVENT_ON_DATA:
             ++countDataEventCalls;
-            ESP_LOGI(TAG, "DATA calls:%d len:%d\n", countDataEventCalls, evt->data_len);
+            ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
             /*
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
@@ -108,8 +137,92 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                     ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n", 
                     bmp.fileSize,bmp.imageOffset,bmp.width,bmp.height,bmp.planes,bmp.depth,bmp.format);
+
+                    if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false) { // uncompressed is handled, 565 also, rest no.
+                      willParse = false;
+                      ESP_LOGE(TAG,"BMP NOT SUPPORTED (compressed formats not handled)\n");
+                    }
+
+                rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
+                if (bmp.depth < 8) rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
+                if (bmp.height < 0)
+                {
+                    bmp.height = -bmp.height;
+                    flip = false;
+                }
+                w = bmp.width;
+                h = bmp.height;
+                if ((w - 1) >= display.width())  w = display.width();
+                if ((h - 1) >= display.height()) h = display.height();
+                
+                bitshift = 8 - bmp.depth;
+                
+                if (bmp.depth == 1) with_color = false;
+                if (bmp.depth <= 8){
+                if (bmp.depth < 8) bitmask >>= bmp.depth;
+
+                for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++)
+                {
+                blue  = output_buffer[bPointer++];
+                green = output_buffer[bPointer++];
+                red   = output_buffer[bPointer++];
+                bPointer++;
+
+                whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+                colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+                if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
+                mono_palette_buffer[pn / 8] |= whitish << pn % 8;
+                if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
+                color_palette_buffer[pn / 8] |= colored << pn % 8;
+                // DEBUG Colors
+                //printf("0x00"); printf("%x\n",red); printf("%x\n",green); printf("%x\n",blue);
+                }
+            }
+
+
+                rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
                }
-               ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
+               if (!willParse) return ESP_FAIL;
+
+                printf("Start rowSize: %d rowPosition %d\n",rowSize, rowPosition);
+
+                switch (bmp.depth){
+                    case 1:
+                    case 4:
+                    case 8:
+                    {
+                        if (0 == in_bits)
+                        {
+                        in_byte = output_buffer[bPointer++];
+                        in_bits = 8;
+                        }
+                        uint16_t pn = (in_byte >> bitshift) & bitmask;
+                        whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                        colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                        in_byte <<= bmp.depth;
+                        in_bits -= bmp.depth;
+                    }
+                    break;
+                }
+
+                if (whitish){
+                    color = EPD_WHITE;
+                }
+                else if (colored && with_color){
+                    color = EPD_RED;
+                }
+                else {
+                    color = EPD_BLACK;
+                }
+                uint16_t yrow = (flip ? h - row - 1 : row);
+                display.drawPixel(col, yrow, color);
+                col++;
+                if (col%bmp.width==0) {
+                    col=0;
+                    yrow++;
+                }
+
+               //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
 
             } else {
                 ESP_LOGI(TAG,"Is chunked response\n");
@@ -118,7 +231,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             break;
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\n");
-            
+            display.update();
             break;
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
@@ -275,14 +388,15 @@ void app_main(void)
     wifi_init_sta();
 
     printf("Free heap: %d\n",xPortGetFreeHeapSize());
+    display.init(true);
 
     http_post();
-    // Test Epd class
-   /* display.init(true);
-   display.setRotation(2);
+
+   // Just test if Epd works:
+   /* display.setRotation(2);
    display.setCursor(10,25);
    display.setTextColor(EPD_BLACK);
    display.setFont(&FreeMonoBold24pt7b);
    display.println("CalEPD");
-   display.update(); */
+   display.update();  */
 }
