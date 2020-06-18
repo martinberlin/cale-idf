@@ -37,6 +37,37 @@ static const char *TAG = "CALE";
 uint16_t countDataEventCalls=0;
 uint32_t countDataBytes=0;
 
+struct BmpHeader
+{
+   uint32_t fileSize;
+   uint32_t imageOffset;
+   uint32_t headerSize;
+   uint32_t width;
+   uint32_t height;
+   uint16_t planes;
+   uint16_t depth;
+   uint32_t format;
+} bmp;
+
+uint16_t read16(uint8_t output_buffer[512], uint8_t startPointer)
+{
+  // BMP data is stored little-endian
+  uint16_t result;
+  ((uint8_t *)&result)[0] = output_buffer[startPointer];   // LSB
+  ((uint8_t *)&result)[1] = output_buffer[startPointer+1]; // MSB
+  return result;
+}
+
+uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
+{
+  uint32_t result;
+  ((uint8_t *)&result)[0] = output_buffer[startPointer]; // LSB
+  ((uint8_t *)&result)[1] = output_buffer[startPointer+1];
+  ((uint8_t *)&result)[2] = output_buffer[startPointer+2];
+  ((uint8_t *)&result)[3] = output_buffer[startPointer+3]; // MSB
+  return result;
+}
+
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
     uint8_t output_buffer[512];  // Buffer to store response 
@@ -64,7 +95,20 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (!esp_http_client_is_chunked_response(evt->client)) {
                 // If user_data buffer is configured, copy the response into the buffer
                memcpy(output_buffer, evt->data, evt->data_len);
+               if (countDataEventCalls==1) {
+                    // Read BMP header -In total 34 bytes header
+                    bmp.fileSize    = read32(output_buffer,2);
+                    bmp.imageOffset = read32(output_buffer,10);
+                    bmp.headerSize  = read32(output_buffer,14);
+                    bmp.width       = read32(output_buffer,18);
+                    bmp.height      = read32(output_buffer,22);
+                    bmp.planes      = read16(output_buffer,26);
+                    bmp.depth       = read16(output_buffer,28);
+                    bmp.format      = read32(output_buffer,30);
 
+                    ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n", 
+                    bmp.fileSize,bmp.imageOffset,bmp.width,bmp.height,bmp.planes,bmp.depth,bmp.format);
+               }
                ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
 
             } else {
