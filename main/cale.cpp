@@ -72,9 +72,10 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 }
 // BMP reading flags
 bool valid = false; // valid format to be handled
-bool flip = true; // bitmap is stored bottom-to-top
+bool flip = true;   // bitmap is stored bottom-to-top
 bool with_color = false; // Candidate for Kconfig
 uint32_t rowSize;
+uint32_t rowByteCounter;
 uint16_t w;
 uint16_t h;
 uint8_t bitmask = 0xFF;
@@ -82,10 +83,12 @@ uint8_t bitshift;
 uint16_t red, green, blue;
 bool whitish, colored;
 uint32_t rowPosition;
-uint16_t row = 0;
-uint16_t col = 0;
+uint16_t drawX = 0;
+uint16_t drawY = 0;
+// bPointer is 34 only first time when the headers come. Then is 0!
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
-uint32_t in_idx = 0;
+uint16_t imageBytesRead = 0;
+
 uint32_t in_bytes = 0;
 uint8_t in_byte = 0; // for depth <= 8
 uint8_t in_bits = 0; // for depth <= 8
@@ -94,7 +97,7 @@ static const uint16_t input_buffer_pixels = 640; // may affect performance
 static const uint16_t max_palette_pixels = 256; // for depth <= 8
 uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
-
+uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
@@ -145,6 +148,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                 rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
                 if (bmp.depth < 8) rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
+
+                printf("ROW Size %d\n", rowSize);
+
                 if (bmp.height < 0)
                 {
                     bmp.height = -bmp.height;
@@ -158,71 +164,91 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 bitshift = 8 - bmp.depth;
                 
                 if (bmp.depth == 1) with_color = false;
+               
                 if (bmp.depth <= 8){
                 if (bmp.depth < 8) bitmask >>= bmp.depth;
+                // Commen palete is at byte 54 see Jean-Marc comment
+                bPointer = 54;
+                for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++){
+                    blue  = output_buffer[bPointer++];
+                    green = output_buffer[bPointer++];
+                    red   = output_buffer[bPointer++];
+                    bPointer++;
 
-                for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++)
-                {
-                blue  = output_buffer[bPointer++];
-                green = output_buffer[bPointer++];
-                red   = output_buffer[bPointer++];
-                bPointer++;
-
-                whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-                if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
-                mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-                if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
-                color_palette_buffer[pn / 8] |= colored << pn % 8;
-                // DEBUG Colors
-                //printf("0x00"); printf("%x\n",red); printf("%x\n",green); printf("%x\n",blue);
+                    whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+                    colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+                    if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
+                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;
+                    if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
+                    color_palette_buffer[pn / 8] |= colored << pn % 8;
+                    // DEBUG Colors
+                    printf("Colors palette:\n"); printf("RED: %x\n",red); printf("GREEN: %x\n",green); printf("BLUE: %x\n",blue);
                 }
-            }
-
+                }
 
                 rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
+
+                // Important we need to start reading the image where the header offset marks
+                bPointer = bmp.imageOffset;
+               } else {
+                   bPointer = 0;
                }
                if (!willParse) return ESP_FAIL;
 
-                printf("Start rowSize: %d rowPosition %d\n",rowSize, rowPosition);
+                printf("bPointer %d\n_inX: %d _inY: %d\n", bPointer, drawX, drawY);
+
+            // LOOP all the received Buffer but start on ImageOffset if first call
+
+            for (uint32_t byteIndex=bPointer; byteIndex <= evt->data_len; ++byteIndex) {
+                in_byte = output_buffer[byteIndex];
+                in_bits = 8;
 
                 switch (bmp.depth){
                     case 1:
                     case 4:
                     case 8:
                     {
-                        if (0 == in_bits)
-                        {
-                        in_byte = output_buffer[bPointer++];
-                        in_bits = 8;
+                        while (in_bits!=0) {
+                         
+                            uint16_t pn = (in_byte >> bitshift) & bitmask;
+                            whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                            colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                            in_byte <<= bmp.depth;
+                            in_bits -= bmp.depth;
+
+                            if (whitish){
+                                color = EPD_WHITE;
+                            } else if (colored && with_color){
+                                color = EPD_RED;
+                            }
+                            else {
+                                color = EPD_BLACK;
+                            }
+                            
+                            //uint16_t yrow = (flip ? h - row - 1 : row);
+                            
+                            display.drawPixel(drawX, drawY, color);
+                            ++drawX;
+                            totalDrawPixels++;
+
+                            if (drawX % bmp.width == 0) {
+                                printf("dX:%d Y:%d\n",drawX,drawY);
+                                drawX=0;
+                                ++drawY;
+                            }
                         }
-                        uint16_t pn = (in_byte >> bitshift) & bitmask;
-                        whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                        colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                        in_byte <<= bmp.depth;
-                        in_bits -= bmp.depth;
+
                     }
                     break;
                 }
+                rowByteCounter++;
+                imageBytesRead++;
+            }
 
-                if (whitish){
-                    color = EPD_WHITE;
-                }
-                else if (colored && with_color){
-                    color = EPD_RED;
-                }
-                else {
-                    color = EPD_BLACK;
-                }
-                uint16_t yrow = (flip ? h - row - 1 : row);
-                display.drawPixel(col, yrow, color);
-                col++;
-                if (col%bmp.width==0) {
-                    col=0;
-                    yrow++;
-                }
+            printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
 
-               //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
+            // Hexa dump
+            //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
 
             } else {
                 ESP_LOGI(TAG,"Is chunked response\n");
@@ -259,7 +285,7 @@ static void http_post(void)
        2.13 http://img.cale.es/bmp/fasani/5e793990af85d -> 1st test
      */
     esp_http_client_config_t config = {
-        .url = "http://img.cale.es/bmp/fasani/5e793990af85d",
+        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -389,6 +415,7 @@ void app_main(void)
 
     printf("Free heap: %d\n",xPortGetFreeHeapSize());
     display.init(true);
+    display.setRotation(1);
 
     http_post();
 
