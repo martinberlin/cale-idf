@@ -124,10 +124,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
              */
-            if (!esp_http_client_is_chunked_response(evt->client)) {
+            //if (!esp_http_client_is_chunked_response(evt->client)) {
                 // If user_data buffer is configured, copy the response into the buffer
                memcpy(output_buffer, evt->data, evt->data_len);
                if (countDataEventCalls==1) {
+                    // display.fillScreen(EPD_WHITE);
                     // Read BMP header -In total 34 bytes header
                     bmp.fileSize    = read32(output_buffer,2);
                     bmp.imageOffset = read32(output_buffer,10);
@@ -138,6 +139,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     bmp.depth       = read16(output_buffer,28);
                     bmp.format      = read32(output_buffer,30);
 
+                    drawY = bmp.height;
                     ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n", 
                     bmp.fileSize,bmp.imageOffset,bmp.width,bmp.height,bmp.planes,bmp.depth,bmp.format);
 
@@ -167,7 +169,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                
                 if (bmp.depth <= 8){
                 if (bmp.depth < 8) bitmask >>= bmp.depth;
-                // Commen palete is at byte 54 see Jean-Marc comment
+                // Comm0n palete is at byte 54 see Jean-Marc comment
                 bPointer = 54;
                 for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++){
                     blue  = output_buffer[bPointer++];
@@ -183,6 +185,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     color_palette_buffer[pn / 8] |= colored << pn % 8;
                     // DEBUG Colors
                     printf("Colors palette:\n"); printf("RED: %x\n",red); printf("GREEN: %x\n",green); printf("BLUE: %x\n",blue);
+                    printf("whitish: %x colored: %x", whitish,colored);
                 }
                 }
 
@@ -231,10 +234,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                             ++drawX;
                             totalDrawPixels++;
 
-                            if (drawX % bmp.width == 0) {
+                            if (drawX % (bmp.width) == 0) {
                                 printf("dX:%d Y:%d\n",drawX,drawY);
                                 drawX=0;
-                                ++drawY;
+                                --drawY;
                             }
                         }
 
@@ -249,10 +252,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             // Hexa dump
             //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
-
-            } else {
+            // On 4 bits depth image returns chunked response
+            /* } else {
                 ESP_LOGI(TAG,"Is chunked response\n");
-            }
+            } */
 
             break;
         case HTTP_EVENT_ON_FINISH:
@@ -415,7 +418,7 @@ void app_main(void)
 
     printf("Free heap: %d\n",xPortGetFreeHeapSize());
     display.init(true);
-    display.setRotation(1);
+    display.setRotation(3);
 
     http_post();
 
