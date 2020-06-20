@@ -15,10 +15,12 @@
 #include "protocol_examples_common.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
+#include "esp_sleep.h"
+
 //#include <wave12i48.h>
 // Should match with your epaper module, size
-//#include <gdew075T7.h>
-#include <gdew027w3.h>
+#include <gdew075T7.h>
+//#include <gdew027w3.h>
 
 // BMP debug Mode: Turn false for production. It will make slower and through a lot of info per Serial
 bool bmpDebug = false;
@@ -28,8 +30,8 @@ bool bmpDebug = false;
 //Wave12I48 display(io);
 // Single SPI EPD
 EpdSpi io;
-//Gdew075T7 display(io);
-Gdew027w3 display(io);
+Gdew075T7 display(io);
+//Gdew027w3 display(io);
 #include <Fonts/FreeMonoBold24pt7b.h>
 
 extern "C" {
@@ -329,6 +331,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\n");
             display.update();
+            // Go to deepsleep after rendering
+            esp_sleep_enable_timer_wakeup(CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER*60*1000);
             break;
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
@@ -355,7 +359,7 @@ static void http_post(void)
        http://cale.es/img/test/circle.bmp           -> Circle test
      */
     esp_http_client_config_t config = {
-        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
+        .url = CONFIG_CALE_SCREEN_URL,
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -363,7 +367,8 @@ static void http_post(void)
     // GET
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "\nHTTP GET Status = %d, content_length = %d\n",
+        ESP_LOGI(TAG, "\nIMAGE URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
+                CONFIG_CALE_SCREEN_URL,
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
     } else {
@@ -484,8 +489,9 @@ void app_main(void)
     wifi_init_sta();
 
     printf("Free heap: %d\n",xPortGetFreeHeapSize());
-    display.init(true);
-    display.setRotation(3);
+    // init(true) activates debug
+    display.init(false);
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
 
     http_post();
 

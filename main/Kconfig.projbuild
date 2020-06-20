@@ -12,8 +12,24 @@ menu "CALE Configuration"
         help
             WiFi password (WPA or WPA2) for the example to use.
 
+    config CALE_SCREEN_URL
+        string "Screen URL to the Bitmap (Max. 8 bit)"
+        default "http://cale.es"
+        help
+            This can be an URL to the image web-service CALE.es
+
+    config DEEPSLEEP_MINUTES_AFTER_RENDER
+        int "ESP32 goes to sleep this amount of minutes after rendering. On wake up renders again"
+        range 5 1440
+        default 60
+    
+    config DISPLAY_ROTATION
+        int "0: default 1: 90° clockwise 2 180° 3 270°"
+        range 0 3
+        default 0
+
     config ESP_MAXIMUM_RETRY
-        int "Maximum retry"
+        int "Maximum retry for trying to reconnect to WiFi"
         default 5
         help
             Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
