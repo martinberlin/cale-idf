@@ -74,8 +74,8 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 }
 
 // BMP reading flags
-bool bmpDebug = false;
-bool valid = false; // valid format to be handled
+bool bmpDebug = true;
+
 bool flip = true;   // bitmap is stored bottom-to-top
 bool with_color = false; // Candidate for Kconfig
 uint32_t rowSize;
@@ -133,10 +133,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             /*
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
+             *  Disabled, need to understand first what is chunked encoding ;)
+             *  if (!esp_http_client_is_chunked_response(evt->client)) {
              */
-            //if (!esp_http_client_is_chunked_response(evt->client)) {
+
             // If user_data buffer is configured, copy the response into the buffer
                memcpy(output_buffer, evt->data, evt->data_len);
+
                if (countDataEventCalls==1) {
                     // display.fillScreen(EPD_WHITE);
                     // Read BMP header -In total 34 bytes header
@@ -204,7 +207,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     // printf("0x00%x%x%x : %x, %x\n",red,green,blue,whitish,colored);
                     }
                 }
-
+                // This is how GxEPD is detecting if BMP is flipped
                 //rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
 
                 // Important we need to start reading the image where the header offset marks
@@ -227,17 +230,18 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 return ESP_OK;
             } else {
                 // Only move pointer once to set right offset
-                if (!isReadingImage) {
-                    if (countDataEventCalls==1 && bmp.imageOffset<evt->data_len) {
+                if (countDataEventCalls==1 && bmp.imageOffset<evt->data_len) {
                         bPointer = bmp.imageOffset;
+                        isReadingImage = true;
                         printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n",bPointer);
-                    } else {
+                } 
+                if (!isReadingImage) {
                     bPointer = bmp.imageOffset-imageBytesRead;
                     imageBytesRead += bPointer;
                     isReadingImage = true;
                     printf("Start reading image. bPointer: %d\n",bPointer);
-                    }
                 }
+
                 
             }
             forCount = 0;
@@ -323,9 +327,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 static void http_post(void)
 {
-    // w content len:  http://img.cale.es/jpg/fasani/5ea1dec401890
-    // BMP :           http://img.cale.es/bmp/fasani/5e5926e25a985
-  
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
