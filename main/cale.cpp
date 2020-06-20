@@ -74,6 +74,7 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 }
 
 // BMP reading flags
+bool bmpDebug = false;
 bool valid = false; // valid format to be handled
 bool flip = true;   // bitmap is stored bottom-to-top
 bool with_color = false; // Candidate for Kconfig
@@ -154,13 +155,17 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                     if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false) { // uncompressed is handled, 565 also, rest no.
                       isSupportedBitmap = false;
-                      ESP_LOGE(TAG,"BMP NOT SUPPORTED (compressed formats not handled)\n");
+                      ESP_LOGE(TAG,"BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 1 or 3\n");
+                    }
+                    if (bmp.depth>8) {
+                      isSupportedBitmap = false;
+                      ESP_LOGE(TAG,"BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
                     }
 
                 rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
                 if (bmp.depth < 8) rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
 
-                printf("ROW Size %d\n", rowSize);
+                if (bmpDebug) printf("ROW Size %d\n", rowSize);
 
                 if (bmp.height < 0)
                 {
@@ -209,14 +214,16 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                }
                if (!isSupportedBitmap) return ESP_FAIL;
 
-                printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n", 
-                bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
-            printf("Is reading image: %d\n",isReadingImage);
+                if (bmpDebug) {
+                    printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n", 
+                    bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
+                    printf("Is reading image: %d\n",isReadingImage);
+                }
 
             // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
             if (dataLenTotal<bmp.imageOffset) {
                 imageBytesRead=dataLenTotal;
-                printf(">read<offset UPDATE bytesRead:%d\n",imageBytesRead);
+                if (bmpDebug) printf("IF read<offset UPDATE bytesRead:%d\n",imageBytesRead);
                 return ESP_OK;
             } else {
                 // Only move pointer once to set right offset
@@ -238,10 +245,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             for (uint32_t byteIndex=bPointer; byteIndex < evt->data_len; ++byteIndex) {
                 in_byte = output_buffer[byteIndex];
                 // Dump only the first calls
-                if (countDataEventCalls<2) {
+                if (countDataEventCalls<2 && bmpDebug) {
                    printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
                 }
-
                 in_bits = 8;
 
                 switch (bmp.depth){
@@ -281,9 +287,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                             totalDrawPixels++;
                             ++drawX;
-
-                            
-
                         }
 
                     }
@@ -338,7 +341,7 @@ static void http_post(void)
 
      */
     esp_http_client_config_t config = {
-        .url = "http://cale.es/img/test/circle.bmp",
+        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
