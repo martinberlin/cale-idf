@@ -20,6 +20,9 @@
 //#include <gdew075T7.h>
 #include <gdew027w3.h>
 
+// BMP debug Mode: Turn false for production. It will make slower and through a lot of info per Serial
+bool bmpDebug = false;
+
 // Multi-SPI 4 channels EPD only
 //Epd4Spi io;
 //Wave12I48 display(io);
@@ -73,10 +76,8 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
   return result;
 }
 
-// BMP reading flags
-bool bmpDebug = true;
-
-bool flip = true;   // bitmap is stored bottom-to-top
+// Candidate for deprecation, all BMP's we use are fliped and load bottom-to-top
+//bool flip = true;   // bitmap is stored bottom-to-top
 bool with_color = false; // Candidate for Kconfig
 uint32_t rowSize;
 uint32_t rowByteCounter;
@@ -179,7 +180,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 if (bmp.height < 0)
                 {
                     bmp.height = -bmp.height;
-                    flip = false;
+                    //flip = false;
                 }
                 w = bmp.width;
                 h = bmp.height;
@@ -194,7 +195,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 if (bmp.depth < 8) bitmask >>= bmp.depth;
                 // Color-palette location:
                 bPointer = bmp.imageOffset - (4 << bmp.depth);
-                printf("Palette location: %d\n\n",bPointer);
+                if (bmpDebug) printf("Palette location: %d\n\n",bPointer);
 
                 for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++){
                     blue  = output_buffer[bPointer++];
@@ -210,15 +211,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     color_palette_buffer[pn / 8] |= colored << pn % 8;
                     
                     // DEBUG Colors - TODO: Double check Palette!!
-                    // printf("0x00%x%x%x : %x, %x\n",red,green,blue,whitish,colored);
+                    if (bmpDebug) printf("0x00%x%x%x : %x, %x\n",red,green,blue,whitish,colored);
                     }
                 }
-                // This is how GxEPD is detecting if BMP is flipped
+                // This is how GxEPD is detecting if BMP is flipped - Candidate for deprecation
                 //rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
-
-                // Important we need to start reading the image where the header offset marks
-                // This will not work when we did not arrive to that byte yet:
-                //bPointer = bmp.imageOffset;
                 imageBytesRead+=evt->data_len;
                }
                if (!isSupportedBitmap) return ESP_FAIL;
@@ -283,8 +280,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                             }
                             
                             
-                            // bmp.width reached? Then go one line up
-                            if (isPaddingAware) {
+                            // bmp.width reached? Then go one line up (Is readed from bottom to top)
+                            if (isPaddingAware) { // 1 bit images are 4-bit padded (Filled usually with 0's)
                                 if (drawX+1 > rowSize*8) {
                                     if (countDataEventCalls<8) {
                                     printf("dX:%d Y:%d\n", drawX, drawY);
@@ -303,7 +300,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                                     --drawY;
                                 } 
                             }
-
+                            // The ultimate mission: Send the X / Y pixel to the GFX Buffer
                             display.drawPixel(drawX, drawY, color);
 
                             totalDrawPixels++;
@@ -319,7 +316,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 forCount++;
             }
 
-            printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
+            if (bmpDebug) printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
 
             // Hexa dump
             //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
