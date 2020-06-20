@@ -213,7 +213,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
             printf("Is reading image: %d\n",isReadingImage);
 
-            // Didn't arrived to imageOffset YET:
+            // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
             if (dataLenTotal<bmp.imageOffset) {
                 imageBytesRead=dataLenTotal;
                 printf(">read<offset UPDATE bytesRead:%d\n",imageBytesRead);
@@ -221,10 +221,15 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             } else {
                 // Only move pointer once to set right offset
                 if (!isReadingImage) {
+                    if (countDataEventCalls==1 && bmp.imageOffset<evt->data_len) {
+                        bPointer = bmp.imageOffset;
+                        printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n",bPointer);
+                    } else {
                     bPointer = bmp.imageOffset-imageBytesRead;
                     imageBytesRead += bPointer;
                     isReadingImage = true;
                     printf("Start reading image. bPointer: %d\n",bPointer);
+                    }
                 }
                 
             }
@@ -331,10 +336,13 @@ static void http_post(void)
      * 
       .host = "httpbin.org",
        .path = "/get",
-       2.13 http://img.cale.es/bmp/fasani/5e793990af85d -> 1st test
+       http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
+       http://cale.es/img/test/1.bmp                -> vertical line
+       http://cale.es/img/test/circle.bmp           -> Circle test
+
      */
     esp_http_client_config_t config = {
-        .url = "http://cale.es/img/test/circle.bmp",
+        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
