@@ -1,11 +1,36 @@
+![CALE Logo](/config-examples/assets/cale-idf.svg)
+
 # CALE ESP-IDF beta
 
-This is the repository where CALE Firmware for the ESP-IDF framework will take form. Right now it serves as experimentation area to build CalEPD that is our own IDF component to control Epapers with ESP32 /ESP32S2. Please note that the components that are now phisically in this repository should be git submodules. We are using them this way to develop faster without the need to pull the submodules updates every time.
+This is the official IDF Firmware of our Web-Service [CALE.es](https://cale.es).
 
-CALE-IDF needs as components:
+It does only 3 things at the moment and is very easy to set up:
+
+1. It connects to cale.es and downloads a Screen bitmap.
+2. In "Streaming mode" it pushes the pixels to Adafruit GFX buffer and at the end renders it in your Epaper.
+3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
+
+And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
+
+**CALE-IDF uses this components:**
 
 - [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
 - [Adafruit GFX for ESP-IDF](https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF) My own fork of Adafruit display library
+
+They are at the moment included without git submodules so we an develop fast without updating them all the time. But they are also available to be used as your project ESP-IDF components.
+
+## Configuration
+
+Make sure to set the GPIOs that are connected from the Epaper to your ESP32. Data in in your epaper (DIN) should be connected to MOSI:
+![CALE config](/config-examples/assets/menuconfig-display.png)
+
+And then set the image configuration and deepsleep minutes. Here you can also set the rotation for your Eink display:
+![Display config](/config-examples/assets/menuconfig-display.png)
+
+
+## CalEPD component
+
+[CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as possible, leaving as much memory as possible for your Firmare. Note that still, the graphics library buffer, depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels it runs stable and there is still free DRAM for more.
 
 ## Branches
 
@@ -13,12 +38,12 @@ CALE-IDF needs as components:
 
     v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
     v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
-    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
+    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display (Note: Needs PSRAM if you want to make something useful)
+    v.0.9.3 First official version with BMP download and render to the display (20.JUN.2020)
 
-**refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master
+**refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master. Inestable branch do not use on Firmware that you ship to a client.
 
 tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. Will be kept for historic reasons
-
 
 The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
@@ -103,6 +128,7 @@ Feel free to play with Espressif IDF SPI settings if you know what you are doing
 
 A new breed of supported displays is coming being the first the [Wave12I48 12.48" b/w epaper from Waveshare](https://github.com/martinberlin/cale-idf/wiki/Model-wave12i48.h).
 This is the first component that support this multi epaper displays abstracting their complexity so you can treat it as a normal 1304x984 single display and use all the Adafruit GFX methods and fonts to render graphics over it.
+Please note that this big display needs a 160 Kb buffer leaving no DRAM available for anything more on your ESP32. So you can either make a very simple program that renders sensor information, or do everything you want, but adding PSRAM for the GFX buffer. Think about ESP32-WROOVER as a good candidate. 
 
 ## Watchdogs feeding for large buffers
 
@@ -116,15 +142,13 @@ In Buffers for big displays like 800*480 where the size is about 48000 bytes lon
 
 Again, if you know more about this than me, feel free to suggest a faster way. It's possible to disable also the [watchdogs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/wdts.html) but of course that is not a good practice to do so.
 
-### References and similar projects
-
-https://github.com/krzychb/esp-epaper-29-ws (2 Years ago, probably ESP-IDF 3.0)
-
-[esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
+### References and related projects
 
 [CALE.es Web-service](https://CALE.es) a Web-Service that prepares BMP & JPG Screens with the right size for your displays
 
 [CALE.es Arduino-espressif32 firmware](https://github.com/martinberlin/eink-calendar)
+
+[esp32.com "epaper" search](https://esp32.com/search.php?keywords=epaper&fid%5B0%5D=13)
 
 [GxEPD Epaper library](https://CALE.es) GxEPD is to use with Espressif Arduino Framework. 
 
@@ -136,6 +160,6 @@ UPDATE: Saved for historical reasons. After starting this project I heavily adop
 ### Credits 
 
 GxEPD has been a great resource to start with. For CalEPD component, we mantain same Constants only without the **Gx prefix** and use the same driver nomenclature as GxEPD library, just in small case.
-Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays.
+Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays. Please note that there are no plans to port this to Arduino-framework. This repository was specially made with the purpouse to explore Espressif's own IoT development framework.
 
-Thanks to all the developers interested to test this like @IoTPanic and others that pushed me to improve my C++ skills.
+Thanks to all the developers interested to test this. Special mentions for @IoTPanic, Spectre and others that pushed me to improve my C++ skills.

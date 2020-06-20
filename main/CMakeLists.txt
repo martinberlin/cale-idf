@@ -1,3 +1,7 @@
-idf_component_register(SRCS "cale.cpp"
-                    INCLUDE_DIRS ".")
+idf_component_register(
+    # Main CALE 
+    SRCS "cale.cpp"
+
+    #SRCS "demo-epaper.cpp"
+    INCLUDE_DIRS ".")
 set(COMPONENTS_DIRS, "components")

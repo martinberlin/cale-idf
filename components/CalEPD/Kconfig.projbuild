@@ -20,12 +20,12 @@ menu "Display Configuration"
         range -1 34
         default 26
     config EINK_BUSY
-        int "EPD: GPIO for Busy signal - DONE, leave rest on 0 unless multi-SPI channels (wave12I48)"
+        int "EPD: GPIO for Busy signal - DONE! Leave rest on 0 unless is has multi-SPI slaves"
         range -1 39
         default 35
 
     config EINK_SPI_M1_CS
-        int "* CS M1 NOTE: The config below only applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins"
+        int "* CS M1 NOTE: The config below only applies to module wave12I48 w/4 SPI epapers"
         range 0 23
         default 23
     config EINK_SPI_S1_CS
