@@ -19,7 +19,7 @@ menu "CALE Configuration"
             This can be an URL to the image web-service CALE.es
 
     config DEEPSLEEP_MINUTES_AFTER_RENDER
-        int "ESP32 goes to sleep this amount of minutes after rendering. On wake up renders again"
+        int "ESP32 goes to deepsleep this amount of minutes. Consuming the minimum after display rendering"
         range 5 1440
         default 60
     
@@ -32,6 +32,6 @@ menu "CALE Configuration"
         int "Maximum retry for trying to reconnect to WiFi"
         default 5
         help
-            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited times.
 
 endmenu
