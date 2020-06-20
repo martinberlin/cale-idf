@@ -235,10 +235,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
             forCount = 0;
             // LOOP all the received Buffer but start on ImageOffset if first call
-            for (uint32_t byteIndex=bPointer; byteIndex <= evt->data_len; ++byteIndex) {
+            for (uint32_t byteIndex=bPointer; byteIndex < evt->data_len; ++byteIndex) {
                 in_byte = output_buffer[byteIndex];
                 // Dump only the first calls
-                if (countDataEventCalls<7) {
+                if (countDataEventCalls<2) {
                    printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
                 }
 
