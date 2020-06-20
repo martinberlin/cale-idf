@@ -63,6 +63,9 @@ uint16_t read16(uint8_t output_buffer[512], uint8_t startPointer)
 
 uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 {
+    printf("read32: %x %x %x %x\n", output_buffer[startPointer],
+    output_buffer[startPointer+1],output_buffer[startPointer+2],output_buffer[startPointer+3]);
+    
   uint32_t result;
   ((uint8_t *)&result)[0] = output_buffer[startPointer]; // LSB
   ((uint8_t *)&result)[1] = output_buffer[startPointer+1];
@@ -70,6 +73,7 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
   ((uint8_t *)&result)[3] = output_buffer[startPointer+3]; // MSB
   return result;
 }
+
 // BMP reading flags
 bool valid = false; // valid format to be handled
 bool flip = true;   // bitmap is stored bottom-to-top
@@ -82,7 +86,7 @@ uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
 bool whitish, colored;
-uint32_t rowPosition;
+//uint32_t rowPosition;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
 // bPointer is 34 only first time when the headers come. Then is 0!
@@ -169,8 +173,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                
                 if (bmp.depth <= 8){
                 if (bmp.depth < 8) bitmask >>= bmp.depth;
-                // Comm0n palete is at byte 54 see Jean-Marc comment
-                bPointer = 54;
+                // Color-palette location:
+                bPointer = bmp.imageOffset - (4 << bmp.depth);
+                printf("Palette location: %d\n\n",bPointer);
+
                 for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++){
                     blue  = output_buffer[bPointer++];
                     green = output_buffer[bPointer++];
@@ -184,12 +190,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
                     color_palette_buffer[pn / 8] |= colored << pn % 8;
                     // DEBUG Colors
-                    printf("Colors palette:\n"); printf("RED: %x\n",red); printf("GREEN: %x\n",green); printf("BLUE: %x\n",blue);
-                    printf("whitish: %x colored: %x", whitish,colored);
+                    //printf("Colors palette:\n"); printf("RED: %x\n",red); printf("GREEN: %x\n",green); printf("BLUE: %x\n",blue);
+                    //printf("whitish: %x colored: %x\n\n", whitish,colored);
                 }
                 }
 
-                rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
+                //rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
 
                 // Important we need to start reading the image where the header offset marks
                 bPointer = bmp.imageOffset;
@@ -198,12 +204,16 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                }
                if (!willParse) return ESP_FAIL;
 
-                printf("bPointer %d\n_inX: %d _inY: %d\n", bPointer, drawX, drawY);
+                printf("\n--> bPointer %d\n_inX: %d _inY: %d\n", bPointer, drawX, drawY);
 
             // LOOP all the received Buffer but start on ImageOffset if first call
 
             for (uint32_t byteIndex=bPointer; byteIndex <= evt->data_len; ++byteIndex) {
                 in_byte = output_buffer[byteIndex];
+                if (byteIndex==0) {
+                printf("1ST BYTE: %x\n", in_byte);
+                }
+
                 in_bits = 8;
 
                 switch (bmp.depth){
@@ -228,24 +238,35 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                                 color = EPD_BLACK;
                             }
                             
-                            //uint16_t yrow = (flip ? h - row - 1 : row);
                             
                             display.drawPixel(drawX, drawY, color);
-                            ++drawX;
-                            totalDrawPixels++;
 
-                            if (drawX % (bmp.width) == 0) {
-                                printf("dX:%d Y:%d\n",drawX,drawY);
-                                drawX=0;
+                            /* if (drawX==0) {
+                                // Draw a fake black point at 0,Y
+                                display.drawPixel(drawX, drawY, EPD_BLACK);
+                            } */
+
+
+                            totalDrawPixels++;
+                            ++drawX;
+
+                            // bmp.width reached? Then go one line up
+                            if (drawX > bmp.width) {
+                                printf("dX:%d Y:%d\n", drawX, drawY);
+                                drawX = 0;
+                                rowByteCounter = 0;
                                 --drawY;
-                            }
+                            } 
+
                         }
 
                     }
                     break;
                 }
+                
                 rowByteCounter++;
                 imageBytesRead++;
+                
             }
 
             printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
@@ -288,7 +309,7 @@ static void http_post(void)
        2.13 http://img.cale.es/bmp/fasani/5e793990af85d -> 1st test
      */
     esp_http_client_config_t config = {
-        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
+        .url = "http://cale.es/img/test/1.bmp",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
