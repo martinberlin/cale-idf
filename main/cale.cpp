@@ -98,6 +98,7 @@ uint8_t in_byte = 0; // for depth <= 8
 uint8_t in_bits = 0; // for depth <= 8
 bool isReadingImage = false;
 bool isSupportedBitmap = true;
+bool isPaddingAware = false;
 uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640; // may affect performance
@@ -152,10 +153,15 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     bmp.depth       = read16(output_buffer,28);
                     bmp.format      = read32(output_buffer,30);
 
+                    
                     drawY = bmp.height;
                     ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n", 
                     bmp.fileSize,bmp.imageOffset,bmp.width,bmp.height,bmp.planes,bmp.depth,bmp.format);
-
+                    
+                    if (bmp.depth==1) {
+                        isPaddingAware = true;
+                        ESP_LOGI(TAG, "BMP isPaddingAware:  1 bit depth are 4 bit padded. Wikipedia gave me a lesson.");
+                    }
                     if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false) { // uncompressed is handled, 565 also, rest no.
                       isSupportedBitmap = false;
                       ESP_LOGE(TAG,"BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 1 or 3\n");
@@ -278,14 +284,25 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                             
                             
                             // bmp.width reached? Then go one line up
-                            if (drawX+1 > bmp.width) {
-                                if (countDataEventCalls<8) {
-                                  printf("dX:%d Y:%d\n", drawX, drawY);
+                            if (isPaddingAware) {
+                                if (drawX+1 > rowSize*8) {
+                                    if (countDataEventCalls<8) {
+                                    printf("dX:%d Y:%d\n", drawX, drawY);
+                                    }
+                                    drawX = 0;
+                                    rowByteCounter = 0;
+                                    --drawY;
                                 }
-                                drawX = 0;
-                                rowByteCounter = 0;
-                                --drawY;
-                            } 
+                            } else {
+                                if (drawX+1 > bmp.width) {
+                                    if (countDataEventCalls<8) {
+                                    printf("dX:%d Y:%d\n", drawX, drawY);
+                                    }
+                                    drawX = 0;
+                                    rowByteCounter = 0;
+                                    --drawY;
+                                } 
+                            }
 
                             display.drawPixel(drawX, drawY, color);
 
@@ -339,7 +356,6 @@ static void http_post(void)
        http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
        http://cale.es/img/test/1.bmp                -> vertical line
        http://cale.es/img/test/circle.bmp           -> Circle test
-
      */
     esp_http_client_config_t config = {
         .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
