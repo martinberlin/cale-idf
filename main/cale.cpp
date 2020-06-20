@@ -267,19 +267,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                             }
                             
                             
-                            display.drawPixel(drawX, drawY, color);
-
-                            /* if (drawX==0) {
-                                // Draw a fake black point at 0,Y
-                                display.drawPixel(drawX, drawY, EPD_BLACK);
-                            } */
-
-
-                            totalDrawPixels++;
-                            ++drawX;
-
                             // bmp.width reached? Then go one line up
-                            if (drawX > bmp.width) {
+                            if (drawX+1 > bmp.width) {
                                 if (countDataEventCalls<8) {
                                   printf("dX:%d Y:%d\n", drawX, drawY);
                                 }
@@ -287,6 +276,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                                 rowByteCounter = 0;
                                 --drawY;
                             } 
+
+                            display.drawPixel(drawX, drawY, color);
+
+                            totalDrawPixels++;
+                            ++drawX;
+
+                            
 
                         }
 
@@ -342,7 +338,7 @@ static void http_post(void)
 
      */
     esp_http_client_config_t config = {
-        .url = "http://img.cale.es/bmp/fasani/5e8cc4cf03d81",
+        .url = "http://cale.es/img/test/circle.bmp",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
