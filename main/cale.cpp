@@ -39,7 +39,7 @@ static const char *TAG = "CALE";
 
 uint16_t countDataEventCalls=0;
 uint32_t countDataBytes=0;
-bool willParse = true;
+
 struct BmpHeader
 {
    uint32_t fileSize;
@@ -63,8 +63,7 @@ uint16_t read16(uint8_t output_buffer[512], uint8_t startPointer)
 
 uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 {
-    printf("read32: %x %x %x %x\n", output_buffer[startPointer],
-    output_buffer[startPointer+1],output_buffer[startPointer+2],output_buffer[startPointer+3]);
+    //printf("read32: %x %x %x %x\n", output_buffer[startPointer],output_buffer[startPointer+1],output_buffer[startPointer+2],output_buffer[startPointer+3]);
     
   uint32_t result;
   ((uint8_t *)&result)[0] = output_buffer[startPointer]; // LSB
@@ -92,10 +91,13 @@ uint16_t drawY = 0;
 // bPointer is 34 only first time when the headers come. Then is 0!
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
 uint16_t imageBytesRead = 0;
-
+uint32_t dataLenTotal = 0;
 uint32_t in_bytes = 0;
 uint8_t in_byte = 0; // for depth <= 8
 uint8_t in_bits = 0; // for depth <= 8
+bool isReadingImage = false;
+bool isSupportedBitmap = true;
+uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640; // may affect performance
 static const uint16_t max_palette_pixels = 256; // for depth <= 8
@@ -124,12 +126,15 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         case HTTP_EVENT_ON_DATA:
             ++countDataEventCalls;
             ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
+            dataLenTotal+=evt->data_len;
+            // Unless bmp.imageOffset initial skip we start reading stream always on byte pointer 0: 
+            bPointer = 0;
             /*
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
              */
             //if (!esp_http_client_is_chunked_response(evt->client)) {
-                // If user_data buffer is configured, copy the response into the buffer
+            // If user_data buffer is configured, copy the response into the buffer
                memcpy(output_buffer, evt->data, evt->data_len);
                if (countDataEventCalls==1) {
                     // display.fillScreen(EPD_WHITE);
@@ -148,7 +153,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     bmp.fileSize,bmp.imageOffset,bmp.width,bmp.height,bmp.planes,bmp.depth,bmp.format);
 
                     if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false) { // uncompressed is handled, 565 also, rest no.
-                      willParse = false;
+                      isSupportedBitmap = false;
                       ESP_LOGE(TAG,"BMP NOT SUPPORTED (compressed formats not handled)\n");
                     }
 
@@ -189,29 +194,47 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     mono_palette_buffer[pn / 8] |= whitish << pn % 8;
                     if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
                     color_palette_buffer[pn / 8] |= colored << pn % 8;
-                    // DEBUG Colors
-                    //printf("Colors palette:\n"); printf("RED: %x\n",red); printf("GREEN: %x\n",green); printf("BLUE: %x\n",blue);
-                    //printf("whitish: %x colored: %x\n\n", whitish,colored);
-                }
+                    
+                    // DEBUG Colors - TODO: Double check Palette!!
+                    // printf("0x00%x%x%x : %x, %x\n",red,green,blue,whitish,colored);
+                    }
                 }
 
                 //rowPosition = flip ? bmp.imageOffset + (bmp.height - h) * rowSize : bmp.imageOffset;
 
                 // Important we need to start reading the image where the header offset marks
-                bPointer = bmp.imageOffset;
-               } else {
-                   bPointer = 0;
+                // This will not work when we did not arrive to that byte yet:
+                //bPointer = bmp.imageOffset;
+                imageBytesRead+=evt->data_len;
                }
-               if (!willParse) return ESP_FAIL;
+               if (!isSupportedBitmap) return ESP_FAIL;
 
-                printf("\n--> bPointer %d\n_inX: %d _inY: %d\n", bPointer, drawX, drawY);
+                printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n", 
+                bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
+            printf("Is reading image: %d\n",isReadingImage);
 
+            // Didn't arrived to imageOffset YET:
+            if (dataLenTotal<bmp.imageOffset) {
+                imageBytesRead=dataLenTotal;
+                printf(">read<offset UPDATE bytesRead:%d\n",imageBytesRead);
+                return ESP_OK;
+            } else {
+                // Only move pointer once to set right offset
+                if (!isReadingImage) {
+                    bPointer = bmp.imageOffset-imageBytesRead;
+                    imageBytesRead += bPointer;
+                    isReadingImage = true;
+                    printf("Start reading image. bPointer: %d\n",bPointer);
+                }
+                
+            }
+            forCount = 0;
             // LOOP all the received Buffer but start on ImageOffset if first call
-
             for (uint32_t byteIndex=bPointer; byteIndex <= evt->data_len; ++byteIndex) {
                 in_byte = output_buffer[byteIndex];
-                if (byteIndex==0) {
-                printf("1ST BYTE: %x\n", in_byte);
+                // Dump only the first calls
+                if (countDataEventCalls<7) {
+                   printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
                 }
 
                 in_bits = 8;
@@ -252,7 +275,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                             // bmp.width reached? Then go one line up
                             if (drawX > bmp.width) {
-                                printf("dX:%d Y:%d\n", drawX, drawY);
+                                if (countDataEventCalls<8) {
+                                  printf("dX:%d Y:%d\n", drawX, drawY);
+                                }
                                 drawX = 0;
                                 rowByteCounter = 0;
                                 --drawY;
@@ -266,7 +291,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 
                 rowByteCounter++;
                 imageBytesRead++;
-                
+                forCount++;
             }
 
             printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
@@ -309,7 +334,7 @@ static void http_post(void)
        2.13 http://img.cale.es/bmp/fasani/5e793990af85d -> 1st test
      */
     esp_http_client_config_t config = {
-        .url = "http://cale.es/img/test/1.bmp",
+        .url = "http://cale.es/img/test/circle.bmp",
         .event_handler = _http_event_handler
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
