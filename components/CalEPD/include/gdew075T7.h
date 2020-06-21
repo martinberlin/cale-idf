@@ -1,4 +1,4 @@
-// 7.5 800*840 b/w Controller: GD7965
+// 7.5 800*480 b/w Controller: GD7965 (In Waveshare called 7.5 V2)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -6,7 +6,8 @@
 
 //#include <gdew042t2.h>
 //#include <gdew0583t7.h>
-#include <gdew075T7.h>
+//#include <gdew075T7.h>
+#include <gdew075T8.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 //#include "wave12i48.h" // Only to use with Edp4Spi IO
@@ -19,7 +20,8 @@
 
 // Single SPI EPD
 EpdSpi io;
-Gdew075T7 display(io);
+Gdew075T8 display(io);
+//Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
@@ -29,7 +31,6 @@ Gdew075T7 display(io);
 // Please check https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts#adding-new-fonts-2002831-18
 // Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 
-#define TOMTHUMB_USE_EXTENDED
 #include <Fonts/TomThumb.h>
 #include <Fonts/Ubuntu_M18pt8b.h>
 
