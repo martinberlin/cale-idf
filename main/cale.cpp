@@ -107,6 +107,7 @@ uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for dept
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
+uint64_t startTime = 0;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -137,6 +138,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
         if (countDataEventCalls == 1)
         {
+            startTime = esp_timer_get_time();
             // Read BMP header -In total 34 bytes header
             bmp.fileSize = read32(output_buffer, 2);
             bmp.imageOffset = read32(output_buffer, 10);
@@ -340,11 +342,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH Refresh and go to sleep %d minutes\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
-        printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
+        if (bmpDebug) 
+            printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
         esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         break;
 
