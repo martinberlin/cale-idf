@@ -17,23 +17,19 @@
 #include "esp_http_client.h"
 #include "esp_sleep.h"
 
-//#include <wave12i48.h>
-// Should match with your epaper module, size
+// Should match your display model (Check WiKi)
 #include <gdew075T7.h>
-//#include <gdew027w3.h>
+EpdSpi io;
+Gdew075T7 display(io);
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
-char espIpAddress[16];
 
-// Multi-SPI 4 channels EPD only
-//Epd4Spi io;
-//Wave12I48 display(io);
-// Single SPI EPD
-EpdSpi io;
-Gdew075T7 display(io);
-//Gdew027w3 display(io);
-#include <Fonts/FreeMonoBold24pt7b.h>
+// IP is sent per post for logging purpouses. Authentication: Bearer token in the headers
+char espIpAddress[16];
+char bearerToken[74] = "";
+// As default is 512 without setting buffer_size property in esp_http_client_config_t
+#define HTTP_RECEIVE_BUFFER_SIZE 1024
 
 extern "C"
 {
@@ -41,8 +37,6 @@ extern "C"
 }
 
 static const char *TAG = "CALE";
-
-#define MAX_HTTP_OUTPUT_BUFFER 1024
 
 uint16_t countDataEventCalls = 0;
 uint32_t countDataBytes = 0;
@@ -112,7 +106,7 @@ uint64_t startTime = 0;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
-    uint8_t output_buffer[512]; // Buffer to store response
+    uint8_t output_buffer[HTTP_RECEIVE_BUFFER_SIZE]; // Buffer to store HTTP response
 
     switch (evt->event_id)
     {
@@ -130,7 +124,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
     case HTTP_EVENT_ON_DATA:
         ++countDataEventCalls;
-        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
+        if (countDataEventCalls%10==0) {
+        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len); }
         dataLenTotal += evt->data_len;
         // Unless bmp.imageOffset initial skip we start reading stream always on byte pointer 0:
         bPointer = 0;
@@ -382,12 +377,20 @@ static void http_post(void)
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
         .method = HTTP_METHOD_POST,
-        .event_handler = _http_event_handler
+        .event_handler = _http_event_handler,
+        .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
         };
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    // Authentication: Bearer    
+    strlcpy(bearerToken, "Bearer: ", sizeof(bearerToken));
+    strlcat(bearerToken, CONFIG_CALE_BEARER_TOKEN, sizeof(bearerToken));
+    
+    printf("POST data: %s\n%s\n", post_data, bearerToken);
 
+    esp_http_client_set_header(client, "Authorization", bearerToken);
+    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK)
     {
