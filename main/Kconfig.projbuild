@@ -18,6 +18,12 @@ menu "CALE Configuration"
         help
             This can be an URL to the image web-service CALE.es
 
+    config CALE_BEARER_TOKEN
+        string "Security token only for private Screens protected with Authentication: Bearer (Max. 65 chars)"
+        default ""
+        help
+            Leave empty if your Screen is public in CALE.es
+
     config DEEPSLEEP_MINUTES_AFTER_RENDER
         int "Minutes that the ESP32 goes to deepsleep after display rendering."
         range 5 1440

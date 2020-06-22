@@ -12,27 +12,24 @@
 // - - - - HTTP Client
 #include "nvs_flash.h"
 #include "esp_netif.h"
-#include "protocol_examples_common.h"
+#include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
 #include "esp_sleep.h"
 
-//#include <wave12i48.h>
-// Should match with your epaper module, size
+// Should match your display model (Check WiKi)
 #include <gdew075T7.h>
-//#include <gdew027w3.h>
-
-// BMP debug Mode: Turn false for production. It will make slower and through a lot of info per Serial
-bool bmpDebug = false;
-
-// Multi-SPI 4 channels EPD only
-//Epd4Spi io;
-//Wave12I48 display(io);
-// Single SPI EPD
 EpdSpi io;
 Gdew075T7 display(io);
-//Gdew027w3 display(io);
-#include <Fonts/FreeMonoBold24pt7b.h>
+
+// BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
+bool bmpDebug = false;
+
+// IP is sent per post for logging purpouses. Authentication: Bearer token in the headers
+char espIpAddress[16];
+char bearerToken[74] = "";
+// As default is 512 without setting buffer_size property in esp_http_client_config_t
+#define HTTP_RECEIVE_BUFFER_SIZE 1024
 
 extern "C"
 {
@@ -40,8 +37,6 @@ extern "C"
 }
 
 static const char *TAG = "CALE";
-
-#define MAX_HTTP_OUTPUT_BUFFER 1024
 
 uint16_t countDataEventCalls = 0;
 uint32_t countDataBytes = 0;
@@ -107,28 +102,30 @@ uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for dept
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
+uint64_t startTime = 0;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
-    uint8_t output_buffer[512]; // Buffer to store response
+    uint8_t output_buffer[HTTP_RECEIVE_BUFFER_SIZE]; // Buffer to store HTTP response
 
     switch (evt->event_id)
     {
     case HTTP_EVENT_ERROR:
-        ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+        ESP_LOGE(TAG, "HTTP_EVENT_ERROR");
         break;
     case HTTP_EVENT_ON_CONNECTED:
-        ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
         break;
     case HTTP_EVENT_HEADER_SENT:
-        ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+        ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
         break;
     case HTTP_EVENT_ON_HEADER:
-        ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
         break;
     case HTTP_EVENT_ON_DATA:
         ++countDataEventCalls;
-        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
+        if (countDataEventCalls%10==0) {
+        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len); }
         dataLenTotal += evt->data_len;
         // Unless bmp.imageOffset initial skip we start reading stream always on byte pointer 0:
         bPointer = 0;
@@ -137,6 +134,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
         if (countDataEventCalls == 1)
         {
+            startTime = esp_timer_get_time();
             // Read BMP header -In total 34 bytes header
             bmp.fileSize = read32(output_buffer, 2);
             bmp.imageOffset = read32(output_buffer, 10);
@@ -340,11 +338,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH Refresh and go to sleep %d minutes\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
-        printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
+        if (bmpDebug) 
+            printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
         esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         break;
 
@@ -367,12 +366,29 @@ static void http_post(void)
        http://cale.es/img/test/1.bmp                -> vertical line
        http://cale.es/img/test/circle.bmp           -> Circle test
      */
+    // POST Send the IP for logging purpouses
+    char post_data[22];
+    uint8_t postsize = sizeof(post_data);
+    strlcpy(post_data, "ip=", postsize);
+    strlcat(post_data, espIpAddress, postsize);
+
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
-        .event_handler = _http_event_handler};
+        .method = HTTP_METHOD_POST,
+        .event_handler = _http_event_handler,
+        .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
+        };
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    // GET
+    // Authentication: Bearer    
+    strlcpy(bearerToken, "Bearer: ", sizeof(bearerToken));
+    strlcat(bearerToken, CONFIG_CALE_BEARER_TOKEN, sizeof(bearerToken));
+    
+    printf("POST data: %s\n%s\n", post_data, bearerToken);
+
+    esp_http_client_set_header(client, "Authorization", bearerToken);
+    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK)
     {
@@ -422,7 +438,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        sprintf(espIpAddress,  IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG, "got ip: %s\n", espIpAddress);
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -515,5 +532,5 @@ void app_main(void)
 
     http_post();
 
-    // Just test if Epd works: Check the demo-epaper.cpp example
+    // Just test if Epd works: Compile the demo-epaper.cpp example modifying main/CMakeLists
 }

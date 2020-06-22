@@ -44,6 +44,29 @@ tft_test         -> Original SPI master example from ESP-IDF 4 just refactored a
 
 The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
+### Epaper demos
+
+Open the /main/CMakeLists.txt file to select what is the C++ file that will be compiled as your main program. Just uncomment one of the SRCS lines:
+
+    idf_component_register(
+      # Main CALE 
+      #SRCS "cale.cpp"
+       SRCS "demo-fonts.cpp"
+      #SRCS "demo-epaper.cpp"
+      INCLUDE_DIRS ".")
+
+This configuration will just compile the Fonts demo to test your epaper display.
+
+## Fonts support and German characters
+
+Please check [Adafruit page on adding new fonts](https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts#adding-new-fonts-2002831-18) as a start. In order to add the whole character range, you need to set from -> to ranges after calling font convert. Just go to the /components/Adafruit-GFX/fontconvert directory and run:
+
+./fontconvert /usr/share/fonts/truetype/ubuntu/YOURTTF.ttf 18 32 252 > ../Fonts/YOURTTFNAME.h
+
+Be aware that PROGMEM is not supported here since we are not in the Arduino framework. So just remove it from the generated fonts.
+
+As an example with all characters including German umlauts ( ä ö ü and others like ß) I left Ubuntu_M18pt8b ready in the Fonts directory. Be aware that using the whole character spectrum will also take part of your programs memory.
+
 ### Submodules
 
 Not being used at the moment since all test and development happens here. Only when there are new working models they will be pushed as new release in the component repository:
