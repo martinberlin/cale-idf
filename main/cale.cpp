@@ -371,8 +371,6 @@ static void http_post(void)
     uint8_t postsize = sizeof(post_data);
     strlcpy(post_data, "ip=", postsize);
     strlcat(post_data, espIpAddress, postsize);
-    
-    printf("POST data: %s\n\n", post_data);
 
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
