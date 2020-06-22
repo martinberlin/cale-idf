@@ -1,7 +1,5 @@
 ![CALE Logo](/config-examples/assets/cale-idf.svg)
 
-# CALE ESP-IDF beta
-
 This is the official IDF Firmware of our Web-Service [CALE.es](https://cale.es).
 
 It does only 3 things at the moment and is very easy to set up:
@@ -25,8 +23,7 @@ Make sure to set the GPIOs that are connected from the Epaper to your ESP32. Dat
 ![CALE config](/config-examples/assets/menuconfig-display.png)
 
 And then set the image configuration and deepsleep minutes. Here you can also set the rotation for your Eink display:
-![Display config](/config-examples/assets/menuconfig-display.png)
-
+![Display config](/config-examples/assets/menuconfig-cale.png)
 
 ## CalEPD component
 
