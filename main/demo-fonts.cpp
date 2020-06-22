@@ -6,8 +6,8 @@
 
 //#include <gdew042t2.h>
 //#include <gdew0583t7.h>
-//#include <gdew075T7.h>
-#include <gdew075T8.h>
+#include <gdew075T7.h>
+//#include <gdew075T8.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 //#include "wave12i48.h" // Only to use with Edp4Spi IO
@@ -20,8 +20,7 @@
 
 // Single SPI EPD
 EpdSpi io;
-Gdew075T8 display(io);
-//Gdew075T7 display(io);
+Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
@@ -32,11 +31,26 @@ Gdew075T8 display(io);
 // Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 
 #include <Fonts/TomThumb.h>
-#include <Fonts/Ubuntu_M18pt8b.h>
+//#include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M20pt8b.h>
 
 extern "C"
 {
    void app_main();
+}
+
+void demo_chars(){
+   for (int i = 32; i <= 126; i++)
+   {
+      display.write(i);
+   }
+   for (int i = 126+33; i <= 255; i++)
+   {
+      display.write(i);
+   }
 }
 
 void app_main(void)
@@ -51,13 +65,24 @@ void app_main(void)
 
    // Please note that TomThumb font is not rendering all character spectrum: 
    // display.setFont(&TomThumb);
-   display.setFont(&Ubuntu_M18pt8b);
-
+   display.setFont(&Ubuntu_M8pt8b);
+   display.print("Ubuntu 8pt");
    for (int i = 32; i <= 255; i++)
    {
       display.write(i); // Needs to be >32 (first character definition)
    }
 
-   display.update();
+   display.print("\nUbuntu 12pt");
+   display.setFont(&Ubuntu_M12pt8b);
+   demo_chars();
 
+   display.print("\nUbuntu 16pt");
+   display.setFont(&Ubuntu_M16pt8b);
+   demo_chars();
+
+   display.print("\nUbuntu 20pt");
+   display.setFont(&Ubuntu_M20pt8b);
+   demo_chars();
+
+   display.update();
 }
