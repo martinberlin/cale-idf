@@ -6,21 +6,21 @@
 
 //#include <gdew042t2.h>
 //#include <gdew0583t7.h>
-#include <gdew075T7.h>
+//#include <gdew075T7.h>
 //#include <gdew075T8.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-//#include "wave12i48.h" // Only to use with Edp4Spi IO
+#include "wave12i48.h" // Only to use with Edp4Spi IO
 
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
-//Epd4Spi io;
-//Wave12I48 display(io);
+Epd4Spi io;
+Wave12I48 display(io);
 
 // Single SPI EPD
-EpdSpi io;
-Gdew075T7 display(io);
+//EpdSpi io;
+//Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
@@ -56,10 +56,14 @@ void demo_chars(){
 void app_main(void)
 {
    
-   printf("CALE-IDF fonts demo\n");
+   printf("CALE-IDF fonts demo\n\n");
+   // Show available Dynamic Random Access Memory available after display.init()
+   printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
+   xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
+
    // Bootstrap epaper class
    display.init(true);
-   display.setRotation(2);
+   display.setRotation(0); // 0 - 12.48 w/USB pointing down
    display.setCursor(10,40);
    display.setTextColor(EPD_BLACK);
 
@@ -71,15 +75,17 @@ void app_main(void)
    {
       display.write(i); // Needs to be >32 (first character definition)
    }
-
+   display.println("");
    display.print("\nUbuntu 12pt");
    display.setFont(&Ubuntu_M12pt8b);
    demo_chars();
 
+   display.println("");
    display.print("\nUbuntu 16pt");
    display.setFont(&Ubuntu_M16pt8b);
    demo_chars();
-
+   
+   display.println("");
    display.print("\nUbuntu 20pt");
    display.setFont(&Ubuntu_M20pt8b);
    demo_chars();

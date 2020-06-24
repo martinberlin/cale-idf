@@ -18,9 +18,19 @@
 #include "esp_sleep.h"
 
 // Should match your display model (Check WiKi)
-#include <gdew075T7.h>
-EpdSpi io;
-Gdew075T7 display(io);
+// 1 channel SPI epaper displays:
+//#include <gdew075T7.h>
+//#include <gdew042t2.h>
+//EpdSpi io;
+//Gdew075T7 display(io);
+//Gdew042t2 display(io);
+
+// Multi-SPI 4 channels EPD only
+// Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
+// Otherwise you will run out of DRAM very shortly!
+#include "wave12i48.h" // Only to use with Edp4Spi IO
+Epd4Spi io;
+Wave12I48 display(io);
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
@@ -529,11 +539,13 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
-
-    printf("Free heap: %d\n", xPortGetFreeHeapSize());
+    
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init(false);
     display.setRotation(CONFIG_DISPLAY_ROTATION);
+    // Show available Dynamic Random Access Memory available after display.init() - Both report same number
+    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
+    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
     http_post();
 
