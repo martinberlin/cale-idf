@@ -8,7 +8,7 @@ It does only 3 things at the moment and is very easy to set up:
 2. In "Streaming mode" it pushes the pixels to Adafruit GFX buffer and at the end renders it in your Epaper.
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
-And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
+And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
 
 **CALE-IDF uses this components:**
 
@@ -27,7 +27,7 @@ And then set the image configuration and deepsleep minutes. Here you can also se
 
 ## CalEPD component
 
-[CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as possible, leaving as much memory as possible for your Firmare. Note that still, the graphics library buffer, depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels it runs stable and there is still free DRAM for more.
+[CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as possible, leaving as much memory as possible for your Firwmare. Note that still, the graphics library buffer, depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels it runs stable and there is still free DRAM for more.
 
 ## Branches
 
@@ -84,18 +84,21 @@ Reminder for myself, in case you update the module library just execute:
 
 ### Compile this 
 
-If it's an ESP32
+If it's an ESP32:
 
-    idf.py -D IDF_TARGET=esp32 menuconfig
+    idf.py set-target esp32
 
-If it's an ESP32S2
+If it's an ESP32S2:
 
-    idf.py -D IDF_TARGET=esp32s2 menuconfig
+    idf.py set-target esp32s2
 
-Make sure to edit **Display configuration** in the Kconfig menuoptions.
-**CALE configuration** has for the moment only a LEDBUILTIN_GPIO setting so it's not important at all. Later will be the place to configure CALE.es image url.
+Make sure to edit **Display configuration** in the Kconfig menuoptions:
 
-And then just build and flash
+    idf.py menuconfig
+
+**CALE configuration** is the section to set the bitmap URL (non-ssl for the moment), deepsleep until next refresh, and optional display rotation
+
+And then just build and flash:
 
     idf.py build
     idf.py flash
