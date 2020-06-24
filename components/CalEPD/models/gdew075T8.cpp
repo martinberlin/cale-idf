@@ -6,60 +6,7 @@
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T8_PU_DELAY 100
-/* 
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_20_LUTC_partial = {
-    0x20, {0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_21_LUTWW_partial = {
-    0x21, {// 10 w
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_22_LUTKW_partial = {
-    0x22, {// 10 w
-           //0x48, T1, T2, T3, T4, 1, // 01 00 10 00
-           0x5A, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_23_LUTWK_partial = {
-    0x23, {
-              // 01 b
-              0x84, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-              //0xA5, T1, T2, T3, T4, 1, // 10 10 01 01 more black
-          },
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_24_LUTKK_partial = {
-    0x24, {// 01 b
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_25_LUTBD_partial = {
-    0x25, {// 01 b
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-// 0x07 (2nd) VGH=20V,VGL=-20V
-// 0x3f (1st) VDH= 15V
-// 0x3f (2nd) VDH=-15V
-DRAM_ATTR const epd_power_4 Gdew075T8::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
-
-DRAM_ATTR const epd_init_1 Gdew075T8::epd_panel_setting_full = {
-    0x00, {0x1f}, 1};
-
-DRAM_ATTR const epd_init_1 Gdew075T8::epd_panel_setting_partial = {
-    0x00, {0x3f}, 1};
-
-DRAM_ATTR const epd_init_4 Gdew075T8::epd_resolution = {
-    0x61, {GDEW075T7_WIDTH / 256, //source 800
-           GDEW075T7_WIDTH % 256,
-           GDEW075T7_HEIGHT / 256, //gate 480
-           GDEW075T7_HEIGHT % 256},
-    4};
- */
 // Constructor
 Gdew075T8::Gdew075T8(EpdSpi &dio) : Adafruit_GFX(GDEW075T8_WIDTH, GDEW075T8_HEIGHT),
                                     Epd(GDEW075T8_WIDTH, GDEW075T8_HEIGHT), IO(dio)
@@ -93,38 +40,30 @@ void Gdew075T8::_wakeUp()
 {
   IO.reset(10);
 
-  IO.cmd(0X65);     //FLASH CONTROL
+  /* IO.cmd(0X65);     //FLASH CONTROL
   IO.data(0x01);
-
   IO.cmd(0xAB);
-
   IO.cmd(0X65);     //FLASH CONTROL
-  IO.data(0x00);
-
-  IO.cmd(0x01);
-  IO.data(0x37);    //POWER SETTING
-  IO.data(0x00);
-
-  IO.cmd(0X00);     //PANNEL SETTING
-  IO.data(0xCF);
-  IO.data(0x08);
+  IO.data(0x00); */
 
   IO.cmd(0x06);     //boost
   IO.data(0xc7);
   IO.data(0xcc);
   IO.data(0x28);
 
-  IO.cmd(0x30);     //PLL setting
-  IO.data(0x3c);
-
-  IO.cmd(0X41);     //TEMPERATURE SETTING
+  IO.cmd(0x01);
+  IO.data(0x37);    //POWER SETTING
   IO.data(0x00);
 
-  IO.cmd(0X50);     //VCOM AND DATA INTERVAL SETTING
-  IO.data(0x77);
+  IO.cmd(0x04);     //POWER ON
+  _waitBusy("_wakeUp power on");
 
-  IO.cmd(0X60);     //TCON SETTING
-  IO.data(0x22);
+  IO.cmd(0X00);     //PANNEL SETTING
+  IO.data(0xCF);
+  IO.data(0x08);
+
+  IO.cmd(0x30);     //PLL setting
+  IO.data(0x3c);
 
   IO.cmd(0x61);     //tres 640*384
   IO.data(0x02);    //source 640
@@ -135,12 +74,11 @@ void Gdew075T8::_wakeUp()
   IO.cmd(0X82);     //VDCS SETTING
   IO.data(0x1E);    //decide by LUT file
 
+  IO.cmd(0X50);     //VCOM AND DATA INTERVAL SETTING
+  IO.data(0x77);
+
   IO.cmd(0xe5);     //FLASH MODE
   IO.data(0x03);
-
-  IO.cmd(0x04);     //POWER ON
-  _waitBusy("_wakeUp power on");
-
 }
 
 void Gdew075T8::update()
@@ -152,24 +90,60 @@ void Gdew075T8::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
 
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint16_t i = 0;
-  uint8_t xLineBytes = GDEW075T8_WIDTH / 8;
-  uint8_t x1buf[xLineBytes];
-  for (uint16_t y = 1; y <= GDEW075T8_HEIGHT; y++)
+  uint8_t updateMethod = 1;
+  switch (updateMethod)
   {
-    for (uint16_t x = 1; x <= xLineBytes; x++)
+  case 1:
+   // Proved to work
+    for (uint16_t c = 1; c < GDEW075T8_BUFFER_SIZE; c++)
     {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-      x1buf[x - 1] = data;
-      if (x == xLineBytes)
-      { // Flush the X line buffer to SPI
-        IO.data(x1buf, sizeof(x1buf));
-      }
-      ++i;
+      _send8pixel(_buffer[c]);
     }
-  }
+    break;
+  
+  default:
+   // Non tested
+   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+    uint16_t i = 0;
+    uint8_t xLineBytes = GDEW075T8_WIDTH / 8;
+    uint8_t x1buf[GDEW075T8_WIDTH];
+    // Y
+    for (uint16_t y = 1; y <= GDEW075T8_HEIGHT; y++)
+    {
+      // X
+      for (uint16_t x = 1; x <= xLineBytes; x++)
+      {
+        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
 
+        // For each X 8 times bitshift
+        for (uint8_t j = 0; j < 8; j++)
+        {
+          uint8_t t = data & 0x80 ? 0x00 : 0x03;
+          t <<= 4;
+          data <<= 1;
+          j++;
+          t |= data & 0x80 ? 0x00 : 0x03;
+          data <<= 1;
+          x1buf[x-1+j] = data;
+        }
+        if (x == xLineBytes)
+        { // Flush the X line buffer to SPI
+          IO.data(x1buf, sizeof(x1buf));
+        }
+
+        if (i%4==0) {
+          rtc_wdt_feed();
+          vTaskDelay(pdMS_TO_TICKS(1));
+        }
+        ++i;
+
+      }
+    }
+
+    break;
+  } 
+
+ 
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
   _waitBusy("update");
