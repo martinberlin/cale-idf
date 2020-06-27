@@ -15,6 +15,9 @@
 #define GDEW027W3_WIDTH 176
 #define GDEW027W3_HEIGHT 264
 #define GDEW027W3_BUFFER_SIZE (uint32_t(GDEW027W3_WIDTH) * uint32_t(GDEW027W3_HEIGHT) / 8)
+// 1 byte of this color in the buffer
+#define GDEW027W3_8PIX_BLACK 0xFF
+#define GDEW027W3_8PIX_WHITE 0x00
 
 class Gdew027w3 : public Epd
 {

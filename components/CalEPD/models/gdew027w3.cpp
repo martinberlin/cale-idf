@@ -246,8 +246,8 @@ void Gdew027w3::init(bool debug)
 
 void Gdew027w3::fillScreen(uint16_t color)
 {
-  // Invert colors for this display 0xFF = pure black, 0x00 = white
-  uint8_t data = (color == EPD_BLACK) ? 0xFF : 0x00;
+  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
+  uint8_t data = (color == EPD_BLACK) ? GDEW027W3_8PIX_BLACK : GDEW027W3_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;

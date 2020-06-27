@@ -208,7 +208,7 @@ void Gdew042t2::init(bool debug)
 
 void Gdew042t2::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? GDEW042T2_8PIX_BLACK : GDEW042T2_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;

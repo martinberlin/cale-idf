@@ -29,7 +29,7 @@ void Gdew075T8::init(bool debug)
 
 void Gdew075T8::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? GDEW075T8_8PIX_BLACK : GDEW075T8_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -349,7 +349,8 @@ void Gdew075T8::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
   uint16_t i = x / 8 + y * GDEW075T8_WIDTH / 8;
 
-  if (color)
+  // 8 pix Black is 0xFF
+  if (!color)
   {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   }

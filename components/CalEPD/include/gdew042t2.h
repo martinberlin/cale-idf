@@ -18,6 +18,8 @@
 #define GDEW042T2_HEIGHT 300
 #define GDEW042T2_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 8)
 
+#define GDEW042T2_8PIX_BLACK 0x00
+#define GDEW042T2_8PIX_WHITE 0xFF
 
 // Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdew042t2 : public Epd
