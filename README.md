@@ -10,6 +10,13 @@ It does only 3 things at the moment and is very easy to set up:
 
 And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
 
+## News
+
+- Repository mantainer will be in holidays till 13 th July. So in the next two weeks there will be no support.
+- Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and I think the Wiki is the perfect place to make updates that are not branch dependant
+- Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. I'll be working in adding a PCB on top with a different board (TTGO T8) that has battery management and PSRAM. Due to the nature of this display and the big pixel resolution, it has a 160 Kb buffer, so it leaves no DRAM for your program. So it's actually only usable with PSIRAM if you want to have a working ESP32 sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
+
 **CALE-IDF uses this components:**
 
 - [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
@@ -20,9 +27,11 @@ They are at the moment included without git submodules so we an develop fast wit
 ## Configuration
 
 Make sure to set the GPIOs that are connected from the Epaper to your ESP32. Data in in your epaper (DIN) should be connected to MOSI:
+
 ![CALE config](/config-examples/assets/menuconfig-display.png)
 
 And then set the image configuration and deepsleep minutes. Here you can also set the rotation for your Eink display:
+
 ![Display config](/config-examples/assets/menuconfig-cale.png)
 
 ## CalEPD component
@@ -31,12 +40,7 @@ And then set the image configuration and deepsleep minutes. Here you can also se
 
 ## Branches
 
-**master**...    -> stable version
-
-    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
-    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
-    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display (Note: Needs PSRAM if you want to make something useful)
-    v.0.9.3 First official version with BMP download and render to the display (20.JUN.2020)
+**master**...    -> stable version (ChangeLog moved to Wiki)
 
 **refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master. Inestable branch do not use on Firmware that you ship to a client.
 
@@ -101,13 +105,13 @@ Make sure to edit **Display configuration** in the Kconfig menuoptions:
 And then just build and flash:
 
     idf.py build
-    idf.py flash
+    idf.py flash monitor
 
 To clean and start again in case you change target (But usually no need to run)
 
     idf.py fullclean
 
-To open the serial monitor
+To open the serial monitor only
 
     idf.py monitor
 
