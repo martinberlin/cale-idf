@@ -51,4 +51,5 @@ class Gdew075T8 : public Epd
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     void _send8pixel(uint8_t data);
+    void _send8pixelPack(uint8_t data);
 };

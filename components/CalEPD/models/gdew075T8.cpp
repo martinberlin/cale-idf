@@ -25,6 +25,11 @@ void Gdew075T8::init(bool debug)
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, true);
   fillScreen(EPD_WHITE);
+  // Note: Update WDT time, this will affect any other class once this is set
+  // NO parece afectar en nada, sigue saliendo el Watchdog alert
+  rtc_wdt_set_length_of_reset_signal(RTC_WDT_SYS_RESET_SIG, RTC_WDT_LENGTH_3_2us);
+  rtc_wdt_set_stage(RTC_WDT_STAGE0, RTC_WDT_STAGE_ACTION_RESET_SYSTEM);
+  rtc_wdt_set_time(RTC_WDT_STAGE0, 900);
 }
 
 void Gdew075T8::fillScreen(uint16_t color)
@@ -39,13 +44,6 @@ void Gdew075T8::fillScreen(uint16_t color)
 void Gdew075T8::_wakeUp()
 {
   IO.reset(10);
-
-  /* IO.cmd(0X65);     //FLASH CONTROL
-  IO.data(0x01);
-  IO.cmd(0xAB);
-  IO.cmd(0X65);     //FLASH CONTROL
-  IO.data(0x00); */
-
   IO.cmd(0x06);     //boost
   IO.data(0xc7);
   IO.data(0xcc);
@@ -90,57 +88,41 @@ void Gdew075T8::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
 
-  uint8_t updateMethod = 1;
+  uint8_t updateMethod = 2;
+
   switch (updateMethod)
   {
   case 1:
    // Proved to work
-    for (uint16_t c = 1; c < GDEW075T8_BUFFER_SIZE; c++)
+    for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
     {
       _send8pixel(_buffer[c]);
+
+      // Lento: Cada Kb espera 10 ms
+      if (c%1024==0) {
+        vTaskDelay(pdMS_TO_TICKS(10));
+        rtc_wdt_feed();
+        printf("%d ",c);
+      }
+
     }
     break;
-  
-  default:
-   // Non tested
-   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-    uint16_t i = 0;
-    uint8_t xLineBytes = GDEW075T8_WIDTH / 8;
-    uint8_t x1buf[GDEW075T8_WIDTH];
-    // Y
-    for (uint16_t y = 1; y <= GDEW075T8_HEIGHT; y++)
+
+  case 2:
+   // Being tested
+    for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
     {
-      // X
-      for (uint16_t x = 1; x <= xLineBytes; x++)
-      {
-        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-
-        // For each X 8 times bitshift
-        for (uint8_t j = 0; j < 8; j++)
-        {
-          uint8_t t = data & 0x80 ? 0x00 : 0x03;
-          t <<= 4;
-          data <<= 1;
-          j++;
-          t |= data & 0x80 ? 0x00 : 0x03;
-          data <<= 1;
-          x1buf[x-1+j] = data;
-        }
-        if (x == xLineBytes)
-        { // Flush the X line buffer to SPI
-          IO.data(x1buf, sizeof(x1buf));
-        }
-
-        if (i%4==0) {
-          rtc_wdt_feed();
-          vTaskDelay(pdMS_TO_TICKS(1));
-        }
-        ++i;
-
+      _send8pixelPack(_buffer[c]);
+      // Each 2 Kb wait 10 ms: c%2048 . Proba de acortarlo!
+      // pdMS_TO_TICKS < 10 salta WDT 
+      if (c%2048==0) {
+        vTaskDelay(pdMS_TO_TICKS(10));
+        rtc_wdt_feed();
+        printf("%d ",c);
       }
     }
-
     break;
+  break;
   } 
 
  
@@ -185,6 +167,25 @@ void Gdew075T8::_send8pixel(uint8_t data)
     IO.data(t);
   }
 }
+
+void Gdew075T8::_send8pixelPack(uint8_t data)
+{
+  uint8_t bits[8];
+
+  for (uint8_t j = 0; j < 8; j++)
+  {
+    uint8_t t = data & 0x80 ? 0x00 : 0x03;
+    t <<= 4;
+    data <<= 1;
+    j++;
+    t |= data & 0x80 ? 0x00 : 0x03;
+    data <<= 1;
+    bits[j] = data;
+  }
+  
+  IO.data(bits, sizeof(bits));
+}
+
 
 void Gdew075T8::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
