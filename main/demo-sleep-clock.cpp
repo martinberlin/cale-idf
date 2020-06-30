@@ -1,6 +1,8 @@
 /*
  * - - - - - - - - Deepsleep clock example - - - - - - - - - - - - - - - - - - - - 
  * Please note that the intention of this clock is not to be precise. 
+ * It uses the ability of ESP32 to deepsleep combined with the epaper persistance
+ * to make a simple clock that consumes as minimum as possible.
  * Just a simple: Sleep every N minutes, increment EPROM variable, refresh epaper.
  * And once a day or every hour, a single HTTP request to sync the hour online. 
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -36,11 +38,15 @@
 // HTTP Request constants
 // Time query: HHmm  -> 0800 (8 AM)
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
-// Day N, month
+// Day N, month - TODO for later maybe just combine it on one request
 const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=l+d,%20F";
 
 // Clock will refresh each N minutes
 int sleepMinutes = 5;
+// Clock will sync with internet time in this two Sync Hours. Leave it on 0 to avoid internet Sync (Leave at least one otherwise it will defer too much from actual time)
+uint8_t syncHour1 = 9;     // At 9 in the morning the clock will Sync with internet time. Use it the time you most look at the clock if it's not perfect when you sleep...who cares?
+uint8_t syncHour2 = 20;
+uint8_t lastSyncHour = 0;  // Flag to know that we've synced the hour with timeQuery request
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE 128
@@ -63,21 +69,6 @@ extern "C"
 
 void deepsleep(){
     esp_deep_sleep(1000000LL * 60 * sleepMinutes);
-}
-
-/**
- * Not working as it should. deprecate or check later
- * deprecated
- */
-void clockLeadingZeros(int8_t number, char outBuffer[3]){
-   char incomingInt[3];
-   itoa(number, incomingInt, 10);
-   if (number<9) {
-      strlcpy(outBuffer,    "0", 3);
-      strlcat(outBuffer, incomingInt, 3);
-   } else {
-      strlcpy(outBuffer, incomingInt, 3);
-   }
 }
 
 void updateClock() {
@@ -171,7 +162,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 }
 
 /**
- * GET simple example, could be done also with POST
+ * GET simple example, could be done also with POST, API accepts both
  */
 static void http_get(const char * requestUrl)
 {
@@ -180,15 +171,16 @@ static void http_get(const char * requestUrl)
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
      * query parameter should be specified in URL.
      */
-
     esp_http_client_config_t config = {
         .url = requestUrl,
         .method = HTTP_METHOD_GET,
         .event_handler = _http_event_handler,
         .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
         };
-    esp_http_client_handle_t client = esp_http_client_init(&config);
     
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    // Perform the request. Will trigger the _http_event_handler event handler
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK)
     {
@@ -201,10 +193,9 @@ static void http_get(const char * requestUrl)
     {
         ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
-    //ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
 }
 
-/* FreeRTOS event group to signal when we are connected*/
+/* FreeRTOS event group to signal when we are connected */
 static EventGroupHandle_t s_wifi_event_group;
 
 /* The event group allows multiple bits for each event, but we only care about two events:
@@ -327,11 +318,11 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    // Just a test, we need to start internet only to sync Time
+    
    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-   wifi_init_sta();
-
-   http_get(timeQuery);
+   // Just a test, we need to start internet only to sync Time
+   /* wifi_init_sta();
+   http_get(timeQuery); */
 
 
     // Open
@@ -342,13 +333,21 @@ void app_main(void)
     if (err != ESP_OK) {
         printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     } else {
-        printf("Done\n");
+        printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
 
         // Read stored
         printf("Reading minutes from NVS ... ");
 
         nvs_get_i8(my_handle, "h", &nvs_hour);
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
+         // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www
+         if (nvs_hour == syncHour1 || nvs_hour == syncHour2) {
+            wifi_init_sta();
+            http_get(timeQuery);
+            // TODO Mark a flag that the internet time was refreshed that is active for the rest of this hour
+            lastSyncHour = nvs_hour;
+         }
+
         switch (err) {
             case ESP_OK:
                 printf("NVS Time %d:%d\n", nvs_hour, nvs_minute);
