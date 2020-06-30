@@ -19,18 +19,21 @@
 
 // Should match your display model (Check WiKi)
 // 1 channel SPI epaper displays:
+#include <gdew075T8.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
-//EpdSpi io;
-//Gdew075T7 display(io);
+//#include <gdew027w3.h>
+EpdSpi io;
+//Gdew027w3 display(io);
+Gdew075T8 display(io);
 //Gdew042t2 display(io);
 
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
-// Otherwise you will run out of DRAM very shortly!
+/* // Otherwise you will run out of DRAM very shortly!
 #include "wave12i48.h" // Only to use with Edp4Spi IO
 Epd4Spi io;
-Wave12I48 display(io);
+Wave12I48 display(io); */
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
