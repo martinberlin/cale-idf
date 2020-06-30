@@ -35,18 +35,19 @@
 #include "esp_http_client.h"
 #include "esp_sleep.h"
 
+bool debugVerbose = false;
 // HTTP Request constants
 // Time query: HHmm  -> 0800 (8 AM)
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
-// Day N, month - TODO for later maybe just combine it on one request
+// Day N, month - TODO for later maybe just combine it on one request. TODO: Render this one:
 const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=l+d,%20F";
 
 // Clock will refresh each N minutes
 int sleepMinutes = 5;
-// Clock will sync with internet time in this two Sync Hours. Leave it on 0 to avoid internet Sync (Leave at least one otherwise it will defer too much from actual time)
-uint8_t syncHour1 = 9;     // At 9 in the morning the clock will Sync with internet time. Use it the time you most look at the clock if it's not perfect when you sleep...who cares?
-uint8_t syncHour2 = 20;
-uint8_t lastSyncHour = 0;  // Flag to know that we've synced the hour with timeQuery request
+// At what time your CLOCK will get in Sync with the internet time?
+// Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
+uint8_t syncHour1 = 8;     // At this hour in the morning the clock will Sync with internet time
+uint8_t syncHour2 = 13;
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE 128
@@ -54,13 +55,17 @@ uint64_t startTime = 0;
 uint16_t countDataEventCalls = 0;
 static const char *TAG = "CALE CLOCK";
 char espIpAddress[16];
+bool espIsOnline = false;
 
 EpdSpi io;
 Gdew027w3 display(io);
 
 // Values that will be stored in NVS - defaults should come initially from timequery (external HTTP request)
-int8_t nvs_hour = 10;
-int8_t nvs_minute = 20;
+int8_t nvs_hour = 0;
+int8_t nvs_minute = 0;
+// Flag to know that we've synced the hour with timeQuery request
+int8_t nvs_last_sync_hour = 0;
+
 
 extern "C"
 {
@@ -78,10 +83,11 @@ void updateClock() {
    display.setFont(&Ubuntu_M20pt8b);
    display.setTextColor(EPD_BLACK);
    display.setCursor(80,50);
-   display.print("30 Jun");
+
+   //TODO: Get day Month from SYNC
+   //display.print("30 Jun");
    // TODO Fix partial update for this epaper:
    //display.updateWindow(90, 80, 100, 30, true);
-   
 
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
    char hour[3];
@@ -92,7 +98,7 @@ void updateClock() {
       strlcpy(hourBuffer,    "0", sizeof(hourBuffer));
       strlcat(hourBuffer, hour, sizeof(hourBuffer));
    } else {
-   strlcpy(hourBuffer, hour, sizeof(hourBuffer));
+      strlcpy(hourBuffer, hour, sizeof(hourBuffer));
    }
 
    char minute[3];
@@ -102,11 +108,11 @@ void updateClock() {
       strlcpy(minuteBuffer,    "0", sizeof(minuteBuffer));
       strlcat(minuteBuffer, minute, sizeof(minuteBuffer));
    } else {
-   strlcpy(minuteBuffer, minute, sizeof(minuteBuffer));
+      strlcpy(minuteBuffer, minute, sizeof(minuteBuffer));
    } 
-   //clockLeadingZeros(nvs_minute, &minuteBuffer); // Incorrect way to do it (bad designed function)
    
-   printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
+   if (debugVerbose) printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
+
    display.setCursor(90,80);
    display.print(hourBuffer);
    display.print(":");
@@ -139,19 +145,33 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         {
             startTime = esp_timer_get_time();
         }
-    // Copy the response into the buffer
+
         ESP_LOGI(TAG, "DATA CALLS: %d length:%d\n", countDataEventCalls, evt->data_len);
         memcpy(output_buffer, evt->data, evt->data_len);
+
+        printf("\nInternet time Syncronization: ");
         for (uint8_t c=0; c<evt->data_len; c++){
            printf("%c", output_buffer[c]);
         }
-        printf("\nEND OF DATA - - - -\n");
-
+         printf("\n\n");
+        // Hour output_buffer[0] and output_buffer[1]
+        char hour[1];
+        hour[0] = output_buffer[0];
+        hour[1] = output_buffer[1];
+        nvs_hour = atoi(hour);
+        
+        // min needs null terminator
+        char min[2];
+        min[0] = output_buffer[2];
+        min[1] = output_buffer[3];
+        min[2] = '\0';
+        nvs_minute = atoi(min);
+        
+        if (debugVerbose) printf("\n\SYNC NVS time to hour: %d:%d\n\n", nvs_hour, nvs_minute);
         break;
 
        case HTTP_EVENT_ON_FINISH:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms"
-        , (esp_timer_get_time()-startTime)/1000);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms", (esp_timer_get_time()-startTime)/1000);
         break;
 
     case HTTP_EVENT_DISCONNECTED:
@@ -232,6 +252,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         sprintf(espIpAddress,  IPSTR, IP2STR(&event->ip_info.ip));
         ESP_LOGI(TAG, "got ip: %s\n", espIpAddress);
+        espIsOnline = true;
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -303,10 +324,9 @@ void wifi_init_sta(void)
     vEventGroupDelete(s_wifi_event_group);
 }
 
-
 void app_main(void)
 {
-   printf("Demo sleeping clock\n");
+   printf("Demo ESP32 deepsleep clock\n");
 
    // Initialize NVS
     esp_err_t err = nvs_flash_init();
@@ -318,39 +338,35 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    
-   ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-   // Just a test, we need to start internet only to sync Time
-   /* wifi_init_sta();
-   http_get(timeQuery); */
-
-
-    // Open
-    printf("\n");
-    printf("Opening Non-Volatile Storage (NVS) handle... ");
     nvs_handle_t my_handle;
     err = nvs_open("storage", NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
         printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     } else {
-        printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
+        if (debugVerbose) printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
 
         // Read stored
-        printf("Reading minutes from NVS ... ");
-
+        nvs_get_i8(my_handle, "last_sync_h", &nvs_last_sync_hour);
         nvs_get_i8(my_handle, "h", &nvs_hour);
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
-         // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www
-         if (nvs_hour == syncHour1 || nvs_hour == syncHour2) {
+         // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
+         printf("LAST Sync hour: %d nvs_hour: %d\n", nvs_last_sync_hour, nvs_hour);
+         //  TO force another hour when it works:                             
+         //nvs_hour = 21; //FORCE!
+         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && nvs_hour != nvs_last_sync_hour) {
             wifi_init_sta();
+            while (espIsOnline==false) {
+               vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
+            printf("HTTP Request: %s\n", timeQuery);
             http_get(timeQuery);
-            // TODO Mark a flag that the internet time was refreshed that is active for the rest of this hour
-            lastSyncHour = nvs_hour;
+            // Mark a flag that the internet time was refreshed that is active for the rest of this hour
+            nvs_set_i8(my_handle, "last_sync_h", nvs_hour);
          }
 
         switch (err) {
             case ESP_OK:
-                printf("NVS Time %d:%d\n", nvs_hour, nvs_minute);
+                if (debugVerbose) printf("NVS Time %d:%d\n", nvs_hour, nvs_minute);
                 
                 break;
             case ESP_ERR_NVS_NOT_FOUND:
@@ -363,12 +379,10 @@ void app_main(void)
       // After reading let's print the hour:
       updateClock();
 
-        // Write
-        printf("Updating restart counter in NVS ... ");
+        // Write NVS
         nvs_minute+=sleepMinutes;
         // TODO Keep in mind that here sleepMinutes can be > 60 and that overpassing minutes need to be summed to 0
         if (nvs_minute>59) {
-           uint8_t last_minutes = nvs_minute;
            int8_t sumExtraMinutes = nvs_minute-60;
            nvs_hour++;
            nvs_minute = 0;
