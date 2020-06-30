@@ -25,7 +25,7 @@ Gdew027w3 display(io);
 const char* timequery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
 
 // Clock will refresh each N minutes
-int sleepMinutes = 5;
+int sleepMinutes = 3;
 
 // Values that will be stored in NVS - defaults should come initially from timequery (external HTTP request)
 int8_t nvs_hour = 10;
@@ -38,6 +38,18 @@ extern "C"
 
 void deepsleep(){
     esp_deep_sleep(1000000LL * 60 * sleepMinutes);
+}
+
+// Not working as it should. deprecate or check later
+void clockLeadingZeros(int8_t number, char outBuffer[3]){
+   char incomingInt[3];
+   itoa(number, incomingInt, 10);
+   if (number<9) {
+      strlcpy(outBuffer,    "0", 3);
+      strlcat(outBuffer, incomingInt, 3);
+   } else {
+      strlcpy(outBuffer, incomingInt, 3);
+   }
 }
 
 void updateClock() {
@@ -54,16 +66,32 @@ void updateClock() {
 
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
    char hour[3];
+   char hourBuffer[3];
+   // Convert the int into a char array
    itoa(nvs_hour, hour, 10);
+   if (nvs_hour<9) {
+      strlcpy(hourBuffer,    "0", sizeof(hourBuffer));
+      strlcat(hourBuffer, hour, sizeof(hourBuffer));
+   } else {
+   strlcpy(hourBuffer, hour, sizeof(hourBuffer));
+   }
 
    char minute[3];
+   char minuteBuffer[3];
    itoa(nvs_minute, minute, 10);
+   if (nvs_minute<9) {
+      strlcpy(minuteBuffer,    "0", sizeof(minuteBuffer));
+      strlcat(minuteBuffer, minute, sizeof(minuteBuffer));
+   } else {
+   strlcpy(minuteBuffer, minute, sizeof(minuteBuffer));
+   } 
+   //clockLeadingZeros(nvs_minute, &minuteBuffer); // Incorrect way to do it (bad designed function)
    
-   printf("%s:%s -> Sending to epaper\n", hour, minute);
+   printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
    display.setCursor(90,80);
-   display.print(hour);
+   display.print(hourBuffer);
    display.print(":");
-   display.print(minute);
+   display.print(minuteBuffer);
    display.update();
 }
 
@@ -115,10 +143,17 @@ void app_main(void)
         printf("Updating restart counter in NVS ... ");
         nvs_minute+=sleepMinutes;
         // TODO Keep in mind that here sleepMinutes can be > 60 and that overpassing minutes need to be summed to 0
-        if (nvs_minute>60) {
+        if (nvs_minute>59) {
+           uint8_t last_minutes = nvs_minute;
+           int8_t sumExtraMinutes = nvs_minute-60;
            nvs_hour++;
            nvs_minute = 0;
+           if (sumExtraMinutes>0) {
+              nvs_minute+=sumExtraMinutes;
+              printf("Summing %d minutes to new hour since last_minute+%d is equal to %d.\n", sumExtraMinutes, sleepMinutes, nvs_minute);
+           }
         }
+        // On 24 will be 00 hours
         if (nvs_hour>23) {
            nvs_hour = 0;
         }
