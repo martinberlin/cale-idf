@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T8_PU_DELAY 100
@@ -22,14 +23,11 @@ void Gdew075T8::init(bool debug)
   debug_enabled = debug;
   if (debug_enabled)
     printf("Gdew075T8::init(debug:%d)\n", debug);
-  //Initialize SPI at 4MHz frequency. true for debug
+  // Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, true);
   fillScreen(EPD_WHITE);
-  // Note: Update WDT time, this will affect any other class once this is set
-  // NO parece afectar en nada, sigue saliendo el Watchdog alert
-  rtc_wdt_set_length_of_reset_signal(RTC_WDT_SYS_RESET_SIG, RTC_WDT_LENGTH_3_2us);
-  rtc_wdt_set_stage(RTC_WDT_STAGE0, RTC_WDT_STAGE_ACTION_RESET_SYSTEM);
-  rtc_wdt_set_time(RTC_WDT_STAGE0, 900);
+  // Update the TWDT’s timeout period and panic configurations 
+  esp_task_wdt_init(99, true);
 }
 
 void Gdew075T8::fillScreen(uint16_t color)
@@ -98,13 +96,9 @@ void Gdew075T8::update()
     {
       _send8pixel(_buffer[c]);
 
-      // Lento: Cada Kb espera 10 ms
-      if (c%1024==0) {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        rtc_wdt_feed();
+      if (c%500==0) {
         printf("%d ",c);
       }
-
     }
     break;
 
@@ -113,11 +107,8 @@ void Gdew075T8::update()
     for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
     {
       _send8pixelPack(_buffer[c]);
-      // Each 2 Kb wait 10 ms: c%2048 . Proba de acortarlo!
-      // pdMS_TO_TICKS < 10 salta WDT 
-      if (c%2048==0) {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        rtc_wdt_feed();
+
+      if (c%500==0) {
         printf("%d ",c);
       }
     }
