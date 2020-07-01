@@ -48,16 +48,16 @@ const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f
 int sleepMinutes = 5;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 0;     // At this hour in the morning the clock will Sync with internet time
+uint8_t syncHour1 = 10;     // At this hour in the morning the clock will Sync with internet time
 uint8_t syncHour2 = 13;    // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 10; // The date request will be done at this hour, only once a day
+uint8_t syncHourDate = 7; // The date request will be done at this hour, only once a day
 /*
  CLOCK Appearance - - - - - - - - - -
        
        9:02
 */
-uint16_t backgroundColor = EPD_BLACK;
-uint16_t textColor = EPD_WHITE;
+uint16_t backgroundColor = EPD_WHITE;
+uint16_t textColor = EPD_BLACK;
 
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
