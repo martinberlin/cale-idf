@@ -149,8 +149,11 @@ void updateClock() {
    display.setCursor(10,display.height()-20);
    display.print(nvs_last_sync_message);
    // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
-   // Note this x,y,x2,y2 coordinates represent the bounding box where the update takes place:
+   // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
    display.updateWindow(0, 0, display.width()-30, display.height()/2, true);
+   // NOTE for other display models: 
+   // If you use another display, bigger or smaller, than the demo you will need to change this box coordinates
+   // In case you want to do a full update just comment the updateWindow line and leave this one:
    //display.update();
 }
 
