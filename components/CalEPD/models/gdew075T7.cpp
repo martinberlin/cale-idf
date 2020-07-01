@@ -129,7 +129,7 @@ void Gdew075T7::init(bool debug)
 
 void Gdew075T7::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? GDEW075T7_8PIX_BLACK : GDEW075T7_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;

@@ -16,6 +16,10 @@
 #define GDEW075T8_WIDTH 640
 #define GDEW075T8_HEIGHT 384
 
+// 8 pix of this color in a buffer byte:
+#define GDEW075T8_8PIX_BLACK 0xFF
+#define GDEW075T8_8PIX_WHITE 0x00
+
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
 // We are not adding page support so here this is our Buffer size
 #define GDEW075T8_BUFFER_SIZE (uint32_t(GDEW075T8_WIDTH) * uint32_t(GDEW075T8_HEIGHT) / 8)
@@ -47,4 +51,5 @@ class Gdew075T8 : public Epd
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     void _send8pixel(uint8_t data);
+    void _send8pixelPack(uint8_t data);
 };

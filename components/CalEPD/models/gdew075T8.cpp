@@ -3,63 +3,11 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T8_PU_DELAY 100
-/* 
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_20_LUTC_partial = {
-    0x20, {0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_21_LUTWW_partial = {
-    0x21, {// 10 w
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_22_LUTKW_partial = {
-    0x22, {// 10 w
-           //0x48, T1, T2, T3, T4, 1, // 01 00 10 00
-           0x5A, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_23_LUTWK_partial = {
-    0x23, {
-              // 01 b
-              0x84, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-              //0xA5, T1, T2, T3, T4, 1, // 10 10 01 01 more black
-          },
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_24_LUTKK_partial = {
-    0x24, {// 01 b
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-DRAM_ATTR const epd_init_42 Gdew075T8::lut_25_LUTBD_partial = {
-    0x25, {// 01 b
-           0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    42};
-
-// 0x07 (2nd) VGH=20V,VGL=-20V
-// 0x3f (1st) VDH= 15V
-// 0x3f (2nd) VDH=-15V
-DRAM_ATTR const epd_power_4 Gdew075T8::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
-
-DRAM_ATTR const epd_init_1 Gdew075T8::epd_panel_setting_full = {
-    0x00, {0x1f}, 1};
-
-DRAM_ATTR const epd_init_1 Gdew075T8::epd_panel_setting_partial = {
-    0x00, {0x3f}, 1};
-
-DRAM_ATTR const epd_init_4 Gdew075T8::epd_resolution = {
-    0x61, {GDEW075T7_WIDTH / 256, //source 800
-           GDEW075T7_WIDTH % 256,
-           GDEW075T7_HEIGHT / 256, //gate 480
-           GDEW075T7_HEIGHT % 256},
-    4};
- */
 // Constructor
 Gdew075T8::Gdew075T8(EpdSpi &dio) : Adafruit_GFX(GDEW075T8_WIDTH, GDEW075T8_HEIGHT),
                                     Epd(GDEW075T8_WIDTH, GDEW075T8_HEIGHT), IO(dio)
@@ -75,14 +23,16 @@ void Gdew075T8::init(bool debug)
   debug_enabled = debug;
   if (debug_enabled)
     printf("Gdew075T8::init(debug:%d)\n", debug);
-  //Initialize SPI at 4MHz frequency. true for debug
+  // Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, true);
   fillScreen(EPD_WHITE);
+  // Update the TWDT’s timeout period and panic configurations 
+  esp_task_wdt_init(99, true);
 }
 
 void Gdew075T8::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? GDEW075T8_8PIX_BLACK : GDEW075T8_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -92,39 +42,24 @@ void Gdew075T8::fillScreen(uint16_t color)
 void Gdew075T8::_wakeUp()
 {
   IO.reset(10);
-
-  IO.cmd(0X65);     //FLASH CONTROL
-  IO.data(0x01);
-
-  IO.cmd(0xAB);
-
-  IO.cmd(0X65);     //FLASH CONTROL
-  IO.data(0x00);
-
-  IO.cmd(0x01);
-  IO.data(0x37);    //POWER SETTING
-  IO.data(0x00);
-
-  IO.cmd(0X00);     //PANNEL SETTING
-  IO.data(0xCF);
-  IO.data(0x08);
-
   IO.cmd(0x06);     //boost
   IO.data(0xc7);
   IO.data(0xcc);
   IO.data(0x28);
 
-  IO.cmd(0x30);     //PLL setting
-  IO.data(0x3c);
-
-  IO.cmd(0X41);     //TEMPERATURE SETTING
+  IO.cmd(0x01);
+  IO.data(0x37);    //POWER SETTING
   IO.data(0x00);
 
-  IO.cmd(0X50);     //VCOM AND DATA INTERVAL SETTING
-  IO.data(0x77);
+  IO.cmd(0x04);     //POWER ON
+  _waitBusy("_wakeUp power on");
 
-  IO.cmd(0X60);     //TCON SETTING
-  IO.data(0x22);
+  IO.cmd(0X00);     //PANNEL SETTING
+  IO.data(0xCF);
+  IO.data(0x08);
+
+  IO.cmd(0x30);     //PLL setting
+  IO.data(0x3c);
 
   IO.cmd(0x61);     //tres 640*384
   IO.data(0x02);    //source 640
@@ -135,12 +70,11 @@ void Gdew075T8::_wakeUp()
   IO.cmd(0X82);     //VDCS SETTING
   IO.data(0x1E);    //decide by LUT file
 
+  IO.cmd(0X50);     //VCOM AND DATA INTERVAL SETTING
+  IO.data(0x77);
+
   IO.cmd(0xe5);     //FLASH MODE
   IO.data(0x03);
-
-  IO.cmd(0x04);     //POWER ON
-  _waitBusy("_wakeUp power on");
-
 }
 
 void Gdew075T8::update()
@@ -152,24 +86,37 @@ void Gdew075T8::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
 
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint16_t i = 0;
-  uint8_t xLineBytes = GDEW075T8_WIDTH / 8;
-  uint8_t x1buf[xLineBytes];
-  for (uint16_t y = 1; y <= GDEW075T8_HEIGHT; y++)
-  {
-    for (uint16_t x = 1; x <= xLineBytes; x++)
-    {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-      x1buf[x - 1] = data;
-      if (x == xLineBytes)
-      { // Flush the X line buffer to SPI
-        IO.data(x1buf, sizeof(x1buf));
-      }
-      ++i;
-    }
-  }
+  uint8_t updateMethod = 2;
 
+  switch (updateMethod)
+  {
+  case 1:
+   // Proved to work
+    for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
+    {
+      _send8pixel(_buffer[c]);
+
+      if (c%500==0) {
+        printf("%d ",c);
+      }
+    }
+    break;
+
+  case 2:
+   // Being tested
+    for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
+    {
+      _send8pixelPack(_buffer[c]);
+
+      if (c%500==0) {
+        printf("%d ",c);
+      }
+    }
+    break;
+  break;
+  } 
+
+ 
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
   _waitBusy("update");
@@ -211,6 +158,25 @@ void Gdew075T8::_send8pixel(uint8_t data)
     IO.data(t);
   }
 }
+
+void Gdew075T8::_send8pixelPack(uint8_t data)
+{
+  uint8_t bits[8];
+
+  for (uint8_t j = 0; j < 8; j++)
+  {
+    uint8_t t = data & 0x80 ? 0x00 : 0x03;
+    t <<= 4;
+    data <<= 1;
+    j++;
+    t |= data & 0x80 ? 0x00 : 0x03;
+    data <<= 1;
+    bits[j] = data;
+  }
+  
+  IO.data(bits, sizeof(bits));
+}
+
 
 void Gdew075T8::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
@@ -375,7 +341,8 @@ void Gdew075T8::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
   uint16_t i = x / 8 + y * GDEW075T8_WIDTH / 8;
 
-  if (color)
+  // 8 pix Black is 0xFF
+  if (!color)
   {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   }

@@ -10,7 +10,6 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 // - - - - HTTP Client
-#include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
@@ -18,9 +17,22 @@
 #include "esp_sleep.h"
 
 // Should match your display model (Check WiKi)
-#include <gdew075T7.h>
+// 1 channel SPI epaper displays:
+#include <gdew075T8.h>
+//#include <gdew075T7.h>
+//#include <gdew042t2.h>
+//#include <gdew027w3.h>
 EpdSpi io;
-Gdew075T7 display(io);
+//Gdew027w3 display(io);
+Gdew075T8 display(io);
+//Gdew042t2 display(io);
+
+// Multi-SPI 4 channels EPD only
+// Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
+/* // Otherwise you will run out of DRAM very shortly!
+#include "wave12i48.h" // Only to use with Edp4Spi IO
+Epd4Spi io;
+Wave12I48 display(io); */
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
@@ -103,6 +115,10 @@ uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for dept
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
+
+void deepsleep(){
+    esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+}
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -344,7 +360,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-        esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+        deepsleep();
         break;
 
     case HTTP_EVENT_DISCONNECTED:
@@ -427,13 +443,14 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            ESP_LOGI(TAG, "Retry to connect to the AP");
         }
         else
         {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            ESP_LOGI(TAG, "Connect to the AP failed %d times. Going to deepsleep %d minutes", CONFIG_ESP_MAXIMUM_RETRY, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+            deepsleep();
         }
-        ESP_LOGI(TAG, "connect to the AP fail");
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -524,11 +541,13 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
-
-    printf("Free heap: %d\n", xPortGetFreeHeapSize());
+    
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init(false);
     display.setRotation(CONFIG_DISPLAY_ROTATION);
+    // Show available Dynamic Random Access Memory available after display.init() - Both report same number
+    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
+    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
     http_post();
 

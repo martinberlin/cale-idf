@@ -213,7 +213,7 @@ void Gdew027w3::initPartialUpdate(){
     IO.data(0x08);
 
     IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING
-    IO.data(0x17);
+    IO.data(0x17); //WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
 
     IO.cmd(lut_20_vcomDC_partial.cmd);
     IO.data(lut_20_vcomDC_partial.data,lut_20_vcomDC_partial.databytes);
@@ -246,8 +246,8 @@ void Gdew027w3::init(bool debug)
 
 void Gdew027w3::fillScreen(uint16_t color)
 {
-  // Invert colors for this display 0xFF = pure black, 0x00 = white
-  uint8_t data = (color == EPD_BLACK) ? 0xFF : 0x00;
+  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
+  uint8_t data = (color == EPD_BLACK) ? GDEW027W3_8PIX_BLACK : GDEW027W3_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -337,130 +337,78 @@ void Gdew027w3::update()
   _sleep();
 }
 
-uint16_t Gdew027w3::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
-{
-  x &= 0xFFF8; // byte boundary
-  xe = (xe - 1) | 0x0007; // byte boundary - 1
-  IO.cmd(0x90); // partial window
-  IO.data(x % 256);
-  IO.data(xe % 256);
-  IO.data(y / 256);
-  IO.data(y % 256);
-  IO.data(ye / 256);
-  IO.data(ye % 256);
-  IO.data(0x01);
-  IO.data(0x00);
-  return (7 + xe - x) / 8; // number of bytes to transfer per line
+uint16_t Gdew027w3::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
+  IO.data(x >> 8);
+  IO.data(x & 0xf8);
+  IO.data(y >> 8);
+  IO.data(y & 0xff);
+  IO.data(xe >> 8);
+  IO.data(xe & 0xf8);
+  IO.data(ye >> 8);
+  IO.data(ye & 0xff);
+ return 1;
 }
 
-void Gdew027w3::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Gdew027w3::_partialRamArea(uint8_t command, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-  printf("deprecated: updateWindow does not work\n");
-  if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GDEW027W3_WIDTH) return;
-  if (y >= GDEW027W3_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GDEW027W3_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEW027W3_HEIGHT, y + h) - 1;
-  // x &= 0xFFF8; // byte boundary, not needed here
-  uint16_t xs_bx = x / 8;
-  uint16_t xe_bx = (xe + 7) / 8;
-  if (!_using_partial_mode) _wakeUp();
-  _using_partial_mode = true;
-  initPartialUpdate();
-  for (uint16_t twice = 0; twice < 2; twice++)
-  { // leave both controller buffers equal
-    IO.cmd(0x91); // partial in
-    _setPartialRamArea(x, y, xe, ye);
-    IO.cmd(0x13);
-
-    uint16_t counter = 0;
-    uint8_t data[GDEW027W3_WIDTH*GDEW027W3_HEIGHT];
-    for (int16_t y1 = y; y1 <= ye; y1++)
-    {
-      for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
-      {
-        uint16_t idx = y1 * (GDEW027W3_WIDTH / 8) + x1;
-        data[counter] = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-        //uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
-        //IO.data(~data); // white is 0xFF on device
-        ++counter;
-      }
-    }
-    IO.data(data, counter);
-    IO.cmd(0x12);      // display refresh
-    _waitBusy("updateWindow");
-    IO.cmd(0x92);      // partial out
-  } // leave both controller buffers equal
-  vTaskDelay(GDEW027W3_PU_DELAY);
+  IO.cmd(command);
+  _setPartialRamArea(x,y,w,h);
 }
 
-void Gdew027w3::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
+void Gdew027w3::_refreshWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-  printf("deprecated: updateToWindow does not work\n");
-  if (using_rotation)
-  {
-    switch (getRotation())
-    {
-      case 1:
-        swap(xs, ys);
-        swap(xd, yd);
-        swap(w, h);
-        xs = GDEW027W3_WIDTH - xs - w - 1;
-        xd = GDEW027W3_WIDTH - xd - w - 1;
-        break;
-      case 2:
-        xs = GDEW027W3_WIDTH - xs - w - 1;
-        ys = GDEW027W3_HEIGHT - ys - h - 1;
-        xd = GDEW027W3_WIDTH - xd - w - 1;
-        yd = GDEW027W3_HEIGHT - yd - h - 1;
-        break;
-      case 3:
-        swap(xs, ys);
-        swap(xd, yd);
-        swap(w, h);
-        ys = GDEW027W3_HEIGHT - ys  - h - 1;
-        yd = GDEW027W3_HEIGHT - yd  - h - 1;
-        break;
-    }
-  }
+  w += (x % 8) + 7;
+  h = gx_uint16_min(h, 256); // strange controller error
+  IO.cmd(0x16);
+  IO.data(x >> 8);
+  IO.data(x & 0xf8);
+  IO.data(y >> 8);
+  IO.data(y & 0xff);
+  IO.data(w >> 8);
+  IO.data(w & 0xf8);
+  IO.data(h >> 8);
+  IO.data(h & 0xff);
+}
+
+void Gdew027w3::_writeToWindow(uint8_t command, uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h)
+{
+  //Serial.printf("_writeToWindow(%d, %d, %d, %d, %d, %d)\n", xs, ys, xd, yd, w, h);
+  // the screen limits are the hard limits
   if (xs >= GDEW027W3_WIDTH) return;
   if (ys >= GDEW027W3_HEIGHT) return;
   if (xd >= GDEW027W3_WIDTH) return;
   if (yd >= GDEW027W3_HEIGHT) return;
-  // the screen limits are the hard limits
-  uint16_t xde = gx_uint16_min(GDEW027W3_WIDTH, xd + w) - 1;
-  uint16_t yde = gx_uint16_min(GDEW027W3_HEIGHT, yd + h) - 1;
+  w = gx_uint16_min(w + 7, GDEW027W3_WIDTH - xd) + (xd % 8);
+  h = gx_uint16_min(h, GDEW027W3_HEIGHT - yd);
+  uint16_t xe = (xs / 8) + (w / 8);
+  IO.cmd(0x91); // partial in
+  _partialRamArea(command, xd, yd, w, h);
+  for (uint16_t y1 = ys; y1 < ys + h; y1++)
+  {
+    for (uint16_t x1 = xs / 8; x1 < xe; x1++)
+    {
+      uint16_t idx = y1 * (GDEW027W3_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(~data);
+    }
+  }
+  //delay(2);
+}
+
+void Gdew027w3::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+{
+  if (using_rotation) _rotate(x, y, w, h);
   if (!_using_partial_mode) _wakeUp();
   _using_partial_mode = true;
+
+  //TODO: Test this in T5S
   initPartialUpdate();
-
-  for (uint16_t twice = 0; twice < 2; twice++)
-  { // leave both controller buffers equal
-    IO.cmd(0x91); // partial in
-    // soft limits, must send as many bytes as set by _SetRamArea
-    uint16_t yse = ys + yde - yd;
-    uint16_t xss_d8 = xs / 8;
-    uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
-    IO.cmd(0x13);
-    uint16_t counter = 0;
-    //uint8_t data[GDEW027W3_WIDTH*GDEW027W3_HEIGHT];
-    for (int16_t y1 = ys; y1 <= yse; y1++)
-    {
-      for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
-      {
-        uint16_t idx = y1 * (GDEW027W3_WIDTH / 8) + x1;
-        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
-        IO.data(data);
-        counter++;
-      }
-    }
-    //IO.data(data, counter); // white is 0xFF on device
-
-    IO.cmd(0x12);      //display refresh
-    _waitBusy("updateToWindow");
-    IO.cmd(0x92); // partial out
-  } // leave both controller buffers equal
-  vTaskDelay(GDEW027W3_PU_DELAY); 
+  _writeToWindow(0x15, x, y, x, y, w, h);
+  _refreshWindow(x, y, w, h); 
+  
+  _waitBusy("updateWindow");
+  // leave both controller buffers equal
+  _writeToWindow(0x14, x, y, x, y, w, h);
 }
 
 void Gdew027w3::_waitBusy(const char* message){

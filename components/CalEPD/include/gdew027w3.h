@@ -15,6 +15,9 @@
 #define GDEW027W3_WIDTH 176
 #define GDEW027W3_HEIGHT 264
 #define GDEW027W3_BUFFER_SIZE (uint32_t(GDEW027W3_WIDTH) * uint32_t(GDEW027W3_HEIGHT) / 8)
+// 1 byte of this color in the buffer
+#define GDEW027W3_8PIX_BLACK 0xFF
+#define GDEW027W3_8PIX_WHITE 0x00
 
 class Gdew027w3 : public Epd
 {
@@ -30,14 +33,8 @@ class Gdew027w3 : public Epd
 
     void fillScreen(uint16_t color);
     void update();
-
-    // Both partial updates DO NOT work as expected, turning all screen black or making strange effects
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
-  
-    // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
 
   private:
     EpdSpi& IO;
@@ -45,8 +42,10 @@ class Gdew027w3 : public Epd
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
-    
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    void _partialRamArea(uint8_t command, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    void _writeToWindow(uint8_t command, uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h);
+    void _refreshWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);

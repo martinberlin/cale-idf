@@ -19,6 +19,9 @@
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
 // We are not adding page support so here this is our Buffer size
 #define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 8)
+// 8 pix of this color in a buffer byte:
+#define GDEW075T7_8PIX_BLACK 0x00
+#define GDEW075T7_8PIX_WHITE 0xFF
 
 class Gdew075T7 : public Epd
 {

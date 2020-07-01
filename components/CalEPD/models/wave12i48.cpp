@@ -50,7 +50,7 @@ void Wave12I48::init(bool debug)
 void Wave12I48::fillScreen(uint16_t color)
 {
   if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK : WAVE12I48_8PIX_WHITE;
   for (uint32_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
