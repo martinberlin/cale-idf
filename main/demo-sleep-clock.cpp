@@ -107,13 +107,14 @@ void updateClock() {
    printf("Day, month: %s\n\n", nvs_day_month);
    display.print(nvs_day_month);
 
-   // TODO Fix partial update for this epaper: display.updateWindow(90, 80, 100, 30, true);
+   // TODO Fix partial update for this epaper: 
 
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
    
    
    display.setFont(&Ubuntu_M24pt8b);
    // Half of display -NN should be the sum of pix per font
+
    display.setCursor(display.width()/2-(12*5),display.height()/2);
    char hour[3];
    char hourBuffer[3];
@@ -147,8 +148,10 @@ void updateClock() {
    display.setFont(&Ubuntu_M8pt8b);
    display.setCursor(10,display.height()-20);
    display.print(nvs_last_sync_message);
-
-   display.update();
+   // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
+   // Note this x,y,x2,y2 coordinates represent the bounding box where the update takes place:
+   display.updateWindow(0, 0, display.width()-30, display.height()/2, true);
+   //display.update();
 }
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
