@@ -18,7 +18,9 @@
 #include "nvs.h"
 // Epd display class
 #include <gdew027w3.h>
-#include <Fonts/ubuntu/Ubuntu_M20pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h> // Day, Month
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
+#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>  // Last Sync message
 
 #include "freertos/event_groups.h"
 #include "esp_system.h"
@@ -36,26 +38,38 @@
 #include "esp_sleep.h"
 
 bool debugVerbose = false;
-// HTTP Request constants
+// HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time query: HHmm  -> 0800 (8 AM)
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
-// Day N, month - TODO for later maybe just combine it on one request. TODO: Render this one:
-const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=l+d,%20F";
+// Day N, month - This additional request will be done on hour 0:
+const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=D+d,+M";
 
 // Clock will refresh each N minutes
 int sleepMinutes = 5;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 8;     // At this hour in the morning the clock will Sync with internet time
-uint8_t syncHour2 = 13;
+uint8_t syncHour1 = 0;     // At this hour in the morning the clock will Sync with internet time
+uint8_t syncHour2 = 13;    // Same here, 2nd request to Sync hour 
+uint8_t syncHourDate = 10; // The date request will be done at this hour, only once a day
+/*
+ CLOCK Appearance - - - - - - - - - -
+       
+       9:02
+*/
+uint16_t backgroundColor = EPD_BLACK;
+uint16_t textColor = EPD_WHITE;
+
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
-#define HTTP_RECEIVE_BUFFER_SIZE 128
+#define HTTP_RECEIVE_BUFFER_SIZE  128
 uint64_t startTime = 0;
 uint16_t countDataEventCalls = 0;
 static const char *TAG = "CALE CLOCK";
 char espIpAddress[16];
 bool espIsOnline = false;
+
+// Ondata needs to know what information is going to retrieve. On 1: time  2: day, month
+uint8_t onDataCheck = 1;
 
 EpdSpi io;
 Gdew027w3 display(io);
@@ -63,9 +77,15 @@ Gdew027w3 display(io);
 // Values that will be stored in NVS - defaults should come initially from timequery (external HTTP request)
 int8_t nvs_hour = 0;
 int8_t nvs_minute = 0;
+char nvs_day_month[22];
+char nvs_last_sync_message[22];
+
 // Flag to know that we've synced the hour with timeQuery request
 int8_t nvs_last_sync_hour = 0;
+int8_t nvs_last_sync_date = 0;
 
+size_t sizeof_last_sync_message = sizeof(nvs_last_sync_message);
+size_t sizeof_day_month = sizeof(nvs_day_month);
 
 extern "C"
 {
@@ -78,18 +98,23 @@ void deepsleep(){
 
 void updateClock() {
    // Test Epd class with partial display
-   display.init(true);
+   display.init(false);
+   display.fillScreen(backgroundColor);
    display.setRotation(3);
-   display.setFont(&Ubuntu_M20pt8b);
-   display.setTextColor(EPD_BLACK);
-   display.setCursor(80,50);
+   display.setFont(&Ubuntu_M16pt8b);
+   display.setTextColor(textColor);
+   display.setCursor(40,40);
+   printf("Day, month: %s\n\n", nvs_day_month);
+   display.print(nvs_day_month);
 
-   //TODO: Get day Month from SYNC
-   //display.print("30 Jun");
-   // TODO Fix partial update for this epaper:
-   //display.updateWindow(90, 80, 100, 30, true);
+   // TODO Fix partial update for this epaper: display.updateWindow(90, 80, 100, 30, true);
 
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
+   
+   
+   display.setFont(&Ubuntu_M24pt8b);
+   // Half of display -NN should be the sum of pix per font
+   display.setCursor(display.width()/2-(12*5),display.height()/2);
    char hour[3];
    char hourBuffer[3];
    // Convert the int into a char array
@@ -117,6 +142,12 @@ void updateClock() {
    display.print(hourBuffer);
    display.print(":");
    display.print(minuteBuffer);
+
+   // Show last update message
+   display.setFont(&Ubuntu_M8pt8b);
+   display.setCursor(10,display.height()-20);
+   display.print(nvs_last_sync_message);
+
    display.update();
 }
 
@@ -153,21 +184,38 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         for (uint8_t c=0; c<evt->data_len; c++){
            printf("%c", output_buffer[c]);
         }
-         printf("\n\n");
-        // Hour output_buffer[0] and output_buffer[1]
-        char hour[1];
-        hour[0] = output_buffer[0];
-        hour[1] = output_buffer[1];
-        nvs_hour = atoi(hour);
+        printf("\n\n");
         
-        // min needs null terminator
-        char min[2];
-        min[0] = output_buffer[2];
-        min[1] = output_buffer[3];
-        min[2] = '\0';
-        nvs_minute = atoi(min);
+        switch (onDataCheck)
+        {
+            /* Retrieve time */
+        case 1:
+            // Hour output_buffer[0] and output_buffer[1]
+            char hour[1];
+            hour[0] = output_buffer[0];
+            hour[1] = output_buffer[1];
+            nvs_hour = atoi(hour);
+            
+            // min needs null terminator
+            char min[2];
+            min[0] = output_buffer[2];
+            min[1] = output_buffer[3];
+            min[2] = '\0';
+            nvs_minute = atoi(min);
+            
+            if (debugVerbose) printf("\nSYNC NVS time to hour: %d:%d\n\n", nvs_hour, nvs_minute);
+            break;
         
-        if (debugVerbose) printf("\n\SYNC NVS time to hour: %d:%d\n\n", nvs_hour, nvs_minute);
+        /* Retrieve day, month */
+        case 2:
+            printf("HTTP Request: Filling nvs_day_month buffer\n");
+            for (uint8_t c=0; c < sizeof(nvs_day_month); c++){
+                nvs_day_month[c] = output_buffer[c];
+            }
+           
+           break;
+        }
+        
         break;
 
        case HTTP_EVENT_ON_FINISH:
@@ -326,7 +374,7 @@ void wifi_init_sta(void)
 
 void app_main(void)
 {
-   printf("Demo ESP32 deepsleep clock\n");
+   printf("ESP32 deepsleep clock\n");
 
    // Initialize NVS
     esp_err_t err = nvs_flash_init();
@@ -347,21 +395,55 @@ void app_main(void)
 
         // Read stored
         nvs_get_i8(my_handle, "last_sync_h", &nvs_last_sync_hour);
+        nvs_get_i8(my_handle, "last_sync_date", &nvs_last_sync_date);
         nvs_get_i8(my_handle, "h", &nvs_hour);
+        nvs_get_str(my_handle, "last_sync_message", nvs_last_sync_message, &sizeof_last_sync_message);
+        nvs_get_str(my_handle, "nvs_day_month", nvs_day_month, &sizeof_day_month);
+
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
          // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
-         printf("LAST Sync hour: %d nvs_hour: %d\n", nvs_last_sync_hour, nvs_hour);
-         //  TO force another hour when it works:                             
-         //nvs_hour = 21; //FORCE!
+         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\nLast Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_message);
+
+
          if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && nvs_hour != nvs_last_sync_hour) {
             wifi_init_sta();
-            while (espIsOnline==false) {
+            uint8_t waitRounds = 0;
+            while (espIsOnline==false && waitRounds<30) {
                vTaskDelay(100 / portTICK_PERIOD_MS);
+               ++waitRounds;
             }
-            printf("HTTP Request: %s\n", timeQuery);
+            
             http_get(timeQuery);
             // Mark a flag that the internet time was refreshed that is active for the rest of this hour
             nvs_set_i8(my_handle, "last_sync_h", nvs_hour);
+            // Save message to store time of last update
+            char lastSync[22];
+            char hour[2];
+            char min[2];
+            itoa(nvs_hour, hour, 10);
+            itoa(nvs_minute, min, 10);
+            strlcpy(lastSync,  "Last sync at ", sizeof(lastSync));
+            strlcat(lastSync,  hour, sizeof(lastSync));
+            strlcat(lastSync,  " and ", sizeof(lastSync));
+            strlcat(lastSync,  min, sizeof(lastSync));
+            strlcat(lastSync,  " minutes.", sizeof(lastSync));
+
+            nvs_set_str(my_handle, "last_sync_message", lastSync);
+
+            printf("LAST SYNC: %s\n", lastSync);
+         }
+
+         // To avoid repeating the call :  && nvs_hour != nvs_last_sync_date
+         if (nvs_hour == syncHourDate && nvs_hour != nvs_last_sync_date) {
+             // Tell ON_DATA to read date:
+             onDataCheck = 2; 
+            nvs_set_i8(my_handle, "last_sync_date", nvs_hour);
+            if (!espIsOnline) {
+                wifi_init_sta();
+            }
+            
+            http_get(dayQuery);
+            nvs_set_str(my_handle, "nvs_day_month", nvs_day_month);
          }
 
         switch (err) {
