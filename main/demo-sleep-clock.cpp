@@ -16,12 +16,6 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-// Epd display class
-#include <gdew027w3.h>
-#include <Fonts/ubuntu/Ubuntu_M16pt8b.h> // Day, Month
-#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
-#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>  // Last Sync message
-
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
@@ -38,28 +32,44 @@
 #include "esp_sleep.h"
 
 bool debugVerbose = false;
+// Important configuration. The class should match your epaper display model:
+#include <gdew027w3.h> // -> Needs to be changed to your model
+EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
+Gdew027w3 display(io); // -> Needs to match your epaper
+
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time query: HHmm  -> 0800 (8 AM)
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
-// Day N, month - This additional request will be done on hour 0:
+// Day N, month - This additional request will be done on syncHourDate only once a day:
 const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=D+d,+M";
 
-// Clock will refresh each N minutes
+// Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
 int sleepMinutes = 5;
+
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 10;     // At this hour in the morning the clock will Sync with internet time
+uint8_t syncHour1 = 9;     // At this hour in the morning the clock will Sync with internet time
 uint8_t syncHour2 = 13;    // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 7; // The date request will be done at this hour, only once a day
+uint8_t syncHourDate = 10; // The date request will be done at this hour, only once a day
 /*
  CLOCK Appearance - - - - - - - - - -
        
-       9:02
+       9:02 -> textColor
 */
 uint16_t backgroundColor = EPD_WHITE;
 uint16_t textColor = EPD_BLACK;
+// Adafruit GFX Font selection - - - - - -
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h> // Day, Month
+#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>  // Last Sync message - Still not fully implemented
+// Main digital clock hour font:
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
+#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm bigger in 48pt -> default selection
+// HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
+uint8_t fontSize = 48;
 
-
+// HTTP_EVENT_ON_DATA callback needs to know what information is going to parse. 
+// - - - - - - - - On 1: time  2: day, month
+uint8_t onDataCheck = 1;
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE  128
 uint64_t startTime = 0;
@@ -67,12 +77,6 @@ uint16_t countDataEventCalls = 0;
 static const char *TAG = "CALE CLOCK";
 char espIpAddress[16];
 bool espIsOnline = false;
-
-// Ondata needs to know what information is going to retrieve. On 1: time  2: day, month
-uint8_t onDataCheck = 1;
-
-EpdSpi io;
-Gdew027w3 display(io);
 
 // Values that will be stored in NVS - defaults should come initially from timequery (external HTTP request)
 int8_t nvs_hour = 0;
@@ -97,25 +101,46 @@ void deepsleep(){
 }
 
 void updateClock() {
-   // Test Epd class with partial display
+    // Half of display -NN should be the sum of pix per font
+   uint8_t fontSpace = (fontSize/2); // Calculate aprox. how much space we need per font Character
+
    display.init(false);
    display.fillScreen(backgroundColor);
    display.setRotation(3);
    display.setFont(&Ubuntu_M16pt8b);
    display.setTextColor(textColor);
-   display.setCursor(40,40);
-   printf("Day, month: %s\n\n", nvs_day_month);
-   display.print(nvs_day_month);
+   display.setCursor(40,30);
+   
+   if (debugVerbose) {
+    printf("updateClock() called\n");
+    printf("display.print() Day, month: %s\n\n", nvs_day_month);
+    }
+    // Day 01, Month  cursor location x,y
+    display.setCursor(40, 30);
+    display.print(nvs_day_month);
 
-   // TODO Fix partial update for this epaper: 
-
+   /**
+    * setCursor and font depending on selected fontSize
+    */
+   switch (fontSize)
+   {
+       /* Bigger font */
+   case 48:
+       display.setCursor(24,110);
+       display.setFont(&Ubuntu_M48pt8b);
+       break;
+   case 24:
+       display.setCursor(90,80);
+       display.setFont(&Ubuntu_M24pt8b);
+       break;
+   default:
+       ESP_LOGE(TAG, "fontSize selection: %d is not defined. Please select 24 or 48 or define new fonts", fontSize);
+       break;
+   }
+   
+   
+   
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
-   
-   
-   display.setFont(&Ubuntu_M24pt8b);
-   // Half of display -NN should be the sum of pix per font
-
-   display.setCursor(display.width()/2-(12*5),display.height()/2);
    char hour[3];
    char hourBuffer[3];
    // Convert the int into a char array
@@ -139,7 +164,6 @@ void updateClock() {
    
    if (debugVerbose) printf("%s:%s -> Sending to epaper\n", hourBuffer, minuteBuffer);
 
-   display.setCursor(90,80);
    display.print(hourBuffer);
    display.print(":");
    display.print(minuteBuffer);
@@ -148,13 +172,28 @@ void updateClock() {
    display.setFont(&Ubuntu_M8pt8b);
    display.setCursor(10,display.height()-20);
    display.print(nvs_last_sync_message);
-   // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
-   // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
-   display.updateWindow(0, 0, display.width()-30, display.height()/2, true);
+   // Partial update box calculation
+    uint16_t x = 0;
+    uint16_t y = 0;
+    uint16_t w = display.width()-1;             // Update width should be smaller than full width() of the display
+    uint16_t h = display.height()/2+fontSpace;
    // NOTE for other display models: 
-   // If you use another display, bigger or smaller, than the demo you will need to change this box coordinates
-   // In case you want to do a full update just comment the updateWindow line and leave this one:
-   //display.update();
+   // If you use another display, bigger or smaller, than the demo you will need to change the updateWindow box coordinates
+   switch (onDataCheck)
+   {
+       /* partial update    x  y  width               height                  */
+   case 1:
+       printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
+       display.updateWindow(x, y, w, h, true);
+       // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
+       // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
+       break;
+       /* Day N, Month update full display (Partial leaves with the time a small background difference on the updateWindow) */
+   case 2:
+       printf("Day, Month changes: update() full epaper\n");
+       display.update();
+       break;
+   }
 }
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
@@ -194,7 +233,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         
         switch (onDataCheck)
         {
-            /* Retrieve time */
+        /* Retrieve time */
         case 1:
             // Hour output_buffer[0] and output_buffer[1]
             char hour[1];
