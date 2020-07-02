@@ -33,10 +33,11 @@
 
 bool debugVerbose = false;
 // Important configuration. The class should match your epaper display model:
+#include <gdew075T7.h>
 #include <gdew027w3.h> // -> Needs to be changed to your model
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
 Gdew027w3 display(io); // -> Needs to match your epaper
-
+//Gdew075T7 display(io);
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time query: HHmm  -> 0800 (8 AM)
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
@@ -48,9 +49,10 @@ int sleepMinutes = 5;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 9;     // At this hour in the morning the clock will Sync with internet time
+// At this hour in the morning the clock will Sync with internet time
+uint8_t syncHour1 = 0;     // IMPORTANT: Leave it on 0 for the first run!
 uint8_t syncHour2 = 13;    // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 10; // The date request will be done at this hour, only once a day
+uint8_t syncHourDate = 0; // The date request will be done at this hour, only once a day
 /*
  CLOCK Appearance - - - - - - - - - -
        
@@ -106,7 +108,7 @@ void updateClock() {
 
    display.init(false);
    display.fillScreen(backgroundColor);
-   display.setRotation(3);
+   display.setRotation(CONFIG_DISPLAY_ROTATION); // Set this in "Cale configuration" -> idf.py menuconfig
    display.setFont(&Ubuntu_M16pt8b);
    display.setTextColor(textColor);
    display.setCursor(40,30);
@@ -184,7 +186,9 @@ void updateClock() {
        /* partial update    x  y  width               height                  */
    case 1:
        printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
+       
        display.updateWindow(x, y, w, h, true);
+       //display.update(); // If updateWindow does not work good for your display model use this and comment the other
        // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
        // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
        break;
@@ -447,10 +451,10 @@ void app_main(void)
 
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
          // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
-         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\nLast Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_message);
+         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\nnvs_last_sync_date: %d Last Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_date, nvs_last_sync_message);
 
 
-         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && nvs_hour != nvs_last_sync_hour) {
+         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && (nvs_hour != nvs_last_sync_hour || (nvs_hour==0 && nvs_last_sync_hour==0))) {
             wifi_init_sta();
             uint8_t waitRounds = 0;
             while (espIsOnline==false && waitRounds<30) {
@@ -479,7 +483,7 @@ void app_main(void)
          }
 
          // To avoid repeating the call :  && nvs_hour != nvs_last_sync_date
-         if (nvs_hour == syncHourDate && nvs_hour != nvs_last_sync_date) {
+         if (nvs_hour == syncHourDate && (nvs_hour != nvs_last_sync_date || (nvs_hour==0 && nvs_last_sync_hour==0))) {
              // Tell ON_DATA to read date:
              onDataCheck = 2; 
             nvs_set_i8(my_handle, "last_sync_date", nvs_hour);
