@@ -2,8 +2,8 @@ idf_component_register(
     # Main CALE 
     #SRCS "cale.cpp"
     
-    SRCS "demo-sleep-clock.cpp"
-    #SRCS "demo-fonts.cpp"
+    #SRCS "demo-sleep-clock.cpp"
+    SRCS "demo-fonts.cpp"
     #SRCS "demo-epaper.cpp"
     INCLUDE_DIRS ".")
     
