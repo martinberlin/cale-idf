@@ -145,7 +145,7 @@ void updateClock() {
    char hourBuffer[3];
    // Convert the int into a char array
    itoa(nvs_hour, hour, 10);
-   if (nvs_hour<9) {
+   if (nvs_hour<10) {
       strlcpy(hourBuffer,    "0", sizeof(hourBuffer));
       strlcat(hourBuffer, hour, sizeof(hourBuffer));
    } else {
@@ -155,7 +155,7 @@ void updateClock() {
    char minute[3];
    char minuteBuffer[3];
    itoa(nvs_minute, minute, 10);
-   if (nvs_minute<9) {
+   if (nvs_minute<10) {
       strlcpy(minuteBuffer,    "0", sizeof(minuteBuffer));
       strlcat(minuteBuffer, minute, sizeof(minuteBuffer));
    } else {

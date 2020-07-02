@@ -116,7 +116,7 @@ class Epd : public virtual Adafruit_GFX
     size_t write(uint8_t);
     void print(const std::string& text);
     void println(const std::string& text);
-    
+    void newline();
   // Methods that should be accesible by inheriting this abstract class
   protected: 
     // This should be inherited from this abstract class so we don't repeat in every model
@@ -140,7 +140,8 @@ class Epd : public virtual Adafruit_GFX
     virtual void _sleep() = 0;
     virtual void _waitBusy(const char* message) = 0;
     virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
- 
+    uint8_t _unicodePerChar(uint8_t c);
+    uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display
 };
 #endif
