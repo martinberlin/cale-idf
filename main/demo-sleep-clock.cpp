@@ -454,7 +454,7 @@ void app_main(void)
          printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\nnvs_last_sync_date: %d Last Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_date, nvs_last_sync_message);
 
 
-         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && (nvs_hour != nvs_last_sync_hour || (nvs_hour==0 && nvs_last_sync_hour==0))) {
+         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && (nvs_hour != nvs_last_sync_hour)) {
             wifi_init_sta();
             uint8_t waitRounds = 0;
             while (espIsOnline==false && waitRounds<30) {
@@ -482,8 +482,7 @@ void app_main(void)
             printf("LAST SYNC: %s\n", lastSync);
          }
 
-         // To avoid repeating the call :  && nvs_hour != nvs_last_sync_date
-         if (nvs_hour == syncHourDate && (nvs_hour != nvs_last_sync_date || (nvs_hour==0 && nvs_last_sync_hour==0))) {
+         if (nvs_hour == syncHourDate && (nvs_hour != nvs_last_sync_date)) {
              // Tell ON_DATA to read date:
              onDataCheck = 2; 
             nvs_set_i8(my_handle, "last_sync_date", nvs_hour);
