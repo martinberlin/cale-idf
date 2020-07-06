@@ -32,6 +32,11 @@
 #include "esp_sleep.h"
 
 bool debugVerbose = false;
+// TinyPICO.com Dotstar or S2 with Neopixel led. Turn down power and set data /clk Gpios
+#define DOTSTAR_PWR 13
+#define DOTSTAR_DATA 2
+#define DOTSTAR_CLK 12
+
 // Important configuration. The class should match your epaper display model:
 #include <gdew075T7.h>
 #include <gdew027w3.h> // -> Needs to be changed to your model
@@ -50,9 +55,10 @@ int sleepMinutes = 5;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 // At this hour in the morning the clock will Sync with internet time
-uint8_t syncHour1 = 0;     // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 13;    // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 0; // The date request will be done at this hour, only once a day
+uint8_t syncHour1 = 0;         // IMPORTANT: Leave it on 0 for the first run!
+uint8_t syncHour2 = 13;        // Same here, 2nd request to Sync hour 
+uint8_t syncHourDate = 0;      // The date request will be done at this hour, only once a day
+uint32_t microsCorrection = 0; // This microsCorrection represents the program time and will be discounted from deepsleep
 /*
  CLOCK Appearance - - - - - - - - - -
        
@@ -99,7 +105,7 @@ extern "C"
 }
 
 void deepsleep(){
-    esp_deep_sleep(1000000LL * 60 * sleepMinutes);
+    esp_deep_sleep(1000000LL * 60 * sleepMinutes - microsCorrection);
 }
 
 void updateClock() {
@@ -423,8 +429,15 @@ void wifi_init_sta(void)
 
 void app_main(void)
 {
-   printf("ESP32 deepsleep clock\n");
+    uint64_t startTime = esp_timer_get_time();
+    
+    printf("ESP32 deepsleep clock\n");
+    printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
 
+    // Turn off neopixel to keep consumption to the minimum
+    gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode((gpio_num_t)DOTSTAR_CLK, GPIO_PULLDOWN_ONLY);
+    gpio_set_pull_mode((gpio_num_t)DOTSTAR_DATA, GPIO_PULLDOWN_ONLY);
    // Initialize NVS
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -438,7 +451,7 @@ void app_main(void)
     nvs_handle_t my_handle;
     err = nvs_open("storage", NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
-        printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
     } else {
         if (debugVerbose) printf("Done. Check if it's the hour to refresh from intenet times (%d or %d)\n", syncHour1, syncHour2);
 
@@ -535,7 +548,7 @@ void app_main(void)
         // After setting any values, nvs_commit() must be called to ensure changes are written
         // to flash storage. Implementations may write to storage at other times,
         // but this is not guaranteed.
-        printf("Committing updates in NVS ... ");
+        ESP_LOGD(TAG, "Committing updates in NVS.");
         err = nvs_commit(my_handle);
         printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
 
@@ -543,8 +556,11 @@ void app_main(void)
         nvs_close(my_handle);
     }
 
-   // TODO: Get initial time from internet 
+   // Calculate how much this program took to run and discount it from deepsleep
+   uint32_t endTime = esp_timer_get_time();
+   microsCorrection = endTime-startTime;
 
-   printf("deepsleep for %d minutes\n", sleepMinutes);
+   printf("deepsleep for %d minutes. microsCorrection: %d\n", sleepMinutes, microsCorrection);
+
    deepsleep();
 }
