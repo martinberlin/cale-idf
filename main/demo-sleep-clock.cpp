@@ -56,9 +56,11 @@ int sleepMinutes = 5;
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 // At this hour in the morning the clock will Sync with internet time
 uint8_t syncHour1 = 0;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 13;        // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 0;      // The date request will be done at this hour, only once a day
-uint32_t microsCorrection = 0; // This microsCorrection represents the program time and will be discounted from deepsleep
+uint8_t syncHour2 = 21;        // Same here, 2nd request to Sync hour 
+uint8_t syncHourDate = 8;      // The date request will be done at this hour, only once a day
+// This microsCorrection represents the program time and will be discounted from deepsleep
+// Fine correction: Handle with care since this will be corrected on each sleepMinutes period
+int64_t microsCorrection = 100000; // Sleep 0.1 seconds more
 /*
  CLOCK Appearance - - - - - - - - - -
        
@@ -245,13 +247,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         {
         /* Retrieve time */
         case 1:
-            // Hour output_buffer[0] and output_buffer[1]
-            char hour[1];
+            // Hour output_buffer[0] and output_buffer[1]. Both need null terminator in order for atoi to work correctly
+            char hour[2];
             hour[0] = output_buffer[0];
             hour[1] = output_buffer[1];
+            hour[2] = '\0';
             nvs_hour = atoi(hour);
             
-            // min needs null terminator
             char min[2];
             min[0] = output_buffer[2];
             min[1] = output_buffer[3];
@@ -438,6 +440,8 @@ void app_main(void)
     gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode((gpio_num_t)DOTSTAR_CLK, GPIO_PULLDOWN_ONLY);
     gpio_set_pull_mode((gpio_num_t)DOTSTAR_DATA, GPIO_PULLDOWN_ONLY);
+    gpio_set_level((gpio_num_t)DOTSTAR_PWR, 0);
+
    // Initialize NVS
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -558,7 +562,7 @@ void app_main(void)
 
    // Calculate how much this program took to run and discount it from deepsleep
    uint32_t endTime = esp_timer_get_time();
-   microsCorrection = endTime-startTime;
+   microsCorrection += endTime-startTime;
 
    printf("deepsleep for %d minutes. microsCorrection: %d\n", sleepMinutes, microsCorrection);
 
