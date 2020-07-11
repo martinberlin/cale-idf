@@ -526,13 +526,17 @@ void app_main(void)
       // After reading let's print the hour:
       updateClock();
 
-        // Write NVS
+        // Write NVS data so is read in next wakeup
         nvs_minute+=sleepMinutes;
         // TODO Keep in mind that here sleepMinutes can be > 60 and that overpassing minutes need to be summed to 0
         if (nvs_minute>59) {
            int8_t sumExtraMinutes = nvs_minute-60;
            nvs_hour++;
            nvs_minute = 0;
+           // Reset flags since hour changed
+           nvs_set_i8(my_handle, "last_sync_date", -1);
+           nvs_set_i8(my_handle, "last_sync_h", -1);
+
            if (sumExtraMinutes>0) {
               nvs_minute+=sumExtraMinutes;
               printf("Summing %d minutes to new hour since last_minute+%d is equal to %d.\n", sumExtraMinutes, sleepMinutes, nvs_minute);
