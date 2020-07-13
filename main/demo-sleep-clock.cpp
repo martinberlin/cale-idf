@@ -50,17 +50,17 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=D+d,+M";
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 5;
+int sleepMinutes = 4;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 // At this hour in the morning the clock will Sync with internet time
 uint8_t syncHour1 = 0;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 21;        // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 8;      // The date request will be done at this hour, only once a day
+uint8_t syncHour2 = 11;        // Same here, 2nd request to Sync hour 
+uint8_t syncHourDate = 11;      // The date request will be done at this hour, only once a day
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
-int64_t microsCorrection = 100000; // Sleep 0.1 seconds more
+int64_t microsCorrection = -300000; // 0.3 predicted boot time
 /*
  CLOCK Appearance - - - - - - - - - -
        
@@ -568,7 +568,7 @@ void app_main(void)
    uint32_t endTime = esp_timer_get_time();
    microsCorrection += endTime-startTime;
 
-   printf("deepsleep for %d minutes. microsCorrection: %d\n", sleepMinutes, microsCorrection);
+   printf("deepsleep for %d minutes. microsCorrection: %lld\n", sleepMinutes, microsCorrection);
 
    deepsleep();
 }
