@@ -53,11 +53,10 @@ const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f
 int sleepMinutes = 4;
 
 // At what time your CLOCK will get in Sync with the internet time?
-// Clock syncs with internet time in this two SyncHours. Leave it on 0 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-// At this hour in the morning the clock will Sync with internet time
+// Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = 0;         // IMPORTANT: Leave it on 0 for the first run!
 uint8_t syncHour2 = 11;        // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 11;      // The date request will be done at this hour, only once a day
+uint8_t syncHourDate = 16;      // The date request will be done at this hour, only once a day
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
 int64_t microsCorrection = -300000; // 0.3 predicted boot time
