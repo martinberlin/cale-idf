@@ -56,7 +56,7 @@ int sleepMinutes = 4;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = 6;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 12;        // Same here, 2nd request to Sync hour 
+uint8_t syncHour2 = 13;        // Same here, 2nd request to Sync hour 
 uint8_t syncHourDate = 11;     // The date request will be done at this hour, only once a day
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
@@ -66,6 +66,7 @@ int64_t microsCorrection = -300000; // 0.3 predicted boot time
        
        9:02 -> textColor
 */
+bool supportsPartialUpdate = true;      // If updateWindow does not work good for your display model turns this to false
 uint16_t backgroundColor = EPD_WHITE;
 uint16_t textColor = EPD_BLACK;
 // Adafruit GFX Font selection - - - - - -
@@ -216,9 +217,12 @@ void updateClock() {
        /* partial update    x  y  width               height                  */
    case 1:
        printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
-       
-       display.updateWindow(x, y, w, h, true);
-       //display.update(); // If updateWindow does not work good for your display model use this and comment the other
+       if (supportsPartialUpdate) {
+        display.updateWindow(x, y, w, h, true);
+       } else {
+        display.update(); 
+       }
+       //
        // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
        // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
        break;
