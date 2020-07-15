@@ -122,7 +122,6 @@ void Gdep015OC1::_writeCommandData(const uint8_t cmd, const uint8_t* pCommandDat
 void Gdep015OC1::_wakeUp(uint8_t em){
   printf("wakeup() start commands\n");
 
-
   IO.cmd(GDOControl.cmd);
   for (int i=0;i<GDOControl.databytes;++i) {
       IO.data(GDOControl.data[i]);
@@ -240,7 +239,7 @@ void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   initPartialUpdate();
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate1"); // needed ?
+  _waitBusy("partialUpdate1", 100); // needed ?
   IO.cmd(0x24);
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
@@ -255,14 +254,15 @@ void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   IO.cmd(0x22);
   IO.data(0x04);
   IO.cmd(0x20);
-  _waitBusy("partialUpdate2");
+  _waitBusy("partialUpdate2", 300);
   IO.cmd(0xff);
 
   vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_RATE_MS); 
+
   // update erase buffer
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  //_waitBusy("partialUpdate3"); // needed ?
+  _waitBusy("partialUpdate3", 100); // needed ?
   IO.cmd(0x24);
 
   for (int16_t y1 = y; y1 <= ye; y1++)

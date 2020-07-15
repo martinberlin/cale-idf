@@ -31,17 +31,18 @@
 #include "esp_http_client.h"
 #include "esp_sleep.h"
 
-bool debugVerbose = false;
+bool debugVerbose = true;
 // TinyPICO.com Dotstar or S2 with Neopixel led. Turn down power and set data /clk Gpios
 #define DOTSTAR_PWR 13
 #define DOTSTAR_DATA 2
 #define DOTSTAR_CLK 12
 
 // Important configuration. The class should match your epaper display model:
-#include <gdew075T7.h>
-#include <gdew027w3.h> // -> Needs to be changed to your model
+//#include <gdew075T7.h>
+//#include <gdew027w3.h> // -> Needs to be changed to your model
+#include <gdep015OC1.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
-Gdew027w3 display(io); // -> Needs to match your epaper
+Gdep015OC1 display(io); // -> Needs to match your epaper
 //Gdew075T7 display(io);
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time query: HHmm  -> 0800 (8 AM)
@@ -54,9 +55,9 @@ int sleepMinutes = 4;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 0;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 11;        // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 16;      // The date request will be done at this hour, only once a day
+uint8_t syncHour1 = 6;         // IMPORTANT: Leave it on 0 for the first run!
+uint8_t syncHour2 = 12;        // Same here, 2nd request to Sync hour 
+uint8_t syncHourDate = 11;     // The date request will be done at this hour, only once a day
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
 int64_t microsCorrection = -300000; // 0.3 predicted boot time
@@ -72,9 +73,10 @@ uint16_t textColor = EPD_BLACK;
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>  // Last Sync message - Still not fully implemented
 // Main digital clock hour font:
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
+#include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
 #include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm bigger in 48pt -> default selection
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
-uint8_t fontSize = 48;
+uint8_t fontSize = 36;
 
 // HTTP_EVENT_ON_DATA callback needs to know what information is going to parse. 
 // - - - - - - - - On 1: time  2: day, month
@@ -113,41 +115,62 @@ void updateClock() {
     // Half of display -NN should be the sum of pix per font
    uint8_t fontSpace = (fontSize/2); // Calculate aprox. how much space we need per font Character
 
-   display.init(false);
+   display.init(debugVerbose);
    display.fillScreen(backgroundColor);
+   
+   //display.update();return; // In case you want to clean screen and get out
    display.setRotation(CONFIG_DISPLAY_ROTATION); // Set this in "Cale configuration" -> idf.py menuconfig
    display.setFont(&Ubuntu_M16pt8b);
    display.setTextColor(textColor);
-   display.setCursor(40,30);
+
+   // Day 01, Month  cursor location x,y
+   switch(display.width()) {
+       case 200:
+        display.setCursor(14,40);
+       break;
+       // Add more case's to adapt the cursor to your display size
+       default: 
+       display.setCursor(40,30);
+       break;
+   }
+   
    
    if (debugVerbose) {
     printf("updateClock() called\n");
     printf("display.print() Day, month: %s\n\n", nvs_day_month);
     }
-    // Day 01, Month  cursor location x,y
-    display.setCursor(40, 30);
+    
     display.print(nvs_day_month);
 
    /**
-    * setCursor and font depending on selected fontSize
+    * set font depending on selected fontSize
     */
    switch (fontSize)
    {
        /* Bigger font */
    case 48:
-       display.setCursor(24,110);
        display.setFont(&Ubuntu_M48pt8b);
        break;
+   case 36:
+       display.setFont(&Ubuntu_M36pt7b);
+       break;
    case 24:
-       display.setCursor(90,80);
        display.setFont(&Ubuntu_M24pt8b);
        break;
    default:
        ESP_LOGE(TAG, "fontSize selection: %d is not defined. Please select 24 or 48 or define new fonts", fontSize);
        break;
    }
-   
-   
+   // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
+   switch(display.width()) {
+       case 200:
+       display.setCursor(8,110);
+       break;
+       
+       default:
+       display.setCursor(90,80);
+       break;
+   }
    
    // NVS to char array. Extract from NVS value and pad with 0 to string in case <10
    char hour[3];
