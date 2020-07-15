@@ -135,7 +135,7 @@ void Gdep015OC1::_wakeUp(uint8_t em){
   IO.cmd(VCOMVol.cmd);
   IO.data(VCOMVol.data[0]);
 
-  _waitBusy("epd_wakeup_power:ON"); // Needed?
+  //_waitBusy("epd_wakeup_power:ON"); // Needed?
 
   IO.cmd(DummyLine.cmd);
   IO.data(DummyLine.data[0]);
@@ -282,9 +282,10 @@ void Gdep015OC1::_waitBusy(const char* message, uint16_t busy_time){
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
-  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY)>=0) {
+  // On low is busy
+  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) {
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>7000000)
     {
@@ -304,7 +305,8 @@ void Gdep015OC1::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    // high is not busy anymore
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>7000000)
     {
