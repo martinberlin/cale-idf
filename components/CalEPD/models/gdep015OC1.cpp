@@ -54,11 +54,11 @@ Gdep015OC1::Gdep015OC1(EpdSpi& dio):
 
 void Gdep015OC1::initFullUpdate(){
     _wakeUp(0x03);
-
+    
     IO.cmd(LUTDefault_full.cmd);     // boost
     for (int i=0;i<LUTDefault_full.databytes;++i) {
         IO.data(LUTDefault_full.data[i]);
-    }
+    } 
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
@@ -106,8 +106,22 @@ void Gdep015OC1::_wakeUp(){
   printf("_wakeUp not used in Gdep015OC1");
 }
 
+/**
+ * @deprecated It seems there is no need to do this for now
+ */
+void Gdep015OC1::_writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen) {
+  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY)){
+    _waitBusy("_waitBusy",100);
+  }
+  IO.cmd(cmd);
+  for (int i=0;i<datalen;++i) {
+      IO.data(*pCommandData++);
+  }
+}
+
 void Gdep015OC1::_wakeUp(uint8_t em){
   printf("wakeup() start commands\n");
+
 
   IO.cmd(GDOControl.cmd);
   for (int i=0;i<GDOControl.databytes;++i) {
@@ -129,8 +143,6 @@ void Gdep015OC1::_wakeUp(uint8_t em){
   
   IO.cmd(Gatetime.cmd);            // CMD: 0x30 DATA: 0xbf
   IO.data(Gatetime.data[0]);
-   
-  vTaskDelay(2/portTICK_RATE_MS); // delay(2) needed?
 
   _setRamDataEntryMode(em);
 }
@@ -150,6 +162,11 @@ void Gdep015OC1::update()
       IO.data(~data);
     }
   }
+  IO.cmd(0x22);
+  IO.data(0xc4);
+  IO.cmd(0x20);
+  _waitBusy("_Update_Full", 1200);
+  IO.cmd(0xff);
 
   _sleep();
 }
@@ -260,6 +277,26 @@ void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_RATE_MS); 
 }
 
+void Gdep015OC1::_waitBusy(const char* message, uint16_t busy_time){
+  if (debug_enabled) {
+    ESP_LOGI(TAG, "_waitBusy for %s", message);
+  }
+  int64_t time_since_boot = esp_timer_get_time();
+  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY)>=0) {
+  while (1){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    vTaskDelay(1);
+    if (esp_timer_get_time()-time_since_boot>7000000)
+    {
+      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      break;
+    }
+  }
+  } else {
+    vTaskDelay(busy_time/portTICK_RATE_MS); 
+  }
+}
+
 void Gdep015OC1::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
@@ -267,7 +304,7 @@ void Gdep015OC1::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>7000000)
     {

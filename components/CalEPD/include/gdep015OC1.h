@@ -43,7 +43,7 @@ class Gdep015OC1 : public Epd
     bool _initial = true;
     bool _debug_buffer = false;
     void _PowerOn();
-    
+    void _writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen); // Waits for busy on each command
     void _setRamDataEntryMode(uint8_t em);
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
@@ -53,6 +53,7 @@ class Gdep015OC1 : public Epd
 
     void _wakeUp(uint8_t em);
     void _sleep();
+    void _waitBusy(const char* message, uint16_t busy_time);
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
