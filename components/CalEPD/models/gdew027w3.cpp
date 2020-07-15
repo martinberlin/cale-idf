@@ -5,8 +5,7 @@
 #include "freertos/task.h"
 
 /*
-DO NOT USE: https://twitter.com/martinfasani/status/1265762052880175107
-Could not get it to work correctly yet
+History & fail record: https://twitter.com/martinfasani/status/1265762052880175107
 */
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.

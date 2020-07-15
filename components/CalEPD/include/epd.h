@@ -43,6 +43,12 @@ typedef struct {
 
 typedef struct {
     uint8_t cmd;
+    uint8_t data[30];
+    uint8_t databytes;
+} epd_init_30;
+
+typedef struct {
+    uint8_t cmd;
     uint8_t data[12];
     uint8_t databytes;
 } epd_init_12;
