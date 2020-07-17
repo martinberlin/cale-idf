@@ -142,7 +142,7 @@ void Hel0151::update()
   printf("BUFF Size:%d\n",sizeof(_buffer));
 
   IO.cmd(0x24);        // update current data
-  for (uint16_t y = 0; y < HEL0151_HEIGHT; y++)
+  for (uint16_t y = HEL0151_HEIGHT; y > 0; y--)
   {
     for (uint16_t x = 0; x < HEL0151_WIDTH / 8; x++)
     {
