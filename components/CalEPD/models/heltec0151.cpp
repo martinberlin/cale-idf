@@ -22,22 +22,6 @@ DRAM_ATTR const epd_init_3 Hel0151::GDOControl={
 0x01,{(HEL0151_HEIGHT - 1) % 256, (HEL0151_HEIGHT - 1) / 256, 0x00},3
 };
 
-DRAM_ATTR const epd_init_3 Hel0151::epd_soft_start={
-0x0c,{0xd7, 0xd6, 0x9d},3
-};
-
-DRAM_ATTR const epd_init_1 Hel0151::VCOMVol={
-0x2c,{0x9b},1
-}; // VCOM 7c
-
-DRAM_ATTR const epd_init_1 Hel0151::DummyLine={
-0x3a,{0x1a},1
-};
-
-DRAM_ATTR const epd_init_1 Hel0151::Gatetime={
-0x3b,{0x08},1
-};
-
 // Partial Update Delay
 #define HEL0151_PU_DELAY 100
 
@@ -125,24 +109,31 @@ void Hel0151::_wakeUp(uint8_t em){
   for (int i=0;i<GDOControl.databytes;++i) {
       IO.data(GDOControl.data[i]);
   }
-  //data entry mode 
-  _setRamDataEntryMode(em);
-  
-  IO.cmd(epd_soft_start.cmd);     // boost
-  for (int i=0;i<epd_soft_start.databytes;++i) {
-      IO.data(epd_soft_start.data[i]);
-  } 
+  //data entry mode - Used according to Heltec
+  //_setRamDataEntryMode(em); - Interesting effect: Mirrored!
 
-  IO.cmd(VCOMVol.cmd);
-  IO.data(VCOMVol.data[0]);
-
-  _waitBusy("epd_wakeup_power:ON"); // Needed?
-
-  IO.cmd(DummyLine.cmd);
-  IO.data(DummyLine.data[0]);
-  
-  IO.cmd(Gatetime.cmd);            // CMD: 0x30 DATA: 0xbf
-  IO.data(Gatetime.data[0]);
+  IO.cmd(0x11); //data entry mode       
+  IO.data(0x01);
+  IO.cmd(0x44); //set Ram-X address start/end position   
+  IO.data(0x00);
+  IO.data(0x18);    //0x0C-->(18+1)*8=200
+  IO.cmd(0x45); //set Ram-Y address start/end position          
+  IO.data(0xC7);   //0xC7-->(199+1)=200
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.data(0x00); 
+  IO.cmd(0x3c); //BorderWavefrom
+  IO.data(0x01);	  
+  IO.cmd(0x18); 
+  IO.data(0x80);	
+  IO.cmd(0x22); // //Load Temperature and waveform setting.
+  IO.data(0XB1);	
+  IO.cmd(0x20); 
+  IO.cmd(0x4e);   // set RAM x address count to 0;
+  IO.data(0x00);
+  IO.cmd(0x4f);   // set RAM y address count to 0X199;    
+  IO.data(0xC7);
+  IO.data(0x00);
 }
 
 void Hel0151::update()

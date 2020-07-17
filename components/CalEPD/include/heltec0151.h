@@ -62,8 +62,4 @@ class Hel0151 : public Epd
     static const epd_init_30 LUTDefault_full;
     static const epd_init_30 LUTDefault_part;
     static const epd_init_3 GDOControl;
-    static const epd_init_3 epd_soft_start;
-    static const epd_init_1 VCOMVol;
-    static const epd_init_1 DummyLine;
-    static const epd_init_1 Gatetime;
 };
