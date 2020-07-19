@@ -47,10 +47,10 @@ Hel0151 display(io); // -> Needs to match your epaper
 
 //Gdew075T7 display(io);
 // HTTP Request constants. Update Europe/Berlin with your timezone v
-// Time query: HHmm  -> 0800 (8 AM)
-const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=Hi";
-// Day N, month - This additional request will be done on syncHourDate only once a day:
-const char* dayQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=D+d,+M";
+// Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
+const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=HiD+d,+M";
+// Represents the sizeof D+d,+M Ex: Sun 19, Jul  (11 chars + \0 null terminator)
+char nvs_day_month[12];
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
 int sleepMinutes = 4;
@@ -58,8 +58,8 @@ int sleepMinutes = 4;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = -1;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 14;        // Same here, 2nd request to Sync hour 
-uint8_t syncHourDate = 1;     // The date request will be done at this hour, only once a day
+uint8_t syncHour2 = 6;         // Same here, 2nd request to Sync hour 
+
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
 int64_t microsCorrection = -300000; // 0.3 predicted boot time
@@ -81,7 +81,7 @@ uint16_t textColor = EPD_BLACK;
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
 uint8_t fontSize = 36;
 
-// HTTP_EVENT_ON_DATA callback needs to know what information is going to parse. 
+// HTTP_EVENT_ON_DATA callback needs to know what information is going to parse - UPDATE: Now parses always hour + date
 // - - - - - - - - On 1: time  2: day, month
 uint8_t onDataCheck = 1;
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
@@ -95,12 +95,11 @@ bool espIsOnline = false;
 // Values that will be stored in NVS - defaults should come initially from timequery (external HTTP request)
 int8_t nvs_hour = 0;
 int8_t nvs_minute = 0;
-char nvs_day_month[22];
+
 char nvs_last_sync_message[22];
 
 // Flag to know that we've synced the hour with timeQuery request
 int8_t nvs_last_sync_hour = 0;
-int8_t nvs_last_sync_date = 0;
 
 size_t sizeof_last_sync_message = sizeof(nvs_last_sync_message);
 size_t sizeof_day_month = sizeof(nvs_day_month);
@@ -270,41 +269,30 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         for (uint8_t c=0; c<evt->data_len; c++){
            printf("%c", output_buffer[c]);
         }
-        printf("\n\n");
+        printf("\n");
         
-        switch (onDataCheck)
-        {
-        /* Retrieve time */
-        case 1:
-            // Hour output_buffer[0] and output_buffer[1]. Both need null terminator in order for atoi to work correctly
-            char hour[2];
-            hour[0] = output_buffer[0];
-            hour[1] = output_buffer[1];
-            hour[2] = '\0';
-            nvs_hour = atoi(hour);
-            
-            char min[2];
-            min[0] = output_buffer[2];
-            min[1] = output_buffer[3];
-            min[2] = '\0';
-            nvs_minute = atoi(min);
-            
-            if (debugVerbose) printf("\nSYNC NVS time to hour: %d:%d\n\n", nvs_hour, nvs_minute);
-            break;
+
+        // Hour output_buffer[0] and output_buffer[1]. Both need null terminator in order for atoi to work correctly
+        char hour[2];
+        hour[0] = output_buffer[0];
+        hour[1] = output_buffer[1];
+        hour[2] = '\0';
+        nvs_hour = atoi(hour);
         
-        /* Retrieve day, month */
-        case 2:
-            printf("HTTP Request: Filling nvs_day_month buffer\n");
-            for (uint8_t c=0; c < sizeof(nvs_day_month); c++){
-                nvs_day_month[c] = output_buffer[c];
-            }
-           
-           break;
+        char min[2];
+        min[0] = output_buffer[2];
+        min[1] = output_buffer[3];
+        min[2] = '\0';
+        nvs_minute = atoi(min);
+        
+        for (uint8_t c=4; c < sizeof(nvs_day_month); c++){
+            nvs_day_month[c-4] = output_buffer[c];
         }
-        
+
+        if (debugVerbose) printf("\nSYNC NVS time to hour: %d:%d\n\n", nvs_hour, nvs_minute);
         break;
 
-       case HTTP_EVENT_ON_FINISH:
+    case HTTP_EVENT_ON_FINISH:
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms", (esp_timer_get_time()-startTime)/1000);
         break;
 
@@ -490,14 +478,13 @@ void app_main(void)
 
         // Read stored
         nvs_get_i8(my_handle, "last_sync_h", &nvs_last_sync_hour);
-        nvs_get_i8(my_handle, "last_sync_date", &nvs_last_sync_date);
         nvs_get_i8(my_handle, "h", &nvs_hour);
         nvs_get_str(my_handle, "last_sync_message", nvs_last_sync_message, &sizeof_last_sync_message);
         nvs_get_str(my_handle, "nvs_day_month", nvs_day_month, &sizeof_day_month);
 
         err = nvs_get_i8(my_handle, "m", &nvs_minute);
          // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
-         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\nnvs_last_sync_date: %d Last Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_date, nvs_last_sync_message);
+         printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\n Last Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_message);
 
 
          if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && (nvs_hour != nvs_last_sync_hour)) {
@@ -528,17 +515,6 @@ void app_main(void)
             printf("LAST SYNC: %s\n", lastSync);
          }
 
-         if (nvs_hour == syncHourDate && (nvs_hour != nvs_last_sync_date)) {
-             // Tell ON_DATA to read date:
-             onDataCheck = 2; 
-            nvs_set_i8(my_handle, "last_sync_date", nvs_hour);
-            if (!espIsOnline) {
-                wifi_init_sta();
-            }
-            
-            http_get(dayQuery);
-            nvs_set_str(my_handle, "nvs_day_month", nvs_day_month);
-         }
 
         switch (err) {
             case ESP_OK:
@@ -580,6 +556,9 @@ void app_main(void)
          
         err = nvs_set_i8(my_handle, "h", nvs_hour);
         printf((err != ESP_OK) ? "Failed saving hour!\n" : "Done storing hour\n");
+
+        err = nvs_set_str(my_handle, "nvs_day_month", nvs_day_month);
+        printf((err != ESP_OK) ? "Failed saving date!\n" : "Done storing date\n");
 
         // Commit written value.
         // After setting any values, nvs_commit() must be called to ensure changes are written
