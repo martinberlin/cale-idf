@@ -21,8 +21,8 @@
 // We are not adding page support so here this is our Buffer size
 #define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 8)
 // 8 pix of this color in a buffer byte:
-#define GDEW075T7_8PIX_BLACK 0x00
-#define GDEW075T7_8PIX_WHITE 0xFF
+#define GDEW075T7_8PIX_BLACK 0xFF
+#define GDEW075T7_8PIX_WHITE 0x00
 
 class Wave7i5 : public Epd
 {
