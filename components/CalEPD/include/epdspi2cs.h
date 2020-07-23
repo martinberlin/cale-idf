@@ -6,6 +6,8 @@
 #ifndef epdspi2cs_h
 #define epdspi2cs_h
 
+#define EPD_REGREAD           0x80  // Instruction R/W bit set HIGH for data READ
+
 class EpdSpi2Cs : IoInterface
 {
   public:
@@ -18,7 +20,7 @@ class EpdSpi2Cs : IoInterface
     void reset(uint8_t millis) override;
     void init(uint8_t frequency, bool debug) override;
 
-    
+    void * readTemp();
     void csStateLow();
     void csStateHigh();
     void csStateToogle();

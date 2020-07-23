@@ -96,6 +96,27 @@ void EpdSpi2Cs::cmd(const uint8_t cmd)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
+void * EpdSpi2Cs::readTemp()
+{
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    data(EPD_REGREAD | 0x08);
+
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);            //Should have had no issues.
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+
+    if (debug_enabled) {
+        printf("B0 %d 1: %d 2: %d 3: %d\n", t.rx_data[0], t.rx_data[1], t.rx_data[2], t.rx_data[3]);
+    }
+    return t.rx_buffer;
+}
+
 /**
  * Data does not toogle CS
  */

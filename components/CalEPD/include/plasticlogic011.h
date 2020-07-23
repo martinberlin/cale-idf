@@ -53,7 +53,6 @@
 #define EPD_PROGRAMMTP        0x40
 #define EPD_MTPADDRESSSETTING 0x41
 #define EPD_LOADMONOWF        0x44
-#define EPD_REGREAD           0x80  // Instruction R/W bit set HIGH for data READ
 
 #define ACC_GSEL    0x03    // Range: 0x03 - +/-2g, 0x05 - +/-4g, 0x08 - +/-8g, 0x0C - +/-16g
 #define ACC_BW      0x0F    // Bandwidth: 0x08 = 7.81Hz bandwith, 0x0F = 1000Hz
