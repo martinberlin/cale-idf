@@ -217,7 +217,7 @@ void Wave7i5::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
   uint16_t i = x / 8 + y * GDEW075T7_WIDTH / 8;
 
-  if (color)
+  if (!color)
   {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
   }
