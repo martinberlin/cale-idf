@@ -15,6 +15,7 @@ set(srcs
  #   "models/gdeh0213b73.cpp"
     "epd.cpp"
     "epdspi.cpp"
+    "epdspi2cs.cpp"
     "epd4spi.cpp"
     )
 

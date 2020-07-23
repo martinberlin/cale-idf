@@ -4,75 +4,16 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-//full screen update LUT
-const epd_init_30 PlasticLogic011::LUTDefault_full={
-0x32, {
-  0x50, 0xAA, 0x55, 0xAA, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-},30};
-
-const epd_init_30 PlasticLogic011::LUTDefault_part={
-0x32, {
-  0x10, 0x18, 0x18, 0x08, 0x18, 0x18, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x14, 0x44, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-},30};
-
-DRAM_ATTR const epd_init_3 PlasticLogic011::GDOControl={
-0x01,{(PLOGIC011_HEIGHT - 1) % 256, (PLOGIC011_HEIGHT - 1) / 256, 0x00},3
-};
-
-DRAM_ATTR const epd_init_3 PlasticLogic011::epd_soft_start={
-0x0c,{0xd7, 0xd6, 0x9d},3
-};
-
-DRAM_ATTR const epd_init_1 PlasticLogic011::VCOMVol={
-0x2c,{0x9b},1
-}; // VCOM 7c
-
-DRAM_ATTR const epd_init_1 PlasticLogic011::DummyLine={
-0x3a,{0x1a},1
-};
-
-DRAM_ATTR const epd_init_1 PlasticLogic011::Gatetime={
-0x3b,{0x08},1
-};
-
 // Partial Update Delay
 #define PLOGIC011_PU_DELAY 100
 
-
 // Constructor
-PlasticLogic011::PlasticLogic011(EpdSpi& dio): 
+PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio): 
   Adafruit_GFX(PLOGIC011_WIDTH, PLOGIC011_HEIGHT),
   Epd(PLOGIC011_WIDTH, PLOGIC011_HEIGHT), IO(dio)
 {
   printf("PlasticLogic011() %d*%d\n",
   PLOGIC011_WIDTH, PLOGIC011_HEIGHT);  
-}
-
-void PlasticLogic011::initFullUpdate(){
-    _wakeUp(0x03);
-    
-    IO.cmd(LUTDefault_full.cmd);     // boost
-    for (int i=0;i<LUTDefault_full.databytes;++i) {
-        IO.data(LUTDefault_full.data[i]);
-    } 
-    _PowerOn();
-    if (debug_enabled) printf("initFullUpdate() LUT\n");
-}
-
-void PlasticLogic011::initPartialUpdate(){
-    _wakeUp(0x03);
-
-    IO.cmd(LUTDefault_part.cmd);     // boost
-    for (int i=0;i<LUTDefault_part.databytes;++i) {
-        IO.data(LUTDefault_part.data[i]);
-    }
-    _PowerOn();
-
-    if (debug_enabled) printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -85,31 +26,46 @@ void PlasticLogic011::init(bool debug)
     IO.cmd(EPD_SOFTWARERESET);
     printf("Free heap:%d\n",xPortGetFreeHeapSize());
 
-    IO.cmd(EPD_PANELSETTING);
-    IO.cmd(0x12);
-    IO.cmd(EPD_WRITEPXRECTSET);
-    IO.cmd(0x0);
-    IO.cmd(71);
-    IO.cmd(0x0);
-    IO.cmd(147);
-    IO.cmd(EPD_VCOMCONFIG);
-    IO.cmd(0x0);
-    IO.cmd(0x0);
-    IO.cmd(0x24);
-    IO.cmd(0x07);
+    IO.csStateLow();
+    IO.data(EPD_PANELSETTING);
+    IO.data(0x12);
+    IO.csStateToogle();
 
-    IO.cmd(EPD_DRIVERVOLTAGE);
-    IO.cmd(0x25);
-    IO.cmd(0xff);
-    IO.cmd(EPD_BORDERSETTING);
-    IO.cmd(0x04);
-    IO.cmd(EPD_LOADMONOWF);
-    IO.cmd(0x60);
-    IO.cmd(EPD_INTTEMPERATURE);
-    IO.cmd(0x0a);
-    IO.cmd(EPD_BOOSTSETTING);
-    IO.cmd(0x22);
-    IO.cmd(0x17);
+    IO.data(EPD_WRITEPXRECTSET);
+    IO.data(0x0);
+    IO.data(71);
+    IO.data(0x0);
+    IO.data(147);
+    IO.csStateToogle();
+
+    IO.data(EPD_VCOMCONFIG);
+    IO.data(0x0);
+    IO.data(0x0);
+    IO.data(0x24);
+    IO.data(0x07);
+    IO.csStateToogle();
+
+    IO.data(EPD_DRIVERVOLTAGE);
+    IO.data(0x25);
+    IO.data(0xff);
+    IO.csStateToogle();
+
+    IO.data(EPD_BORDERSETTING);
+    IO.data(0x04);
+    IO.csStateToogle();
+
+    IO.data(EPD_LOADMONOWF);
+    IO.data(0x60);
+    IO.csStateToogle();
+
+    IO.data(EPD_INTTEMPERATURE);
+    IO.data(0x0a);
+    IO.csStateToogle();
+
+    IO.data(EPD_BOOSTSETTING);
+    IO.data(0x22);
+    IO.data(0x17);
+    IO.csStateHigh();
     //fillScreen(EPD_WHITE);
 }
 
@@ -133,174 +89,93 @@ void PlasticLogic011::_wakeUp(){
   printf("_wakeUp not used in PlasticLogic011");
 }
 
-/**
- * @deprecated It seems there is no need to do this for now
- */
-void PlasticLogic011::_writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen) {
-  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY)){
-    _waitBusy("_waitBusy",100);
-  }
-  IO.cmd(cmd);
-  for (int i=0;i<datalen;++i) {
-      IO.data(*pCommandData++);
-  }
-}
-
 void PlasticLogic011::_wakeUp(uint8_t em){
   printf("wakeup() start commands\n");
-
-  IO.cmd(GDOControl.cmd);
-  for (int i=0;i<GDOControl.databytes;++i) {
-      IO.data(GDOControl.data[i]);
-  }
-
-  IO.cmd(epd_soft_start.cmd);     // boost
-  for (int i=0;i<epd_soft_start.databytes;++i) {
-      IO.data(epd_soft_start.data[i]);
-  }
-
-  IO.cmd(VCOMVol.cmd);
-  IO.data(VCOMVol.data[0]);
-
-  _waitBusy("epd_wakeup_power:ON"); // Needed?
-
-  IO.cmd(DummyLine.cmd);
-  IO.data(DummyLine.data[0]);
-  
-  IO.cmd(Gatetime.cmd);            // CMD: 0x30 DATA: 0xbf
-  IO.data(Gatetime.data[0]);
-
-  _setRamDataEntryMode(em);
 }
 
-void PlasticLogic011::update()
-{
-  initFullUpdate();
-  printf("BUFF Size:%d\n",sizeof(_buffer));
+void PlasticLogic011::update(){
+  update(EPD_UPD_FULL);
+}
 
-  IO.cmd(0x24);        // update current data
-  for (uint16_t y = 0; y < PLOGIC011_HEIGHT; y++)
-  {
-    for (uint16_t x = 0; x < PLOGIC011_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (PLOGIC011_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
+void PlasticLogic011::update(uint8_t updateMode)
+{
+  
+  // EPD_PIXELACESSPOS
+  printf("BUFF Size:%d\n",sizeof(_buffer));
+  IO.csStateLow();
+  IO.data(EPD_PIXELACESSPOS);
+  IO.data(0);
+  IO.data(147);
+  IO.csStateToogle();
+
+  // Send buffer
+  for (int i=0; i < sizeof(_buffer); i++) {
+    IO.data(_buffer[i]);
   }
-  IO.cmd(0x22);
-  IO.data(0xc4);
-  IO.cmd(0x20);
-  _waitBusy("_Update_Full", 1200);
-  IO.cmd(0xff);
+  
+  IO.csStateHigh();
+  _waitBusy("_Update_Full", EPD_TMG_SRT);
+
+    switch (updateMode) {
+        case 0:
+          IO.csStateLow();
+          IO.data(EPD_PROGRAMMTP);
+          IO.data(0x00);
+
+          IO.csStateToogle();
+          IO.data(EPD_DISPLAYENGINE);
+          IO.data(0x03);
+          IO.csStateHigh();
+
+          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+            break;
+        case 1:
+            // TODO
+            //writeRegister(EPD_PROGRAMMTP, 0x00, -1, -1, -1);
+            //writeRegister(EPD_DISPLAYENGINE, 0x07, -1, -1, -1);
+            _waitBusy("EPD_UPD_PART", EPD_TMG_LNG);
+            break;
+        case 2:
+            // TODO
+            //writeRegister(EPD_PROGRAMMTP, 0x02, -1, -1, -1);
+            //writeRegister(EPD_DISPLAYENGINE, 0x07, -1, -1, -1);
+            _waitBusy("EPD_UPD_MONO", EPD_TMG_MID);
+    }
 
   _sleep();
 }
 
-void PlasticLogic011::_setRamDataEntryMode(uint8_t em)
-{
-  const uint16_t xPixelsPar = PLOGIC011_WIDTH - 1;
-  const uint16_t yPixelsPar = PLOGIC011_HEIGHT - 1;
-  em = gx_uint16_min(em, 0x03);
-  IO.cmd(0x11);
-  IO.data(em);
-  switch (em)
-  {
-    case 0x00: // x decrease, y decrease
-      _SetRamArea(xPixelsPar / 8, 0x00, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
-      _SetRamPointer(xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256); // set ram
-      break;
-    case 0x01: // x increase, y decrease : as in demo code
-      _SetRamArea(0x00, xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
-      _SetRamPointer(0x00, yPixelsPar % 256, yPixelsPar / 256); // set ram
-      break;
-    case 0x02: // x decrease, y increase
-      _SetRamArea(xPixelsPar / 8, 0x00, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
-      _SetRamPointer(xPixelsPar / 8, 0x00, 0x00); // set ram
-      break;
-    case 0x03: // x increase, y increase : normal mode
-      _SetRamArea(0x00, xPixelsPar / 8, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
-      _SetRamPointer(0x00, 0x00, 0x00); // set ram
-      break;
-  }
-}
+void PlasticLogic011::_powerOn(void) {
+  IO.csStateLow();
+  IO.data(EPD_SETRESOLUTION);
+  IO.data(0x00);
+  IO.data(239);
+  IO.data(0x00);
+  IO.data(147);
+  IO.csStateToogle();
 
-void PlasticLogic011::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
-{
-  IO.cmd(0x44);
-  IO.data(Xstart);
-  IO.data(Xend);
-  IO.cmd(0x45);
-  IO.data(Ystart);
-  IO.data(Ystart1);
-  IO.data(Yend);
-  IO.data(Yend1);
-}
+  IO.data(EPD_TCOMTIMING);
+  IO.data(0x67);
+  IO.data(0x55);
+  IO.csStateToogle();
+  
+  IO.data(EPD_POWERSEQUENCE);
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.csStateToogle();
 
-void PlasticLogic011::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
-{
-  IO.cmd(0x4e);
-  IO.data(addrX);
-  IO.cmd(0x4f);
-  IO.data(addrY);
-  IO.data(addrY1);
-}
-
-void PlasticLogic011::_PowerOn(void)
-{
-  IO.cmd(0x22);
-  IO.data(0xc0);
-  IO.cmd(0x20);
+  IO.data(EPD_POWERCONTROL);
+  IO.data(0xD1);
+  IO.csStateHigh();
   _waitBusy("_PowerOn");
 }
 
 void PlasticLogic011::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= PLOGIC011_WIDTH) return;
-  if (y >= PLOGIC011_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(PLOGIC011_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(PLOGIC011_HEIGHT, y + h) - 1;
-  uint16_t xs_d8 = x / 8;
-  uint16_t xe_d8 = xe / 8;
-  initPartialUpdate();
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate1", 100); // needed ?
-  IO.cmd(0x24);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (PLOGIC011_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  }
   
-  IO.cmd(0x22);
-  IO.data(0x04);
-  IO.cmd(0x20);
-  _waitBusy("partialUpdate2", 300);
-  IO.cmd(0xff);
-
-  vTaskDelay(PLOGIC011_PU_DELAY/portTICK_RATE_MS); 
-
-  // update erase buffer
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate3", 100); // needed ?
-  IO.cmd(0x24);
-
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (PLOGIC011_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  }
+  printf("Not implemented\n");
   vTaskDelay(PLOGIC011_PU_DELAY/portTICK_RATE_MS); 
 }
 
@@ -343,11 +218,32 @@ void PlasticLogic011::_waitBusy(const char* message){
   }
 }
 
-void PlasticLogic011::_sleep(){
-  IO.cmd(0x22); // power off display
-  IO.data(0xc3);
-  IO.cmd(0x20);
+// Called _poweroff in microEPD
+void PlasticLogic011::_powerOff(){
+  IO.csStateLow();
+  IO.data(EPD_POWERCONTROL); 
+  IO.data(0xD0);            // power off display
+  IO.csStateHigh();
+
   _waitBusy("power_off");
+  IO.csStateLow();
+  IO.data(EPD_POWERCONTROL);
+  IO.data(0xC0);
+  IO.csStateHigh();
+}
+
+/**
+ * Putting the UC8156 in deep sleep mode with less than 1µA current @3.3V
+ * Reset pin toggling needed to wakeup the driver IC again.
+ */ 
+void PlasticLogic011::_sleep(){
+  IO.csStateLow();
+  IO.data(0x21);  // deepsleep
+  IO.data(0xff);          
+  IO.data(0xff);
+  IO.data(0xff);
+  IO.data(0xff);
+  IO.cs2StateHigh();
 }
 
 void PlasticLogic011::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -393,10 +289,41 @@ void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * PLOGIC011_WIDTH / 8;
 
-  // This is the trick to draw colors right. Genious Jean-Marc
   if (color) {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
     } else {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
 }
+
+    void PlasticLogic011::accelBegin() {
+      uint8_t accGsel[2] = {0x0F, ACC_GSEL};
+      uint8_t accBand[2] = {0x10, ACC_BW};
+      IO.cmdAccel(accGsel, sizeof(accGsel));
+      IO.cmdAccel(accBand, sizeof(accBand));
+    }
+    
+    void PlasticLogic011::accelActivateTapOnInt1() {
+      uint8_t accEnSingleTap[2]   = {0x16, 0x20};
+      uint8_t accMapSingleTap[2]  = {0x19, 0x20};
+      uint8_t accAdjTapSens[2]    = {0x2B, 0x01};
+      uint8_t accInterruptMode[2] = {0x21, 0x0F};
+      IO.cmdAccel(accEnSingleTap, sizeof(accEnSingleTap));
+      IO.cmdAccel(accMapSingleTap, sizeof(accMapSingleTap));
+      IO.cmdAccel(accAdjTapSens, sizeof(accAdjTapSens));
+      IO.cmdAccel(accInterruptMode, sizeof(accInterruptMode));
+    }
+
+    void PlasticLogic011::accelClearLatchedInt1() {
+      uint8_t accLatch[2] = {0x21, 0x80};
+      IO.cmdAccel(accLatch, sizeof(accLatch));
+    }
+
+    void PlasticLogic011::accelReadAccel() {
+      // Research how to read from SPI (MISO gpio?)
+    }
+
+    void PlasticLogic011::accelDeepSuspend() {
+      uint8_t accelDeepSuspend[2] = {0x11, 0x20};
+      IO.cmdAccel(accelDeepSuspend, sizeof(accelDeepSuspend));
+    }
