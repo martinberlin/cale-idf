@@ -24,10 +24,10 @@ class EpdSpi2Cs : IoInterface
     uint8_t readRegister(uint8_t address);
     void csStateLow();
     void csStateHigh();
-    void csStateToogle();
+    
     void cs2StateLow();
     void cs2StateHigh();
-    void cs2StateToogle();
+    
     // Accelerometer BMA250E uses CS2
     void cmdAccel(const uint8_t *data, int len);
 

@@ -166,19 +166,12 @@ void EpdSpi2Cs::csStateLow() {
 void EpdSpi2Cs::csStateHigh() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
-void EpdSpi2Cs::csStateToogle() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
-}
+
 void EpdSpi2Cs::cs2StateLow() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 0);
 }
 void EpdSpi2Cs::cs2StateHigh() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 1);
-}
-void EpdSpi2Cs::cs2StateToogle() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 1);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 0);
 }
 
 /**
@@ -208,8 +201,9 @@ void EpdSpi2Cs::cmdAccel(const uint8_t *data, int len)
 }
 
 void EpdSpi2Cs::reset(uint8_t millis=5) {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
-    vTaskDelay(millis / portTICK_RATE_MS);
+    // No need to do it 3 times ;)
+    /* gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    vTaskDelay(millis / portTICK_RATE_MS); */
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
     vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);

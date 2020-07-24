@@ -16,6 +16,12 @@ PlasticLogic021::PlasticLogic021(EpdSpi2Cs& dio):
   PLOGIC021_WIDTH, PLOGIC021_HEIGHT);  
 }
 
+void PlasticLogic021::csStateToogle(const char* message) {
+   IO.csStateHigh();
+   _waitBusy(message);
+   IO.csStateLow();   
+}
+
 //Initialize the display
 void PlasticLogic021::init(bool debug)
 {
@@ -26,8 +32,12 @@ void PlasticLogic021::init(bool debug)
     }
     IO.init(4, debug); // 4MHz frequency
     
-    IO.reset(10);
-    //IO.cmd(EPD_SOFTWARERESET); // No need if rst is defined
+    if (CONFIG_EINK_RST > -1) {
+      IO.reset(10);
+    } else {
+      IO.cmd(EPD_SOFTWARERESET);
+    }
+    _waitBusy("Hardware reset");
     
     uint8_t size = getEPDsize();
     printf("EPD size: %d Free heap:%d\n", size, xPortGetFreeHeapSize());
@@ -35,51 +45,50 @@ void PlasticLogic021::init(bool debug)
     IO.csStateLow();
     IO.data(EPD_PANELSETTING);
     IO.data(0x10);
-    IO.csStateToogle();
+    csStateToogle("Panel Setting");
 
     IO.data(EPD_WRITEPXRECTSET);
     IO.data(0x00);
     IO.data(0xEF); // 239
     IO.data(0x00);
     IO.data(0x91); // 145
-    IO.csStateToogle();
+    csStateToogle("Write rectangular pixel");
 
     IO.data(EPD_VCOMCONFIG);
     IO.data(0x0);
     IO.data(0x0);
     IO.data(0x24);
     IO.data(0x07);
-    IO.csStateToogle();
+    csStateToogle("VCOM configuration");
 
     IO.data(EPD_DRIVERVOLTAGE);
     IO.data(0x25);
     IO.data(0xff);
-    IO.csStateToogle();
+    csStateToogle("Driver voltage setting");
 
     IO.data(EPD_BORDERSETTING);
     IO.data(0x04);
-    IO.csStateToogle();
+    csStateToogle("Vborder setting");
 
     IO.data(EPD_LOADMONOWF);
     IO.data(0x60);
-    IO.csStateToogle();
+    csStateToogle("Load mono");
 
     IO.data(EPD_INTTEMPERATURE);
     IO.data(0x0a);
-    IO.csStateToogle();
+    csStateToogle("Temperature");
 
     IO.data(EPD_BOOSTSETTING);
     IO.data(0x22);
     IO.data(0x17);
     IO.csStateHigh();
+    _waitBusy("Boost setting");
     
     printf("begin() ends\n");
 
     //Set landscape mode as default
     setRotation(1);
-    /* fillScreen(EPD_WHITE);
-    */
-    update(); 
+    fillScreen(EPD_WHITE);
 }
 
 uint8_t PlasticLogic021::getEPDsize() {
@@ -174,7 +183,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   IO.data(EPD_PIXELACESSPOS);
   IO.data(0x00);
   IO.data(0x00);
-  IO.csStateToogle();
+  csStateToogle("Pixel access position");
 
   IO.data(0x10);
   // Send buffer
@@ -183,7 +192,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   }
   
   IO.csStateHigh();
-  _waitBusy("_Update_Full", EPD_TMG_SRT);
+  _waitBusy("Buffer sent", EPD_TMG_SRT);
   
   _powerOn();
 
@@ -193,7 +202,7 @@ void PlasticLogic021::update(uint8_t updateMode)
           IO.data(EPD_PROGRAMMTP);
           IO.data(0x00);
 
-          IO.csStateToogle();
+          csStateToogle("Program WS MTP");
           IO.data(EPD_DISPLAYENGINE);
           IO.data(0x03);
           IO.csStateHigh();
@@ -225,18 +234,18 @@ void PlasticLogic021::_powerOn(void) {
   IO.data(0xEF); //239
   IO.data(0x00);
   IO.data(0x9F); //159
-  IO.csStateToogle();
+  csStateToogle("Panel resolution");
 
   IO.data(EPD_TCOMTIMING);
   IO.data(0x67);
   IO.data(0x55);
-  IO.csStateToogle();
+  csStateToogle("TCOM Timing");
   
   IO.data(EPD_POWERSEQUENCE);
   IO.data(0x00);
   IO.data(0x00);
   IO.data(0x00);
-  IO.csStateToogle();
+  csStateToogle("Power sequence");
 
   IO.data(EPD_POWERCONTROL);
   IO.data(0xD1);

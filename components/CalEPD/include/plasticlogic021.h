@@ -42,6 +42,7 @@ class PlasticLogic021 : public Epd
     void accelClearLatchedInt1();
     void accelReadAccel();
     void accelDeepSuspend();
+    void csStateToogle(const char* message);
 
     uint8_t getEPDsize();
 
