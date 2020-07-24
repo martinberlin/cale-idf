@@ -108,8 +108,8 @@ void Wave7i5::update()
 
 void Wave7i5::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("updateWindow: Not tested in EPD\n");
-  if (using_rotation)
+  printf("updateWindow: Waveshare this is not a good example of partial update. Use Gdew075T7\n");
+  /* if (using_rotation)
     _rotate(x, y, w, h);
   if (x >= GDEW075T7_WIDTH)
     return;
@@ -132,16 +132,10 @@ void Wave7i5::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool 
   }
   
   IO.cmd(0x12);
-  // Feeding watchdog (after testing)
-  /* if (idx % 8 == 0)
-      {
-        rtc_wdt_feed();
-        vTaskDelay(pdMS_TO_TICKS(1));
-      } */
   
   _waitBusy("updateWindow");
   
-  vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
+  vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS); */
 }
 
 void Wave7i5::_waitBusy(const char *message)

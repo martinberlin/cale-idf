@@ -17,6 +17,7 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS2, GPIO_MODE_OUTPUT);
+    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_MOSI, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_MISO, GPIO_MODE_INPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_RST, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_BUSY, GPIO_MODE_INPUT);
@@ -49,7 +50,7 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         .clock_speed_hz=frequency*multiplier*1000,  // DEBUG: 50000 - No debug usually 4 Mhz
         .input_delay_ns=0,
         .spics_io_num=CONFIG_EINK_SPI_CS,
-        .flags = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),
+        .flags=SPI_DEVICE_HALFDUPLEX,
         .queue_size=5
     };
     // DISABLED Callbacks pre_cb/post_cb. SPI does not seem to behave the same
@@ -116,6 +117,27 @@ void * EpdSpi2Cs::readTemp()
     }
     return t.rx_buffer;
 }
+
+uint8_t EpdSpi2Cs::readRegister(uint8_t address) {
+        esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    data(address | EPD_REGREAD);
+
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);            //Should have had no issues.
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+
+    if (debug_enabled) {
+        printf("B0 %d 1: %d 2: %d 3: %d\n", t.rx_data[0], t.rx_data[1], t.rx_data[2], t.rx_data[3]);
+    }
+    return 1;
+}
+
 
 /**
  * Data does not toogle CS
@@ -185,7 +207,9 @@ void EpdSpi2Cs::cmdAccel(const uint8_t *data, int len)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 1);
 }
 
-void EpdSpi2Cs::reset(uint8_t millis=20) {
+void EpdSpi2Cs::reset(uint8_t millis=5) {
+    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
+    vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
     vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
