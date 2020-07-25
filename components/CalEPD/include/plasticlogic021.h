@@ -65,7 +65,6 @@ class PlasticLogic021 : public Epd
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
 
-    void _wakeUp(uint8_t em);
     void _sleep();
     void _waitBusy(const char* message, uint16_t busy_time);
     void _waitBusy(const char* message);

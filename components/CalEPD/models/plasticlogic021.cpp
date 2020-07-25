@@ -42,37 +42,7 @@ void PlasticLogic021::init(bool debug)
     uint8_t size = getEPDsize();
     printf("EPD size: %d Free heap:%d\n", size, xPortGetFreeHeapSize());
 
-    uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
-    IO.data(panelSetting, sizeof(panelSetting));
-    _waitBusy("Panel setting");
-
-    uint8_t settingWriteRectangular[5] = {EPD_WRITEPXRECTSET, 0x00, 0x47, 0x00, 0x93};
-    IO.data(settingWriteRectangular, sizeof(settingWriteRectangular));
-    _waitBusy("settingWriteRectangular");
-
-    uint8_t settingVcom[5] = {EPD_VCOMCONFIG, 0x0, 0x0, 0x24, 0x07};
-    IO.data(settingVcom, sizeof(settingVcom));
-    _waitBusy("VCOM configuration");
-
-    uint8_t settingDriverVoltage[3] = {EPD_DRIVERVOLTAGE, 0x25, 0xff};
-    IO.data(settingDriverVoltage, sizeof(settingDriverVoltage));
-    _waitBusy("Driver voltage setting");
-
-    uint8_t settingVborder[2] = {EPD_BORDERSETTING, 0x04};
-    IO.data(settingVborder, sizeof(settingVborder));
-    _waitBusy("Vborder setting");
-
-    uint8_t settingLoadMono[2] = {EPD_LOADMONOWF, 0x60};
-    IO.data(settingLoadMono, sizeof(settingLoadMono));
-    _waitBusy("Load mono");
-
-    uint8_t settingTemperature[2] = {EPD_INTTEMPERATURE, 0x0a};
-    IO.data(settingTemperature, sizeof(settingTemperature));
-    _waitBusy("Temperature");
-
-    uint8_t settingBoost[3] = {EPD_BOOSTSETTING, 0x22, 0x17};
-    IO.data(settingBoost, sizeof(settingBoost));
-    _waitBusy("Boost setting");
+    _wakeUp();
     
     printf("begin() ends\n");
 
@@ -83,15 +53,16 @@ void PlasticLogic021::init(bool debug)
 
 uint8_t PlasticLogic021::getEPDsize() {
   uint8_t size = 0;
-   IO.csStateLow();
-   IO.data(EPD_PROGRAMMTP);
-   IO.data(0x02);
-   IO.data(EPD_MTPADDRESSSETTING);
-   IO.data(0xF2);
-   IO.data(0x04);
-   // Read 1 dummy bytes
-   IO.readRegister(0x43);
-   size = IO.readRegister(0x43);
+  uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x02};
+  uint8_t setMtpAddress[3] = {EPD_MTPADDRESSSETTING, 0xF2, 0x04};
+  
+  IO.data(programMtp, sizeof(programMtp));
+  IO.data(setMtpAddress, sizeof(setMtpAddress));
+  _waitBusy("setMtpAddress");
+
+  // Read 1 dummy bytes
+  IO.readRegister(0x43);
+  size = IO.readRegister(0x43);
 
   switch (size)
   {
@@ -124,12 +95,12 @@ void PlasticLogic021::setRotation(uint8_t o) {
 
    switch (o)
    {
-   case 2:
+   case 1:
      /* Portrait */
      IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
      break;
    
-   default:
+   case 2:
      /* Landscape mode */
      IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
      break;
@@ -154,11 +125,37 @@ uint16_t PlasticLogic021::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe
   return 0;
 }
 void PlasticLogic021::_wakeUp(){
-  printf("_wakeUp not used in PlasticLogic021");
-}
+    uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
+    IO.data(panelSetting, sizeof(panelSetting));
+    _waitBusy("Panel setting");
 
-void PlasticLogic021::_wakeUp(uint8_t em){
-  printf("wakeup() start commands\n");
+    uint8_t settingWriteRectangular[5] = {EPD_WRITEPXRECTSET, 0x00, 0x47, 0x00, 0x93};
+    IO.data(settingWriteRectangular, sizeof(settingWriteRectangular));
+    _waitBusy("settingWriteRectangular");
+
+    uint8_t settingVcom[5] = {EPD_VCOMCONFIG, 0x0, 0x0, 0x24, 0x07};
+    IO.data(settingVcom, sizeof(settingVcom));
+    _waitBusy("VCOM configuration");
+
+    uint8_t settingDriverVoltage[3] = {EPD_DRIVERVOLTAGE, 0x25, 0xff};
+    IO.data(settingDriverVoltage, sizeof(settingDriverVoltage));
+    _waitBusy("Driver voltage setting");
+
+    uint8_t settingVborder[2] = {EPD_BORDERSETTING, 0x04};
+    IO.data(settingVborder, sizeof(settingVborder));
+    _waitBusy("Vborder setting");
+
+    uint8_t settingLoadMono[2] = {EPD_LOADMONOWF, 0x60};
+    IO.data(settingLoadMono, sizeof(settingLoadMono));
+    _waitBusy("Load mono");
+
+    uint8_t settingTemperature[2] = {EPD_INTTEMPERATURE, 0x0a};
+    IO.data(settingTemperature, sizeof(settingTemperature));
+    _waitBusy("Temperature");
+
+    uint8_t settingBoost[3] = {EPD_BOOSTSETTING, 0x22, 0x17};
+    IO.data(settingBoost, sizeof(settingBoost));
+    _waitBusy("Boost setting");
 }
 
 void PlasticLogic021::update(){
@@ -179,7 +176,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   IO.csStateLow();
   // Send buffer
   for (int i=0; i < sizeof(_buffer); i++) {
-    IO.data(_buffer[i]);
+    //IO.data(_buffer[i]);
   }
   
   IO.csStateHigh();
@@ -230,9 +227,9 @@ void PlasticLogic021::_powerOn(void) {
   _waitBusy("Power sequence");
 
   IO.data(setPowerControl, sizeof(setPowerControl));
-  _waitBusy("_PowerOn");
+  _waitBusy("setPowerControl");
 
-  //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
+  while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
 }
 
 void PlasticLogic021::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
@@ -271,9 +268,9 @@ void PlasticLogic021::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
-    vTaskDelay(10/portTICK_RATE_MS); 
+    vTaskDelay(1/portTICK_RATE_MS); 
 
-    if (esp_timer_get_time()-time_since_boot>200000)
+    if (esp_timer_get_time()-time_since_boot>500000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
