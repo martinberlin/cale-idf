@@ -31,6 +31,8 @@ class EpdSpi2Cs : IoInterface
     // Accelerometer BMA250E uses CS2
     void cmdAccel(const uint8_t *data, int len);
 
+    void waitForBusy();
+
 
   private:
     bool debug_enabled = true;

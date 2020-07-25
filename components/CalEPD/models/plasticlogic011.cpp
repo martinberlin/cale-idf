@@ -33,21 +33,22 @@ void PlasticLogic011::init(bool debug)
     IO.init(4, debug); // 4MHz frequency
     
     if (CONFIG_EINK_RST > -1) {
-      IO.reset(10);
+      IO.reset(5);
     } else {
       IO.cmd(EPD_SOFTWARERESET);
     }
     
-    
+    /*
     uint8_t size = getEPDsize();
-    printf("EPD size: %d Free heap:%d\n", size, xPortGetFreeHeapSize());
+    printf("EPD size received from EPD: %d\n", size); */
+    // xPortGetFreeHeapSize()
 
     _wakeUp();
     
     printf("begin() ends\n");
 
     //Set landscape mode as default
-    setRotation(1);
+    setEpdRotation(1);
     fillScreen(EPD_WHITE);
 }
 
@@ -88,8 +89,11 @@ uint8_t PlasticLogic011::getEPDsize() {
   return size;
 }
 
-void PlasticLogic011::setRotation(uint8_t o) {
-
+/**
+ * Sets internal EPD into portrait or Landscape mode
+ * Not sure if it will be a public method at the end of integration
+ */
+void PlasticLogic011::setEpdRotation(uint8_t o) {
    uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07};
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
 
@@ -107,23 +111,29 @@ void PlasticLogic011::setRotation(uint8_t o) {
    }
 }
 
+void PlasticLogic011::clearScreen(){
+  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+  {
+    _buffer[x] = 0xff;
+  }
+}
 
 void PlasticLogic011::fillScreen(uint16_t color)
 {
-  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
-  uint8_t data = (color == EPD_BLACK) ? PLOGIC011_8PIX_BLACK : PLOGIC011_8PIX_WHITE;
+  
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
-    _buffer[x] = data;
+    _buffer[x] = color;
   }
 
-  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%x) _buffer len:%d\n", color, sizeof(_buffer));
 }
 
 uint16_t PlasticLogic011::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
   printf("_setPartialRamArea not used in PlasticLogic011");
   return 0;
 }
+
 void PlasticLogic011::_wakeUp(){
     uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
     IO.data(panelSetting, sizeof(panelSetting));
@@ -172,14 +182,26 @@ void PlasticLogic011::update(uint8_t updateMode)
   uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
 
   IO.data(pixelAccessPos, sizeof(pixelAccessPos));
+  bool sendBufferInSingleTransaction = true;
 
+  // This part is not working correctly or there is an initialization parameter incorrectly sent
+  if (sendBufferInSingleTransaction) {
+     // This is overwritting pixel 0 (Update it)
+    _buffer[0] = 0x10;
+    IO.data(_buffer,sizeof(_buffer));
+  } else {
+
+    // The EPD controller receives this in a single transaction in paperino, not like:
   IO.csStateLow();
-  // Send buffer
+  IO.data(0x10);
   for (int i=0; i < sizeof(_buffer); i++) {
-    //IO.data(_buffer[i]);
+    IO.data(_buffer[i]);
   }
-  
   IO.csStateHigh();
+
+  }
+
+  
   _waitBusy("Buffer sent", EPD_TMG_SRT);
   
   _powerOn();
@@ -187,23 +209,25 @@ void PlasticLogic011::update(uint8_t updateMode)
     switch (updateMode) {
         case 0:
           IO.data(programMtp, sizeof(programMtp));
-
           IO.data(displayEngine, sizeof(displayEngine));
-
           _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
 
           break;
         case 1:
-            // TODO
-            //writeRegister(EPD_PROGRAMMTP, 0x00, -1, -1, -1);
-            //writeRegister(EPD_DISPLAYENGINE, 0x07, -1, -1, -1);
-            _waitBusy("EPD_UPD_PART", EPD_TMG_LNG);
+          displayEngine[1] = 0x07;
+
+          IO.data(programMtp, sizeof(programMtp));
+          IO.data(displayEngine, sizeof(displayEngine));
+          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
             break;
         case 2:
-            // TODO
-            //writeRegister(EPD_PROGRAMMTP, 0x02, -1, -1, -1);
-            //writeRegister(EPD_DISPLAYENGINE, 0x07, -1, -1, -1);
-            _waitBusy("EPD_UPD_MONO", EPD_TMG_MID);
+          programMtp[1] = 0x02;
+          displayEngine[1] = 0x07;
+
+          IO.data(programMtp, sizeof(programMtp));
+          IO.data(displayEngine, sizeof(displayEngine));
+          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+          break;
     }
     
   _powerOff();
@@ -228,7 +252,8 @@ void PlasticLogic011::_powerOn(void) {
 
   IO.data(setPowerControl, sizeof(setPowerControl));
   _waitBusy("setPowerControl");
-
+  
+  vTaskDelay(100/portTICK_RATE_MS);       // Only because reading the value below is not working
   while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
 }
 
@@ -282,10 +307,11 @@ void PlasticLogic011::_waitBusy(const char* message){
 void PlasticLogic011::_powerOff(){
   uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD0};
   IO.data(setPowerControl, sizeof(setPowerControl)); 
-
   _waitBusy("power_off");
-  setPowerControl[2] = 0xC0;
-  IO.data(setPowerControl, sizeof(setPowerControl)); 
+  
+  setPowerControl[1] = 0xC0;
+  IO.data(setPowerControl, sizeof(setPowerControl));
+  _waitBusy("setPowerControl");
 }
 
 /**
@@ -338,13 +364,15 @@ void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = PLOGIC011_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * PLOGIC011_WIDTH / 8;
-
-  if (color) {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    } else {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    }
+  
+  y=y+3;
+  uint8_t pixels = _buffer[x/4 + (y) * _nextline];
+	switch (x%4) {					            //2-bit grayscale dot
+    	case 0: _buffer[x/4 + (y) * _nextline] = (pixels & 0x3F) | ((uint8_t)color << 6); break;	
+    	case 1: _buffer[x/4 + (y) * _nextline] = (pixels & 0xCF) | ((uint8_t)color << 4); break;	
+    	case 2: _buffer[x/4 + (y) * _nextline] = (pixels & 0xF3) | ((uint8_t)color << 2); break;	
+    	case 3: _buffer[x/4 + (y) * _nextline] = (pixels & 0xFC) | (uint8_t)color; break;		
+	}
 }
 
     void PlasticLogic011::accelBegin() {

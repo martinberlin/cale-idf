@@ -38,11 +38,11 @@ bool debugVerbose = true;
 #define DOTSTAR_CLK 12
 
 // Important configuration. The class should match your epaper display model:
-//#include <gdew075T7.h>
+#include <wave7i5.h>
 //#include <gdew027w3.h> // -> Needs to be changed to your model
-#include <gdep015OC1.h> 
+//#include <gdep015OC1.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
-Gdep015OC1 display(io); // -> Needs to match your epaper
+Wave7i5 display(io); // -> Needs to match your epaper
 //Gdew075T7 display(io);
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time query: HHmm  -> 0800 (8 AM)

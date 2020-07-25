@@ -16,11 +16,8 @@
 // Controller: UC8156  Manufacturer: https://www.plasticlogic.com/products/displays/displays-with-ultrachip/1-1-inch-display
 #define PLOGIC011_WIDTH 148
 #define PLOGIC011_HEIGHT 72
-// TODO: Should be /4 according to plasticlogic: 
+// TODO: Should be 2 bits per pixel: 
 #define PLOGIC011_BUFFER_SIZE (uint32_t(PLOGIC011_WIDTH) * uint32_t(PLOGIC011_HEIGHT) / 4)
-// 1 byte of this color in the buffer (Not sure if I need this for this EPD)
-#define PLOGIC011_8PIX_BLACK 0xFF
-#define PLOGIC011_8PIX_WHITE 0x00
 
 class PlasticLogic011 : public Epd
 {
@@ -33,6 +30,7 @@ class PlasticLogic011 : public Epd
     void init(bool debug);
 
     void fillScreen(uint16_t color);
+    void clearScreen(); 
     void update();
     void update(uint8_t updateMode);
 
@@ -49,17 +47,19 @@ class PlasticLogic011 : public Epd
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     
-    void  setRotation(uint8_t o);
+    void  setEpdRotation(uint8_t o);
     void _powerOn();
     void _powerOff();
 
   private:
     EpdSpi2Cs& IO;
     uint8_t _buffer[PLOGIC011_BUFFER_SIZE];
-    bool color = false;
+    
     bool _initial = true;
     bool _debug_buffer = false;
-    // Accelerometer + temperature
+    uint16_t _nextline = PLOGIC011_WIDTH/4;
+
+    // Accelerometer + temperature (Not on EPD but on the Paperino SPI interface PCB)
     int x, y, z, temp;
 
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
