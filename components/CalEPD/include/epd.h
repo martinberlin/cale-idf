@@ -109,7 +109,6 @@ class Epd : public virtual Adafruit_GFX
     // Every display model should implement this public methods
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method
     virtual void init(bool debug) = 0;
-    virtual void fillScreen(uint16_t color) = 0;
     virtual void update() = 0; 
 
     // Partial methods are going to be implemented by each model clases

@@ -28,8 +28,6 @@ class PlasticLogic011 : public Epd
     
     // EPD tests 
     void init(bool debug);
-
-    void fillScreen(uint16_t color);
     void clearScreen(); 
     void update();
     void update(uint8_t updateMode);

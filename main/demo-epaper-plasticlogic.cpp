@@ -30,10 +30,10 @@ void app_main(void)
    // Research why with any other color than BLACK it makes horizontal lines:
    display.fillScreen(EPD_LGRAY);
 
-   display.setFont(&Ubuntu_M24pt8b);
+   /* display.setFont(&Ubuntu_M24pt8b);
    display.setCursor(10,40);
    display.setTextColor(EPD_DGRAY);
-   display.println("HOLA");
+   display.println("HOLA"); */
    //display.fillScreen(EPD_WHITE);
    //display.fillCircle(50, 20, 10, EPD_BLACK);
    /* display.fillCircle(20, 20, 10, EPD_DARKGREY);

@@ -49,7 +49,6 @@ void PlasticLogic011::init(bool debug)
 
     //Set landscape mode as default
     setEpdRotation(1);
-    fillScreen(EPD_WHITE);
 }
 
 uint8_t PlasticLogic011::getEPDsize() {
@@ -116,17 +115,6 @@ void PlasticLogic011::clearScreen(){
   {
     _buffer[x] = 0xff;
   }
-}
-
-void PlasticLogic011::fillScreen(uint16_t color)
-{
-  
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
-  {
-    _buffer[x] = color;
-  }
-
-  if (debug_enabled) printf("fillScreen(%x) _buffer len:%d\n", color, sizeof(_buffer));
 }
 
 uint16_t PlasticLogic011::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
