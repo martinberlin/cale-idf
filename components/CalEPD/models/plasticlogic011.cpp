@@ -1,34 +1,34 @@
-#include "plasticlogic021.h"
+#include "plasticlogic011.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
 
 // Partial Update Delay
-#define PLOGIC021_PU_DELAY 100
+#define PLOGIC011_PU_DELAY 100
 
 // Constructor
-PlasticLogic021::PlasticLogic021(EpdSpi2Cs& dio): 
-  Adafruit_GFX(PLOGIC021_WIDTH, PLOGIC021_HEIGHT),
-  Epd(PLOGIC021_WIDTH, PLOGIC021_HEIGHT), IO(dio)
+PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio): 
+  Adafruit_GFX(PLOGIC011_WIDTH, PLOGIC011_HEIGHT),
+  Epd(PLOGIC011_WIDTH, PLOGIC011_HEIGHT), IO(dio)
 {
-  printf("PlasticLogic021() %d*%d\n",
-  PLOGIC021_WIDTH, PLOGIC021_HEIGHT);  
+  printf("PlasticLogic011() %d*%d\n",
+  PLOGIC011_WIDTH, PLOGIC011_HEIGHT);  
 }
 
-void PlasticLogic021::csStateToogle(const char* message) {
+void PlasticLogic011::csStateToogle(const char* message) {
    IO.csStateHigh();
    _waitBusy(message);
    IO.csStateLow();   
 }
 
 //Initialize the display
-void PlasticLogic021::init(bool debug)
+void PlasticLogic011::init(bool debug)
 {
     debug_enabled = debug;
     if (debug_enabled) {
-      printf("PlasticLogic021::init(%d) bufferSize: %d width: %d height: %d\n", 
-    debug, PLOGIC021_BUFFER_SIZE, PLOGIC021_WIDTH, PLOGIC021_HEIGHT);
+      printf("PlasticLogic011::init(%d) bufferSize: %d width: %d height: %d\n", 
+    debug, PLOGIC011_BUFFER_SIZE, PLOGIC011_WIDTH, PLOGIC011_HEIGHT);
     }
     IO.init(4, debug); // 4MHz frequency
     
@@ -51,7 +51,7 @@ void PlasticLogic021::init(bool debug)
     fillScreen(EPD_WHITE);
 }
 
-uint8_t PlasticLogic021::getEPDsize() {
+uint8_t PlasticLogic011::getEPDsize() {
   uint8_t size = 0;
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x02};
   uint8_t setMtpAddress[3] = {EPD_MTPADDRESSSETTING, 0xF2, 0x04};
@@ -88,7 +88,7 @@ uint8_t PlasticLogic021::getEPDsize() {
   return size;
 }
 
-void PlasticLogic021::setRotation(uint8_t o) {
+void PlasticLogic011::setRotation(uint8_t o) {
 
    uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07};
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
@@ -108,10 +108,10 @@ void PlasticLogic021::setRotation(uint8_t o) {
 }
 
 
-void PlasticLogic021::fillScreen(uint16_t color)
+void PlasticLogic011::fillScreen(uint16_t color)
 {
   // 0xFF = 8 pixels black, 0x00 = 8 pix. white
-  uint8_t data = (color == EPD_BLACK) ? PLOGIC021_8PIX_BLACK : PLOGIC021_8PIX_WHITE;
+  uint8_t data = (color == EPD_BLACK) ? PLOGIC011_8PIX_BLACK : PLOGIC011_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -120,11 +120,11 @@ void PlasticLogic021::fillScreen(uint16_t color)
   if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
-uint16_t PlasticLogic021::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
-  printf("_setPartialRamArea not used in PlasticLogic021");
+uint16_t PlasticLogic011::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
+  printf("_setPartialRamArea not used in PlasticLogic011");
   return 0;
 }
-void PlasticLogic021::_wakeUp(){
+void PlasticLogic011::_wakeUp(){
     uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
     IO.data(panelSetting, sizeof(panelSetting));
     _waitBusy("Panel setting");
@@ -158,11 +158,11 @@ void PlasticLogic021::_wakeUp(){
     _waitBusy("Boost setting");
 }
 
-void PlasticLogic021::update(){
+void PlasticLogic011::update(){
   update(EPD_UPD_FULL);
 }
 
-void PlasticLogic021::update(uint8_t updateMode)
+void PlasticLogic011::update(uint8_t updateMode)
 {
     // EPD_PIXELACESSPOS
   printf("Sending BUFF with size: %d\n", sizeof(_buffer));
@@ -210,7 +210,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   //_sleep();
 }
 
-void PlasticLogic021::_powerOn(void) {
+void PlasticLogic011::_powerOn(void) {
 
   uint8_t setResolution[5]   = {EPD_SETRESOLUTION, 0x00, 0xEF, 0x00, 0x93};
   uint8_t setTcomTiming[3]   = {EPD_TCOMTIMING   , 0x67, 0x65};
@@ -232,15 +232,15 @@ void PlasticLogic021::_powerOn(void) {
   while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
 }
 
-void PlasticLogic021::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void PlasticLogic011::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
   
   printf("Not implemented\n");
-  vTaskDelay(PLOGIC021_PU_DELAY/portTICK_RATE_MS); 
+  vTaskDelay(PLOGIC011_PU_DELAY/portTICK_RATE_MS); 
 }
 
-void PlasticLogic021::_waitBusy(const char* message, uint16_t busy_time){
+void PlasticLogic011::_waitBusy(const char* message, uint16_t busy_time){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -261,7 +261,7 @@ void PlasticLogic021::_waitBusy(const char* message, uint16_t busy_time){
   }
 }
 
-void PlasticLogic021::_waitBusy(const char* message){
+void PlasticLogic011::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -279,7 +279,7 @@ void PlasticLogic021::_waitBusy(const char* message){
 }
 
 // Called _poweroff in microEPD
-void PlasticLogic021::_powerOff(){
+void PlasticLogic011::_powerOff(){
   uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD0};
   IO.data(setPowerControl, sizeof(setPowerControl)); 
 
@@ -292,34 +292,34 @@ void PlasticLogic021::_powerOff(){
  * Putting the UC8156 in deep sleep mode with less than 1µA current @3.3V
  * Reset pin toggling needed to wakeup the driver IC again.
  */ 
-void PlasticLogic021::_sleep(){
+void PlasticLogic011::_sleep(){
   uint8_t deepsleep[5] = {0x21 , 0xff, 0xff, 0xff, 0xff};
   IO.data(deepsleep, sizeof(deepsleep)); 
 }
 
-void PlasticLogic021::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void PlasticLogic011::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
     case 1:
       swap(x, y);
       swap(w, h);
-      x = PLOGIC021_WIDTH - x - w - 1;
+      x = PLOGIC011_WIDTH - x - w - 1;
       break;
     case 2:
-      x = PLOGIC021_WIDTH - x - w - 1;
-      y = PLOGIC021_HEIGHT - y - h - 1;
+      x = PLOGIC011_WIDTH - x - w - 1;
+      y = PLOGIC011_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = PLOGIC021_HEIGHT - y - h - 1;
+      y = PLOGIC011_HEIGHT - y - h - 1;
       break;
   }
 }
 
 
-void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -327,18 +327,18 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = PLOGIC021_WIDTH - x - 1;
+      x = PLOGIC011_WIDTH - x - 1;
       break;
     case 2:
-      x = PLOGIC021_WIDTH - x - 1;
-      y = PLOGIC021_HEIGHT - y - 1;
+      x = PLOGIC011_WIDTH - x - 1;
+      y = PLOGIC011_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = PLOGIC021_HEIGHT - y - 1;
+      y = PLOGIC011_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * PLOGIC021_WIDTH / 8;
+  uint16_t i = x / 8 + y * PLOGIC011_WIDTH / 8;
 
   if (color) {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
@@ -347,14 +347,14 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
     }
 }
 
-    void PlasticLogic021::accelBegin() {
+    void PlasticLogic011::accelBegin() {
       uint8_t accGsel[2] = {0x0F, ACC_GSEL};
       uint8_t accBand[2] = {0x10, ACC_BW};
       IO.cmdAccel(accGsel, sizeof(accGsel));
       IO.cmdAccel(accBand, sizeof(accBand));
     }
     
-    void PlasticLogic021::accelActivateTapOnInt1() {
+    void PlasticLogic011::accelActivateTapOnInt1() {
       uint8_t accEnSingleTap[2]   = {0x16, 0x20};
       uint8_t accMapSingleTap[2]  = {0x19, 0x20};
       uint8_t accAdjTapSens[2]    = {0x2B, 0x01};
@@ -365,16 +365,16 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
       IO.cmdAccel(accInterruptMode, sizeof(accInterruptMode));
     }
 
-    void PlasticLogic021::accelClearLatchedInt1() {
+    void PlasticLogic011::accelClearLatchedInt1() {
       uint8_t accLatch[2] = {0x21, 0x80};
       IO.cmdAccel(accLatch, sizeof(accLatch));
     }
 
-    void PlasticLogic021::accelReadAccel() {
+    void PlasticLogic011::accelReadAccel() {
       // Research how to read from SPI (MISO gpio?)
     }
 
-    void PlasticLogic021::accelDeepSuspend() {
+    void PlasticLogic011::accelDeepSuspend() {
       uint8_t accelDeepSuspend[2] = {0x11, 0x20};
       IO.cmdAccel(accelDeepSuspend, sizeof(accelDeepSuspend));
     }

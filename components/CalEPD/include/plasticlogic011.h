@@ -14,18 +14,18 @@
 #include <epdspi2cs.h>
 
 // Controller: UC8156  Manufacturer: https://www.plasticlogic.com/products/displays/displays-with-ultrachip/1-1-inch-display
-#define PLOGIC021_WIDTH 148
-#define PLOGIC021_HEIGHT 72
+#define PLOGIC011_WIDTH 148
+#define PLOGIC011_HEIGHT 72
 // TODO: Should be /4 according to plasticlogic: 
-#define PLOGIC021_BUFFER_SIZE (uint32_t(PLOGIC021_WIDTH) * uint32_t(PLOGIC021_HEIGHT) / 4)
+#define PLOGIC011_BUFFER_SIZE (uint32_t(PLOGIC011_WIDTH) * uint32_t(PLOGIC011_HEIGHT) / 4)
 // 1 byte of this color in the buffer (Not sure if I need this for this EPD)
-#define PLOGIC021_8PIX_BLACK 0xFF
-#define PLOGIC021_8PIX_WHITE 0x00
+#define PLOGIC011_8PIX_BLACK 0xFF
+#define PLOGIC011_8PIX_WHITE 0x00
 
-class PlasticLogic021 : public Epd
+class PlasticLogic011 : public Epd
 {
   public:
-    PlasticLogic021(EpdSpi2Cs& IO);
+    PlasticLogic011(EpdSpi2Cs& IO);
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -55,7 +55,7 @@ class PlasticLogic021 : public Epd
 
   private:
     EpdSpi2Cs& IO;
-    uint8_t _buffer[PLOGIC021_BUFFER_SIZE];
+    uint8_t _buffer[PLOGIC011_BUFFER_SIZE];
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
@@ -69,5 +69,4 @@ class PlasticLogic021 : public Epd
     void _waitBusy(const char* message, uint16_t busy_time);
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-
 };
