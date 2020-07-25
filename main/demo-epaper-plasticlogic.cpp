@@ -10,22 +10,46 @@
 // Should match with your epaper module, size
 // First plasticlogic EPD implementation
 #include <plasticlogic011.h>
-
 EpdSpi2Cs io;
 PlasticLogic011 display(io);
-// FONT used for title / message body - Only after display library
-//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 
-#include <Fonts/FreeMonoBold24pt7b.h>
-#include <Fonts/FreeSansOblique24pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/FreeMono9pt7b.h>
-#include <Fonts/FreeSerif12pt7b.h>
-#include <Fonts/FreeSerifBoldItalic18pt7b.h>
 extern "C"
 {
    void app_main();
 }
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> 
+
+void app_main(void)
+{
+
+   printf("CalEPD epaper research\n");
+   
+   // Test Epd class
+   display.init(true);
+   display.clearScreen();
+   // Research why with any other color than BLACK it makes horizontal lines:
+   display.fillScreen(EPD_LGRAY);
+
+   display.setFont(&Ubuntu_M24pt8b);
+   display.setCursor(10,40);
+   display.setTextColor(EPD_DGRAY);
+   display.println("HOLA");
+   //display.fillScreen(EPD_WHITE);
+   //display.fillCircle(50, 20, 10, EPD_BLACK);
+   /* display.fillCircle(20, 20, 10, EPD_DARKGREY);
+
+   display.fillCircle(100, 30, 30, EPD_WHITE);
+   
+   display.setRotation(0); // Sets rotation in Adafruit GFX */
+   
+   display.update();
+}
+
+// FONT used for title / message body - Only after display library
+//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
+// HH:mm
+#include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
+#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> 
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
 {
@@ -37,7 +61,7 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
    }
    display.setTextColor(fgcolor);
    display.setCursor(10, 40);
-   display.setFont(&FreeMonoBold24pt7b);
+   display.setFont(&Ubuntu_M24pt8b);
    printf("display.width() %d\n\n", display.width());
    display.println("CalEPD display test\n");
    // Print all character from an Adafruit Font
@@ -77,19 +101,13 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
    }
 
    display.setTextColor(bkcolor);
-   display.setFont(&FreeMonoBold24pt7b);
+   display.setFont(&Ubuntu_M48pt8b);
    display.println("CalEPD");
    display.setTextColor(fgcolor);
 
-   display.setFont(&FreeSerif12pt7b);
+   display.setFont(&Ubuntu_M24pt8b);
    display.println("AbcdeFghiJklm");
-
-   display.setFont(&FreeSerifBoldItalic18pt7b);
-   display.println("BERLIN");
-   display.setFont(&FreeSansOblique24pt7b);
-   display.println("is a very");
-   display.println("nice city");
-   return; // STOP test here
+   return;
 }
 
 void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
@@ -105,54 +123,4 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.println("PARTIAL");
    display.println("REFRESH");
    display.updateWindow(box_x, box_y, box_w, box_h, true);
-}
-
-void app_main(void)
-{
-
-   printf("CALE-IDF epaper research\n");
-   /* Print chip information */
-   esp_chip_info_t chip_info;
-   esp_chip_info(&chip_info);
-   printf("This is %s chip with %d CPU cores\n",
-          CONFIG_IDF_TARGET,
-          chip_info.cores);
-
-   printf("Silicon revision %d, ", chip_info.revision);
-   printf("Free heap: %d\n", esp_get_free_heap_size());
-
-   // Test Epd class
-   display.init(true);
-   //display.clearScreen();
-   display.fillCircle(50, 20, 10, EPD_BLACK);
-   display.fillCircle(100, 30, 30, EPD_DARKGREY);
-   //display.fillScreen(EPD_DARKGREY);
-   
-   display.setRotation(0); // Sets rotation in Adafruit GFX
-   display.update();
-   /* 
-
-   // Back, Foreground
-   //demo(EPD_WHITE, EPD_BLACK);
-   display.setFont(&FreeSerifBoldItalic18pt7b);
-   display.fillScreen(EPD_BLACK);
-   display.setCursor(10,10);
-   display.setTextColor(EPD_WHITE);
-   display.print("HELLO");
-   display.update();
-
-   vTaskDelay(2000 / portTICK_PERIOD_MS);
-
-   //demo(EPD_BLACK, EPD_WHITE);
-   //display.update();
-   // Partial update tests:
-   // Note: Prints the background but not full black
-   // As a side effect also affects the top and bottom parts minimally
-   if (false)
-   {
-      demoPartialUpdate(EPD_BLACK, EPD_WHITE, 100, 50);
-      vTaskDelay(3000 / portTICK_PERIOD_MS);
-      // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
-      //demoPartialUpdate(EPD_WHITE, EPD_BLACK, 200, 100);
-   } */
 }

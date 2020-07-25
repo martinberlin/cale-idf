@@ -35,7 +35,7 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         .sclk_io_num=CONFIG_EINK_SPI_CLK,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=4094
+        .max_transfer_sz=8188
     };
     // max_transfer_sz   4Kb is the defaut SPI transfer size if 0
     // debug: 50000  0.5 Mhz so we can sniff the SPI commands with a Slave

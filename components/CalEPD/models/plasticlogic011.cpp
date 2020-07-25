@@ -182,25 +182,15 @@ void PlasticLogic011::update(uint8_t updateMode)
   uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
 
   IO.data(pixelAccessPos, sizeof(pixelAccessPos));
-  bool sendBufferInSingleTransaction = true;
 
-  // This part is not working correctly or there is an initialization parameter incorrectly sent
-  if (sendBufferInSingleTransaction) {
-     // This is overwritting pixel 0 (Update it)
-    _buffer[0] = 0x10;
-    IO.data(_buffer,sizeof(_buffer));
-  } else {
-
-    // The EPD controller receives this in a single transaction in paperino, not like:
-  IO.csStateLow();
-  IO.data(0x10);
-  for (int i=0; i < sizeof(_buffer); i++) {
-    IO.data(_buffer[i]);
-  }
-  IO.csStateHigh();
-
+  bufferEpd[0] = 0x10;
+  //_buffer[0] = 0x10;
+  // Copy GFX buffer contents:
+  for (int i=1; i < sizeof(bufferEpd); i++) {
+    bufferEpd[i] = _buffer[i-1];
   }
 
+  IO.data(bufferEpd,sizeof(bufferEpd));
   
   _waitBusy("Buffer sent", EPD_TMG_SRT);
   

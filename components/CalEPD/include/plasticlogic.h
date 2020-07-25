@@ -3,6 +3,7 @@
 #ifndef plasticlogic_h
 #define plasticlogic_h
 
+#define EPD_BLACK 0x00
 #define EPD_DGRAY 0x01
 #define EPD_LGRAY 0x02
 #define EPD_WHITE 0x03

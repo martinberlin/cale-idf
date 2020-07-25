@@ -54,7 +54,10 @@ class PlasticLogic011 : public Epd
   private:
     EpdSpi2Cs& IO;
     uint8_t _buffer[PLOGIC011_BUFFER_SIZE];
-    
+    // Buffer sent to EPD prefixed with 0x10:
+    uint8_t bufferEpd[PLOGIC011_BUFFER_SIZE+1];
+
+
     bool _initial = true;
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC011_WIDTH/4;
