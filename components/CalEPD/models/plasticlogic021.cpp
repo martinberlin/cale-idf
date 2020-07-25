@@ -37,51 +37,41 @@ void PlasticLogic021::init(bool debug)
     } else {
       IO.cmd(EPD_SOFTWARERESET);
     }
-    _waitBusy("Hardware reset");
+    
     
     uint8_t size = getEPDsize();
     printf("EPD size: %d Free heap:%d\n", size, xPortGetFreeHeapSize());
 
-    IO.csStateLow();
-    IO.data(EPD_PANELSETTING);
-    IO.data(0x10);
-    csStateToogle("Panel Setting");
+    uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
+    IO.data(panelSetting, sizeof(panelSetting));
+    _waitBusy("Panel setting");
 
-    IO.data(EPD_WRITEPXRECTSET);
-    IO.data(0x00);
-    IO.data(0xEF); // 239
-    IO.data(0x00);
-    IO.data(0x91); // 145
-    csStateToogle("Write rectangular pixel");
+    uint8_t settingWriteRectangular[5] = {EPD_WRITEPXRECTSET, 0x00, 0x47, 0x00, 0x93};
+    IO.data(settingWriteRectangular, sizeof(settingWriteRectangular));
+    _waitBusy("settingWriteRectangular");
 
-    IO.data(EPD_VCOMCONFIG);
-    IO.data(0x0);
-    IO.data(0x0);
-    IO.data(0x24);
-    IO.data(0x07);
-    csStateToogle("VCOM configuration");
+    uint8_t settingVcom[5] = {EPD_VCOMCONFIG, 0x0, 0x0, 0x24, 0x07};
+    IO.data(settingVcom, sizeof(settingVcom));
+    _waitBusy("VCOM configuration");
 
-    IO.data(EPD_DRIVERVOLTAGE);
-    IO.data(0x25);
-    IO.data(0xff);
-    csStateToogle("Driver voltage setting");
+    uint8_t settingDriverVoltage[3] = {EPD_DRIVERVOLTAGE, 0x25, 0xff};
+    IO.data(settingDriverVoltage, sizeof(settingDriverVoltage));
+    _waitBusy("Driver voltage setting");
 
-    IO.data(EPD_BORDERSETTING);
-    IO.data(0x04);
-    csStateToogle("Vborder setting");
+    uint8_t settingVborder[2] = {EPD_BORDERSETTING, 0x04};
+    IO.data(settingVborder, sizeof(settingVborder));
+    _waitBusy("Vborder setting");
 
-    IO.data(EPD_LOADMONOWF);
-    IO.data(0x60);
-    csStateToogle("Load mono");
+    uint8_t settingLoadMono[2] = {EPD_LOADMONOWF, 0x60};
+    IO.data(settingLoadMono, sizeof(settingLoadMono));
+    _waitBusy("Load mono");
 
-    IO.data(EPD_INTTEMPERATURE);
-    IO.data(0x0a);
-    csStateToogle("Temperature");
+    uint8_t settingTemperature[2] = {EPD_INTTEMPERATURE, 0x0a};
+    IO.data(settingTemperature, sizeof(settingTemperature));
+    _waitBusy("Temperature");
 
-    IO.data(EPD_BOOSTSETTING);
-    IO.data(0x22);
-    IO.data(0x17);
-    IO.csStateHigh();
+    uint8_t settingBoost[3] = {EPD_BOOSTSETTING, 0x22, 0x17};
+    IO.data(settingBoost, sizeof(settingBoost));
     _waitBusy("Boost setting");
     
     printf("begin() ends\n");
@@ -128,18 +118,20 @@ uint8_t PlasticLogic021::getEPDsize() {
 }
 
 void PlasticLogic021::setRotation(uint8_t o) {
-   IO.csStateLow();
-   IO.data(EPD_DATENTRYMODE);
+
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07};
+   uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
+
    switch (o)
    {
    case 2:
      /* Portrait */
-     IO.data(0x02);
+     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
      break;
    
    default:
      /* Landscape mode */
-     IO.data(0x20);
+     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
      break;
    }
 }
@@ -175,20 +167,19 @@ void PlasticLogic021::update(){
 
 void PlasticLogic021::update(uint8_t updateMode)
 {
-  
-  
-  // EPD_PIXELACESSPOS
+    // EPD_PIXELACESSPOS
   printf("Sending BUFF with size: %d\n", sizeof(_buffer));
-  IO.csStateLow();
-  IO.data(EPD_PIXELACESSPOS);
-  IO.data(0x00);
-  IO.data(0x00);
-  csStateToogle("Pixel access position");
 
-  IO.data(0x10);
+  uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0x00, 0x93};
+  uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
+  uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
+
+  IO.data(pixelAccessPos, sizeof(pixelAccessPos));
+
+  IO.csStateLow();
   // Send buffer
   for (int i=0; i < sizeof(_buffer); i++) {
-    //IO.data(_buffer[i]);
+    IO.data(_buffer[i]);
   }
   
   IO.csStateHigh();
@@ -198,18 +189,13 @@ void PlasticLogic021::update(uint8_t updateMode)
 
     switch (updateMode) {
         case 0:
-          IO.csStateLow();
-          IO.data(EPD_PROGRAMMTP);
-          IO.data(0x00);
+          IO.data(programMtp, sizeof(programMtp));
 
-          csStateToogle("Program WS MTP");
-          IO.data(EPD_DISPLAYENGINE);
-          IO.data(0x03);
-          IO.csStateHigh();
+          IO.data(displayEngine, sizeof(displayEngine));
 
           _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
 
-            break;
+          break;
         case 1:
             // TODO
             //writeRegister(EPD_PROGRAMMTP, 0x00, -1, -1, -1);
@@ -223,36 +209,30 @@ void PlasticLogic021::update(uint8_t updateMode)
             _waitBusy("EPD_UPD_MONO", EPD_TMG_MID);
     }
     
-  /* _powerOff();
-  _sleep(); */
+  _powerOff();
+  //_sleep();
 }
 
 void PlasticLogic021::_powerOn(void) {
-  IO.csStateLow();
-  IO.data(EPD_SETRESOLUTION);
-  IO.data(0x00);
-  IO.data(0xEF); //239
-  IO.data(0x00);
-  IO.data(0x9F); //159
-  csStateToogle("Panel resolution");
 
-  IO.data(EPD_TCOMTIMING);
-  IO.data(0x67);
-  IO.data(0x55);
-  csStateToogle("TCOM Timing");
+  uint8_t setResolution[5]   = {EPD_SETRESOLUTION, 0x00, 0xEF, 0x00, 0x93};
+  uint8_t setTcomTiming[3]   = {EPD_TCOMTIMING   , 0x67, 0x65};
+  uint8_t setPowerSeq[4]     = {EPD_POWERSEQUENCE, 0x00, 0x00, 0x00};
+  uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD1};
+
+  IO.data(setResolution, sizeof(setResolution));
+  _waitBusy("Panel resolution");
+
+  IO.data(setTcomTiming, sizeof(setTcomTiming));
+  _waitBusy("TCOM Timing");
   
-  IO.data(EPD_POWERSEQUENCE);
-  IO.data(0x00);
-  IO.data(0x00);
-  IO.data(0x00);
-  csStateToogle("Power sequence");
+  IO.data(setPowerSeq, sizeof(setPowerSeq));
+  _waitBusy("Power sequence");
 
-  IO.data(EPD_POWERCONTROL);
-  IO.data(0xD1);
-  IO.csStateHigh();
+  IO.data(setPowerControl, sizeof(setPowerControl));
+  _waitBusy("_PowerOn");
 
-  while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
-  //_waitBusy("_PowerOn");
+  //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
 }
 
 void PlasticLogic021::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
@@ -271,7 +251,7 @@ void PlasticLogic021::_waitBusy(const char* message, uint16_t busy_time){
   // On high is busy
   if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) {
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>7000000)
     {
@@ -290,11 +270,10 @@ void PlasticLogic021::_waitBusy(const char* message){
   }
   int64_t time_since_boot = esp_timer_get_time();
 
-  while (1){
-    // On low is not busy anymore
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
-    vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>7000000)
+  while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
+    vTaskDelay(10/portTICK_RATE_MS); 
+
+    if (esp_timer_get_time()-time_since_boot>200000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
@@ -304,16 +283,12 @@ void PlasticLogic021::_waitBusy(const char* message){
 
 // Called _poweroff in microEPD
 void PlasticLogic021::_powerOff(){
-  IO.csStateLow();
-  IO.data(EPD_POWERCONTROL); 
-  IO.data(0xD0);            // power off display
-  IO.csStateHigh();
+  uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD0};
+  IO.data(setPowerControl, sizeof(setPowerControl)); 
 
   _waitBusy("power_off");
-  IO.csStateLow();
-  IO.data(EPD_POWERCONTROL);
-  IO.data(0xC0);
-  IO.csStateHigh();
+  setPowerControl[2] = 0xC0;
+  IO.data(setPowerControl, sizeof(setPowerControl)); 
 }
 
 /**
@@ -321,13 +296,8 @@ void PlasticLogic021::_powerOff(){
  * Reset pin toggling needed to wakeup the driver IC again.
  */ 
 void PlasticLogic021::_sleep(){
-  IO.csStateLow();
-  IO.data(0x21);  // deepsleep
-  IO.data(0xff);          
-  IO.data(0xff);
-  IO.data(0xff);
-  IO.data(0xff);
-  IO.cs2StateHigh();
+  uint8_t deepsleep[5] = {0x21 , 0xff, 0xff, 0xff, 0xff};
+  IO.data(deepsleep, sizeof(deepsleep)); 
 }
 
 void PlasticLogic021::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)

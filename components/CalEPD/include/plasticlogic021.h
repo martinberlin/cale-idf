@@ -14,8 +14,8 @@
 #include <epdspi2cs.h>
 
 // Controller: UC8156  Manufacturer: https://www.plasticlogic.com/products/displays/displays-with-ultrachip/1-1-inch-display
-#define PLOGIC021_WIDTH 240
-#define PLOGIC021_HEIGHT 146
+#define PLOGIC021_WIDTH 148
+#define PLOGIC021_HEIGHT 72
 // TODO: Should be /4 according to plasticlogic: 
 #define PLOGIC021_BUFFER_SIZE (uint32_t(PLOGIC021_WIDTH) * uint32_t(PLOGIC021_HEIGHT) / 4)
 // 1 byte of this color in the buffer (Not sure if I need this for this EPD)

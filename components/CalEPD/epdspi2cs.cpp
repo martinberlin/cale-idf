@@ -157,8 +157,31 @@ void EpdSpi2Cs::data(const uint8_t data)
 
     assert(ret==ESP_OK);
 }
-// Non used
-void EpdSpi2Cs::data(const uint8_t *data, int len) {}
+
+/**
+ * Send multiple data in one transaction
+ */
+void EpdSpi2Cs::data(const uint8_t *data, int len) {
+    if (len==0) return;
+    if (debug_enabled) {
+        printf("D\n");
+        for (int i = 0; i < len; i++)  {
+            printf("%x ",data[i]);
+        }
+        printf("\n");
+    }
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    esp_err_t ret;
+    spi_transaction_t t;
+                
+    memset(&t, 0, sizeof(t));
+    t.length=len*8;
+    t.tx_buffer=data;
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+}
 
 void EpdSpi2Cs::csStateLow() {
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
@@ -201,9 +224,6 @@ void EpdSpi2Cs::cmdAccel(const uint8_t *data, int len)
 }
 
 void EpdSpi2Cs::reset(uint8_t millis=5) {
-    // No need to do it 3 times ;)
-    /* gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
-    vTaskDelay(millis / portTICK_RATE_MS); */
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
     vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
