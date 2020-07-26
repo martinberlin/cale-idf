@@ -13,6 +13,8 @@
 #include <Adafruit_GFX.h>
 #include <epd4spi.h>
 #include "soc/rtc_wdt.h"       // Watchdog control
+#include <gdew_colors.h>
+
 #define WAVE12I48_WIDTH 1304
 #define WAVE12I48_HEIGHT 984
 

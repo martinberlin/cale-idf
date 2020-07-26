@@ -21,7 +21,7 @@
 #define EPD_PANELSETTING      0x01
 #define EPD_DRIVERVOLTAGE     0x02
 #define EPD_POWERCONTROL      0x03
-#define EPD_BOOSTSETTING    	0x04
+#define EPD_BOOSTSETTING      0x04
 #define EPD_TCOMTIMING        0x06
 #define EPD_INTTEMPERATURE    0x07
 #define EPD_SETRESOLUTION     0x0C

@@ -209,7 +209,6 @@ void PlasticLogic011::update(uint8_t updateMode)
     }
     
   _powerOff();
-  //_sleep();
 }
 
 void PlasticLogic011::_powerOn(void) {
@@ -237,10 +236,7 @@ void PlasticLogic011::_powerOn(void) {
 
 void PlasticLogic011::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  if (using_rotation) _rotate(x, y, w, h);
-  
-  printf("Not implemented\n");
-  vTaskDelay(PLOGIC011_PU_DELAY/portTICK_RATE_MS); 
+  printf("Not implemented for this model. Use update(EPD_UPD_PART)\n");
 }
 
 void PlasticLogic011::_waitBusy(const char* message, uint16_t busy_time){
@@ -297,8 +293,9 @@ void PlasticLogic011::_powerOff(){
  * Reset pin toggling needed to wakeup the driver IC again.
  */ 
 void PlasticLogic011::_sleep(){
+  printf("Deepsleep called. In order to wake up from sleep mode this display needs to be initialized again calling init() method\n");
   uint8_t deepsleep[5] = {0x21 , 0xff, 0xff, 0xff, 0xff};
-  IO.data(deepsleep, sizeof(deepsleep)); 
+  IO.data(deepsleep, sizeof(deepsleep));
 }
 
 void PlasticLogic011::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)

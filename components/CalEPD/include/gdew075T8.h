@@ -13,6 +13,8 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include "soc/rtc_wdt.h"
+#include <gdew_colors.h>
+
 #define GDEW075T8_WIDTH 640
 #define GDEW075T8_HEIGHT 384
 

@@ -1,7 +1,7 @@
 #ifndef epd_h
 #define epd_h
 
-#define CALEPD_VERSION "0.9.4"
+#define CALEPD_VERSION "0.9.5"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,13 +15,6 @@
 #include <string>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-
-// the only colors supported by any of these displays; mapping of other colors is class specific
-#define EPD_BLACK     0x0000
-#define EPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
-#define EPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
-#define EPD_WHITE     0xFFFF
-#define EPD_RED       0xF800      /* 255,   0,   0 */
 
 typedef struct {
     uint8_t cmd;
