@@ -10,6 +10,7 @@
 // Should match with your epaper module, size
 // First plasticlogic EPD implementation
 #include <plasticlogic011.h>
+
 EpdSpi2Cs io;
 PlasticLogic011 display(io);
 
@@ -17,110 +18,95 @@ extern "C"
 {
    void app_main();
 }
-#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> 
+// FONT used for title / message body - Only after display library
+//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
+#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
+
+void print_plastic_logic(std::string text, uint16_t color) {
+   display.setFont(&Ubuntu_M16pt8b);
+   display.setCursor(2,20);
+   display.setTextColor(EPD_DGRAY);
+   display.print("Plastic");
+   display.setCursor(2,40);
+   display.print(text);
+}
+
+void print_title(std::string title, uint16_t color = EPD_BLACK, int16_t x = 2){
+   display.setFont(&Ubuntu_M12pt8b);
+   display.setCursor(x,15);
+   display.setTextColor(color);
+   display.print(title);
+}
 
 void app_main(void)
 {
-
-   printf("CalEPD epaper research\n");
+   printf("CalEPD epaper research. Plasticlogic.com test\n");
+   /** Color constants that the epaper supports:
+    EPD_BLACK 0x00
+    EPD_DGRAY 0x01
+    EPD_LGRAY 0x02
+    EPD_WHITE 0x03
+    */
    
-   // Test Epd class
-   display.init(true);
-   display.clearScreen();
-   // Research why with any other color than BLACK it makes horizontal lines:
-   display.fillScreen(EPD_LGRAY);
-
-   /* display.setFont(&Ubuntu_M24pt8b);
-   display.setCursor(10,40);
-   display.setTextColor(EPD_DGRAY);
-   display.println("HOLA"); */
-   //display.fillScreen(EPD_WHITE);
-   //display.fillCircle(50, 20, 10, EPD_BLACK);
-   /* display.fillCircle(20, 20, 10, EPD_DARKGREY);
-
-   display.fillCircle(100, 30, 30, EPD_WHITE);
-   
+   // Initialize display class
+   display.init();         // Add init(true) for debug
    display.setRotation(0); // Sets rotation in Adafruit GFX */
-   
+   display.clearScreen();
+   print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
    display.update();
-}
+   vTaskDelay(2000 / portTICK_PERIOD_MS); // Wait 2 seconds
+   display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
 
-// FONT used for title / message body - Only after display library
-//Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-// HH:mm
-#include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
-#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> 
+   // DEMO for 148 * 72 1.1 inches. Please adapt following variables for different sizes
+   uint8_t rectW = 37;
 
-void demo(uint16_t bkcolor, uint16_t fgcolor)
-{
-   display.fillScreen(bkcolor);
-   // Short test:
-   for (int i = 1; i <= display.width(); i++)
-   {
-      display.drawPixel(i, 10, fgcolor);
-   }
-   display.setTextColor(fgcolor);
-   display.setCursor(10, 40);
-   display.setFont(&Ubuntu_M24pt8b);
-   printf("display.width() %d\n\n", display.width());
-   display.println("CalEPD display test\n");
-   // Print all character from an Adafruit Font
-   if (true)
-   {
-      for (int i = 40; i <= 126; i++)
-      {
-         display.write(i); // Needs to be >32 (first character definition)
-      }
-   }
+   // Make some rectangles showing the different shades of gray
+   // fillRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color)
+   display.fillRect(    1,1,rectW,display.height(),EPD_BLACK);
+   display.fillRect(rectW,1,rectW,display.height(),EPD_DGRAY);   // Dark gray
+   display.fillRect(rectW*2,1,rectW,display.height(),EPD_LGRAY); // Light gray
+   display.drawRect(rectW*3,1,rectW,display.height(),EPD_BLACK); // Last white rectangle
+   display.update();
 
-   // Cope with different Epd resolutions just for the demo
-   if (display.width() > 1000 && display.width() <= 1305)
-   {
-      display.fillCircle(650, 400, 180, fgcolor);
-      display.fillCircle(900, 200, 40, fgcolor);
-      display.fillCircle(1100, 200, 40, fgcolor);
-      display.fillCircle(1100, 400, 40, fgcolor);
-      display.fillCircle(1100, 700, 40, fgcolor);
-   }
-   else if (display.width() >= 800 && display.width() < 900)
-   {
-      display.setCursor(6, 626);
-      display.fillRect(1, 600, display.width(), 34, fgcolor);
-      display.fillCircle(100, 100, 60, fgcolor);
-      display.fillCircle(200, 200, 50, fgcolor);
-      display.fillCircle(300, 300, 40, fgcolor);
-      display.fillCircle(500, 500, 200, fgcolor);
-   }
-   else if (display.width() > 300 && display.width() <= 400)
-   {
-      display.setCursor(6, 326);
-      display.fillRect(1, 300, display.width(), 34, fgcolor);
-      display.fillCircle(100, 100, 60, fgcolor);
-      display.fillCircle(200, 200, 50, fgcolor);
-      display.fillCircle(300, 300, 40, fgcolor);
-   }
+   vTaskDelay(2000 / portTICK_PERIOD_MS);
+   print_plastic_logic("logic", EPD_LGRAY);
+   display.update(EPD_UPD_PART); // Try a partial update leaving background as is
 
-   display.setTextColor(bkcolor);
-   display.setFont(&Ubuntu_M48pt8b);
-   display.println("CalEPD");
-   display.setTextColor(fgcolor);
+   vTaskDelay(2000 / portTICK_PERIOD_MS);
+   display.clearScreen();
+   print_title("3 grays",20);
 
-   display.setFont(&Ubuntu_M24pt8b);
-   display.println("AbcdeFghiJklm");
-   return;
-}
+   // Draw 3 circles showing the levels of gray
+   // fillRect(int16_t x, int16_t y, int16_t radius, int16_t color)
+   display.fillCircle(rectW, display.height()/2, 15, EPD_BLACK);
+   display.fillCircle(rectW*2, display.height()/2, 15, EPD_DGRAY);
+   display.fillCircle(rectW*3, display.height()/2, 15, EPD_LGRAY);
+   display.update();
+   vTaskDelay(2000 / portTICK_PERIOD_MS);
+   display.clearScreen();
 
-void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
-{
-   display.setTextColor(fgcolor);
+   display.fillCircle(rectW, display.height()/2, 15, EPD_LGRAY);
+   display.update(); // full update
+   vTaskDelay(500 / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*2, display.height()/2, 15, EPD_DGRAY);
+   display.update(EPD_UPD_PART);
+   vTaskDelay(500 / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*3, display.height()/2, 15, EPD_BLACK);
+   display.update(EPD_UPD_PART);
+   vTaskDelay(500 / portTICK_PERIOD_MS);
+   display.clearScreen();
 
-   uint16_t box_w = display.width() - box_x - 10;
-   uint16_t box_h = 120;
-   printf("Partial update box x:%d y:%d width:%d height:%d\n", box_x, box_y, box_w, box_h);
-   uint16_t cursor_y = box_y + 20;
-   display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
-   display.setCursor(box_x, cursor_y + 40);
-   display.println("PARTIAL");
-   display.println("REFRESH");
-   display.updateWindow(box_x, box_y, box_w, box_h, true);
+   display.fillCircle(rectW*3, display.height()/2, 15, EPD_DGRAY);
+   display.update();
+   vTaskDelay(300 / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*2, display.height()/2, 15, EPD_LGRAY);
+   display.update(EPD_UPD_PART);
+   vTaskDelay(300 / portTICK_PERIOD_MS);
+   display.drawCircle(rectW, display.height()/2, 15, EPD_BLACK);
+   display.update(EPD_UPD_PART);
+   vTaskDelay(300 / portTICK_PERIOD_MS);
+   print_title("end", EPD_DGRAY, 54);
+   display.update(EPD_UPD_PART);
 }

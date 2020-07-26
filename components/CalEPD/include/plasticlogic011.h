@@ -27,7 +27,7 @@ class PlasticLogic011 : public Epd
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
     // EPD tests 
-    void init(bool debug);
+    void init(bool debug = false);
     void clearScreen(); 
     void update();
     void update(uint8_t updateMode);

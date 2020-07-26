@@ -4,9 +4,6 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-// Partial Update Delay
-#define PLOGIC011_PU_DELAY 100
-
 // Constructor
 PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio): 
   Adafruit_GFX(PLOGIC011_WIDTH, PLOGIC011_HEIGHT),
@@ -162,8 +159,7 @@ void PlasticLogic011::update(){
 
 void PlasticLogic011::update(uint8_t updateMode)
 {
-    // EPD_PIXELACESSPOS
-  printf("Sending BUFF with size: %d\n", sizeof(_buffer));
+  ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
 
   uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0x00, 0x93};
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
