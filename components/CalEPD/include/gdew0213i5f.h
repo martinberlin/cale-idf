@@ -11,6 +11,8 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
+#include <gdew_colors.h>
+
 // Controller: IL0373
 #define GDEW0213I5F_WIDTH 104
 #define GDEW0213I5F_HEIGHT 212

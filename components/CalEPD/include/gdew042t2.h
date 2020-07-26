@@ -12,6 +12,8 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
+#include <gdew_colors.h>
+
 // Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
 
 #define GDEW042T2_WIDTH 400

@@ -7,11 +7,15 @@ set(srcs
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
     "models/gdew0213i5f.cpp"
+    "models/gdep015OC1.cpp"
+    "models/heltec0151.cpp"
+    "models/plasticlogic011.cpp"
     
  # Pending for more testing:
  #   "models/gdeh0213b73.cpp"
     "epd.cpp"
     "epdspi.cpp"
+    "epdspi2cs.cpp"
     "epd4spi.cpp"
     )
 

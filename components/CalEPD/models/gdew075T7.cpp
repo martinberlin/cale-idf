@@ -6,6 +6,7 @@
 
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
+ Manufacturer sample: https://github.com/waveshare/e-Paper/blob/master/Arduino/epd7in5_V2/epd7in5_V2.cpp
 */
 #define T1 30 // charge balance pre-phase
 #define T2 5  // optional extension
@@ -158,7 +159,7 @@ void Gdew075T7::_wakeUp()
     IO.data(epd_panel_setting_full.data[i]);
   }
 
-  IO.cmd(0x61); // tres (??? Check what is)
+  IO.cmd(0x61); // tres
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
   for (int i = 0; i < epd_resolution.databytes; ++i)
@@ -263,7 +264,7 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
         // white is 0x00 in buffer
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         // white is 0xFF on device
-        IO.data(data);
+        IO.data(~data);
         if (idx % 8 == 0)
         {
           rtc_wdt_feed();

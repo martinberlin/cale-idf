@@ -7,12 +7,12 @@
 #include <gdew0583t7.h>
 #include <gdew075T7.h>
 #include <gdew075T8.h>
-//#include <gdew027w3.h>
+#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 // Single SPI EPD
-//EpdSpi io;
+EpdSpi io;
 //Gdew075T8 display(io);
-//Gdew075T7 display(io);
+Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
@@ -21,10 +21,10 @@
 // Multi-SPI 4 channels EPD only - 12.48 Epaper display
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
-#include "wave12i48.h" // Only to use with Edp4Spi IO
+/* #include "wave12i48.h" // Only to use with Edp4Spi IO
 Epd4Spi io;
 Wave12I48 display(io);
-
+ */
 
 
 // FONT used for title / message body - Only after display library
@@ -43,12 +43,13 @@ extern "C"
 }
 
 void demo_chars(){
-   for (int i = 32; i <= 126; i++)
+ for (int i = 32; i <= 126; i++)
    {
       display.write(i);
-   }
-   for (int i = 126+33; i <= 255; i++)
+   } 
+ for (int i = 126+33; i <= 255; i++)
    {
+      //printf("%d ",i);
       display.write(i);
    }
 }
@@ -61,37 +62,46 @@ void app_main(void)
    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
    // Bootstrap epaper class
-   display.init(true);
+   display.init(false);
    // Store your epapers all white, just turn true:
    if (false) {
    display.fillScreen(EPD_WHITE); 
    display.update();
    return;
    }
-   display.setRotation(0); // 0 - 12.48 w/USB pointing down
+   display.setRotation(2); // 0 - 12.48 w/USB pointing down
    display.fillScreen(EPD_BLACK);
 
    display.setCursor(10,40);
    display.setTextColor(EPD_WHITE);
+   
+   display.setFont(&Ubuntu_M16pt8b);
 
-   // Please note that TomThumb font is not rendering all character spectrum: 
-   // display.setFont(&TomThumb);
+   display.println("German characters test");
+   display.println("° äöü ÄÖÜ ß");
+   display.println("Löwen, Bären, Vögel und Käfer sind Tiere. Völlerei lässt grüßen! Heute ist 38° zu warm.");
+   display.println("");
+   display.println("Spanish / French characters test");
+   display.println("æçèé êëìí ï ñ");
+   display.println("La cigüeña estaba sola en la caña. Estás allí?");
+   display.newline(); // new way to add a newline
+   
+   // German sentence
    display.setFont(&Ubuntu_M8pt8b);
    display.print("Ubuntu 8pt");
-   for (int i = 32; i <= 255; i++)
-   {
-      display.write(i); // Needs to be >32 (first character definition)
-   }
+   demo_chars();
+
+   
    display.println("");
    display.print("\nUbuntu 12pt");
    display.setFont(&Ubuntu_M12pt8b);
    demo_chars();
-
+/*
    display.println("");
    display.print("\nUbuntu 16pt");
    display.setFont(&Ubuntu_M16pt8b);
    demo_chars();
-   /*
+   
    display.println("");
    display.print("\nUbuntu 20pt");
    display.setFont(&Ubuntu_M20pt8b);

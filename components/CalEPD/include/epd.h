@@ -1,7 +1,7 @@
 #ifndef epd_h
 #define epd_h
 
-#define CALEPD_VERSION "0.9.3"
+#define CALEPD_VERSION "0.9.5"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,13 +15,6 @@
 #include <string>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-
-// the only colors supported by any of these displays; mapping of other colors is class specific
-#define EPD_BLACK     0x0000
-#define EPD_DARKGREY  0x7BEF      /* 128, 128, 128 */
-#define EPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
-#define EPD_WHITE     0xFFFF
-#define EPD_RED       0xF800      /* 255,   0,   0 */
 
 typedef struct {
     uint8_t cmd;
@@ -40,6 +33,12 @@ typedef struct {
     uint8_t data[44];
     uint8_t databytes;
 } epd_init_44;
+
+typedef struct {
+    uint8_t cmd;
+    uint8_t data[30];
+    uint8_t databytes;
+} epd_init_30;
 
 typedef struct {
     uint8_t cmd;
@@ -102,8 +101,7 @@ class Epd : public virtual Adafruit_GFX
 
     // Every display model should implement this public methods
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;  // Override GFX own drawPixel method
-    virtual void init(bool debug) = 0;
-    virtual void fillScreen(uint16_t color) = 0;
+    virtual void init(bool debug = false) = 0;
     virtual void update() = 0; 
 
     // Partial methods are going to be implemented by each model clases
@@ -116,7 +114,7 @@ class Epd : public virtual Adafruit_GFX
     size_t write(uint8_t);
     void print(const std::string& text);
     void println(const std::string& text);
-    
+    void newline();
   // Methods that should be accesible by inheriting this abstract class
   protected: 
     // This should be inherited from this abstract class so we don't repeat in every model
@@ -140,7 +138,8 @@ class Epd : public virtual Adafruit_GFX
     virtual void _sleep() = 0;
     virtual void _waitBusy(const char* message) = 0;
     virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
- 
+    uint8_t _unicodePerChar(uint8_t c);
+    uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display
 };
 #endif

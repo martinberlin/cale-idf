@@ -12,7 +12,8 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include "soc/rtc_wdt.h"       // Watchdog control the dogs
+#include "soc/rtc_wdt.h"
+#include <gdew_colors.h>
 
 #define GDEW0583T7_WIDTH 600
 #define GDEW0583T7_HEIGHT 448
