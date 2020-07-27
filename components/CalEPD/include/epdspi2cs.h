@@ -20,8 +20,8 @@ class EpdSpi2Cs : IoInterface
     void reset(uint8_t millis) override;
     void init(uint8_t frequency, bool debug) override;
 
-    void * readTemp();
-    uint8_t readRegister(uint8_t address);
+    uint16_t readTemp();
+    uint16_t readRegister(const uint8_t *data, int len);
     void csStateLow();
     void csStateHigh();
     

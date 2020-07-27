@@ -35,36 +35,44 @@ void PlasticLogic011::init(bool debug)
       IO.cmd(EPD_SOFTWARERESET);
     }
     
-    /*
+    
     uint8_t size = getEPDsize();
-    printf("EPD size received from EPD: %d\n", size); */
+    printf("EPD size ID: %d\n", size);
     // xPortGetFreeHeapSize()
 
     _wakeUp();
     
-    printf("begin() ends\n");
+
+    printf("Attempt to read temperature: %d\n", IO.readTemp());
 
     //Set landscape mode as default
     setEpdRotation(1);
 }
 
+
 uint8_t PlasticLogic011::getEPDsize() {
-  uint8_t size = 0;
+  uint16_t response = 0;
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x02};
   uint8_t setMtpAddress[3] = {EPD_MTPADDRESSSETTING, 0xF2, 0x04};
   
   IO.data(programMtp, sizeof(programMtp));
+  _waitBusy("programMtp");
   IO.data(setMtpAddress, sizeof(setMtpAddress));
   _waitBusy("setMtpAddress");
+  uint8_t reg = 0x43|EPD_REGREAD;
 
+  uint8_t regRead[2] = {reg, 0xFF};
   // Read 1 dummy bytes
-  IO.readRegister(0x43);
-  size = IO.readRegister(0x43);
+  IO.readRegister(regRead,sizeof(regRead));
+  response = IO.readRegister(regRead,sizeof(regRead));
+  uint8_t size = (response >> (8*1)) & 0xff;
+  printf("size: %d\n", size);
 
   switch (size)
   {
   case 49:
-    size = IO.readRegister(0x43);
+    response = IO.readRegister(regRead,sizeof(regRead));
+    size = (response >> (8*1)) & 0xff;
     if (size==49)    {
       return 11; // 1.1" detected
     } else {
@@ -225,9 +233,9 @@ void PlasticLogic011::_powerOn(void) {
 
   IO.data(setPowerControl, sizeof(setPowerControl));
   _waitBusy("setPowerControl");
-  
-  vTaskDelay(100/portTICK_RATE_MS);       // Only because reading the value below is not working
-  while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
+  // 70 works
+  vTaskDelay(70/portTICK_RATE_MS);       // Only because reading the value below is not working
+  //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
 }
 
 void PlasticLogic011::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
