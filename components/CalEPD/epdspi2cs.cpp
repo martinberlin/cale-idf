@@ -119,6 +119,7 @@ uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len)
     t.length=len*8;
     t.tx_buffer=data;
     t.flags = SPI_TRANS_USE_RXDATA;
+    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);
