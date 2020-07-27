@@ -41,6 +41,7 @@ void PlasticLogic011::init(bool debug)
     if (size != 11) {
       ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class", size);
     }
+    printf("Epaper temperature sensor: %d °C\n", IO.readTemp());
 
     _wakeUp();
     

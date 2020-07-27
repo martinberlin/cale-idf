@@ -17,11 +17,9 @@
 void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
     
-    //Initialize GPIOs direction & initial states
+    //Initialize GPIOs direction & initial states. MOSI/MISO are setup by SPI interface
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS2, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_MOSI, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_MISO, GPIO_MODE_INPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_RST, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_BUSY, GPIO_MODE_INPUT);
     gpio_set_pull_mode((gpio_num_t)CONFIG_EINK_BUSY, GPIO_PULLUP_ONLY);
@@ -46,12 +44,11 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         frequency = 50;
         multiplier = 1;
     }
-    //Config Frequency and SS GPIO
+    //Config Frequency and SS GPIO. Full duplex SPI:
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
         .clock_speed_hz=frequency*multiplier*1000,  // DEBUG: 50000 - No debug usually 4 Mhz
         .spics_io_num=CONFIG_EINK_SPI_CS,
-        //.flags=SPI_DEVICE_HALFDUPLEX,
         .queue_size=5
     };
     // DISABLED Callbacks pre_cb/post_cb. SPI does not seem to behave the same
@@ -100,11 +97,12 @@ void EpdSpi2Cs::cmd(const uint8_t cmd)
 
 uint8_t EpdSpi2Cs::readTemp()
 {
-    printf("Not implemented\n");
-    return 1;
+    uint8_t regTemp[2] = {EPD_REGREAD | 0x08, 0xFF};
+    return readRegister(regTemp, sizeof(regTemp));
 }
 
-uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len) {
+uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len)
+{
     if (len==0) return 0;
     if (debug_enabled) {
         printf("READ: \n");
@@ -132,7 +130,8 @@ uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len) {
     return readByte;
 }
 
-void EpdSpi2Cs::waitForBusy() {
+void EpdSpi2Cs::waitForBusy()
+{
     int64_t time_since_boot = esp_timer_get_time();
 
   while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
@@ -167,7 +166,8 @@ void EpdSpi2Cs::data(const uint8_t data)
 /**
  * Send multiple data in one transaction
  */
-void EpdSpi2Cs::data(const uint8_t *data, int len) {
+void EpdSpi2Cs::data(const uint8_t *data, int len)
+{
     if (len==0) return;
     if (debug_enabled) {
         printf("D\n");

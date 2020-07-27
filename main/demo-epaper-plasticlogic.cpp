@@ -10,7 +10,7 @@
 // Should match with your epaper module, size
 // First plasticlogic EPD implementation
 #include <plasticlogic011.h>
-
+// Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 PlasticLogic011 display(io);
 
@@ -29,7 +29,7 @@ void print_plastic_logic(std::string text, uint16_t color) {
    display.setCursor(2,20);
    display.setTextColor(EPD_DGRAY);
    display.print("Plastic");
-   display.setCursor(2,40);
+   display.setCursor(2,44);
    display.print(text);
 }
 
@@ -56,9 +56,12 @@ void app_main(void)
    display.clearScreen();
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
    display.update();
+   //return;
+   
    vTaskDelay(2000 / portTICK_PERIOD_MS); // Wait 2 seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
-
+   display.update();
+   
    // DEMO for 148 * 72 1.1 inches. Please adapt following variables for different sizes
    uint8_t rectW = 37;
 
