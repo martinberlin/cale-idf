@@ -35,15 +35,17 @@ void PlasticLogic011::init(bool debug)
       IO.cmd(EPD_SOFTWARERESET);
     }
     
-    
     uint8_t size = getEPDsize();
     printf("EPD size ID: %d\n", size);
-    // xPortGetFreeHeapSize()
+
+    if (size != 11) {
+      ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class", size);
+    }
 
     _wakeUp();
     
-
-    printf("Attempt to read temperature: %d\n", IO.readTemp());
+    // Not implemented, pending:
+    //printf("Attempt to read temperature: %d\n", IO.readTemp());
 
     //Set landscape mode as default
     setEpdRotation(1);
@@ -51,7 +53,7 @@ void PlasticLogic011::init(bool debug)
 
 
 uint8_t PlasticLogic011::getEPDsize() {
-  uint16_t response = 0;
+  int8_t response = 0;
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x02};
   uint8_t setMtpAddress[3] = {EPD_MTPADDRESSSETTING, 0xF2, 0x04};
   
@@ -65,15 +67,15 @@ uint8_t PlasticLogic011::getEPDsize() {
   // Read 1 dummy bytes
   IO.readRegister(regRead,sizeof(regRead));
   response = IO.readRegister(regRead,sizeof(regRead));
-  uint8_t size = (response >> (8*1)) & 0xff;
-  printf("size: %d\n", size);
 
-  switch (size)
+  ESP_LOGI(TAG, "MISO responded with: %d", response);
+
+  switch (response)
   {
   case 49:
     response = IO.readRegister(regRead,sizeof(regRead));
-    size = (response >> (8*1)) & 0xff;
-    if (size==49)    {
+    
+    if (response==49)    {
       return 11; // 1.1" detected
     } else {
       return 14; // 1.4" detected
@@ -87,10 +89,10 @@ uint8_t PlasticLogic011::getEPDsize() {
     return 31;
     break;
   default:
-    size = 99;
+    response = -1;
     break;
   }
-  return size;
+  return response;
 }
 
 /**

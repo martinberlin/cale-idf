@@ -98,13 +98,13 @@ void EpdSpi2Cs::cmd(const uint8_t cmd)
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
-uint16_t EpdSpi2Cs::readTemp()
+uint8_t EpdSpi2Cs::readTemp()
 {
     printf("Not implemented\n");
     return 1;
 }
 
-uint16_t EpdSpi2Cs::readRegister(const uint8_t *data, int len) {
+uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len) {
     if (len==0) return 0;
     if (debug_enabled) {
         printf("READ: \n");
@@ -127,8 +127,9 @@ uint16_t EpdSpi2Cs::readRegister(const uint8_t *data, int len) {
     gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 
     waitForBusy();
-    
-    return *(uint16_t*) t.rx_data;
+    uint16_t response = *(uint16_t*) t.rx_data;
+    uint8_t readByte = (response >> (8*1)) & 0xff;
+    return readByte;
 }
 
 void EpdSpi2Cs::waitForBusy() {
