@@ -56,11 +56,22 @@ void app_main(void)
    display.clearScreen();
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
    display.update();
-   //return;
+   vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
+   display.clearScreen();
+   display.update();
+
+   // Print temperature
+   display.setFont(&Ubuntu_M24pt8b);
+   display.setCursor(30,40);
+   display.print(display.readTemperatureString(1)); // 1: Appends °C
+   display.update();
+
+   //return; // Stop here
    
-   vTaskDelay(2000 / portTICK_PERIOD_MS); // Wait 2 seconds
+   vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
    display.update();
+
    
    // DEMO for 148 * 72 1.1 inches. Please adapt following variables for different sizes
    uint8_t rectW = 37;
@@ -72,10 +83,6 @@ void app_main(void)
    display.fillRect(rectW*2,1,rectW,display.height(),EPD_LGRAY); // Light gray
    display.drawRect(rectW*3,1,rectW,display.height(),EPD_BLACK); // Last white rectangle
    display.update();
-
-   vTaskDelay(2000 / portTICK_PERIOD_MS);
-   print_plastic_logic("logic", EPD_LGRAY);
-   display.update(EPD_UPD_PART); // Try a partial update leaving background as is
 
    vTaskDelay(2000 / portTICK_PERIOD_MS);
    display.clearScreen();

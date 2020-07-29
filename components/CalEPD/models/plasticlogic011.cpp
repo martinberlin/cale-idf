@@ -41,13 +41,10 @@ void PlasticLogic011::init(bool debug)
     if (size != 11) {
       ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class", size);
     }
-    printf("Epaper temperature sensor: %d °C\n", IO.readTemp());
 
     _wakeUp();
-    
-    // Not implemented, pending:
-    //printf("Attempt to read temperature: %d\n", IO.readTemp());
 
+    //printf("Epaper temperature after wakeUp: %d °C\n", IO.readTemp());
     //Set landscape mode as default
     setEpdRotation(1);
 }
@@ -62,9 +59,10 @@ uint8_t PlasticLogic011::getEPDsize() {
   _waitBusy("programMtp");
   IO.data(setMtpAddress, sizeof(setMtpAddress));
   _waitBusy("setMtpAddress");
-  uint8_t reg = 0x43|EPD_REGREAD;
 
+  uint8_t reg = 0x43|EPD_REGREAD;
   uint8_t regRead[2] = {reg, 0xFF};
+
   // Read 1 dummy bytes
   IO.readRegister(regRead,sizeof(regRead));
   response = IO.readRegister(regRead,sizeof(regRead));
@@ -94,6 +92,23 @@ uint8_t PlasticLogic011::getEPDsize() {
     break;
   }
   return response;
+}
+
+uint8_t PlasticLogic011::readTemperature()
+{
+  return IO.readTemp();
+}
+
+std::string PlasticLogic011::readTemperatureString(uint8_t type) {
+  uint8_t temperature = readTemperature();
+  std::string temp = std::to_string(temperature);
+  switch (type)
+  {
+  case 1:
+    temp = temp + "°C";
+    break;
+  }
+  return temp;
 }
 
 /**

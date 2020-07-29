@@ -39,7 +39,8 @@ class PlasticLogic011 : public Epd
     void accelReadAccel();
     void accelDeepSuspend();
     void csStateToogle(const char* message);
-
+    uint8_t readTemperature();
+    std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
     uint8_t getEPDsize();
 
     // Partial update of rectangle from buffer to screen, does not power off
