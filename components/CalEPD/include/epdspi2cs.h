@@ -28,8 +28,7 @@ class EpdSpi2Cs : IoInterface
     void cs2StateLow();
     void cs2StateHigh();
     
-    // Accelerometer BMA250E uses CS2
-    void cmdAccel(const uint8_t *data, int len);
+    // Accelerometer BMA250E uses CS2. Update being done in plastic/accelerometer branch
 
     void waitForBusy();
 

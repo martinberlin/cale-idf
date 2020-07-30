@@ -13,12 +13,6 @@ PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio):
   PLOGIC011_WIDTH, PLOGIC011_HEIGHT);  
 }
 
-void PlasticLogic011::csStateToogle(const char* message) {
-   IO.csStateHigh();
-   _waitBusy(message);
-   IO.csStateLow();   
-}
-
 //Initialize the display
 void PlasticLogic011::init(bool debug)
 {
@@ -371,35 +365,3 @@ void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
     	case 3: _buffer[x/4 + (y) * _nextline] = (pixels & 0xFC) | (uint8_t)color; break;		
 	}
 }
-
-    void PlasticLogic011::accelBegin() {
-      uint8_t accGsel[2] = {0x0F, ACC_GSEL};
-      uint8_t accBand[2] = {0x10, ACC_BW};
-      IO.cmdAccel(accGsel, sizeof(accGsel));
-      IO.cmdAccel(accBand, sizeof(accBand));
-    }
-    
-    void PlasticLogic011::accelActivateTapOnInt1() {
-      uint8_t accEnSingleTap[2]   = {0x16, 0x20};
-      uint8_t accMapSingleTap[2]  = {0x19, 0x20};
-      uint8_t accAdjTapSens[2]    = {0x2B, 0x01};
-      uint8_t accInterruptMode[2] = {0x21, 0x0F};
-      IO.cmdAccel(accEnSingleTap, sizeof(accEnSingleTap));
-      IO.cmdAccel(accMapSingleTap, sizeof(accMapSingleTap));
-      IO.cmdAccel(accAdjTapSens, sizeof(accAdjTapSens));
-      IO.cmdAccel(accInterruptMode, sizeof(accInterruptMode));
-    }
-
-    void PlasticLogic011::accelClearLatchedInt1() {
-      uint8_t accLatch[2] = {0x21, 0x80};
-      IO.cmdAccel(accLatch, sizeof(accLatch));
-    }
-
-    void PlasticLogic011::accelReadAccel() {
-      // Research how to read from SPI (MISO gpio?)
-    }
-
-    void PlasticLogic011::accelDeepSuspend() {
-      uint8_t accelDeepSuspend[2] = {0x11, 0x20};
-      IO.cmdAccel(accelDeepSuspend, sizeof(accelDeepSuspend));
-    }

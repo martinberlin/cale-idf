@@ -32,13 +32,8 @@ class PlasticLogic011 : public Epd
     void update();
     void update(uint8_t updateMode);
 
-    // Bosch Accelerometer BMA250E
-    void accelBegin();
-    void accelActivateTapOnInt1();
-    void accelClearLatchedInt1();
-    void accelReadAccel();
-    void accelDeepSuspend();
-    void csStateToogle(const char* message);
+    // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
+
     uint8_t readTemperature();
     std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
     uint8_t getEPDsize();
