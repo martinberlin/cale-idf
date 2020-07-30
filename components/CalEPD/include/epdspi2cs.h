@@ -5,8 +5,8 @@
 
 #ifndef epdspi2cs_h
 #define epdspi2cs_h
-
-#define EPD_REGREAD           0x80  // Instruction R/W bit set HIGH for data READ
+// Instruction R/W bit set HIGH for data READ
+#define EPD_REGREAD           0x80
 
 class EpdSpi2Cs : IoInterface
 {
@@ -22,17 +22,9 @@ class EpdSpi2Cs : IoInterface
 
     uint8_t readTemp();
     uint8_t readRegister(const uint8_t *data, int len);
-    void csStateLow();
-    void csStateHigh();
-    
-    void cs2StateLow();
-    void cs2StateHigh();
     
     // Accelerometer BMA250E uses CS2. Update being done in plastic/accelerometer branch
-
     void waitForBusy();
-
-
   private:
     bool debug_enabled = true;
 };

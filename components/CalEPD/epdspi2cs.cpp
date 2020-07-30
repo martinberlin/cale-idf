@@ -87,12 +87,9 @@ void EpdSpi2Cs::cmd(const uint8_t cmd)
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&cmd;               //The data is the cmd itself 
-
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
 uint8_t EpdSpi2Cs::readTemp()
@@ -119,11 +116,11 @@ uint8_t EpdSpi2Cs::readRegister(const uint8_t *data, int len)
     t.length=len*8;
     t.tx_buffer=data;
     t.flags = SPI_TRANS_USE_RXDATA;
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    // There is no need to toogle CS when is defined in spi_config struct: spics_io_num
+    //gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 
     waitForBusy();
     uint16_t response = *(uint16_t*) t.rx_data;
@@ -135,14 +132,14 @@ void EpdSpi2Cs::waitForBusy()
 {
     int64_t time_since_boot = esp_timer_get_time();
 
-  while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
-    vTaskDelay(10/portTICK_RATE_MS); 
+    while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
+        vTaskDelay(10/portTICK_RATE_MS); 
 
-    if (esp_timer_get_time()-time_since_boot>500000)
-    {
-      break;
+        if (esp_timer_get_time()-time_since_boot>500000)
+        {
+        break;
+        }
     }
-  }
 }
 
 /**
@@ -177,7 +174,6 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
         }
         printf("\n");
     }
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
                 
@@ -187,21 +183,6 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
     ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
-}
-
-void EpdSpi2Cs::csStateLow() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
-}
-void EpdSpi2Cs::csStateHigh() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
-}
-
-void EpdSpi2Cs::cs2StateLow() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 0);
-}
-void EpdSpi2Cs::cs2StateHigh() {
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS2, 1);
 }
 
 void EpdSpi2Cs::reset(uint8_t millis=5) {
