@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include <string>
 #include <Adafruit_GFX.h>
-#include <epdspi.h>
+#include <epdspi2cs.h>
 
 #ifndef plasticlogic_h
 #define plasticlogic_h
@@ -58,7 +58,7 @@ class PlasticLogic : public virtual Adafruit_GFX
   public:
     const char* TAG = "Epd PlasticLogic driver";
     
-    PlasticLogic(int16_t w, int16_t h) : Adafruit_GFX(w,h) {
+    PlasticLogic(int16_t w, int16_t h, EpdSpi2Cs& dio) : Adafruit_GFX(w,h), IO(dio) {
         printf("CalEPD component version %s\n",CALEPD_VERSION);
     };
 
@@ -88,6 +88,7 @@ class PlasticLogic : public virtual Adafruit_GFX
     }
 
   private:
+    EpdSpi2Cs& IO;
     // Every display model should implement this private methods
     virtual void _wakeUp() = 0;
     virtual void _waitBusy(const char* message) = 0;
