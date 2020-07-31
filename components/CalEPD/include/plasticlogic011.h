@@ -29,15 +29,6 @@ class PlasticLogic011 : public PlasticLogic
     void update(uint8_t updateMode=EPD_UPD_FULL);
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
 
-    // Internal temperature sensor
-    uint8_t readTemperature();
-    std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
-    uint8_t getEPDsize();
-    // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
-    void  setEpdRotation(uint8_t o);
-    void _powerOn();
-    void _powerOff();
-
   private:
     EpdSpi2Cs& IO;
     uint8_t _buffer[PLOGIC011_BUFFER_SIZE];
@@ -48,13 +39,5 @@ class PlasticLogic011 : public PlasticLogic
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC011_WIDTH/4;
 
-    // Accelerometer
-    int x, y, z, temp;
-
-    void _wakeUp();
-
-    void _sleep();
-    void _waitBusy(const char* message, uint16_t busy_time);
-    void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 };

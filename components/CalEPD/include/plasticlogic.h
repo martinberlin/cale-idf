@@ -62,6 +62,8 @@ class PlasticLogic : public virtual Adafruit_GFX
         printf("CalEPD component version %s\n",CALEPD_VERSION);
     };
 
+    void initIO(bool debug = false);
+
     // Every display model should implement this public methods
     // Override GFX own drawPixel method
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;
@@ -69,11 +71,20 @@ class PlasticLogic : public virtual Adafruit_GFX
     virtual void update(uint8_t updateMode=EPD_UPD_FULL) = 0;
 
     // This are common methods every MODELX will inherit
-    // hook to Adafruit_GFX::write
-    size_t write(uint8_t);
+    size_t write(uint8_t);  // hook to Adafruit_GFX::write
     void print(const std::string& text);
     void println(const std::string& text);
     void newline();
+
+    // Internal temperature sensor
+    uint8_t readTemperature();
+    std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
+    uint8_t getEPDsize();
+    // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
+    void  setEpdRotation(uint8_t o);
+    void _powerOn();
+    void _powerOff();
+    void _sleep();
 
   // Methods that should be accesible by inheriting this abstract class
   protected: 
@@ -86,13 +97,16 @@ class PlasticLogic : public virtual Adafruit_GFX
       a = b;
       b = t;
     }
+    void _wakeUp();
+    void _waitBusy(const char* message, uint16_t busy_time);
+    void _waitBusy(const char* message);
 
   private:
+    // Only detail IO is being instanced two times and may be not convenient:
     EpdSpi2Cs& IO;
     // Every display model should implement this private methods
-    virtual void _wakeUp() = 0;
-    virtual void _waitBusy(const char* message) = 0;
     virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
+    
     uint8_t _unicodeEasy(uint8_t c);
 };
 #endif
