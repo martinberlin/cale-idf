@@ -1,8 +1,7 @@
 #ifndef epd_h
 #define epd_h
 
-#define CALEPD_VERSION "0.9.5"
-
+#include <calepd_version.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

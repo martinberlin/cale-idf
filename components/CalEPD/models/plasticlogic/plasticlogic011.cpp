@@ -7,7 +7,7 @@
 // Constructor
 PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio): 
   Adafruit_GFX(PLOGIC011_WIDTH, PLOGIC011_HEIGHT),
-  Epd(PLOGIC011_WIDTH, PLOGIC011_HEIGHT), IO(dio)
+  PlasticLogic(PLOGIC011_WIDTH, PLOGIC011_HEIGHT), IO(dio)
 {
   printf("PlasticLogic011() %d*%d\n",
   PLOGIC011_WIDTH, PLOGIC011_HEIGHT);  

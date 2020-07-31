@@ -8,7 +8,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include <string>
-#include <epd.h>
+#include <plasticlogic.h>
 #include <Adafruit_GFX.h>
 #include <plasticlogic.h>
 #include <epdspi2cs.h>
@@ -19,7 +19,7 @@
 // TODO: Should be 2 bits per pixel: 
 #define PLOGIC011_BUFFER_SIZE (uint32_t(PLOGIC011_WIDTH) * uint32_t(PLOGIC011_HEIGHT) / 4)
 
-class PlasticLogic011 : public Epd
+class PlasticLogic011 : public PlasticLogic
 {
   public:
     PlasticLogic011(EpdSpi2Cs& IO);
