@@ -24,23 +24,16 @@ class PlasticLogic011 : public PlasticLogic
   public:
     PlasticLogic011(EpdSpi2Cs& IO);
     
-    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-    
-    // EPD tests 
     void init(bool debug = false);
-    void clearScreen(); 
-    void update();
-    void update(uint8_t updateMode);
+    void clearScreen();
+    void update(uint8_t updateMode=EPD_UPD_FULL);
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
 
-    // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
-
+    // Internal temperature sensor
     uint8_t readTemperature();
     std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
     uint8_t getEPDsize();
-
-    // Partial update of rectangle from buffer to screen, does not power off
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    
+    // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
     void  setEpdRotation(uint8_t o);
     void _powerOn();
     void _powerOff();
@@ -55,10 +48,9 @@ class PlasticLogic011 : public PlasticLogic
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC011_WIDTH/4;
 
-    // Accelerometer + temperature (Not on EPD but on the Paperino SPI interface PCB)
+    // Accelerometer
     int x, y, z, temp;
 
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
 
     void _sleep();

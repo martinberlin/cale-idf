@@ -134,11 +134,6 @@ void PlasticLogic011::clearScreen(){
   }
 }
 
-uint16_t PlasticLogic011::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
-  printf("_setPartialRamArea not used in PlasticLogic011");
-  return 0;
-}
-
 void PlasticLogic011::_wakeUp(){
     uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
     IO.data(panelSetting, sizeof(panelSetting));
@@ -171,10 +166,6 @@ void PlasticLogic011::_wakeUp(){
     uint8_t settingBoost[3] = {EPD_BOOSTSETTING, 0x22, 0x17};
     IO.data(settingBoost, sizeof(settingBoost));
     _waitBusy("Boost setting");
-}
-
-void PlasticLogic011::update(){
-  update(EPD_UPD_FULL);
 }
 
 void PlasticLogic011::update(uint8_t updateMode)
@@ -248,11 +239,6 @@ void PlasticLogic011::_powerOn(void) {
   // 70 works
   vTaskDelay(70/portTICK_RATE_MS);       // Only because reading the value below is not working
   //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
-}
-
-void PlasticLogic011::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
-{
-  printf("Not implemented for this model. Use update(EPD_UPD_PART)\n");
 }
 
 void PlasticLogic011::_waitBusy(const char* message, uint16_t busy_time){
