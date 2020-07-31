@@ -9,7 +9,6 @@ set(srcs
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/heltec0151.cpp"
-    "models/plasticlogic/epdspi2cs.cpp"
     "models/plasticlogic/plasticlogic.cpp"
     "models/plasticlogic/plasticlogic011.cpp"
     
@@ -18,6 +17,7 @@ set(srcs
      
     "epd.cpp"
     "epdspi.cpp"
+    "epdspi2cs.cpp"
     "epd4spi.cpp"
     )
 
