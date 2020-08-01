@@ -1,25 +1,25 @@
-#include "plasticlogic021.h"
+#include "plasticlogic031.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
 
 // Constructor
-PlasticLogic021::PlasticLogic021(EpdSpi2Cs& dio): 
-  Adafruit_GFX(PLOGIC021_WIDTH, PLOGIC021_HEIGHT),
-  PlasticLogic(PLOGIC021_WIDTH, PLOGIC021_HEIGHT, dio), IO(dio)
+PlasticLogic031::PlasticLogic031(EpdSpi2Cs& dio): 
+  Adafruit_GFX(PLOGIC031_WIDTH, PLOGIC031_HEIGHT),
+  PlasticLogic(PLOGIC031_WIDTH, PLOGIC031_HEIGHT, dio), IO(dio)
 {
-  printf("PlasticLogic021() %d*%d _buffer:%d\n",
-  PLOGIC021_WIDTH, PLOGIC021_HEIGHT, PLOGIC021_BUFFER_SIZE);
+  printf("PlasticLogic031() %d*%d _buffer:%d\n",
+  PLOGIC031_WIDTH, PLOGIC031_HEIGHT, PLOGIC031_BUFFER_SIZE);
 }
 
 //Initialize the display
-void PlasticLogic021::init(bool debug)
+void PlasticLogic031::init(bool debug)
 {
     debug_enabled = debug;
     if (debug_enabled) {
-      printf("PlasticLogic021::init(%d) bufferSize: %d width: %d height: %d\n", 
-    debug, PLOGIC021_BUFFER_SIZE, PLOGIC021_WIDTH, PLOGIC021_HEIGHT);
+      printf("PlasticLogic031::init(%d) bufferSize: %d width: %d height: %d\n", 
+    debug, PLOGIC031_BUFFER_SIZE, PLOGIC031_WIDTH, PLOGIC031_HEIGHT);
     }
     initIO(debug);
     
@@ -37,16 +37,16 @@ void PlasticLogic021::init(bool debug)
     setEpdRotation(1);
 }
 
-void PlasticLogic021::clearScreen(){
+void PlasticLogic031::clearScreen(){
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = 0xff;
   }
 }
 
-int PlasticLogic021::_getPixel(int x, int y) {
+int PlasticLogic031::_getPixel(int x, int y) {
   // Not sure if width / height is correct since we handle rotation differently
-    if ((x < 0) || (x >= PLOGIC021_HEIGHT) || (y < 0) || (y >= PLOGIC021_WIDTH)) return 5;  
+    if ((x < 0) || (x >= PLOGIC031_HEIGHT) || (y < 0) || (y >= PLOGIC031_WIDTH)) return 5;  
 
 	uint16_t byteIndex = x/4 + (y) * _nextline;
     switch (x%4) {
@@ -62,7 +62,7 @@ int PlasticLogic021::_getPixel(int x, int y) {
 /**
  * Not tested in my implementation
  */
-void PlasticLogic021::scrambleBuffer() {
+void PlasticLogic031::scrambleBuffer() {
     for (int y=0; y<146; y++) {                   // for each gateline...
         for (int x=0; x<240/2; x++) {             // for each sourceline...
             drawPixel(239-x, y, _getPixel(x,y+1));
@@ -71,7 +71,7 @@ void PlasticLogic021::scrambleBuffer() {
     }
 }
 
-void PlasticLogic021::update(uint8_t updateMode)
+void PlasticLogic031::update(uint8_t updateMode)
 {
   // Research how to send more data via SPI this way
   // E (452) spi_master: check_trans_valid(669): txdata transfer > host maximum
@@ -123,29 +123,29 @@ void PlasticLogic021::update(uint8_t updateMode)
   _powerOff();
 }
 
-void PlasticLogic021::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void PlasticLogic031::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
     case 1:
       swap(x, y);
       swap(w, h);
-      x = PLOGIC021_WIDTH - x - w - 1;
+      x = PLOGIC031_WIDTH - x - w - 1;
       break;
     case 2:
-      x = PLOGIC021_WIDTH - x - w - 1;
-      y = PLOGIC021_HEIGHT - y - h - 1;
+      x = PLOGIC031_WIDTH - x - w - 1;
+      y = PLOGIC031_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = PLOGIC021_HEIGHT - y - h - 1;
+      y = PLOGIC031_HEIGHT - y - h - 1;
       break;
   }
 }
 
 
-void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void PlasticLogic031::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -153,15 +153,15 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = PLOGIC021_WIDTH - x - 1;
+      x = PLOGIC031_WIDTH - x - 1;
       break;
     case 2:
-      x = PLOGIC021_WIDTH - x - 1;
-      y = PLOGIC021_HEIGHT - y - 1;
+      x = PLOGIC031_WIDTH - x - 1;
+      y = PLOGIC031_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = PLOGIC021_HEIGHT - y - 1;
+      y = PLOGIC031_HEIGHT - y - 1;
       break;
   }
   
