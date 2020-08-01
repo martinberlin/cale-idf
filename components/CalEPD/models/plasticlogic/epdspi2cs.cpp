@@ -69,12 +69,14 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         }
     }
 
-/* Send a command to the LCD. Uses spi_device_polling_transmit, which waits
- * until the transfer is complete.
- *
+/* Send a command to the Epaper. Uses spi_device_polling_transmit, which waits
+ * until the transfer is complete. 
  * Since command transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
+ * 
+ * Note: Adding spics_io_num to spi_device_interface_config_t toggles Chip Select
+ * GPIO automatically low when the transaction starts and high at the end.
  */
 void EpdSpi2Cs::cmd(const uint8_t cmd)
 {

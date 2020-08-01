@@ -13,6 +13,7 @@ set(srcs
     "models/plasticlogic/epdspi2cs.cpp"
     "models/plasticlogic/plasticlogic.cpp"
     "models/plasticlogic/plasticlogic011.cpp"
+    "models/plasticlogic/plasticlogic021.cpp"
     
  # Pending for more testing:
  #   "models/gdeh0213b73.cpp"

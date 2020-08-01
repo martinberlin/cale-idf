@@ -62,6 +62,8 @@ class PlasticLogic : public virtual Adafruit_GFX
         printf("CalEPD component version %s\n",CALEPD_VERSION);
     };
 
+    uint8_t size = 0;
+
     void initIO(bool debug = false);
 
     // Every display model should implement this public methods
@@ -97,6 +99,7 @@ class PlasticLogic : public virtual Adafruit_GFX
       a = b;
       b = t;
     }
+    void _setSize(uint8_t epdSize);
     void _wakeUp();
     void _waitBusy(const char* message, uint16_t busy_time);
     void _waitBusy(const char* message);

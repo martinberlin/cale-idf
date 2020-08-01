@@ -53,9 +53,10 @@ uint8_t PlasticLogic::getEPDsize() {
     return 31;
     break;
   default:
-    response = -1;
+    response = 0;
     break;
   }
+  _setSize(response);
   return response;
 }
 
@@ -98,16 +99,43 @@ void PlasticLogic::setEpdRotation(uint8_t o) {
    }
 }
 
+void PlasticLogic::_setSize(uint8_t epdSize) {
+  size = epdSize;
+}
+
 void PlasticLogic::_wakeUp(){
-    uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
+  uint8_t panelSetting[2] = {EPD_PANELSETTING, 0x12};
+  uint8_t settingWriteRectangular[5] = {EPD_WRITEPXRECTSET, 0x00, 0x47, 0x00, 0x93};
+  uint8_t settingVcom[5] = {EPD_VCOMCONFIG, 0x0, 0x0, 0x24, 0x07};
+  ESP_LOGI(TAG, "Setting wakeup EPD_WRITEPXRECTSET for size:%d\n",size);
+
+  switch (size) {
+        // case 11: Defaults
+        case 14:
+          // EPD_WRITEPXRECTSET, 0, 0xB3, 0x3C, 0x9F
+        settingWriteRectangular[2] = 0xB3;
+        settingWriteRectangular[3] = 0x3C;
+        settingWriteRectangular[4] = 0x9F;
+          break;
+        case 21:
+          // EPD_WRITEPXRECTSET, 0, 0xEF, 0, 145->91(hexa)
+        settingWriteRectangular[2] = 0xEF;
+        settingWriteRectangular[4] = 0x91;
+          break;
+        case 31:
+          // EPD_WRITEPXRECTSET, 0, 0x97, 0, 0x9b
+        settingWriteRectangular[2] = 0x97;
+        settingWriteRectangular[4] = 0x9b;
+        break;
+  }
+
+    // 1. First 3 set differently depending on size
     IO.data(panelSetting, sizeof(panelSetting));
     _waitBusy("Panel setting");
-
-    uint8_t settingWriteRectangular[5] = {EPD_WRITEPXRECTSET, 0x00, 0x47, 0x00, 0x93};
+    // 2.
     IO.data(settingWriteRectangular, sizeof(settingWriteRectangular));
     _waitBusy("settingWriteRectangular");
-
-    uint8_t settingVcom[5] = {EPD_VCOMCONFIG, 0x0, 0x0, 0x24, 0x07};
+    // 3.
     IO.data(settingVcom, sizeof(settingVcom));
     _waitBusy("VCOM configuration");
 
