@@ -1,17 +1,22 @@
 # CALE ESP-IDF beta
 
-This is the beginning, and a very raw try, to make CALE compile in the Espressif IOT Development Framework. At the moment to explore how difficult it can be to pass an existing ESP32 Arduino framework project to a ESP-IDF based one and to measure how far we can go compiling this with Espressif's own dev framework. 
-It will take some weeks to have a working example. The reason is that we would like to explore alternative libraries like [ESP32 IDF Epaper example](https://github.com/loboris/ESP32_ePaper_example) and to make a version that is compatible with the recently released ESP32-S2
+This is the beginning, and a very raw try, to make CALE compile in the Espressif IOT Development Framework. But it's also the development area of our professional [epaper component CalEPD](https://github.com/martinberlin/CalEPD). 
+
+**Epaper ESP-IDF component with GFX capabilities and multi SPI support**
 
 ## Branches
 
 **master**...    -> stable version
-
-    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
-    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
+    v.0.9.5 [PlasticLogic Added new EPD manufacturer](https://plasticlogic.com)
     v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
+    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
+    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
+    
+    
 
 **refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master
+
+**refactor/XXX** -> Some other branch where I refactor things for a manufacturer. Do not use inestable branches!
 
 tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. Will be kept for historic reasons
 
@@ -24,12 +29,12 @@ Open the /main/CMakeLists.txt file to select what is the C++ file that will be c
 
     idf_component_register(
       # Main CALE 
-      #SRCS "cale.cpp"
+      #SRCS "cale.cpp" -> CALE Firmware for IDF
        SRCS "demo-fonts.cpp"
       #SRCS "demo-epaper.cpp"
       INCLUDE_DIRS ".")
 
-This configuration will just compile the Fonts demo to test your epaper display.
+This configuration will just compile the Fonts demo to test your epaper display. Use cale.cpp if you are looking forward to compile our [CALE Firmware](https://github.com/martinberlin/eink-calendar). This is the ESP-IDF version of that Eink-calendar esp32-arduino Firmware. In CALE.es there is a web-service that can help you making dynamic Screens for your epapers.
 
 ## Fonts support and German characters
 
