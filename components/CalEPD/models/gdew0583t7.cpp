@@ -55,7 +55,7 @@ void Gdew0583T7::init(bool debug)
 
 void Gdew0583T7::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -141,12 +141,12 @@ void Gdew0583T7::update()
     // If this does not work please comment this:
     _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
-    // Let CPU breath
-    if (i%2==0) {
+    if (i%500==0) {
        rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(8));
-     }
-    if (i%500==0 && debug_enabled) printf("%d ",i);
+       vTaskDelay(pdMS_TO_TICKS(10));
+       if (debug_enabled) printf("%d ",i);
+    }
+  
   }
 
   IO.cmd(0x12);
@@ -308,7 +308,7 @@ void Gdew0583T7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GDEW0583T7_WIDTH / 8;
 
-  if (color) {
+  if (!color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     } else {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
