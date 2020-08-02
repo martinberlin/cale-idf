@@ -1,11 +1,11 @@
 /*
- * - - - - - - - - Deepsleep clock example - - - - - - - - - - - - - - - - - - - - 
+ * - - - - - - - - Deepsleep clock example - - - - - v1 is intented for wristwatch - 
  * Please note that the intention of this clock is not to be precise. 
  * It uses the ability of ESP32 to deepsleep combined with the epaper persistance
  * to make a simple clock that consumes as minimum as possible.
  * Just a simple: Sleep every N minutes, increment EPROM variable, refresh epaper.
  * And once a day or every hour, a single HTTP request to sync the hour online. 
- * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -50,19 +50,20 @@ Hel0151 display(io); // -> Needs to match your epaper
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=HiD+d,+M";
 // Represents the sizeof D+d,+M Ex: Sun 19, Jul  (11 chars + \0 null terminator)
-char nvs_day_month[12];
+char nvs_day_month[15];
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
 int sleepMinutes = 4;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = -1;         // IMPORTANT: Leave it on 0 for the first run!
+uint8_t syncHour1 = -1;        // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
 uint8_t syncHour2 = 6;         // Same here, 2nd request to Sync hour 
-
+bool forceSync = false;        // IMPORTANT: Should be always false since on true is for debugging and will sync on every wakeup!
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
 int64_t microsCorrection = -300000; // 0.3 predicted boot time
+
 /*
  CLOCK Appearance - - - - - - - - - -
        
@@ -167,7 +168,7 @@ void updateClock() {
    // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
    switch(display.width()) {
        case 200:
-       display.setCursor(2, 110);
+       display.setCursor(5, 120);
        break;
        
        default:
@@ -486,8 +487,8 @@ void app_main(void)
          // If the hour that comes from nvs matches one of the two syncHour's then syncronize with the www. Only if it was not already done!
          printf("LAST Sync hour: %d nvs_hour: %d nvs_minute: %d\n Last Sync message: %s\n\n", nvs_last_sync_hour, nvs_hour, nvs_minute, nvs_last_sync_message);
 
-
-         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2) && (nvs_hour != nvs_last_sync_hour)) {
+        // Sync on syncHour1 1 or 2 or when forceSync is true.
+         if ((nvs_hour == syncHour1 || nvs_hour == syncHour2 || forceSync)  && (nvs_hour != nvs_last_sync_hour || forceSync)) {
             wifi_init_sta();
             uint8_t waitRounds = 0;
             while (espIsOnline==false && waitRounds<30) {
