@@ -1,6 +1,6 @@
 ![CALE Logo](/config-examples/assets/cale-idf.svg)
 
-This is the official IDF Firmware of our Web-Service [CALE.es](https://cale.es).
+This is the official IDF Firmware of our Web-Service [CALE.es](https://cale.es). Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and I think the Wiki is the perfect place to make updates that are not branch dependant.
 
 It does only 3 things at the moment and is very easy to set up:
 
@@ -12,9 +12,8 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 
 ## News
 
-- Repository mantainer will be in holidays till 13 th July. So in the next two weeks there will be no support.
-- Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and I think the Wiki is the perfect place to make updates that are not branch dependant
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- [Gdew0583t7](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583t7.h) Good Display 5.83 b/w model added after testing. In the next weeks I will focus on getting grayscales and additional colors to work.
 - Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. I'll be working in adding a PCB on top with a different board (TTGO T8) that has battery management and PSRAM. Due to the nature of this display and the big pixel resolution, it has a 160 Kb buffer, so it leaves no DRAM for your program. So it's actually only usable with PSIRAM if you want to have a working ESP32 sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
 
 **CALE-IDF uses this components:**
