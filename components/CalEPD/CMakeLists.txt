@@ -9,13 +9,18 @@ set(srcs
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/heltec0151.cpp"
-    "models/plasticlogic011.cpp"
-    
- # Pending for more testing:
- #   "models/gdeh0213b73.cpp"
+    # Plasticlogic.com Flex epaper models:
+    "models/plasticlogic/epdspi2cs.cpp"
+    "models/plasticlogic/plasticlogic.cpp"
+    "models/plasticlogic/plasticlogic011.cpp"
+    "models/plasticlogic/plasticlogic021.cpp"
+    "models/plasticlogic/plasticlogic031.cpp"
+
+    # Pending for more testing:
+    #   "models/gdeh0213b73.cpp"
+    # Common base classes
     "epd.cpp"
     "epdspi.cpp"
-    "epdspi2cs.cpp"
     "epd4spi.cpp"
     )
 

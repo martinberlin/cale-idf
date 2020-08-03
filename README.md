@@ -9,6 +9,13 @@ It does only 3 things at the moment and is very easy to set up:
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
 And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
+**master**...    -> stable version
+    v.0.9.5 [PlasticLogic Added new EPD manufacturer](https://plasticlogic.com)
+    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
+    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
+    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
+    
+    
 
 ## News
 
@@ -53,12 +60,12 @@ Open the /main/CMakeLists.txt file to select what is the C++ file that will be c
 
     idf_component_register(
       # Main CALE 
-      #SRCS "cale.cpp"
+      #SRCS "cale.cpp" -> CALE Firmware for IDF
        SRCS "demo-fonts.cpp"
       #SRCS "demo-epaper.cpp"
       INCLUDE_DIRS ".")
 
-This configuration will just compile the Fonts demo to test your epaper display.
+This configuration will just compile the Fonts demo to test your epaper display. Use cale.cpp if you are looking forward to compile our [CALE Firmware](https://github.com/martinberlin/eink-calendar). This is the ESP-IDF version of that Eink-calendar esp32-arduino Firmware. In CALE.es there is a web-service that can help you making dynamic Screens for your epapers.
 
 ## Fonts support and German characters
 

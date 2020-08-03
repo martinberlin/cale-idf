@@ -55,7 +55,7 @@ void Gdew0583T7::init(bool debug)
 
 void Gdew0583T7::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_BLACK) ? 0xFF : 0x00;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;
@@ -136,26 +136,23 @@ void Gdew0583T7::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
 
-
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
     // If this does not work please comment this:
-    //_send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
+    _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
-    // And uncomment next two lines:
-    // uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-    // IO.data(data);
-
-    // Let CPU breath. Withouth delay watchdog will jump in your neck
-    if (i%8==0) {
+    if (i%500==0) {
        rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(1));
-     }
-    if (i%500==0 && debug_enabled) printf("%d ",i);
+       vTaskDelay(pdMS_TO_TICKS(10));
+       if (debug_enabled) printf("%d ",i);
+    }
+  
   }
 
   IO.cmd(0x12);
   _waitBusy("update");
+
+  //vTaskDelay(pdMS_TO_TICKS(1000));
   _sleep();
 }
 
@@ -246,8 +243,8 @@ void Gdew0583T7::_waitBusy(const char* message){
   }
   int64_t time_since_boot = esp_timer_get_time();
 
-  while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+  while (true){
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>2000000)
     {
@@ -311,7 +308,7 @@ void Gdew0583T7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GDEW0583T7_WIDTH / 8;
 
-  if (color) {
+  if (!color) {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     } else {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
