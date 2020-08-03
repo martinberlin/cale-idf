@@ -127,21 +127,7 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
-  switch (getRotation())
-  {
-    case 1:
-      swap(x, y);
-      x = PLOGIC021_WIDTH - x - 1;
-      break;
-    case 2:
-      x = PLOGIC021_WIDTH - x - 1;
-      y = PLOGIC021_HEIGHT - y - 1;
-      break;
-    case 3:
-      swap(x, y);
-      y = PLOGIC021_HEIGHT - y - 1;
-      break;
-  }
+  // This is not working the same as other epapers: Research why
   
   uint8_t pixels = _buffer[x/4 + (y) * _nextline];
 	switch (x%4) {					            //2-bit grayscale dot

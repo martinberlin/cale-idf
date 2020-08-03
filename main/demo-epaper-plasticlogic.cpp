@@ -26,6 +26,7 @@ extern "C"
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
 #include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M36pt7b.h>
 
 void print_plastic_logic(std::string text, uint16_t color) {
    display.setFont(&Ubuntu_M16pt8b);
@@ -55,14 +56,17 @@ void app_main(void)
    
    // Initialize display class
    display.init();         // Add init(true) for debug
-   display.setRotation(0); // Sets rotation in Adafruit GFX */
+
+   // TODO: Rotation is not working as it should:
+   
    display.clearScreen();
+   //display.setRotation(1);  // GFX Rotation now working as in others. Use setEpdRotation to turn it upside down
+   display.setEpdRotation(1); // 2: does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
 
    display.fillRect(1,54, display.width(), 4, EPD_BLACK);
    display.update();
    
-   //return; // Stop here
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();
    display.update();
@@ -70,14 +74,18 @@ void app_main(void)
    // Print temperature
    uint16_t delayPartial = 500;
    display.setFont(&Ubuntu_M24pt8b);
+
+   printf("display.width: %d pix\n", display.width());
    switch (display.width())
    {
    case 148:
       display.setCursor(30,40);
       break;
    case 240:
+      display.setFont(&Ubuntu_M36pt7b);
       delayPartial = 1000;
-      display.setCursor(85,100);
+      printf("setting cursor to x:%d y:%d\n", 40,190);
+      display.setCursor(40,190);
       
    default:
       display.setCursor(50,50);
@@ -86,7 +94,8 @@ void app_main(void)
    
    display.print(display.readTemperatureString(1)); // 1: Appends °C
    display.update();
-   
+   //return;
+
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
    display.update();
@@ -151,5 +160,10 @@ void app_main(void)
    display.update(EPD_UPD_MONO);
    vTaskDelay(200 / portTICK_PERIOD_MS);
    print_title("end MONO", EPD_BLACK, 54);
+   display.println("Partial update having");
+   vTaskDelay(200 / portTICK_PERIOD_MS);
+   display.update(EPD_UPD_MONO);
+   display.println("some issues ;)");
+   vTaskDelay(200 / portTICK_PERIOD_MS);
    display.update(EPD_UPD_MONO);
 }
