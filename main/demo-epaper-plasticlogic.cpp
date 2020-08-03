@@ -59,7 +59,7 @@ void app_main(void)
    display.clearScreen();
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
 
-   display.fillRect(1,50, display.width(), 4, EPD_BLACK);
+   display.fillRect(1,54, display.width(), 4, EPD_BLACK);
    display.update();
    
    //return; // Stop here
@@ -68,8 +68,22 @@ void app_main(void)
    display.update();
 
    // Print temperature
+   uint16_t delayPartial = 500;
    display.setFont(&Ubuntu_M24pt8b);
-   display.setCursor(30,40);
+   switch (display.width())
+   {
+   case 148:
+      display.setCursor(30,40);
+      break;
+   case 240:
+      delayPartial = 1000;
+      display.setCursor(85,100);
+      
+   default:
+      display.setCursor(50,50);
+      break;
+   }
+   
    display.print(display.readTemperatureString(1)); // 1: Appends °C
    display.update();
    
@@ -104,24 +118,38 @@ void app_main(void)
 
    display.fillCircle(rectW, display.height()/2, 15, EPD_LGRAY);
    display.update(); // full update
-   vTaskDelay(500 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.fillCircle(rectW*2, display.height()/2, 15, EPD_DGRAY);
    display.update(EPD_UPD_PART);
-   vTaskDelay(500 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.fillCircle(rectW*3, display.height()/2, 15, EPD_BLACK);
    display.update(EPD_UPD_PART);
-   vTaskDelay(500 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.clearScreen();
 
    display.fillCircle(rectW*3, display.height()/2, 15, EPD_DGRAY);
    display.update();
-   vTaskDelay(300 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.fillCircle(rectW*2, display.height()/2, 15, EPD_LGRAY);
    display.update(EPD_UPD_PART);
-   vTaskDelay(300 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.drawCircle(rectW, display.height()/2, 15, EPD_BLACK);
    display.update(EPD_UPD_PART);
-   vTaskDelay(300 / portTICK_PERIOD_MS);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    print_title("end", EPD_DGRAY, 54);
    display.update(EPD_UPD_PART);
+   vTaskDelay(delayPartial / portTICK_PERIOD_MS);
+   display.clearScreen();
+
+   display.fillCircle(rectW*3, display.height()/2, 20, EPD_BLACK);
+   display.update();
+   vTaskDelay(200 / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*2, display.height()/2, 20, EPD_BLACK);
+   display.update(EPD_UPD_MONO);
+   vTaskDelay(200 / portTICK_PERIOD_MS);
+   display.drawCircle(rectW, display.height()/2, 20, EPD_BLACK);
+   display.update(EPD_UPD_MONO);
+   vTaskDelay(200 / portTICK_PERIOD_MS);
+   print_title("end MONO", EPD_BLACK, 54);
+   display.update(EPD_UPD_MONO);
 }
