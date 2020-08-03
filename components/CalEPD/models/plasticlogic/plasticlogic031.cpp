@@ -123,28 +123,6 @@ void PlasticLogic031::update(uint8_t updateMode)
   _powerOff();
 }
 
-void PlasticLogic031::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
-{
-  switch (getRotation())
-  {
-    case 1:
-      swap(x, y);
-      swap(w, h);
-      x = PLOGIC031_WIDTH - x - w - 1;
-      break;
-    case 2:
-      x = PLOGIC031_WIDTH - x - w - 1;
-      y = PLOGIC031_HEIGHT - y - h - 1;
-      break;
-    case 3:
-      swap(x, y);
-      swap(w, h);
-      y = PLOGIC031_HEIGHT - y - h - 1;
-      break;
-  }
-}
-
-
 void PlasticLogic031::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 

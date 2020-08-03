@@ -38,6 +38,4 @@ class PlasticLogic011 : public PlasticLogic
     bool _initial = true;
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC011_WIDTH/4;
-
-    void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 };
