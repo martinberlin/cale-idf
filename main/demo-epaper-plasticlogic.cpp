@@ -10,14 +10,17 @@
 // Should match with your epaper module, size
 // First plasticlogic EPD implementation
 #include <plasticlogic011.h>
+#include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
-PlasticLogic011 display(io);
+//PlasticLogic011 display(io);
+PlasticLogic021 display(io);
 
 extern "C"
 {
    void app_main();
 }
+
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
@@ -51,11 +54,13 @@ void app_main(void)
     */
    
    // Initialize display class
-   display.init();         // Add init(true) for debug
+   display.init(true);         // Add init(true) for debug
    display.setRotation(0); // Sets rotation in Adafruit GFX */
    display.clearScreen();
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
    display.update();
+   
+
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();
    display.update();
@@ -71,10 +76,10 @@ void app_main(void)
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
    display.update();
-
+   
    
    // DEMO for 148 * 72 1.1 inches. Please adapt following variables for different sizes
-   uint8_t rectW = 37;
+   uint8_t rectW = display.width()/4; // For 11 is 37.
 
    // Make some rectangles showing the different shades of gray
    // fillRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color)

@@ -76,7 +76,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   // Research how to send more data via SPI this way
   // E (452) spi_master: check_trans_valid(669): txdata transfer > host maximum
   ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
-  //scrambleBuffer(); // Still does not work as it should
+  scrambleBuffer(); // Still does not work as it should
 
   uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0, 0}; // In original class are -1 but that does not seem a valid SPI byte
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
@@ -164,7 +164,6 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   
-  y=y+3;
   uint8_t pixels = _buffer[x/4 + (y) * _nextline];
 	switch (x%4) {					            //2-bit grayscale dot
     	case 0: _buffer[x/4 + (y) * _nextline] = (pixels & 0x3F) | ((uint8_t)color << 6); break;	
