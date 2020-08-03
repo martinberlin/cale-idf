@@ -82,19 +82,27 @@ std::string PlasticLogic::readTemperatureString(uint8_t type) {
  * Not sure if it will be a public method at the end of integration
  */
 void PlasticLogic::setEpdRotation(uint8_t o) {
-   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07};
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07}; //11
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
+    switch (size) {
+      case 14:
+        settingDataEntryPortrait[1] = 0x02;
+        break;
+      case 21:
+        settingDataEntryPortrait[1] = 0x20;
+        break;
+    }
 
    switch (o)
    {
    case 1:
-     /* Portrait */
-     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
+     /* Landscape mode */
+     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
      break;
    
    case 2:
-     /* Landscape mode */
-     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
+     /* Portrait */
+     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
      break;
    }
 }
@@ -118,6 +126,7 @@ void PlasticLogic::_wakeUp(){
         settingWriteRectangular[4] = 0x9F;
           break;
         case 21:
+        panelSetting[1] = 0x10;
           // EPD_WRITEPXRECTSET, 0, 0xEF, 0, 145->91(hexa)
         settingWriteRectangular[2] = 0xEF;
         settingWriteRectangular[4] = 0x91;

@@ -29,7 +29,7 @@ void PlasticLogic021::init(bool debug)
     if (size != 21) {
       ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class (21)", size);
     }
-
+    _setSize(size);
     _wakeUp();
 
     //printf("Epaper temperature after wakeUp: %d °C\n", IO.readTemp());
@@ -76,7 +76,7 @@ void PlasticLogic021::update(uint8_t updateMode)
   // Research how to send more data via SPI this way
   // E (452) spi_master: check_trans_valid(669): txdata transfer > host maximum
   ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
-  scrambleBuffer();
+  //scrambleBuffer(); // Still does not work as it should
 
   uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0, 0}; // In original class are -1 but that does not seem a valid SPI byte
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
@@ -105,7 +105,6 @@ void PlasticLogic021::update(uint8_t updateMode)
           break;
         case 1:
           displayEngine[1] = 0x07;
-
           IO.data(programMtp, sizeof(programMtp));
           IO.data(displayEngine, sizeof(displayEngine));
           _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
