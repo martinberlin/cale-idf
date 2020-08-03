@@ -82,9 +82,12 @@ std::string PlasticLogic::readTemperatureString(uint8_t type) {
  * Not sure if it will be a public method at the end of integration
  */
 void PlasticLogic::setEpdRotation(uint8_t o) {
-   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07}; //11
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02}; // All of them
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
     switch (size) {
+      case 11:
+        settingDataEntryLandscape[1] = 0x07;
+        break;
       case 14:
         settingDataEntryLandscape[1] = 0x02;
         break;
