@@ -86,10 +86,7 @@ void PlasticLogic::setEpdRotation(uint8_t o) {
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
     switch (size) {
       case 14:
-        settingDataEntryPortrait[1] = 0x02;
-        break;
-      case 21:
-        settingDataEntryPortrait[1] = 0x20;
+        settingDataEntryLandscape[1] = 0x02;
         break;
     }
 
@@ -170,8 +167,17 @@ void PlasticLogic::_wakeUp(){
 }
 
 void PlasticLogic::_powerOn(void) {
-
   uint8_t setResolution[5]   = {EPD_SETRESOLUTION, 0x00, 0xEF, 0x00, 0x93};
+
+  switch (size)
+  {
+  case 14:
+  case 21:
+  case 31:
+    setResolution[4]   = 0x9F;
+    break;
+  }
+  
   uint8_t setTcomTiming[3]   = {EPD_TCOMTIMING   , 0x67, 0x65};
   uint8_t setPowerSeq[4]     = {EPD_POWERSEQUENCE, 0x00, 0x00, 0x00};
   uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD1};
@@ -187,9 +193,12 @@ void PlasticLogic::_powerOn(void) {
 
   IO.data(setPowerControl, sizeof(setPowerControl));
   _waitBusy("setPowerControl");
-  // 70 works
-  vTaskDelay(70/portTICK_RATE_MS);       // Only because reading the value below is not working
-  //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
+  // Resolve the wait for pump read
+  //vTaskDelay(140/portTICK_RATE_MS);       // Only because reading the value below is not working
+  uint8_t reg = 0x15|EPD_REGREAD;
+  uint8_t regRead[2] = {reg, 0xFF};
+
+  while (IO.readRegister(regRead,sizeof(regRead)) == 0) {}   // Wait until Internal Pump is ready 
 }
 
 void PlasticLogic::_waitBusy(const char* message, uint16_t busy_time){

@@ -33,7 +33,7 @@ void PlasticLogic021::init(bool debug)
     _wakeUp();
 
     //printf("Epaper temperature after wakeUp: %d °C\n", IO.readTemp());
-    //Set landscape mode as default
+    //Set landscape mode: 1 as default
     setEpdRotation(1);
 }
 
@@ -46,7 +46,7 @@ void PlasticLogic021::clearScreen(){
 
 int PlasticLogic021::_getPixel(int x, int y) {
   // Not sure if width / height is correct since we handle rotation differently
-    if ((x < 0) || (x >= PLOGIC021_HEIGHT) || (y < 0) || (y >= PLOGIC021_WIDTH)) return 5;  
+    if ((x < 0) || (x >= PLOGIC021_WIDTH) || (y < 0) || (y >= PLOGIC021_HEIGHT)) return 5;  
 
 	uint16_t byteIndex = x/4 + (y) * _nextline;
     switch (x%4) {
@@ -63,10 +63,10 @@ int PlasticLogic021::_getPixel(int x, int y) {
  * Not tested in my implementation
  */
 void PlasticLogic021::scrambleBuffer() {
-    for (int y=0; y<146; y++) {                   // for each gateline...
-        for (int x=0; x<240/2; x++) {             // for each sourceline...
-            drawPixel(239-x, y, _getPixel(x,y+1));
-            drawPixel(x, y, _getPixel(x+120,y+1));
+    for (int y=0; y<PLOGIC021_HEIGHT; y++) {                   // for each gateline...
+        for (int x=0; x<PLOGIC021_WIDTH/2; x++) {             // for each sourceline...
+            drawPixel(PLOGIC021_WIDTH-1-x, y, _getPixel(x,y+1));
+            drawPixel(x, y, _getPixel(x+(PLOGIC021_WIDTH/2),y+1));
         }
     }
 }

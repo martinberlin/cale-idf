@@ -54,13 +54,15 @@ void app_main(void)
     */
    
    // Initialize display class
-   display.init(true);         // Add init(true) for debug
+   display.init();         // Add init(true) for debug
    display.setRotation(0); // Sets rotation in Adafruit GFX */
    display.clearScreen();
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
+
+   display.fillRect(1,50, display.width(), 4, EPD_BLACK);
    display.update();
    
-
+   //return; // Stop here
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();
    display.update();
@@ -70,8 +72,6 @@ void app_main(void)
    display.setCursor(30,40);
    display.print(display.readTemperatureString(1)); // 1: Appends °C
    display.update();
-
-   //return; // Stop here
    
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
