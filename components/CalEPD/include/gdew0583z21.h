@@ -28,10 +28,8 @@ class Gdew0583z21 : public Epd
    
     Gdew0583z21(EpdSpi& IO);
     
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
     void init(bool debug);
-    
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
+    void drawPixel(int16_t x, int16_t y, uint16_t color);
     void fillScreen(uint16_t color);
     void update();
     
@@ -47,7 +45,7 @@ class Gdew0583z21 : public Epd
 
     void _send8pixel(uint8_t data,uint8_t red);
     void PIC_display(const unsigned char* picData);
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);

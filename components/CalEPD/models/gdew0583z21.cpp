@@ -143,30 +143,6 @@ void Gdew0583z21::update()
   _sleep();
 }
 
-uint16_t Gdew0583z21::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
-{
-  x &= 0xFFF8;            // byte boundary
-  xe = (xe - 1) | 0x0007; // byte boundary - 1
-  IO.cmd(0x90);           // partial window
-  IO.data(x / 256);
-  IO.data(x % 256);
-  IO.data(xe / 256);
-  IO.data(xe % 256);
-  IO.data(y / 256);
-  IO.data(y % 256);
-  IO.data(ye / 256);
-  IO.data(ye % 256);
-  IO.data(0x00);
-  return (7 + xe - x) / 8; // number of bytes to transfer per line
-
-}
-
-void Gdew0583z21::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
-{
-  printf("updateWindow: Not implemented\n");  
-  vTaskDelay(GDEW0583Z21_PU_DELAY / portTICK_PERIOD_MS);
-}
-
 void Gdew0583z21::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
@@ -246,21 +222,20 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
       _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
   }
-
 }
 
 void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
-{
-  //0x03 WHITE
-  //0x04 RED
+{ 
   for (uint8_t j = 0; j < 8; j++)
   {
+    //0x04 RED
     uint8_t tr = red & 0x80 ? 0x04 : 0x03; 
     tr <<= 4;
     red <<= 1;
-    tr |= red & 0x80 ? 0x04 : 0x03;  // 0x04 is red
-    data <<= 1;
-                            // 
+    tr |= red & 0x80 ? 0x04 : 0x03;
+    red <<= 1;
+    
+    //0x03 WHITE 0x00 BLACK
     uint8_t t = data & 0x80 ? 0x00: tr;
     t <<= 4;
     data <<= 1;
@@ -268,13 +243,14 @@ void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
     t |= data & 0x80 ? 0x00 : tr;
     data <<= 1;
 
-    IO.dataBuffer(t); // only black
+    IO.dataBuffer(t);
   } 
   
 }
 
 /**
  * Example from Good display
+ * Does not work / is just an internal private reference
  */
 void Gdew0583z21::PIC_display(const unsigned char* picData)
 {
