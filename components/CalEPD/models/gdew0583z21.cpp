@@ -121,7 +121,7 @@ void Gdew0583z21::update()
 
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
-    _send8pixel(_buffer[i]);
+    _send8pixel(_buffer[i], _red_buffer[i]);
     
     if (i%2000==0) {
        rtc_wdt_feed();
@@ -249,18 +249,28 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 }
 
-void Gdew0583z21::_send8pixel(uint8_t data)
+void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
 {
+  //0x03 WHITE
+  //0x04 RED
   for (uint8_t j = 0; j < 8; j++)
   {
-    uint8_t t = data & 0x80 ? 0x00 : 0x03;
+    uint8_t tr = red & 0x80 ? 0x04 : 0x03; 
+    tr <<= 4;
+    red <<= 1;
+    tr |= red & 0x80 ? 0x04 : 0x03;  // 0x04 is red
+    data <<= 1;
+                            // 
+    uint8_t t = data & 0x80 ? 0x00: tr;
     t <<= 4;
     data <<= 1;
     j++;
-    t |= data & 0x80 ? 0x00 : 0x03;
+    t |= data & 0x80 ? 0x00 : tr;
     data <<= 1;
-    IO.dataBuffer(t);
-  }
+
+    IO.dataBuffer(t); // only black
+  } 
+  
 }
 
 /**

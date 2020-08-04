@@ -22,7 +22,7 @@ EpdSpi io;
 Gdew0583z21 display(io);
 //Gdew075T7 display(io);
 //Gdew042t2 display(io);
-//Gdew0583z21 display(io);
+//Gdew0583T7 display(io);
 //Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
@@ -139,10 +139,12 @@ void app_main(void)
 
    display.setRotation(2);
    
-   display.fillCircle(200,200,100,EPD_BLACK);
+   
    
    // Back, Foreground
    demo(EPD_WHITE, EPD_BLACK);
+   display.fillCircle(200,200,100,EPD_RED);
+   
    display.update();
 
 /* 

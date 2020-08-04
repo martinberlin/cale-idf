@@ -45,7 +45,7 @@ class Gdew0583z21 : public Epd
     bool _using_partial_mode = false;
     bool _initial = true;
 
-    void _send8pixel(uint8_t data);
+    void _send8pixel(uint8_t data,uint8_t red);
     void PIC_display(const unsigned char* picData);
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
