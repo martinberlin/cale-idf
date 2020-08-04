@@ -1,4 +1,4 @@
-// 5.83 600*448 b/w/R Controller: GD7965 (3 colors)
+// 5.83 600*448 b/w/R Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +45,8 @@ class Gdew0583z21 : public Epd
     bool _using_partial_mode = false;
     bool _initial = true;
 
+    void _send8pixel(uint8_t data);
+    void PIC_display(const unsigned char* picData);
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();
@@ -52,7 +54,7 @@ class Gdew0583z21 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     // Command & data structs
    
-    static const epd_init_4 epd_wakeup_power;
-    static const epd_init_1 epd_panel_setting;
+    static const epd_init_2 epd_wakeup_power;
+    static const epd_init_2 epd_panel_setting;
     static const epd_init_4 epd_resolution;
 };

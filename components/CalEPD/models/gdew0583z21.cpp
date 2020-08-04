@@ -1,3 +1,4 @@
+//Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
 #include "gdew0583z21.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,17 +6,16 @@
 #include "freertos/task.h"
 
 // CMD, DATA, Databytes * Optional we are going to use sizeof(data)
-DRAM_ATTR const epd_init_4 Gdew0583z21::epd_wakeup_power={
+DRAM_ATTR const epd_init_2 Gdew0583z21::epd_wakeup_power={
 0x01,{
-  0x07,
-  0x07, // VGH=20V,VGL=-20V
-  0x3F, // VDH=+15V
-  0x3F, // VDH=-15V
-  },4
+  0x37,
+  0x00},2
 };
 
-DRAM_ATTR const epd_init_1 Gdew0583z21::epd_panel_setting={
-0x00,{0x0F},1
+DRAM_ATTR const epd_init_2 Gdew0583z21::epd_panel_setting={
+0x00,{
+  0xCF,
+  0x08},1
 };
 
 DRAM_ATTR const epd_init_4 Gdew0583z21::epd_resolution={
@@ -68,40 +68,46 @@ void Gdew0583z21::_wakeUp(){
   for (int i=0;i<sizeof(epd_wakeup_power.data);++i) {
     IO.data(epd_wakeup_power.data[i]);
   }
-
-  IO.cmd(0x82);  // VCOM Voltage
-  IO.data(0x28); // All temperature range
-  
-  IO.cmd(0xe5);  // Flash mode
-  IO.data(0x03);
-  // Power it on
-  IO.cmd(0x04);
-  _waitBusy("Power on");
-
-
   printf("Panel setting\n");
   IO.cmd(epd_panel_setting.cmd);
   IO.data(epd_panel_setting.data[0]); //0x0f KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
 
-  // Resolution setting
+  printf("PLL\n");
+  IO.cmd(0x30);
+  IO.data(0x3a);
+
+  printf("VCOM\n");
+  IO.cmd(0x82);
+  IO.data(0x28);
+  
+  printf("boost\n");
+  IO.cmd(0x06);
+	IO.data(0xc7);	   	
+	IO.data(0xcc);
+	IO.data(0x15);
+
+	IO.cmd(0X50);			//VCOM AND DATA INTERVAL SETTING
+	IO.data(0x77);
+
+	IO.cmd(0X60);			//TCON SETTING
+	IO.data(0x22);
+
+	IO.cmd(0X65);			//FLASH CONTROL
+	IO.data(0x00);
+  
   printf("Resolution setting\n");
   IO.cmd(epd_resolution.cmd);
   for (int i=0;i<sizeof(epd_resolution.data);++i) {
     IO.data(epd_resolution.data[i]);
   }
-  IO.cmd(0x15);
-  IO.data(0x00);
-  // Vcom and data interval settings
-  IO.cmd(0x50);
-  IO.data(0x11);
-  IO.data(0x07);
-  // TCON (???)
-  IO.cmd(0x60);
-  IO.data(0x22);
-  
-  // Withouth flash mode does not work (But is not on gxEPD)
-  /* IO.cmd(0xe5);  // Flash mode
-  IO.data(0x03);  */
+  printf("Flash mode\n");
+  IO.cmd(0xe5);
+	IO.data(0x03);
+
+  // Power it on
+  IO.cmd(0x04);
+  _waitBusy("Power on");
+
 }
 
 void Gdew0583z21::update()
@@ -111,11 +117,11 @@ void Gdew0583z21::update()
   _wakeUp();
   // IN GD example says bufferSize is 38880 (?)
   IO.cmd(0x10);
-  printf("Sending a %d bytes black buffer via SPI\n",sizeof(_buffer));
+  printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
 
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
-    IO.dataBuffer((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
+    _send8pixel(_buffer[i]);
     
     if (i%2000==0) {
        rtc_wdt_feed();
@@ -123,17 +129,6 @@ void Gdew0583z21::update()
        if (debug_enabled) printf("%d ",i);
     }
   
-  }
-  printf("RED buffer\n");
-  IO.cmd(0x13); // Red buffer
-    for (uint32_t i = 0; i < sizeof(_red_buffer); i++)
-  {
-    IO.dataBuffer((i < sizeof(_red_buffer)) ? ~_red_buffer[i] : 0x00);
-    if (i%2000==0) {
-       rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(10));
-       if (debug_enabled) printf("%d ",i);
-    }
   }
   IO.cmd(0x12);
   
@@ -252,4 +247,58 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
     }
   }
 
+}
+
+void Gdew0583z21::_send8pixel(uint8_t data)
+{
+  for (uint8_t j = 0; j < 8; j++)
+  {
+    uint8_t t = data & 0x80 ? 0x00 : 0x03;
+    t <<= 4;
+    data <<= 1;
+    j++;
+    t |= data & 0x80 ? 0x00 : 0x03;
+    data <<= 1;
+    IO.dataBuffer(t);
+  }
+}
+
+/**
+ * Example from Good display
+ */
+void Gdew0583z21::PIC_display(const unsigned char* picData)
+{
+  uint32_t i,j;
+	uint8_t temp1,temp2,temp3;
+		//EPD_W21_WriteCMD(0x10);	     //start to transport picture
+
+		for(i=0;i<67200;i++)	     //2bit for a pixels(old is 4bit for a pixels)   
+		{   
+			temp1 = *picData;
+			picData++;
+			for(j=0;j<2;j++)         //2bit to 4bit
+			{
+				temp2 = temp1&0xc0 ;   //Analysis the first 2bit
+				if(temp2 == 0xc0)
+					temp3 = 0x00; 			 //black(2bit to 4bit)
+				else if(temp2 == 0x00)
+					temp3 = 0x03;        //white(2bit to 4bit)
+				else
+					temp3 = 0x04;        //red(2bit to 4bit)
+					
+				temp3 <<=4;            //move to the Hight 4bit
+				temp1 <<=2;            //move 2bit	
+				temp2 = temp1&0xc0 ;   //Analysis the second 2bit
+				if(temp2 == 0xc0)
+					temp3 |= 0x00;       //black(2bit to 4bit),Data consolidation
+				else if(temp2 == 0x00)
+					temp3 |= 0x03;       //white(2bit to 4bit),Data consolidation
+				else
+					temp3 |= 0x04;       //red(2bit to 4bit),Data consolidation
+				
+				temp1 <<=2;            //move 2bit£¬turn the next 2bit
+				
+				//EPD_W21_WriteDATA(temp3); //write a byte,Contains two 4bit pixels	
+			}
+		}
 }
