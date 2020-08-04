@@ -28,7 +28,7 @@ class PlasticLogic021 : public PlasticLogic
     void clearScreen();
     void update(uint8_t updateMode=EPD_UPD_FULL);
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-
+    void setEpdRotation(uint8_t o); // Override
   private:
     EpdSpi2Cs& IO;
     uint8_t _buffer[PLOGIC021_BUFFER_SIZE];

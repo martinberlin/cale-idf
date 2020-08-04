@@ -137,3 +137,30 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
     	case 3: _buffer[x/4 + (y) * _nextline] = (pixels & 0xFC) | (uint8_t)color; break;		
 	}
 }
+
+void PlasticLogic021::setEpdRotation(uint8_t o) {
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02}; // All of them
+   uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
+    switch (size) {
+      case 11:
+        settingDataEntryLandscape[1] = 0x07;
+        break;
+      case 14:
+        settingDataEntryLandscape[1] = 0x02;
+        break;
+    }
+
+   switch (o)
+   {
+   case 1:
+     /* Landscape mode */
+     _nextline = height()/4;
+     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
+     break;
+   case 2:
+     /* Portrait */
+     _nextline = width()/4;
+     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
+     break;
+   }
+}
