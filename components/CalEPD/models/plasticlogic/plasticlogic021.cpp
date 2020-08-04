@@ -139,8 +139,8 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 void PlasticLogic021::setEpdRotation(uint8_t o) {
-   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02}; // All of them
-   uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02};  // All of them
+   uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20}; // 2.1" as default
     switch (size) {
       case 11:
         settingDataEntryLandscape[1] = 0x07;
@@ -154,12 +154,10 @@ void PlasticLogic021::setEpdRotation(uint8_t o) {
    {
    case 1:
      /* Landscape mode */
-     _nextline = height()/4;
      IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
      break;
    case 2:
      /* Portrait */
-     _nextline = width()/4;
      IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
      break;
    }
