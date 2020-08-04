@@ -5,25 +5,17 @@
 #include "freertos/task.h"
 
 // CMD, DATA, Databytes * Optional we are going to use sizeof(data)
-DRAM_ATTR const epd_init_2 Gdew0583z21::epd_wakeup_power={
-0x01,{0x37,0x00},2
+DRAM_ATTR const epd_init_4 Gdew0583z21::epd_wakeup_power={
+0x01,{
+  0x07,
+  0x07, // VGH=20V,VGL=-20V
+  0x3F, // VDH=+15V
+  0x3F, // VDH=-15V
+  },4
 };
 
-DRAM_ATTR const epd_init_2 Gdew0583z21::epd_panel_setting={
-0x00,{0xCF,0x08},2
-};
-
-DRAM_ATTR const epd_init_3 Gdew0583z21::epd_boost={
-0x06,{0xC7,0xCC,0x28},3
-};
-
-// 0x3a -> 15s refresh  |  0x3c -> 30s refresh
-DRAM_ATTR const epd_init_1 Gdew0583z21::epd_pll={
-0x30,{0x3a},1
-};
-
-DRAM_ATTR const epd_init_1 Gdew0583z21::epd_temperature={
-0x41,{0x00},1
+DRAM_ATTR const epd_init_1 Gdew0583z21::epd_panel_setting={
+0x00,{0x0F},1
 };
 
 DRAM_ATTR const epd_init_4 Gdew0583z21::epd_resolution={
@@ -55,77 +47,61 @@ void Gdew0583z21::init(bool debug)
 
 void Gdew0583z21::fillScreen(uint16_t color)
 {
-  int8_t data = (color == EPD_BLACK) ? 0xFF : 0x00;
+  uint8_t black = 0x00;
+  uint8_t red = 0x00;
+  if (color == EPD_WHITE);
+  else if (color == EPD_BLACK) black = 0xFF;
+  else if (color == EPD_RED) red = 0xFF;
+  else if ((color & 0xF100) > (0xF100 / 2))  red = 0xFF;
+  else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) black = 0xFF;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
-    _buffer[x] = data;
+    _buffer[x] = black;
+    _red_buffer[x] = red;
   }
 }
 
 void Gdew0583z21::_wakeUp(){
   IO.reset(10);
-//IMPORTANT: Some EPD controllers like to receive data byte per byte
-//So this won't work, still needs to be tried out for this epaper:
-//IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
-  printf("_wakeUp Power on\n");
   IO.cmd(epd_wakeup_power.cmd);
+ 
   for (int i=0;i<sizeof(epd_wakeup_power.data);++i) {
-    //printf(">%d\n",i);
     IO.data(epd_wakeup_power.data[i]);
   }
- 
-  printf("Panel setting\n");
-  IO.cmd(epd_panel_setting.cmd);
-  for (int i=0;i<sizeof(epd_panel_setting.data);++i) {
-    IO.data(epd_panel_setting.data[i]);
-  }
 
-  IO.cmd(epd_boost.cmd);
-  for (int i=0;i<sizeof(epd_boost.data);++i) {
-    IO.data(epd_boost.data[i]);
-  }
-
-  IO.cmd(epd_pll.cmd);
-  IO.data(epd_pll.data[0]);
-
-  IO.cmd(epd_temperature.cmd);
-  IO.data(epd_temperature.data[0]);
-  // Vcom and data interval settings
-  IO.cmd(0x50);
-  IO.data(0x77);
-  IO.cmd(0x60); // TCON (???)
-  IO.data(0x22);
-
-  // Resolution setting
-  IO.cmd(epd_resolution.cmd);
-  for (int i=0;i<sizeof(epd_resolution.data);++i) {
-    IO.data(epd_resolution.data[i]);
-  }
-
-  // Vcom voltage setting
   IO.cmd(0x82);  // VCOM Voltage
   IO.data(0x28); // All temperature range
   
   IO.cmd(0xe5);  // Flash mode
   IO.data(0x03);
-
   // Power it on
   IO.cmd(0x04);
   _waitBusy("Power on");
-}
 
-void Gdew0583z21::_send8pixel(uint8_t data)
-{
-  for (uint8_t j = 0; j < 8; j++)
-  {
-    uint8_t t = data & 0x80 ? 0x00 : 0x03;
-    t <<= 4;
-    data <<= 1;
-    j++;
-    t |= data & 0x80 ? 0x00 : 0x03;
-    data <<= 1;
-    IO.data(t);
+
+  printf("Panel setting\n");
+  IO.cmd(epd_panel_setting.cmd);
+  IO.data(epd_panel_setting.data[0]); //0x0f KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
+
+  // Resolution setting
+  printf("Resolution setting\n");
+  IO.cmd(epd_resolution.cmd);
+  for (int i=0;i<sizeof(epd_resolution.data);++i) {
+    IO.data(epd_resolution.data[i]);
   }
+  IO.cmd(0x15);
+  IO.data(0x00);
+  // Vcom and data interval settings
+  IO.cmd(0x50);
+  IO.data(0x11);
+  IO.data(0x07);
+  // TCON (???)
+  IO.cmd(0x60);
+  IO.data(0x22);
+  
+  // Withouth flash mode does not work (But is not on gxEPD)
+  /* IO.cmd(0xe5);  // Flash mode
+  IO.data(0x03);  */
 }
 
 void Gdew0583z21::update()
@@ -133,24 +109,35 @@ void Gdew0583z21::update()
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
-
+  // IN GD example says bufferSize is 38880 (?)
   IO.cmd(0x10);
-  printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
+  printf("Sending a %d bytes black buffer via SPI\n",sizeof(_buffer));
 
   for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
-    // If this does not work please comment this:
-    _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
-
-    if (i%500==0) {
+    IO.dataBuffer((i < sizeof(_buffer)) ? ~_buffer[i] : 0xFF);
+    
+    if (i%2000==0) {
        rtc_wdt_feed();
        vTaskDelay(pdMS_TO_TICKS(10));
        if (debug_enabled) printf("%d ",i);
     }
   
   }
-  uint64_t endTime = esp_timer_get_time();
+  printf("RED buffer\n");
+  IO.cmd(0x13); // Red buffer
+    for (uint32_t i = 0; i < sizeof(_red_buffer); i++)
+  {
+    IO.dataBuffer((i < sizeof(_red_buffer)) ? ~_red_buffer[i] : 0x00);
+    if (i%2000==0) {
+       rtc_wdt_feed();
+       vTaskDelay(pdMS_TO_TICKS(10));
+       if (debug_enabled) printf("%d ",i);
+    }
+  }
   IO.cmd(0x12);
+  
+  uint64_t endTime = esp_timer_get_time();
   _waitBusy("update");
   uint64_t updateTime = esp_timer_get_time();
   
@@ -179,66 +166,9 @@ uint16_t Gdew0583z21::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, ui
 
 }
 
-void Gdew0583z21::eraseDisplay(bool using_partial_update) {
-  if (using_partial_update)
-  {
-    if (!_using_partial_mode) _wakeUp();
-    _using_partial_mode = true;   // remember
-    IO.cmd(0x91);                 // partial in
-    _setPartialRamArea(0, 0, GDEW0583Z21_WIDTH - 1, GDEW0583Z21_HEIGHT - 1);
-    IO.cmd(0x10);
-    for (uint32_t i = 0; i < GDEW0583Z21_BUFFER_SIZE; i++)
-    {
-      _send8pixel(0x00);
-    }
-    IO.cmd(0x12);                 // display refresh
-    _waitBusy("eraseDisplay");
-    IO.cmd(0x92);                 // partial out
-  } else {
-    // Not using Partial update
-    _using_partial_mode = false; // remember
-    _wakeUp();
-    IO.cmd(0x10);
-    for (uint32_t i = 0; i < GDEW0583Z21_BUFFER_SIZE; i++)
-    {
-      _send8pixel(0x00);
-    }
-    IO.cmd(0x12);      //display refresh
-    _waitBusy("eraseDisplay");
-    _sleep();
-  }
-}
-
 void Gdew0583z21::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("updateWindow: Still in test mode\n");
-  if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GDEW0583Z21_WIDTH) return;
-  if (y >= GDEW0583Z21_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GDEW0583Z21_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEW0583Z21_HEIGHT, y + h) - 1;
-  // x &= 0xFFF8; // byte boundary, not needed here
-  uint16_t xs_bx = x / 8;
-  uint16_t xe_bx = (xe + 7) / 8;
-  if (!_using_partial_mode) eraseDisplay(true); // clean surrounding
-  _using_partial_mode = true;
-   
-  IO.cmd(0x91); // partial in
-  _setPartialRamArea(x, y, xe, ye);
-  IO.cmd(0x10);
-
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
-    {
-      uint16_t idx = y1 * (GDEW0583Z21_WIDTH / 8) + x1;
-      _send8pixel((idx < sizeof(_buffer)) ? _buffer[idx] : 0x00);
-    }
-  }
-  IO.cmd(0x12);     // display refresh
-  _waitBusy("updateWindow partial refresh");
-  IO.cmd(0x92);     // partial out
-  
+  printf("updateWindow: Not implemented\n");  
   vTaskDelay(GDEW0583Z21_PU_DELAY / portTICK_PERIOD_MS);
 }
 
@@ -260,12 +190,6 @@ void Gdew0583z21::_waitBusy(const char* message){
 }
 
 void Gdew0583z21::_sleep(){
-  IO.cmd(0X65); // Flash control (???)
-  IO.data(0x01);
-  IO.cmd(0xB9);
-  IO.cmd(0X65); // Flash control
-  IO.data(0x00);
-
   // Flash sleep  
   IO.cmd(0x02);
   _waitBusy("Power Off");
@@ -313,9 +237,19 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GDEW0583Z21_WIDTH / 8;
 
-  if (!color) {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    } else {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  // This formulas are from gxEPD that apparently got the color right:
+  _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  if (color == EPD_WHITE) return;
+  else if (color == EPD_BLACK) _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
+  else if (color == EPD_RED) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
+  else
+  {
+    if ((color & 0xF100) > (0xF100 / 2)) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
+    else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
+    {
+      _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
+  }
+
 }

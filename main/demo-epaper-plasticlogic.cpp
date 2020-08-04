@@ -14,7 +14,7 @@
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 //PlasticLogic011 display(io);
-PlasticLogic011 display(io);
+PlasticLogic021 display(io);
 
 extern "C"
 {

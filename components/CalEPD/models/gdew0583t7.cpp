@@ -124,7 +124,7 @@ void Gdew0583T7::_send8pixel(uint8_t data)
     j++;
     t |= data & 0x80 ? 0x00 : 0x03;
     data <<= 1;
-    IO.data(t);
+    IO.dataBuffer(t);
   }
 }
 
@@ -142,7 +142,7 @@ void Gdew0583T7::update()
     // If this does not work please comment this:
     _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
-    if (i%500==0) {
+    if (i%2000==0) {
        rtc_wdt_feed();
        vTaskDelay(pdMS_TO_TICKS(10));
        if (debug_enabled) printf("%d ",i);

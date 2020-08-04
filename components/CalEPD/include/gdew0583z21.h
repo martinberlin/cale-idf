@@ -30,7 +30,7 @@ class Gdew0583z21 : public Epd
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void init(bool debug);
-    void eraseDisplay(bool using_partial_update);
+    
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void update();
@@ -50,21 +50,9 @@ class Gdew0583z21 : public Epd
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-    void _send8pixel(uint8_t data);
     // Command & data structs
-    // LUT tables for this display are filled with zeroes at the end with writeLuts()
-    static const epd_init_42 lut_20_LUTC_partial;
-    static const epd_init_42 lut_21_LUTWW_partial;
-    static const epd_init_42 lut_22_LUTKW_partial;
-    static const epd_init_42 lut_23_LUTWK_partial;
-    static const epd_init_42 lut_24_LUTKK_partial;
-    static const epd_init_42 lut_25_LUTBD_partial;
-    
-    static const epd_init_2 epd_wakeup_power;
-    static const epd_init_2 epd_panel_setting;
-    static const epd_init_3 epd_boost;
-    static const epd_init_1 epd_panel_setting_partial;
-    static const epd_init_1 epd_pll;
-    static const epd_init_1 epd_temperature;
+   
+    static const epd_init_4 epd_wakeup_power;
+    static const epd_init_1 epd_panel_setting;
     static const epd_init_4 epd_resolution;
 };

@@ -99,9 +99,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    /* if (debug_enabled) {
+    if (debug_enabled) {
       printf("D %x\n",data);
-    } */
+    }
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
@@ -109,6 +109,18 @@ void EpdSpi::data(uint8_t data)
     t.tx_buffer=&data;              //The data is the cmd itself
     ret=spi_device_polling_transmit(spi, &t);
     
+    assert(ret==ESP_OK);
+}
+
+
+void EpdSpi::dataBuffer(uint8_t data)
+{
+    esp_err_t ret;
+    spi_transaction_t t;
+    memset(&t, 0, sizeof(t));       //Zero out the transaction
+    t.length=8;                     //Command is 8 bits
+    t.tx_buffer=&data;              //The data is the cmd itself
+    ret=spi_device_polling_transmit(spi, &t);
     assert(ret==ESP_OK);
 }
 
