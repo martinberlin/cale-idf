@@ -65,13 +65,18 @@ uint8_t PlasticLogic::readTemperature()
   return IO.readTemp();
 }
 
-std::string PlasticLogic::readTemperatureString(uint8_t type) {
+std::string PlasticLogic::readTemperatureString(char type) {
   uint8_t temperature = readTemperature();
   std::string temp = std::to_string(temperature);
   switch (type)
   {
-  case 1:
-    temp = temp + "°C";
+  case 'c':
+    temp = temp + " °C";
+    break;
+  case 'f':
+  uint8_t fahrenheit = temperature * 9/5 + 32;
+    temp = std::to_string(fahrenheit);
+    temp += " °F";
     break;
   }
   return temp;

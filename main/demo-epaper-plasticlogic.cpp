@@ -14,7 +14,7 @@
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 //PlasticLogic011 display(io);
-PlasticLogic011 display(io);
+PlasticLogic021 display(io);
 
 extern "C"
 {
@@ -59,12 +59,12 @@ void app_main(void)
 
    // TODO: Rotation is not working as it should:
    
-   display.clearScreen();
+   //display.clearScreen();
    // GFX Rotation not working as in others when > 1.1" 
-   // Suspected reason: scrambleBuffer() should be also rotation aware
-   display.setRotation(0);  
+   // Suspected reason: scrambleBuffer/getPixel should be also rotation aware
+   //display.setRotation(0);  
 
-   //display.setEpdRotation(1); // 2: Does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
+   //display.setEpdRotation(2); // 2: Does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
 
    display.fillRect(1,54, display.width(), 4, EPD_BLACK);
@@ -88,14 +88,14 @@ void app_main(void)
       display.setFont(&Ubuntu_M36pt7b);
       delayPartial = 1000;
       printf("setting cursor to x:%d y:%d\n", 40,190);
-      display.setCursor(40,190);
+      display.setCursor(40,90);
       break;
    default:
       display.setCursor(50,50);
       break;
    }
-   
-   display.print(display.readTemperatureString(1)); // 1: Appends °C
+   printf("celsius: %d degrees", display.readTemperature());
+   display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
    display.update();
    //return;
 

@@ -65,20 +65,23 @@ int PlasticLogic021::_getPixel(int x, int y) {
 void PlasticLogic021::scrambleBuffer() {
     for (int y=0; y<PLOGIC021_HEIGHT; y++) {                   // for each gateline...
         for (int x=0; x<PLOGIC021_WIDTH/2; x++) {             // for each sourceline...
-            drawPixel(PLOGIC021_WIDTH-1-x, y, _getPixel(x,y+1));
-            drawPixel(x, y, _getPixel(x+(PLOGIC021_WIDTH/2),y+1));
+            drawPixel(PLOGIC021_WIDTH-1-x, y, _getPixel(x,y+1));   //1
+            drawPixel(x, y, _getPixel(x+(PLOGIC021_WIDTH/2),y+1)); //2
         }
     }
+    // What does this really does? It takes one pixel from one part and moves it to the other in 2 Operations: 
+    
+    //1 ¹> . . . . | . . . . . . ²>  Sends the pixel to the beginning (mirrors it) IMPORTANT: y+1 on read
+    //2 ²< . . . . |>¹ . 2nd half taken --> goes to 1st half
 }
 
 void PlasticLogic021::update(uint8_t updateMode)
 {
-  // Research how to send more data via SPI this way
-  // E (452) spi_master: check_trans_valid(669): txdata transfer > host maximum
+  // Research how to send more data via SPI this way since it may not work for bigger EPDs
   ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
   
-  scrambleBuffer(); 
-  
+  // There is no real need to scrambleBuffer. More explanations follow
+  scrambleBuffer();
   uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0, 0}; // In original class are -1 but that does not seem a valid SPI byte
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
   uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
