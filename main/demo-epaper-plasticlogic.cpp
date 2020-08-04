@@ -14,7 +14,7 @@
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 //PlasticLogic011 display(io);
-PlasticLogic021 display(io);
+PlasticLogic011 display(io);
 
 extern "C"
 {
@@ -60,8 +60,11 @@ void app_main(void)
    // TODO: Rotation is not working as it should:
    
    display.clearScreen();
-   //display.setRotation(1);  // GFX Rotation now working as in others. Use setEpdRotation to turn it upside down
-   display.setEpdRotation(1); // 2: does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
+   // GFX Rotation not working as in others when > 1.1" 
+   // Suspected reason: scrambleBuffer() should be also rotation aware
+   display.setRotation(0);  
+
+   //display.setEpdRotation(1); // 2: Does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
 
    display.fillRect(1,54, display.width(), 4, EPD_BLACK);
@@ -86,7 +89,7 @@ void app_main(void)
       delayPartial = 1000;
       printf("setting cursor to x:%d y:%d\n", 40,190);
       display.setCursor(40,190);
-      
+      break;
    default:
       display.setCursor(50,50);
       break;
@@ -124,6 +127,7 @@ void app_main(void)
    display.update();
    vTaskDelay(2000 / portTICK_PERIOD_MS);
    display.clearScreen();
+   return; // STOP
 
    display.fillCircle(rectW, display.height()/2, 15, EPD_LGRAY);
    display.update(); // full update
@@ -150,20 +154,4 @@ void app_main(void)
    vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.clearScreen();
 
-   display.fillCircle(rectW*3, display.height()/2, 20, EPD_BLACK);
-   display.update();
-   vTaskDelay(200 / portTICK_PERIOD_MS);
-   display.fillCircle(rectW*2, display.height()/2, 20, EPD_BLACK);
-   display.update(EPD_UPD_MONO);
-   vTaskDelay(200 / portTICK_PERIOD_MS);
-   display.drawCircle(rectW, display.height()/2, 20, EPD_BLACK);
-   display.update(EPD_UPD_MONO);
-   vTaskDelay(200 / portTICK_PERIOD_MS);
-   print_title("end MONO", EPD_BLACK, 54);
-   display.println("Partial update having");
-   vTaskDelay(200 / portTICK_PERIOD_MS);
-   display.update(EPD_UPD_MONO);
-   display.println("some issues ;)");
-   vTaskDelay(200 / portTICK_PERIOD_MS);
-   display.update(EPD_UPD_MONO);
 }
