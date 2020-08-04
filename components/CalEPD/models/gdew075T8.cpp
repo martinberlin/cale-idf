@@ -86,7 +86,7 @@ void Gdew075T8::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
 
-  uint8_t updateMethod = 2;
+  uint8_t updateMethod = 1;
 
   switch (updateMethod)
   {
@@ -103,7 +103,7 @@ void Gdew075T8::update()
     break;
 
   case 2:
-   // Being tested
+   // Does not work like expected. Does the IL0371 expect to receive just 1 pixel per SPI transaction?
     for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
     {
       _send8pixelPack(_buffer[c]);
