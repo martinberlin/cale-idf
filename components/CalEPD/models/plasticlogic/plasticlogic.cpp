@@ -239,7 +239,7 @@ void PlasticLogic::_waitBusy(const char* message){
   while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
     vTaskDelay(1/portTICK_RATE_MS); 
 
-    if (esp_timer_get_time()-time_since_boot>500000)
+    if (esp_timer_get_time()-time_since_boot>100000)
     {
       if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
       break;
