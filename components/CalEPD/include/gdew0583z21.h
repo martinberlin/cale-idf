@@ -43,7 +43,7 @@ class Gdew0583z21 : public Epd
     bool _using_partial_mode = false;
     bool _initial = true;
 
-    void _send8pixel(uint8_t data,uint8_t red);
+    void _send8pixel(uint8_t black,uint8_t red);
     void PIC_display(const unsigned char* picData);
     
     void _wakeUp();

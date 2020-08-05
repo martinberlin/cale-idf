@@ -124,7 +124,7 @@ void Gdew0583z21::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
 
-  for (uint32_t i = 0; i < sizeof(_buffer); i++)
+  for (uint32_t i = 0; i < sizeof(_buffer); ++i)
   {
     _send8pixel(_buffer[i], _red_buffer[i]);
     
@@ -229,29 +229,37 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
 }
 
-void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
+/**
+ * There should be a smarter way to do this
+ * if you find it, just make a PR
+ */
+void Gdew0583z21::_send8pixel(uint8_t black, uint8_t red)
 { 
-  // 4bit for each pixel? (or 2?)
+  // This loops 4 times, recollects 2 pixels, and sends them to IO.data (Is very slow like it is)
   for (uint8_t j = 0; j < 8; ++j)
   {
-    //0x04 RED
-    uint8_t tr = red & 0x80 ? 0x04 : 0x03; 
-    tr <<= 4;
+    //0x04 RED + 0x03 WHITE 
+    uint8_t isRed = red & 0x80;
+    //0x00 BLACK
+    uint8_t isBlack = black & 0x80;
+
+    uint8_t pix1 = isRed ? 0x04 : (isBlack) ? 0x00 : 0x03; 
+    pix1 <<= 4;
     red <<= 1;
-    tr |= red & 0x80 ? 0x04 : 0x03;
+    pix1 |= isRed ? 0x04 : (isBlack) ? 0x00 : 0x03;
     red <<= 1;
 
-    //0x03 WHITE 0x00 BLACK
-    uint8_t tb = data & 0x80 ? 0x00: tr;
-    tb <<= 4;
-    data <<= 1;
+    //0x00 BLACK
+    uint8_t pix2 = isBlack ? 0x00 : (isRed) ? 0x04 : 0x03; 
+    pix2 <<= 4;
+    black <<= 1;
     j++;
-    tb |= data & 0x80 ? 0x00 : tr;
-    data <<= 1;
+    pix2 |= isBlack ? 0x00 : (isRed) ? 0x04 : 0x03; 
+    black <<= 1;
 
-    IO.dataBuffer(tb);
+    IO.dataBuffer(pix1&pix2);
   }
-  
+
 }
 
 /**
