@@ -7,14 +7,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-// Should match with your epaper module, size
-// First plasticlogic EPD implementation
+// Should match with your epaper module and size
+// One or many classes can be included at the same time
 #include <plasticlogic011.h>
+#include <plasticlogic014.h>
 #include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 //PlasticLogic011 display(io);
-PlasticLogic021 display(io);
+PlasticLogic014 display(io);
+
+// Leave on true to play short demo that ends in white
+bool playShortDemo = false;
 
 extern "C"
 {
@@ -59,10 +63,10 @@ void app_main(void)
 
    // TODO: Rotation is not working as it should:
    
-   //display.clearScreen();
+   display.clearScreen();
    // GFX Rotation not working as in others when > 1.1" 
    // Suspected reason: scrambleBuffer/getPixel should be also rotation aware
-   //display.setRotation(0);  
+   //display.setRotation(0);    // Does not work in 2.1 due to scrambleBuffer()
 
    //display.setEpdRotation(2); // 2: Does not turn it portrait, just upside down (Same with Paperino PL_microEPD)
    print_plastic_logic("logic.com", EPD_DGRAY);  // Prints plasticlogic.com
@@ -97,14 +101,13 @@ void app_main(void)
    printf("celsius: %d degrees", display.readTemperature());
    display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
    display.update();
-   //return;
 
    vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait N seconds
    display.clearScreen();  // Do a clearScreen between frames otherwise last one will remain and only new parts overwritten
    display.update();
    
    
-   // DEMO for 148 * 72 1.1 inches. Please adapt following variables for different sizes
+   // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
    // Make some rectangles showing the different shades of gray
@@ -127,8 +130,26 @@ void app_main(void)
    display.update();
    vTaskDelay(2000 / portTICK_PERIOD_MS);
    display.clearScreen();
-   return; // STOP
 
+   if (playShortDemo) {
+   display.update();
+   return; // STOP
+   }
+   // MONO does not support grays:
+   uint8_t delayMono = 100;
+   print_title("mono update", EPD_BLACK, 1);
+   display.fillCircle(rectW, display.height()/2, 20, EPD_BLACK);
+   display.update(); // full update
+   vTaskDelay(delayMono / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*2, display.height()/2, 20, EPD_BLACK);
+   display.update(EPD_UPD_MONO);
+   vTaskDelay(delayMono / portTICK_PERIOD_MS);
+   display.fillCircle(rectW*3, display.height()/2, 20, EPD_BLACK);
+   display.update(EPD_UPD_MONO);
+   vTaskDelay(delayMono / portTICK_PERIOD_MS);
+   display.clearScreen();
+
+   print_title("partial update", EPD_DGRAY, 1);
    display.fillCircle(rectW, display.height()/2, 15, EPD_LGRAY);
    display.update(); // full update
    vTaskDelay(delayPartial / portTICK_PERIOD_MS);

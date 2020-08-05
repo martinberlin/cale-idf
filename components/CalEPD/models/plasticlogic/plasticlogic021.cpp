@@ -107,19 +107,19 @@ void PlasticLogic021::update(uint8_t updateMode)
           _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
 
           break;
-        case 1:
+        case EPD_UPD_PART:
           displayEngine[1] = 0x07;
           IO.data(programMtp, sizeof(programMtp));
           IO.data(displayEngine, sizeof(displayEngine));
-          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+          _waitBusy("EPD_UPD_PART", EPD_TMG_LNG);
             break;
-        case 2:
+        case EPD_UPD_MONO:
           programMtp[1] = 0x02;
           displayEngine[1] = 0x07;
 
           IO.data(programMtp, sizeof(programMtp));
           IO.data(displayEngine, sizeof(displayEngine));
-          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+          _waitBusy("EPD_UPD_MONO", EPD_TMG_LNG);
           break;
     }
     
