@@ -54,5 +54,6 @@ class Gdew0583z21 : public Epd
    
     static const epd_init_2 epd_wakeup_power;
     static const epd_init_2 epd_panel_setting;
+    static const epd_init_3 epd_boost;
     static const epd_init_4 epd_resolution;
 };

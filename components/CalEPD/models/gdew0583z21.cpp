@@ -18,6 +18,10 @@ DRAM_ATTR const epd_init_2 Gdew0583z21::epd_panel_setting={
   0x08},1
 };
 
+DRAM_ATTR const epd_init_3 Gdew0583z21::epd_boost={
+0x06,{0xC7,0xCC,0x28},3
+};
+
 DRAM_ATTR const epd_init_4 Gdew0583z21::epd_resolution={
 0x61,{
   0x02, //source 600
@@ -80,11 +84,12 @@ void Gdew0583z21::_wakeUp(){
   IO.cmd(0x82);
   IO.data(0x28);
   
-  printf("boost\n");
-  IO.cmd(0x06);
-	IO.data(0xc7);	   	
-	IO.data(0xcc);
-	IO.data(0x15);
+  printf("Boost\n"); // Handles the intensity of the colors displayed
+  IO.cmd(epd_boost.cmd);
+  for (int i=0;i<sizeof(epd_boost.data);++i) {
+    IO.data(epd_boost.data[i]);
+  }
+
 
 	IO.cmd(0X50);			//VCOM AND DATA INTERVAL SETTING
 	IO.data(0x77);
@@ -226,7 +231,8 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
 { 
-  for (uint8_t j = 0; j < 8; j++)
+  // 4bit for each pixel? (or 2?)
+  for (uint8_t j = 0; j < 8; ++j)
   {
     //0x04 RED
     uint8_t tr = red & 0x80 ? 0x04 : 0x03; 
@@ -234,17 +240,17 @@ void Gdew0583z21::_send8pixel(uint8_t data, uint8_t red)
     red <<= 1;
     tr |= red & 0x80 ? 0x04 : 0x03;
     red <<= 1;
-    
+
     //0x03 WHITE 0x00 BLACK
-    uint8_t t = data & 0x80 ? 0x00: tr;
-    t <<= 4;
+    uint8_t tb = data & 0x80 ? 0x00: tr;
+    tb <<= 4;
     data <<= 1;
     j++;
-    t |= data & 0x80 ? 0x00 : tr;
+    tb |= data & 0x80 ? 0x00 : tr;
     data <<= 1;
 
-    IO.dataBuffer(t);
-  } 
+    IO.dataBuffer(tb);
+  }
   
 }
 
