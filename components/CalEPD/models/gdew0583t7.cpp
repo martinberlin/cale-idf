@@ -130,6 +130,7 @@ void Gdew0583T7::_send8pixel(uint8_t data)
 
 void Gdew0583T7::update()
 {
+  uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
 
@@ -148,9 +149,13 @@ void Gdew0583T7::update()
     }
   
   }
-
+  uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
   _waitBusy("update");
+  uint64_t updateTime = esp_timer_get_time();
+  
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
+         (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
 
   //vTaskDelay(pdMS_TO_TICKS(1000));
   _sleep();

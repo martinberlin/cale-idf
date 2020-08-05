@@ -1,25 +1,25 @@
-#include "plasticlogic011.h"
+#include "plasticlogic014.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
 
 // Constructor
-PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio): 
-  Adafruit_GFX(PLOGIC011_WIDTH, PLOGIC011_HEIGHT),
-  PlasticLogic(PLOGIC011_WIDTH, PLOGIC011_HEIGHT, dio), IO(dio)
+PlasticLogic014::PlasticLogic014(EpdSpi2Cs& dio): 
+  Adafruit_GFX(PLOGIC014_WIDTH, PLOGIC014_HEIGHT),
+  PlasticLogic(PLOGIC014_WIDTH, PLOGIC014_HEIGHT, dio), IO(dio)
 {
-  printf("PlasticLogic011() %d*%d\n",
-  PLOGIC011_WIDTH, PLOGIC011_HEIGHT);
+  printf("PlasticLogic014() %d*%d\n",
+  PLOGIC014_WIDTH, PLOGIC014_HEIGHT);
 }
 
 //Initialize the display
-void PlasticLogic011::init(bool debug)
+void PlasticLogic014::init(bool debug)
 {
     debug_enabled = debug;
     if (debug_enabled) {
-      printf("PlasticLogic011::init(%d) bufferSize: %d width: %d height: %d\n", 
-    debug, PLOGIC011_BUFFER_SIZE, PLOGIC011_WIDTH, PLOGIC011_HEIGHT);
+      printf("PlasticLogic014::init(%d) bufferSize: %d width: %d height: %d\n", 
+    debug, PLOGIC014_BUFFER_SIZE, PLOGIC014_WIDTH, PLOGIC014_HEIGHT);
     }
     initIO(debug);
     
@@ -27,7 +27,7 @@ void PlasticLogic011::init(bool debug)
     _setSize(size);
     printf("EPD size ID: %d\n", size);
 
-    if (size != 11) {
+    if (size != 14) {
       ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class", size);
     }
 
@@ -38,18 +38,18 @@ void PlasticLogic011::init(bool debug)
     setEpdRotation(1);
 }
 
-void PlasticLogic011::clearScreen(){
+void PlasticLogic014::clearScreen(){
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = 0xff;
   }
 }
 
-void PlasticLogic011::update(uint8_t updateMode)
+void PlasticLogic014::update(uint8_t updateMode)
 {
   ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
 
-  uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0x00, 0x93};
+  uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0x00, 0x9f};
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
   uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
 
@@ -94,7 +94,7 @@ void PlasticLogic011::update(uint8_t updateMode)
   _powerOff();
 }
 
-void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void PlasticLogic014::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -102,15 +102,15 @@ void PlasticLogic011::drawPixel(int16_t x, int16_t y, uint16_t color) {
   {
     case 1:
       swap(x, y);
-      x = PLOGIC011_WIDTH - x - 1;
+      x = PLOGIC014_WIDTH - x - 1;
       break;
     case 2:
-      x = PLOGIC011_WIDTH - x - 1;
-      y = PLOGIC011_HEIGHT - y - 1;
+      x = PLOGIC014_WIDTH - x - 1;
+      y = PLOGIC014_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = PLOGIC011_HEIGHT - y - 1;
+      y = PLOGIC014_HEIGHT - y - 1;
       break;
   }
   

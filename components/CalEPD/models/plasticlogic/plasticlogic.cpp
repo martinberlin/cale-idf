@@ -65,13 +65,18 @@ uint8_t PlasticLogic::readTemperature()
   return IO.readTemp();
 }
 
-std::string PlasticLogic::readTemperatureString(uint8_t type) {
+std::string PlasticLogic::readTemperatureString(char type) {
   uint8_t temperature = readTemperature();
   std::string temp = std::to_string(temperature);
   switch (type)
   {
-  case 1:
-    temp = temp + "°C";
+  case 'c':
+    temp = temp + " °C";
+    break;
+  case 'f':
+  uint8_t fahrenheit = temperature * 9/5 + 32;
+    temp = std::to_string(fahrenheit);
+    temp += " °F";
     break;
   }
   return temp;
@@ -82,19 +87,27 @@ std::string PlasticLogic::readTemperatureString(uint8_t type) {
  * Not sure if it will be a public method at the end of integration
  */
 void PlasticLogic::setEpdRotation(uint8_t o) {
-   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x07};
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02}; // All of them
    uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20};
+    switch (size) {
+      case 11:
+        settingDataEntryLandscape[1] = 0x07;
+        break;
+      case 14:
+        settingDataEntryLandscape[1] = 0x02;
+        break;
+    }
 
    switch (o)
    {
    case 1:
-     /* Portrait */
-     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
+     /* Landscape mode */
+     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
      break;
    
    case 2:
-     /* Landscape mode */
-     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
+     /* Portrait */
+     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
      break;
    }
 }
@@ -118,6 +131,7 @@ void PlasticLogic::_wakeUp(){
         settingWriteRectangular[4] = 0x9F;
           break;
         case 21:
+        panelSetting[1] = 0x10;
           // EPD_WRITEPXRECTSET, 0, 0xEF, 0, 145->91(hexa)
         settingWriteRectangular[2] = 0xEF;
         settingWriteRectangular[4] = 0x91;
@@ -161,8 +175,17 @@ void PlasticLogic::_wakeUp(){
 }
 
 void PlasticLogic::_powerOn(void) {
-
   uint8_t setResolution[5]   = {EPD_SETRESOLUTION, 0x00, 0xEF, 0x00, 0x93};
+
+  switch (size)
+  {
+  case 14:
+  case 21:
+  case 31:
+    setResolution[4]   = 0x9F;
+    break;
+  }
+  
   uint8_t setTcomTiming[3]   = {EPD_TCOMTIMING   , 0x67, 0x65};
   uint8_t setPowerSeq[4]     = {EPD_POWERSEQUENCE, 0x00, 0x00, 0x00};
   uint8_t setPowerControl[2] = {EPD_POWERCONTROL , 0xD1};
@@ -178,9 +201,12 @@ void PlasticLogic::_powerOn(void) {
 
   IO.data(setPowerControl, sizeof(setPowerControl));
   _waitBusy("setPowerControl");
-  // 70 works
-  vTaskDelay(70/portTICK_RATE_MS);       // Only because reading the value below is not working
-  //while (IO.readRegister(0x15) == 0) {}   // Wait until Internal Pump is ready 
+  // Resolve the wait for pump read
+  //vTaskDelay(140/portTICK_RATE_MS);       // Only because reading the value below is not working
+  uint8_t reg = 0x15|EPD_REGREAD;
+  uint8_t regRead[2] = {reg, 0xFF};
+
+  while (IO.readRegister(regRead,sizeof(regRead)) == 0) {}   // Wait until Internal Pump is ready 
 }
 
 void PlasticLogic::_waitBusy(const char* message, uint16_t busy_time){

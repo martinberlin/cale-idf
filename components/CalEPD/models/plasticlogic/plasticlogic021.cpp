@@ -29,11 +29,11 @@ void PlasticLogic021::init(bool debug)
     if (size != 21) {
       ESP_LOGE(TAG, "ATTENTION the size responded by the display: %d does not mach this class (21)", size);
     }
-
+    _setSize(size);
     _wakeUp();
 
     //printf("Epaper temperature after wakeUp: %d °C\n", IO.readTemp());
-    //Set landscape mode as default
+    //Set landscape mode: 1 as default
     setEpdRotation(1);
 }
 
@@ -46,7 +46,7 @@ void PlasticLogic021::clearScreen(){
 
 int PlasticLogic021::_getPixel(int x, int y) {
   // Not sure if width / height is correct since we handle rotation differently
-    if ((x < 0) || (x >= PLOGIC021_HEIGHT) || (y < 0) || (y >= PLOGIC021_WIDTH)) return 5;  
+    if ((x < 0) || (x >= PLOGIC021_WIDTH) || (y < 0) || (y >= PLOGIC021_HEIGHT)) return 5;  
 
 	uint16_t byteIndex = x/4 + (y) * _nextline;
     switch (x%4) {
@@ -63,21 +63,25 @@ int PlasticLogic021::_getPixel(int x, int y) {
  * Not tested in my implementation
  */
 void PlasticLogic021::scrambleBuffer() {
-    for (int y=0; y<146; y++) {                   // for each gateline...
-        for (int x=0; x<240/2; x++) {             // for each sourceline...
-            drawPixel(239-x, y, _getPixel(x,y+1));
-            drawPixel(x, y, _getPixel(x+120,y+1));
+    for (int y=0; y<PLOGIC021_HEIGHT; y++) {                   // for each gateline...
+        for (int x=0; x<PLOGIC021_WIDTH/2; x++) {             // for each sourceline...
+            drawPixel(PLOGIC021_WIDTH-1-x, y, _getPixel(x,y+1));   //1
+            drawPixel(x, y, _getPixel(x+(PLOGIC021_WIDTH/2),y+1)); //2
         }
     }
+    // What does this really does? It takes one pixel from one part and moves it to the other in 2 Operations: 
+    
+    //1 ¹> . . . . | . . . . . . ²>  Sends the pixel to the beginning (mirrors it) IMPORTANT: y+1 on read
+    //2 ²< . . . . |>¹ . 2nd half taken --> goes to 1st half
 }
 
 void PlasticLogic021::update(uint8_t updateMode)
 {
-  // Research how to send more data via SPI this way
-  // E (452) spi_master: check_trans_valid(669): txdata transfer > host maximum
+  // Research how to send more data via SPI this way since it may not work for bigger EPDs
   ESP_LOGD(TAG, "Sending %d bytes buffer", sizeof(_buffer));
+  
+  // There is no real need to scrambleBuffer. More explanations follow
   scrambleBuffer();
-
   uint8_t pixelAccessPos[3] = {EPD_PIXELACESSPOS, 0, 0}; // In original class are -1 but that does not seem a valid SPI byte
   uint8_t programMtp[2] = {EPD_PROGRAMMTP, 0x00};
   uint8_t displayEngine[2] = {EPD_DISPLAYENGINE, 0x03};
@@ -103,69 +107,31 @@ void PlasticLogic021::update(uint8_t updateMode)
           _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
 
           break;
-        case 1:
+        case EPD_UPD_PART:
           displayEngine[1] = 0x07;
-
           IO.data(programMtp, sizeof(programMtp));
           IO.data(displayEngine, sizeof(displayEngine));
-          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+          _waitBusy("EPD_UPD_PART", EPD_TMG_LNG);
             break;
-        case 2:
+        case EPD_UPD_MONO:
           programMtp[1] = 0x02;
           displayEngine[1] = 0x07;
 
           IO.data(programMtp, sizeof(programMtp));
           IO.data(displayEngine, sizeof(displayEngine));
-          _waitBusy("EPD_UPD_FULL", EPD_TMG_LNG);
+          _waitBusy("EPD_UPD_MONO", EPD_TMG_LNG);
           break;
     }
     
   _powerOff();
 }
 
-void PlasticLogic021::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
-{
-  switch (getRotation())
-  {
-    case 1:
-      swap(x, y);
-      swap(w, h);
-      x = PLOGIC021_WIDTH - x - w - 1;
-      break;
-    case 2:
-      x = PLOGIC021_WIDTH - x - w - 1;
-      y = PLOGIC021_HEIGHT - y - h - 1;
-      break;
-    case 3:
-      swap(x, y);
-      swap(w, h);
-      y = PLOGIC021_HEIGHT - y - h - 1;
-      break;
-  }
-}
-
-
 void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
-  switch (getRotation())
-  {
-    case 1:
-      swap(x, y);
-      x = PLOGIC021_WIDTH - x - 1;
-      break;
-    case 2:
-      x = PLOGIC021_WIDTH - x - 1;
-      y = PLOGIC021_HEIGHT - y - 1;
-      break;
-    case 3:
-      swap(x, y);
-      y = PLOGIC021_HEIGHT - y - 1;
-      break;
-  }
+  // This is not working the same as other epapers: Research why
   
-  y=y+3;
   uint8_t pixels = _buffer[x/4 + (y) * _nextline];
 	switch (x%4) {					            //2-bit grayscale dot
     	case 0: _buffer[x/4 + (y) * _nextline] = (pixels & 0x3F) | ((uint8_t)color << 6); break;	
@@ -173,4 +139,29 @@ void PlasticLogic021::drawPixel(int16_t x, int16_t y, uint16_t color) {
     	case 2: _buffer[x/4 + (y) * _nextline] = (pixels & 0xF3) | ((uint8_t)color << 2); break;	
     	case 3: _buffer[x/4 + (y) * _nextline] = (pixels & 0xFC) | (uint8_t)color; break;		
 	}
+}
+
+void PlasticLogic021::setEpdRotation(uint8_t o) {
+   uint8_t settingDataEntryPortrait[2] = {EPD_DATENTRYMODE, 0x02};  // All of them
+   uint8_t settingDataEntryLandscape[2] = {EPD_DATENTRYMODE, 0x20}; // 2.1" as default
+    switch (size) {
+      case 11:
+        settingDataEntryLandscape[1] = 0x07;
+        break;
+      case 14:
+        settingDataEntryLandscape[1] = 0x02;
+        break;
+    }
+
+   switch (o)
+   {
+   case 1:
+     /* Landscape mode */
+     IO.data(settingDataEntryLandscape, sizeof(settingDataEntryLandscape));
+     break;
+   case 2:
+     /* Portrait */
+     IO.data(settingDataEntryPortrait, sizeof(settingDataEntryPortrait));
+     break;
+   }
 }

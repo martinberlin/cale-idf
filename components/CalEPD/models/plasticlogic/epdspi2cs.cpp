@@ -174,7 +174,7 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
     if (debug_enabled) {
         printf("D\n");
         for (int i = 0; i < len; i++)  {
-            printf("%d ",data[i]);
+            printf("%x ",data[i]);
         }
         printf("\n");
     }

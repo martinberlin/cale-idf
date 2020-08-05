@@ -80,7 +80,7 @@ class PlasticLogic : public virtual Adafruit_GFX
 
     // Internal temperature sensor
     uint8_t readTemperature();
-    std::string readTemperatureString(uint8_t type = 0); // 0: string 1: celsius
+    std::string readTemperatureString(char type = 't'); // t: string c: celsius
     uint8_t getEPDsize();
     // Bosch Accelerometer BMA250E not readable still. Check plastic/accelerometer branch
     void  setEpdRotation(uint8_t o);
@@ -107,8 +107,6 @@ class PlasticLogic : public virtual Adafruit_GFX
   private:
     // Only detail IO is being instanced two times and may be not convenient:
     EpdSpi2Cs& IO;
-    // Every display model should implement this private methods
-    virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
     
     uint8_t _unicodeEasy(uint8_t c);
 };

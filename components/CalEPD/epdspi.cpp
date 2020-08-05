@@ -87,13 +87,12 @@ void EpdSpi::cmd(const uint8_t cmd)
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&cmd;               //The data is the cmd itself 
-
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    // No need to toogle CS when spics_io_num is defined in SPI config struct
+    //gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 0);
     ret=spi_device_polling_transmit(spi, &t);
 
-    assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    assert(ret==ESP_OK);
     gpio_set_level((gpio_num_t)CONFIG_EINK_DC, 1);
     
 }
@@ -103,7 +102,6 @@ void EpdSpi::data(uint8_t data)
     /* if (debug_enabled) {
       printf("D %x\n",data);
     } */
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
@@ -111,8 +109,7 @@ void EpdSpi::data(uint8_t data)
     t.tx_buffer=&data;              //The data is the cmd itself
     ret=spi_device_polling_transmit(spi, &t);
     
-    assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
+    assert(ret==ESP_OK);
 }
 
 /* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the
@@ -125,14 +122,13 @@ void EpdSpi::data(uint8_t data)
 void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
-    /* if (debug_enabled) {
+    if (debug_enabled) {
         printf("D\n");
         for (int i = 0; i < len; i++)  {
             printf("%x ",data[i]);
         }
         printf("\n");
-    } */
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 0);
+    }
     esp_err_t ret;
     spi_transaction_t t;
                 
@@ -141,7 +137,6 @@ void EpdSpi::data(const uint8_t *data, int len)
     t.tx_buffer=data;               //Data
     ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     assert(ret==ESP_OK);            //Should have had no issues.
-    gpio_set_level((gpio_num_t)CONFIG_EINK_SPI_CS, 1);
 }
 
 void EpdSpi::reset(uint8_t millis=20) {

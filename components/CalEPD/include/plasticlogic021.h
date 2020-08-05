@@ -28,7 +28,7 @@ class PlasticLogic021 : public PlasticLogic
     void clearScreen();
     void update(uint8_t updateMode=EPD_UPD_FULL);
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-
+    void setEpdRotation(uint8_t o); // Override
   private:
     EpdSpi2Cs& IO;
     uint8_t _buffer[PLOGIC021_BUFFER_SIZE];
@@ -39,7 +39,6 @@ class PlasticLogic021 : public PlasticLogic
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC021_WIDTH/4;
 
-    void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     // Done for 21 and 31 size
     void scrambleBuffer();
     int _getPixel(int x, int y);
