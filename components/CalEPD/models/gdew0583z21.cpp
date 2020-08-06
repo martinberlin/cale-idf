@@ -232,32 +232,25 @@ void Gdew0583z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
 /**
  * There should be a smarter way to do this
  * if you find it, just make a PR
+ * 0x04 RED
+ * 0x03 WHITE 
+ * 0x00 BLACK
  */
 void Gdew0583z21::_send8pixel(uint8_t black, uint8_t red)
 { 
   // This loops 4 times, recollects 2 pixels, and sends them to IO.data (Is very slow like it is)
   for (uint8_t j = 0; j < 8; ++j)
   {
-    //0x04 RED + 0x03 WHITE 
-    uint8_t isRed = red & 0x80;
-    //0x00 BLACK
-    uint8_t isBlack = black & 0x80;
-
-    uint8_t pix1 = isRed ? 0x04 : (isBlack) ? 0x00 : 0x03; 
-    pix1 <<= 4;
-    red <<= 1;
-    pix1 |= isRed ? 0x04 : (isBlack) ? 0x00 : 0x03;
-    red <<= 1;
-
-    //0x00 BLACK
-    uint8_t pix2 = isBlack ? 0x00 : (isRed) ? 0x04 : 0x03; 
+    uint8_t pix2 = (black & 0x80) ? 0x00 : (red & 0x80) ? 0x04 : 0x03; 
     pix2 <<= 4;
     black <<= 1;
+    red <<= 1;
     j++;
-    pix2 |= isBlack ? 0x00 : (isRed) ? 0x04 : 0x03; 
+    pix2 |= (black & 0x80) ? 0x00 : (red & 0x80) ? 0x04 : 0x03; 
     black <<= 1;
+    red <<= 1;
 
-    IO.dataBuffer(pix1&pix2);
+    IO.dataBuffer(pix2);
   }
 
 }
