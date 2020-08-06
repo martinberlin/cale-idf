@@ -45,8 +45,8 @@ void Gdew0583z21::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583z21::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, debug);
-    //fillScreen(EPD_WHITE);
+    IO.init(2, debug);
+    fillScreen(EPD_WHITE);
 }
 
 void Gdew0583z21::fillScreen(uint16_t color)
@@ -123,17 +123,20 @@ void Gdew0583z21::update()
   // IN GD example says bufferSize is 38880 (?)
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
-
+  
+  uint8_t msWait = 1;
+  if (debug_enabled) {
+    msWait = 10;
+  }
+  
   for (uint32_t i = 0; i < sizeof(_buffer); ++i)
   {
     _send8pixel(_buffer[i], _red_buffer[i]);
     
     if (i%2000 == 0) {
-       rtc_wdt_feed();
-       vTaskDelay(pdMS_TO_TICKS(10));
-       if (debug_enabled) {
-         printf("%d ",i);
-       }
+       // Funny without outputting this to serial is not refreshing. Seems no need of rtc_wdt_feed();
+       printf("%d ",i);
+       vTaskDelay(pdMS_TO_TICKS(msWait));   
     }
   
   }
