@@ -49,7 +49,7 @@ void Gdew0583T7::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583T7::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, true);
+    IO.init(4, debug);
     fillScreen(EPD_WHITE);
 }
 

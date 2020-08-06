@@ -45,8 +45,8 @@ void Gdew0583z21::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583z21::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, true);
-    fillScreen(EPD_WHITE);
+    IO.init(4, debug);
+    //fillScreen(EPD_WHITE);
 }
 
 void Gdew0583z21::fillScreen(uint16_t color)
@@ -128,10 +128,12 @@ void Gdew0583z21::update()
   {
     _send8pixel(_buffer[i], _red_buffer[i]);
     
-    if (i%2000==0) {
+    if (i%2000 == 0) {
        rtc_wdt_feed();
        vTaskDelay(pdMS_TO_TICKS(10));
-       if (debug_enabled) printf("%d ",i);
+       if (debug_enabled) {
+         printf("%d ",i);
+       }
     }
   
   }

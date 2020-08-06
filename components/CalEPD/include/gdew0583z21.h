@@ -28,7 +28,7 @@ class Gdew0583z21 : public Epd
    
     Gdew0583z21(EpdSpi& IO);
     
-    void init(bool debug);
+    void init(bool debug = false);
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void fillScreen(uint16_t color);
     void update();

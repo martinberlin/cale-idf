@@ -37,7 +37,7 @@ class Wave12I48 : public Epd
     
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     // EPD tests 
-    void init(bool debug);
+    void init(bool debug = false);
     void clear();
     void initFullUpdate();
     void initPartialUpdate();
