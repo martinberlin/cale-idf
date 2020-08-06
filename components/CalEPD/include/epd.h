@@ -132,7 +132,7 @@ class Epd : public virtual Adafruit_GFX
 
   private:
     // Every display model should implement this private methods
-    virtual uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) = 0;
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     virtual void _wakeUp() = 0;
     virtual void _sleep() = 0;
     virtual void _waitBusy(const char* message) = 0;

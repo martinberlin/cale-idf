@@ -4,6 +4,7 @@ set(srcs
     "models/gdew075T7.cpp"
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
+    "models/gdew0583z21.cpp"
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
     "models/gdew0213i5f.cpp"

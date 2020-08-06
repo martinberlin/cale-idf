@@ -29,7 +29,7 @@ class Gdew0583T7 : public Epd
     Gdew0583T7(EpdSpi& IO);
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);
-    void init(bool debug);
+    void init(bool debug = false);
     void eraseDisplay(bool using_partial_update);
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);

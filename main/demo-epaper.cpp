@@ -3,9 +3,10 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include "wave12i48.h"
+//#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
-//#include <gdew0583t7.h>
+#include <gdew0583t7.h>
+#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
@@ -13,11 +14,12 @@
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
-Epd4Spi io;
-Wave12I48 display(io);
+/* Epd4Spi io;
+Wave12I48 display(io); */
 
 // Single SPI EPD
-//EpdSpi io;
+EpdSpi io;
+Gdew0583z21 display(io);
 //Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
@@ -135,12 +137,17 @@ void app_main(void)
    // Test Epd class
    display.init(true);
 
-   display.setRotation(0);
-
+   display.setRotation(2);
+   
+   
+   
    // Back, Foreground
    demo(EPD_WHITE, EPD_BLACK);
+   display.fillCircle(200,200,100,EPD_RED);
+   
    display.update();
 
+/* 
    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
    demo(EPD_BLACK, EPD_WHITE);
@@ -154,5 +161,5 @@ void app_main(void)
       vTaskDelay(3000 / portTICK_PERIOD_MS);
       // Note:  This affects the white vertical all over the partial update so it's not usable. Do not use white background for now
       //demoPartialUpdate(EPD_WHITE, EPD_BLACK, 200, 100);
-   }
+   } */
 }
