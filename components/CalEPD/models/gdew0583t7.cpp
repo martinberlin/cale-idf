@@ -247,9 +247,9 @@ void Gdew0583T7::_waitBusy(const char* message){
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
-
+  // In this controller BUSY == 0 
   while (true){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>2000000)
     {

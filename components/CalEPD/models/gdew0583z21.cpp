@@ -45,7 +45,7 @@ void Gdew0583z21::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583z21::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(2, debug);
+    IO.init(4, debug);
     fillScreen(EPD_WHITE);
 }
 
@@ -123,20 +123,15 @@ void Gdew0583z21::update()
   // IN GD example says bufferSize is 38880 (?)
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
-  
-  uint8_t msWait = 1;
-  if (debug_enabled) {
-    msWait = 10;
-  }
-  
+    
   for (uint32_t i = 0; i < sizeof(_buffer); ++i)
   {
     _send8pixel(_buffer[i], _red_buffer[i]);
     
-    if (i%2000 == 0) {
+    if (i%2000 == 0 && debug_enabled) {
        // Funny without outputting this to serial is not refreshing. Seems no need of rtc_wdt_feed();
        printf("%d ",i);
-       vTaskDelay(pdMS_TO_TICKS(msWait));   
+       vTaskDelay(pdMS_TO_TICKS(10));   
     }
   
   }
@@ -158,9 +153,9 @@ void Gdew0583z21::_waitBusy(const char* message){
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
-
+  // In this controller BUSY == 0 
   while (true){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>2000000)
     {
@@ -258,45 +253,4 @@ void Gdew0583z21::_send8pixel(uint8_t black, uint8_t red)
     IO.dataBuffer(pix2);
   }
 
-}
-
-/**
- * Example from Good display
- * Does not work / is just an internal private reference
- */
-void Gdew0583z21::PIC_display(const unsigned char* picData)
-{
-  uint32_t i,j;
-	uint8_t temp1,temp2,temp3;
-		//EPD_W21_WriteCMD(0x10);	     //start to transport picture
-
-		for(i=0;i<67200;i++)	     //2bit for a pixels(old is 4bit for a pixels)   
-		{   
-			temp1 = *picData;
-			picData++;
-			for(j=0;j<2;j++)         //2bit to 4bit
-			{
-				temp2 = temp1&0xc0 ;   //Analysis the first 2bit
-				if(temp2 == 0xc0)
-					temp3 = 0x00; 			 //black(2bit to 4bit)
-				else if(temp2 == 0x00)
-					temp3 = 0x03;        //white(2bit to 4bit)
-				else
-					temp3 = 0x04;        //red(2bit to 4bit)
-					
-				temp3 <<=4;            //move to the Hight 4bit
-				temp1 <<=2;            //move 2bit	
-				temp2 = temp1&0xc0 ;   //Analysis the second 2bit
-				if(temp2 == 0xc0)
-					temp3 |= 0x00;       //black(2bit to 4bit),Data consolidation
-				else if(temp2 == 0x00)
-					temp3 |= 0x03;       //white(2bit to 4bit),Data consolidation
-				else
-					temp3 |= 0x04;       //red(2bit to 4bit),Data consolidation
-				
-				temp1 <<=2;            //move 2bit£¬turn the next 2bit
-				
-				//EPD_W21_WriteDATA(temp3); //write a byte,Contains two 4bit pixels	
-			}
-		}
 }
