@@ -42,14 +42,12 @@ class Gdew0583z21 : public Epd
     uint8_t _red_buffer[GDEW0583Z21_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
-
-    void _send8pixel(uint8_t black,uint8_t red);
-    void PIC_display(const unsigned char* picData);
     
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
+    void _send8pixel(uint8_t black,uint8_t red);
     // Command & data structs
    
     static const epd_init_2 epd_wakeup_power;
