@@ -15,10 +15,8 @@
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
 //PlasticLogic011 display(io);
-PlasticLogic014 display(io);
-
-// Leave on true to play short demo that ends in white
-bool playShortDemo = false;
+//PlasticLogic014 display(io);
+PlasticLogic021 display(io);
 
 extern "C"
 {

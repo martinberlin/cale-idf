@@ -49,7 +49,7 @@ void Gdew0583T7::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Gdew0583T7::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, true);
+    IO.init(4, debug);
     fillScreen(EPD_WHITE);
 }
 
@@ -124,7 +124,7 @@ void Gdew0583T7::_send8pixel(uint8_t data)
     j++;
     t |= data & 0x80 ? 0x00 : 0x03;
     data <<= 1;
-    IO.data(t);
+    IO.dataBuffer(t);
   }
 }
 
@@ -142,7 +142,7 @@ void Gdew0583T7::update()
     // If this does not work please comment this:
     _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
-    if (i%500==0) {
+    if (i%2000==0) {
        rtc_wdt_feed();
        vTaskDelay(pdMS_TO_TICKS(10));
        if (debug_enabled) printf("%d ",i);
@@ -247,9 +247,9 @@ void Gdew0583T7::_waitBusy(const char* message){
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
-
+  // In this controller BUSY == 0 
   while (true){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>2000000)
     {
