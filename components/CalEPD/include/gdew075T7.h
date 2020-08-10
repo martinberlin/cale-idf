@@ -37,7 +37,11 @@ class Gdew075T7 : public Epd
     void init(bool debug = false);
     void initFullUpdate();
     void initPartialUpdate();
+    // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
+    // Alternative method to updateWindow
+    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
+    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void update();
 

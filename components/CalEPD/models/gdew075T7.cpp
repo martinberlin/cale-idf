@@ -159,18 +159,20 @@ void Gdew075T7::_wakeUp()
     IO.data(epd_panel_setting_full.data[i]);
   }
 
-  IO.cmd(0x61); // tres
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
   for (int i = 0; i < epd_resolution.databytes; ++i)
   {
     IO.data(epd_resolution.data[i]);
   }
-  IO.data(0x00);
+  // Not sure if 0x15 is really needed, seems to work the same without it too
+  IO.cmd(0x15);  // Dual SPI
+  IO.data(0x00); // MM_EN, DUSPI_EN
+
   IO.cmd(0x50);  // VCOM AND DATA INTERVAL SETTING
   IO.data(0x29); // LUTKW, N2OCP: copy new to old
   IO.data(0x07);
-  IO.cmd(0x60); // TCON SETTING
+  IO.cmd(0x60);  // TCON SETTING
   IO.data(0x22);
 
   initFullUpdate();
@@ -242,11 +244,13 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     return;
   uint16_t xe = gx_uint16_min(GDEW075T7_WIDTH, x + w) - 1;
   uint16_t ye = gx_uint16_min(GDEW075T7_HEIGHT, y + h) - 1;
-  // x &= 0xFFF8; // byte boundary, not needed here
+
+  // x &= 0xFFF8; // byte boundary, need to test this
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
-  if (!_using_partial_mode)
+  if (!_using_partial_mode) {
     _wakeUp();
+    }
 
   _using_partial_mode = true;
   initPartialUpdate();
@@ -275,8 +279,69 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     IO.cmd(0x12); // display refresh
     _waitBusy("updateWindow");
     IO.cmd(0x92); // partial out
-  }               // leave both controller buffers equal
+  }
 
+  vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
+}
+
+void Gdew075T7::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
+{
+  if (using_rotation)
+  {
+    switch (getRotation())
+    {
+      case 1:
+        swap(xs, ys);
+        swap(xd, yd);
+        swap(w, h);
+        xs = GDEW075T7_WIDTH - xs - w - 1;
+        xd = GDEW075T7_WIDTH - xd - w - 1;
+        break;
+      case 2:
+        xs = GDEW075T7_WIDTH - xs - w - 1;
+        ys = GDEW075T7_HEIGHT - ys - h - 1;
+        xd = GDEW075T7_WIDTH - xd - w - 1;
+        yd = GDEW075T7_HEIGHT - yd - h - 1;
+        break;
+      case 3:
+        swap(xs, ys);
+        swap(xd, yd);
+        swap(w, h);
+        ys = GDEW075T7_HEIGHT - ys  - h - 1;
+        yd = GDEW075T7_HEIGHT - yd  - h - 1;
+        break;
+    }
+  }
+  if (xs >= GDEW075T7_WIDTH) return;
+  if (ys >= GDEW075T7_HEIGHT) return;
+  if (xd >= GDEW075T7_WIDTH) return;
+  if (yd >= GDEW075T7_HEIGHT) return;
+  uint16_t xde = gx_uint16_min(GDEW075T7_WIDTH, xd + w) - 1;
+  uint16_t yde = gx_uint16_min(GDEW075T7_HEIGHT, yd + h) - 1;
+  if (!_using_partial_mode) _wakeUp();
+  _using_partial_mode = true;
+  initPartialUpdate();
+  
+  { // leave both controller buffers equal
+    IO.cmd(0x91); // partial in
+    // soft limits, must send as many bytes as set by _SetRamArea
+    uint16_t yse = ys + yde - yd;
+    uint16_t xss_d8 = xs / 8;
+    uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
+    IO.cmd(0x13);
+    for (int16_t y1 = ys; y1 <= yse; y1++)
+    {
+      for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
+      {
+        uint16_t idx = y1 * (GDEW075T7_WIDTH / 8) + x1;
+        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
+        IO.dataBuffer(~data); // white is 0xFF on device
+      }
+    }
+    IO.cmd(0x12);      //display refresh
+    _waitBusy("updateToWindow");
+    IO.cmd(0x92); // partial out
+  }
   vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
 }
 
