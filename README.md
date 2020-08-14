@@ -1,25 +1,27 @@
 ![CALE Logo](/config-examples/assets/cale-idf.svg)
 
-This is the official IDF Firmware of our Web-Service [CALE.es](https://cale.es). Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and I think the Wiki is the perfect place to make updates that are not branch dependant.
+cale-IDF is the firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
+Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and I think the Wiki is the perfect place to make updates that are not branch dependant.
 
-It does only 3 things at the moment and is very easy to set up:
+CALE does only 3 things at the moment and is very easy to set up:
 
 1. It connects to cale.es and downloads a Screen bitmap.
 2. In "Streaming mode" it pushes the pixels to Adafruit GFX buffer and at the end renders it in your Epaper.
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
 And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
-**master**...    -> stable version
+
+
+    RELEASES
     v.0.9.5 [PlasticLogic Added new EPD manufacturer](https://plasticlogic.com)
     v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
     v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
     v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
     
-    
-
 ## News
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- [Gdew0583z21](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583z21.h) Good Display 5.83 b/w/r 3 color eink added. Refresh takes like 10 seconds but the red looks amazing. No grays or partial update is supported in color models.
 - [Gdew0583t7](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583t7.h) Good Display 5.83 b/w model added after testing. In the next weeks I will focus on getting grayscales and additional colors to work.
 - Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. I'll be working in adding a PCB on top with a different board (TTGO T8) that has battery management and PSRAM. Due to the nature of this display and the big pixel resolution, it has a 160 Kb buffer, so it leaves no DRAM for your program. So it's actually only usable with PSIRAM if you want to have a working ESP32 sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
 
