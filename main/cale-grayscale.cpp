@@ -18,24 +18,19 @@
 
 // Should match your display model (Check WiKi)
 // 1 channel SPI epaper displays:
-
 //#include <gdew075T8.h>
 //#include <gdew0583t7.h>
-//#include <gdew0583z21.h>
+#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//EpdSpi io;
+EpdSpi io;
 //Gdew0583z21 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
 //Gdew075T8 display(io);
 //Gdew042t2 display(io);
-#include <plasticlogic021.h>
-EpdSpi2Cs io;
-//PlasticLogic011 display(io);
-//PlasticLogic014 display(io);
-PlasticLogic021 display(io);
+
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 /* // Otherwise you will run out of DRAM very shortly!
