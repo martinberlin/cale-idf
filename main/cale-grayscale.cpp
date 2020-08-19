@@ -18,19 +18,24 @@
 
 // Should match your display model (Check WiKi)
 // 1 channel SPI epaper displays:
+
 //#include <gdew075T8.h>
 //#include <gdew0583t7.h>
-#include <gdew0583z21.h>
+//#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-EpdSpi io;
+//EpdSpi io;
 //Gdew0583z21 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
 //Gdew075T8 display(io);
 //Gdew042t2 display(io);
-
+#include <plasticlogic021.h>
+EpdSpi2Cs io;
+//PlasticLogic011 display(io);
+//PlasticLogic014 display(io);
+PlasticLogic021 display(io);
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 /* // Otherwise you will run out of DRAM very shortly!
@@ -98,7 +103,7 @@ uint16_t h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
-bool whitish, colored;
+bool whitish, color_lgray, color_dgray;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
@@ -115,7 +120,8 @@ uint16_t forCount = 0;
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
 uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for depth <= 8 b/w
-uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
+uint8_t lgray_palette_buffer[max_palette_pixels / 8]; // Light gray
+uint8_t dgray_palette_buffer[max_palette_pixels / 8]; // Dark  gray
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
@@ -226,17 +232,26 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     bPointer++;
 
                     whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                    colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0));                                                  // reddish or yellowish?
-                    if (0 == pn % 8)
+                    color_lgray = (red > 0xA9 && red < 0x80) || ((green > 0xA9 && green < 0x80) || (blue > 0xA9 && blue < 0x80)); // EPD_LGRAY
+                    color_dgray = (red > 0x54) || ((green > 0x54) || (blue > 0x54)); // EPD_DGRAY
+                    
+                    
+                    printf("R %x G %x B %x . ",red,green,blue);
+                                      
+                    
+                    if (0 == pn % 8) {
                         mono_palette_buffer[pn / 8] = 0;
-                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-                    if (0 == pn % 8)
-                        color_palette_buffer[pn / 8] = 0;
-                    color_palette_buffer[pn / 8] |= colored << pn % 8;
+                        lgray_palette_buffer[pn / 8] = 0;
+                        dgray_palette_buffer[pn / 8] = 0;
+                        }
+                        
+                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;                        
+                    lgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
+                    dgray_palette_buffer[pn / 8] |= color_dgray << pn % 8;
 
                     // DEBUG Colors - TODO: Double check Palette!!
                     if (bmpDebug)
-                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
+                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, color_lgray);
                 }
             }
             imageBytesRead += evt->data_len;
@@ -298,8 +313,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 {
 
                     uint16_t pn = (in_byte >> bitshift) & bitmask;
+                    
                     whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                    color_lgray = lgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                    color_dgray = dgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
+
                     in_byte <<= bmp.depth;
                     in_bits -= bmp.depth;
 
@@ -307,7 +325,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     {
                         color = EPD_WHITE;
                     }
-                    else if (colored && with_color)
+                    else if (color_dgray)
+                    {
+                        //printf("DGRAY\n");
+                        color = EPD_DGRAY;
+                    }
+                    else if (color_lgray)
                     {
                         color = EPD_LGRAY;
                     }
