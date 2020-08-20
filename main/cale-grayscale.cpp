@@ -94,8 +94,14 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
     ((uint8_t *)&result)[3] = output_buffer[startPointer + 3]; // MSB
     return result;
 }
+/** COLOR Boundaries for gray 
+ *  0x00:Black  0x55:DGray  0xAA:LGray  0xFF White
+ **/
+uint8_t lgray_lb = 0x56; // Near to dark gray
+uint8_t lgray_hb = 0xFA; // Almost white
+uint8_t dgray_lb = 0x01; // Near to black
+uint8_t dgray_hb = 0xA9;
 
-bool with_color = true; // Candidate for Kconfig
 uint32_t rowSize;
 uint32_t rowByteCounter;
 uint16_t w;
@@ -212,9 +218,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             bitshift = 8 - bmp.depth;
 
-            if (bmp.depth == 1)
-                with_color = false;
-
             if (bmp.depth <= 8)
             {
                 if (bmp.depth < 8)
@@ -231,28 +234,31 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     red = output_buffer[bPointer++];
                     bPointer++;
 
-                    whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                    color_lgray = (red > 0xA9 && red < 0x80) || ((green > 0xA9 && green < 0x80) || (blue > 0xA9 && blue < 0x80)); // EPD_LGRAY
-                    color_dgray = (red > 0x54) || ((green > 0x54) || (blue > 0x54)); // EPD_DGRAY
-                    
-                    
-                    printf("R %x G %x B %x . ",red,green,blue);
-                                      
+                    whitish = ((red > 0x80) && (green > 0x80) && (blue > 0x80));
+                    // Balanced with boundaries defined in global COLORS 
+                    color_lgray = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb); // EPD_LGRAY
+                    color_dgray = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb); // EPD_DGRAY                                     
                     
                     if (0 == pn % 8) {
                         mono_palette_buffer[pn / 8] = 0;
                         lgray_palette_buffer[pn / 8] = 0;
                         dgray_palette_buffer[pn / 8] = 0;
                         }
-                        
+                    
                     mono_palette_buffer[pn / 8] |= whitish << pn % 8;                        
                     lgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
                     dgray_palette_buffer[pn / 8] |= color_dgray << pn % 8;
 
-                    // DEBUG Colors - TODO: Double check Palette!!
+                    if (color_lgray) {
+                        printf("pn: %d LGRAY: %x\n",pn,color_lgray);
+                    }
+                    if (color_dgray) {
+                        printf("pn: %d DGRAY: %x\n",pn,color_dgray);
+                    }
+                    // DEBUG Colors
                     if (bmpDebug)
                         printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, color_lgray);
-                }
+                    }
             }
             imageBytesRead += evt->data_len;
         }
@@ -292,10 +298,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
         }
         forCount = 0;
+
         // LOOP all the received Buffer but start on ImageOffset if first call
         for (uint32_t byteIndex = bPointer; byteIndex < evt->data_len; ++byteIndex)
         {
             in_byte = output_buffer[byteIndex];
+            
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
@@ -321,19 +329,20 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     in_byte <<= bmp.depth;
                     in_bits -= bmp.depth;
 
-                    if (whitish)
+                    // Withouth this is coming white first and skips light gray (Research why)
+                    if (whitish && !color_lgray)
                     {
                         color = EPD_WHITE;
-                    }
-                    else if (color_dgray)
-                    {
-                        //printf("DGRAY\n");
-                        color = EPD_DGRAY;
                     }
                     else if (color_lgray)
                     {
                         color = EPD_LGRAY;
                     }
+                    else if (color_dgray)
+                    {
+                        color = EPD_DGRAY;
+                    }
+                    
                     else
                     {
                         color = EPD_BLACK;
