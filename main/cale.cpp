@@ -9,33 +9,34 @@
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-// - - - - HTTP Client
+#include "esp_sleep.h"
+// - - - - HTTP Client includes:
 #include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
-#include "esp_sleep.h"
-
-// Should match your display model (Check WiKi)
-// 1 channel SPI epaper displays:
-
-//#include <gdew075T8.h>
+/**
+ * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
+ * Needs 3 things: 
+ * 1. Include the right class (Check Wiki for supported models)
+ * 2. Instantiate io class, below an example for Good Display/Waveshare epapers
+ * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
+ */
+// 1 channel SPI epaper displays example:
 //#include <gdew0583t7.h>
-//#include <gdew0583z21.h>
+//#include <gdew075T8.h>
+#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//EpdSpi io;
-//Gdew0583z21 display(io);
-//Gdew0583T7 display(io);
-//Gdew027w3 display(io);
-//Gdew075T8 display(io);
-//Gdew042t2 display(io);
-#include <plasticlogic021.h>
-EpdSpi2Cs io;
-//PlasticLogic011 display(io);
-//PlasticLogic014 display(io);
-PlasticLogic021 display(io);
+EpdSpi io;
+Gdew0583z21 display(io);
+
+// Plastic Logic test: 
+//#include <plasticlogic021.h>
+//EpdSpi2Cs io;
+//PlasticLogic021 display(io);
+
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 /* // Otherwise you will run out of DRAM very shortly!
@@ -232,11 +233,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                     whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
                     colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0));                                                  // reddish or yellowish?
-                    if (0 == pn % 8)
+                    if (0 == pn % 8) {
                         mono_palette_buffer[pn / 8] = 0;
-                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-                    if (0 == pn % 8)
                         color_palette_buffer[pn / 8] = 0;
+                    }
+                        
+                    mono_palette_buffer[pn / 8]  |= whitish << pn % 8;                       
                     color_palette_buffer[pn / 8] |= colored << pn % 8;
 
                     // DEBUG Colors - TODO: Double check Palette!!
@@ -314,7 +316,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     else if (colored && with_color)
                     {
-                        color = EPD_LGRAY;
+                        color = EPD_RED;
                     }
                     else
                     {
@@ -390,7 +392,9 @@ static void http_post(void)
        http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
        http://cale.es/img/test/1.bmp                -> vertical line
        http://cale.es/img/test/circle.bmp           -> Circle test
+       timeout_ms set to 9 seconds since for large displays a dynamic BMP can take some seconds to be generated
      */
+    
     // POST Send the IP for logging purpouses
     char post_data[22];
     uint8_t postsize = sizeof(post_data);
@@ -400,6 +404,7 @@ static void http_post(void)
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
         .method = HTTP_METHOD_POST,
+        .timeout_ms = 9000,
         .event_handler = _http_event_handler,
         .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
         };
