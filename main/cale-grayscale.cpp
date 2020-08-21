@@ -9,34 +9,33 @@
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-#include "esp_sleep.h"
-// - - - - HTTP Client includes:
+// - - - - HTTP Client
 #include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
-/**
- * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
- * Needs 3 things: 
- * 1. Include the right class (Check Wiki for supported models)
- * 2. Instantiate io class, below an example for Good Display/Waveshare epapers
- * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
- */
-// 1 channel SPI epaper displays example:
-//#include <gdew0583t7.h>
+#include "esp_sleep.h"
+
+// Should match your display model (Check WiKi)
+// 1 channel SPI epaper displays:
+
 //#include <gdew075T8.h>
-#include <gdew0583z21.h>
+//#include <gdew0583t7.h>
+//#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-EpdSpi io;
-Gdew0583z21 display(io);
-
-// Plastic Logic test: 
-//#include <plasticlogic021.h>
-//EpdSpi2Cs io;
-//PlasticLogic021 display(io);
-
+//EpdSpi io;
+//Gdew0583z21 display(io);
+//Gdew0583T7 display(io);
+//Gdew027w3 display(io);
+//Gdew075T8 display(io);
+//Gdew042t2 display(io);
+#include <plasticlogic021.h>
+EpdSpi2Cs io;
+//PlasticLogic011 display(io);
+//PlasticLogic014 display(io);
+PlasticLogic021 display(io);
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 /* // Otherwise you will run out of DRAM very shortly!
@@ -95,8 +94,14 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
     ((uint8_t *)&result)[3] = output_buffer[startPointer + 3]; // MSB
     return result;
 }
+/** COLOR Boundaries for gray 
+ *  0x00:Black  0x55:DGray  0xAA:LGray  0xFF White
+ **/
+uint8_t lgray_lb = 0x56; // Near to dark gray
+uint8_t lgray_hb = 0xFA; // Almost white
+uint8_t dgray_lb = 0x01; // Near to black
+uint8_t dgray_hb = 0xA9;
 
-bool with_color = true; // Candidate for Kconfig
 uint32_t rowSize;
 uint32_t rowByteCounter;
 uint16_t w;
@@ -104,7 +109,7 @@ uint16_t h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
-bool whitish, colored;
+bool whitish, color_lgray, color_dgray;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
@@ -121,7 +126,8 @@ uint16_t forCount = 0;
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
 uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for depth <= 8 b/w
-uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
+uint8_t lgray_palette_buffer[max_palette_pixels / 8]; // Light gray
+uint8_t dgray_palette_buffer[max_palette_pixels / 8]; // Dark  gray
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
@@ -212,9 +218,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             bitshift = 8 - bmp.depth;
 
-            if (bmp.depth == 1)
-                with_color = false;
-
             if (bmp.depth <= 8)
             {
                 if (bmp.depth < 8)
@@ -231,20 +234,31 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     red = output_buffer[bPointer++];
                     bPointer++;
 
-                    whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                    colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0));                                                  // reddish or yellowish?
+                    whitish = ((red > 0x80) && (green > 0x80) && (blue > 0x80));
+                    // Balanced with boundaries defined in global COLORS 
+                    color_lgray = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb); // EPD_LGRAY
+                    color_dgray = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb); // EPD_DGRAY                                     
+                    
                     if (0 == pn % 8) {
                         mono_palette_buffer[pn / 8] = 0;
-                        color_palette_buffer[pn / 8] = 0;
-                    }
-                        
-                    mono_palette_buffer[pn / 8]  |= whitish << pn % 8;                       
-                    color_palette_buffer[pn / 8] |= colored << pn % 8;
+                        lgray_palette_buffer[pn / 8] = 0;
+                        dgray_palette_buffer[pn / 8] = 0;
+                        }
+                    
+                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;                        
+                    lgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
+                    dgray_palette_buffer[pn / 8] |= color_dgray << pn % 8;
 
-                    // DEBUG Colors - TODO: Double check Palette!!
+                    if (color_lgray) {
+                        printf("pn: %d LGRAY: %x\n",pn,color_lgray);
+                    }
+                    if (color_dgray) {
+                        printf("pn: %d DGRAY: %x\n",pn,color_dgray);
+                    }
+                    // DEBUG Colors
                     if (bmpDebug)
-                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
-                }
+                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, color_lgray);
+                    }
             }
             imageBytesRead += evt->data_len;
         }
@@ -284,10 +298,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
         }
         forCount = 0;
+
         // LOOP all the received Buffer but start on ImageOffset if first call
         for (uint32_t byteIndex = bPointer; byteIndex < evt->data_len; ++byteIndex)
         {
             in_byte = output_buffer[byteIndex];
+            
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
@@ -305,19 +321,28 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 {
 
                     uint16_t pn = (in_byte >> bitshift) & bitmask;
+                    
                     whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                    color_lgray = lgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                    color_dgray = dgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
+
                     in_byte <<= bmp.depth;
                     in_bits -= bmp.depth;
 
-                    if (whitish)
+                    // Withouth this is coming white first and skips light gray (Research why)
+                    if (whitish && !color_lgray)
                     {
                         color = EPD_WHITE;
                     }
-                    else if (colored && with_color)
+                    else if (color_lgray)
                     {
-                        color = EPD_RED;
+                        color = EPD_LGRAY;
                     }
+                    else if (color_dgray)
+                    {
+                        color = EPD_DGRAY;
+                    }
+                    
                     else
                     {
                         color = EPD_BLACK;
@@ -392,9 +417,7 @@ static void http_post(void)
        http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
        http://cale.es/img/test/1.bmp                -> vertical line
        http://cale.es/img/test/circle.bmp           -> Circle test
-       timeout_ms set to 9 seconds since for large displays a dynamic BMP can take some seconds to be generated
      */
-    
     // POST Send the IP for logging purpouses
     char post_data[22];
     uint8_t postsize = sizeof(post_data);
@@ -404,7 +427,6 @@ static void http_post(void)
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
         .method = HTTP_METHOD_POST,
-        .timeout_ms = 9000,
         .event_handler = _http_event_handler,
         .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
         };

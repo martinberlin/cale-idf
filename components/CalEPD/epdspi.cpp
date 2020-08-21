@@ -115,12 +115,11 @@ void EpdSpi::data(uint8_t data)
 
 void EpdSpi::dataBuffer(uint8_t data)
 {
-    esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
     t.length=8;                     //Command is 8 bits
     t.tx_buffer=&data;
-    ret=spi_device_polling_transmit(spi, &t);
+    spi_device_polling_transmit(spi, &t);
 }
 
 /* Send data to the SPI. Uses spi_device_polling_transmit, which waits until the

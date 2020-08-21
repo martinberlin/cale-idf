@@ -3,11 +3,11 @@ menu "Display Configuration"
     comment "Mosi and Clock should be set for any epaper"
     config EINK_SPI_MOSI
         int "EPD SPI: GPIO for MOSI (DIN in epaper) * Universal MOSI"
-        range 0 34
+        range 0 35
         default 23
     config EINK_SPI_CLK
         int "EPD SPI: GPIO for Clock                * Universal CLK"
-        range 0 34
+        range 0 37
         default 18
     config EINK_SPI_CS
         int "EPD SPI: GPIO for Chip Select"
@@ -22,18 +22,20 @@ menu "Display Configuration"
         range -1 34
         default 26
     config EINK_BUSY
-        int "EPD: GPIO for Busy signal - DONE! Leave rest on 0 unless is has multi-SPI slaves"
+        int "EPD: GPIO for Busy signal - DONE for Good Display/Waveshare einks! Leave rest on 0 unless is Wave12I48 or PlasticLogic"
         range -1 39
         default 35
     
+    comment "Important: Leave the rest of unconfigured GPIOs to -1 unless multi-SPI channels (wave12I48) or Plasticlogic EPDs"
     comment "CS2 and MISO pins apply only to Plasticlogic.com epaper displays"
+    
     config EINK_SPI_CS2
         int "EPD SPI: GPIO for Chip Select2"
         range -1 34
         default 4
     config EINK_SPI_MISO
         int "EPD SPI: GPIO for MISO"
-        range 0 34
+        range -1 36
         default 19
         
     comment "Config below applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins (14 pins)"
@@ -49,8 +51,8 @@ menu "Display Configuration"
         range 0 23
         default 22
     config EINK_SPI_M2_CS
-        int "* CS M2"
-        range 0 23
+        int "* CS M2 do not use 16-17 when using PSRAM"
+        range 0 27
         default 16
     config EINK_SPI_S2_CS
         int "* CS S2"
@@ -79,8 +81,8 @@ menu "Display Configuration"
         range 0 25
         default 25
     config EINK_M2S2_DC
-        int "* M2S2_DC"
-        range 0 25
+        int "* M2S2_DC do not use 16-17 when using PSRAM"
+        range 0 27
         default 17
     config EINK_M1S1_RST
         int "* M1S1_RST"
