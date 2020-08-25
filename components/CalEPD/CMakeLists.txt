@@ -19,7 +19,7 @@ set(srcs
     "models/plasticlogic/plasticlogic031.cpp"
 
     # Pending for more testing:
-    #   "models/gdeh0213b73.cpp"
+    "models/gdeh0213b73.cpp"
     # Common base classes
     "epd.cpp"
     "epdspi.cpp"

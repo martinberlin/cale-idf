@@ -123,7 +123,7 @@ void Gdeh0213b73::update()
     {
       uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
+      IO.data(~data);
     }
   }
   cmd(0x26);
@@ -132,7 +132,7 @@ void Gdeh0213b73::update()
     {
       uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
+      IO.data(~data);
     }
   }
   
