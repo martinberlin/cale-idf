@@ -31,8 +31,9 @@
 class Gdeh0213b73 : public Epd
 {
   public:
-   
     Gdeh0213b73(EpdSpi& IO);
+    // Sorry manufacturers but I will count on black/white only real ink colors supported not white (Others will respect your color number definition)
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     

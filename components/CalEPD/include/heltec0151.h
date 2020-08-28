@@ -13,7 +13,7 @@
 #include <epdspi.h>
 #include <gdew_colors.h>
 
-// Controller: IL3829  Note: Used by Waveshare in https://www.waveshare.com/wiki/1.54inch_e-Paper_Module
+// Controller: IL3829
 #define HEL0151_WIDTH 200
 #define HEL0151_HEIGHT 200
 #define HEL0151_BUFFER_SIZE (uint32_t(HEL0151_WIDTH) * uint32_t(HEL0151_HEIGHT) / 8)
@@ -25,6 +25,7 @@ class Hel0151 : public Epd
 {
   public:
     Hel0151(EpdSpi& IO);
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     

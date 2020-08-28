@@ -25,6 +25,7 @@ class Gdew0213i5f : public Epd
   public:
    
     Gdew0213i5f(EpdSpi& IO);
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     

@@ -4,12 +4,16 @@ set(srcs
     "models/gdew075T7.cpp"
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
-    "models/gdew0583z21.cpp"
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/heltec0151.cpp"
+    
+    # 3 colors Goodisplay
+    "models/color/gdew0583z21.cpp"
+    "models/color/gdew075c64.cpp"
+
     # Plasticlogic.com Flex epaper models:
     "models/plasticlogic/epdspi2cs.cpp"
     "models/plasticlogic/plasticlogic.cpp"
