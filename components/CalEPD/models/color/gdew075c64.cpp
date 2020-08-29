@@ -10,7 +10,7 @@
 // 0x3f (1st) VDH= 15V
 // 0x3f (2nd) VDH=-15V
 DRAM_ATTR const epd_power_4 Gdew075C64::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3a, 0x3a}, 4};
+    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
 
 DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution = {
     0x61, {0x03, //source 800
@@ -19,8 +19,15 @@ DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution = {
            0xE0},
     4};
 
-DRAM_ATTR const epd_init_3 Gdew075C64::epd_boost={
-0x06,{0xC7,0xCC,0x28},3
+// Note: Played with this settings. If is too high (In specs says 0x17) then
+//       yellow will get out from right side. Too low and won't be yellow enough (But is sill not 100% right)
+//       For me it looks more yellow on the top and more dark yellow on the bottom
+DRAM_ATTR const epd_init_4 Gdew075C64::epd_boost={
+0x06,{
+  0x17,
+  0x17,
+  0x15, /* Top part of the display get's more color on 0x16. On 0x18 get's too yellow and desbords on left side */
+  0x17},4
 };
 
 // Constructor
@@ -78,6 +85,10 @@ void Gdew075C64::_wakeUp()
   // Panel setting
   IO.cmd(0x00);
   IO.data(0x0f); //KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
+
+  // PLL 
+  IO.cmd(0x30);
+  IO.data(0x06);
 
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
