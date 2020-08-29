@@ -5,14 +5,12 @@
 #include "freertos/task.h"
 // Controller: GD7965 (EK79655)
 // Specification: https://www.scribd.com/document/448888338/GDEW075C64-V1-0-Specification
-// Partial Update Delay, may have an influence on degradation
-#define GDEW075C64_PU_DELAY 100
 
 // 0x07 (2nd) VGH=20V,VGL=-20V
 // 0x3f (1st) VDH= 15V
 // 0x3f (2nd) VDH=-15V
 DRAM_ATTR const epd_power_4 Gdew075C64::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
+    0x01, {0x07, 0x07, 0x3a, 0x3a}, 4};
 
 DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution = {
     0x61, {0x03, //source 800
@@ -93,7 +91,7 @@ void Gdew075C64::_wakeUp()
   for (int i=0;i<sizeof(epd_boost.data);++i) {
     IO.data(epd_boost.data[i]);
   }
-  
+
   // Not sure if 0x15 is really needed, seems to work the same without it too
   IO.cmd(0x15);  // Dual SPI
   IO.data(0x00); // MM_EN, DUSPI_EN
@@ -115,14 +113,38 @@ void Gdew075C64::update()
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
 
-  for (uint16_t i = 1; i < sizeof(_buffer); i++){
-    IO.data(~_buffer[i]);
+   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+  uint16_t i = 0;
+  uint8_t xLineBytes = GDEW075C64_WIDTH / 8;
+  uint8_t x1buf[xLineBytes];
+  for (uint16_t y = 1; y <= GDEW075C64_HEIGHT; y++)
+  {
+    for (uint16_t x = 1; x <= xLineBytes; x++)
+    {
+      uint8_t data = i < sizeof(_buffer) ? ~_buffer[i] : 0x00;
+      x1buf[x - 1] = data;
+      if (x == xLineBytes)
+      { // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
+      ++i;
+    }
   }
 
   IO.cmd(0x13);
-
-  for (uint16_t i = 1; i < sizeof(_color); i++) {
-   IO.data(_color[i]);
+  i = 0;
+  for (uint16_t y = 1; y <= GDEW075C64_HEIGHT; y++)
+  {
+    for (uint16_t x = 1; x <= xLineBytes; x++)
+    {
+      uint8_t data = i < sizeof(_color) ? _color[i] : 0x00;
+      x1buf[x - 1] = data;
+      if (x == xLineBytes)
+      { // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
+      ++i;
+    }
   }
 
   uint64_t endTime = esp_timer_get_time();
