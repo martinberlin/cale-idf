@@ -1,4 +1,4 @@
-// 5.83 600*448 b/w/R Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
+// 7.5 800*480 b/w Controller: GD7965 (In Waveshare called 7.5 V2)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,9 +18,12 @@
 #define GDEW075C64_WIDTH 800
 #define GDEW075C64_HEIGHT 480
 
+// EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
+// We are not adding page support so here this is our Buffer size
 #define GDEW075C64_BUFFER_SIZE (uint32_t(GDEW075C64_WIDTH) * uint32_t(GDEW075C64_HEIGHT) / 8)
-
-#define GDEW075C64_PU_DELAY 500
+// 8 pix of this color in a buffer byte:
+#define GDEW075C64_8PIX_BLACK 0x00
+#define GDEW075C64_8PIX_WHITE 0xFF
 
 class Gdew075C64 : public Epd
 {
@@ -29,30 +32,32 @@ class Gdew075C64 : public Epd
     Gdew075C64(EpdSpi& IO);
     uint8_t colors_supported = 3;
     
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
+    
+    // EPD tests 
     void init(bool debug = false);
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
+    // Partial update of rectangle from buffer to screen, does not power off
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void update();
-    // Color epapers from Goodisplay do not support partial update
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
   private:
     EpdSpi& IO;
 
     uint8_t _buffer[GDEW075C64_BUFFER_SIZE];
-    uint8_t _color_buffer[GDEW075C64_BUFFER_SIZE]; // Yellow or Red depending on the model
+    uint8_t _color[GDEW075C64_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
     
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-    void _send8pixel(uint8_t black,uint8_t red);
-
+    
     // Command & data structs
-    static const epd_init_4 epd_wakeup_power;
-    static const epd_init_2 epd_panel_setting;
-    static const epd_init_3 epd_boost;
+    
+    static const epd_power_4 epd_wakeup_power;
+    static const epd_init_1 epd_pll;
     static const epd_init_4 epd_resolution;
 };

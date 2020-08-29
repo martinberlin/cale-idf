@@ -1,56 +1,44 @@
-//Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
 #include "gdew075c64.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
+// Controller: GD7965 (EK79655)
+// Specification: https://www.scribd.com/document/448888338/GDEW075C64-V1-0-Specification
+// Partial Update Delay, may have an influence on degradation
+#define GDEW075C64_PU_DELAY 100
 
-// CMD, DATA, Databytes * Optional we are going to use sizeof(data)
-DRAM_ATTR const epd_init_4 Gdew075C64::epd_wakeup_power={
-0x01,{
-  0x07,
-  0x07,
-  0x3F,
-  0x3F
-  },4
-};
+// 0x07 (2nd) VGH=20V,VGL=-20V
+// 0x3f (1st) VDH= 15V
+// 0x3f (2nd) VDH=-15V
+DRAM_ATTR const epd_power_4 Gdew075C64::epd_wakeup_power = {
+    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
 
-DRAM_ATTR const epd_init_2 Gdew075C64::epd_panel_setting={
-0x00,{
-  0x00,
-  0x0F //KW-3f   KWR-2F BWROTP 0f BWOTP 1f
-  },1
-};
-
-DRAM_ATTR const epd_init_3 Gdew075C64::epd_boost={
-0x06,{0xC7,0xCC,0x28},3
-};
-
-DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution={
-0x61,{
-  0x03, //source 800
-  0x20,
-  0x01, //gate 480
-  0xE0
-},4};
+DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution = {
+    0x61, {0x03, //source 800
+           0x20,
+           0x01, //gate 480
+           0xE0},
+    4};
 
 // Constructor
-Gdew075C64::Gdew075C64(EpdSpi& dio): 
-  Adafruit_GFX(GDEW075C64_WIDTH, GDEW075C64_HEIGHT),
-  Epd(GDEW075C64_WIDTH, GDEW075C64_HEIGHT), IO(dio)
+Gdew075C64::Gdew075C64(EpdSpi &dio) : Adafruit_GFX(GDEW075C64_WIDTH, GDEW075C64_HEIGHT),
+                                    Epd(GDEW075C64_WIDTH, GDEW075C64_HEIGHT), IO(dio)
 {
-  printf("Gdew075C64() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GDEW075C64_WIDTH, GDEW075C64_HEIGHT);  
+  printf("Gdew075C64() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
+         GDEW075C64_WIDTH, GDEW075C64_HEIGHT, GDEW075C64_BUFFER_SIZE);
+  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
 }
 
 //Initialize the display
 void Gdew075C64::init(bool debug)
 {
-    debug_enabled = debug;
-    if (debug_enabled) printf("Gdew075C64::init(debug:%d)\n", debug);
-    //Initialize SPI at 4MHz frequency. true for debug
-    IO.init(4, debug);
-    fillScreen(EPD_WHITE);
+  debug_enabled = debug;
+  if (debug_enabled)
+    printf("Gdew075C64::init(debug:%d)\n", debug);
+  //Initialize SPI at 4MHz frequency. true for debug
+  IO.init(4, false);
+  fillScreen(EPD_WHITE);
 }
 
 void Gdew075C64::fillScreen(uint16_t color)
@@ -65,58 +53,47 @@ void Gdew075C64::fillScreen(uint16_t color)
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = black;
-    _color_buffer[x] = red;
+    _color[x] = red;
   }
 }
 
-void Gdew075C64::_wakeUp(){
+void Gdew075C64::_wakeUp()
+{
   IO.reset(10);
+  //IMPORTANT: Some EPD controllers like to receive data byte per byte
+  //So this won't work:
+  //IO.data(epd_wakeup_power.data,epd_wakeup_power.databytes);
+
   IO.cmd(epd_wakeup_power.cmd);
- 
-  for (int i=0;i<sizeof(epd_wakeup_power.data);++i) {
+  for (int i = 0; i < epd_wakeup_power.databytes; ++i)
+  {
     IO.data(epd_wakeup_power.data[i]);
   }
 
-  // Power it on
   IO.cmd(0x04);
-  _waitBusy("Power on");
+  _waitBusy("_wakeUp power on");
 
-  printf("Panel setting\n");
-  IO.cmd(epd_panel_setting.cmd);
-  IO.data(epd_panel_setting.data[0]); //0x0f KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
+  // Panel setting
+  IO.cmd(0x00);
+  IO.data(0x0f); //KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
 
-  /* printf("PLL\n");
-  IO.cmd(0x30);
-  IO.data(0x3a); */
-  printf("Resolution setting\n");
+  // Resolution setting
   IO.cmd(epd_resolution.cmd);
-  for (int i=0;i<sizeof(epd_resolution.data);++i) {
+  for (int i = 0; i < epd_resolution.databytes; ++i)
+  {
     IO.data(epd_resolution.data[i]);
   }
 
-  IO.cmd(0x15);
-  IO.data(0x00); 
+  // Not sure if 0x15 is really needed, seems to work the same without it too
+  IO.cmd(0x15);  // Dual SPI
+  IO.data(0x00); // MM_EN, DUSPI_EN
 
-  printf("Boost\n"); // Handles the intensity of the colors displayed. CHECK: Not in original Arduino example from Goodisplay
-  IO.cmd(epd_boost.cmd);
-  for (int i=0;i<sizeof(epd_boost.data);++i) {
-    IO.data(epd_boost.data[i]);
-  }
-  printf("VCOM\n");
-  IO.cmd(0x50);
-  IO.data(0x11);
+  IO.cmd(0x50);  // VCOM AND DATA INTERVAL SETTING
+  IO.data(0x11); // LUTKW, N2OCP: copy new to old
   IO.data(0x07);
-  // TCON
-  IO.cmd(0x60);
+
+  IO.cmd(0x60);  // TCON SETTING
   IO.data(0x22);
-
-	IO.cmd(0X65);			//FLASH CONTROL  CHECK: Not in original Arduino example from Goodisplay
-	IO.data(0x00);
-  
-  printf("Flash mode\n");         // CHECK: Not in original Arduino example from Goodisplay
-  IO.cmd(0xe5);
-	IO.data(0x03);
-
 }
 
 void Gdew075C64::update()
@@ -124,141 +101,121 @@ void Gdew075C64::update()
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
-  // IN GD example says bufferSize is 38880 (?)
+
   IO.cmd(0x10);
-  printf("Sending a %d bytes buffer via SPI\n",sizeof(_buffer));
-    
-  for (uint32_t i = 0; i < sizeof(_buffer); ++i)
-  {
-    _send8pixel(_buffer[i], _color_buffer[i]);
-    
-    if (i%2000 == 0 && debug_enabled) {
-       // Funny without outputting this to serial is not refreshing. Seems no need of rtc_wdt_feed();
-       printf("%d ",i);
-       vTaskDelay(pdMS_TO_TICKS(10));   
-    }
-  
+  printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
+
+  for (uint16_t i = 1; i < sizeof(_buffer); i++){
+    IO.data(~_buffer[i]);
   }
-  IO.cmd(0x12);
-  
+
+  IO.cmd(0x13);
+
+  for (uint16_t i = 1; i < sizeof(_color); i++) {
+   IO.data(_color[i]);
+  }
+
   uint64_t endTime = esp_timer_get_time();
+  IO.cmd(0x12);
+
   _waitBusy("update");
   uint64_t updateTime = esp_timer_get_time();
-  
+
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
+
   _sleep();
 }
 
 void Gdew075C64::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("Color epapers from Goodisplay do not support partial update. Full update triggered\n");
-  update();
+  printf("updateWindow: Not for color epapers of Goodisplay. Launching full update\n");
+   update();
 }
 
-void Gdew075C64::_waitBusy(const char* message){
-  if (debug_enabled) {
+void Gdew075C64::_waitBusy(const char *message)
+{
+  if (debug_enabled)
+  {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
   int64_t time_since_boot = esp_timer_get_time();
-  // In this controller BUSY == 0 
-  while (true){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
+
+  while (1)
+  {
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1)
+      break;
     vTaskDelay(1);
-    if (esp_timer_get_time()-time_since_boot>2000000)
+    if (esp_timer_get_time() - time_since_boot > 2000000)
     {
-      if (debug_enabled) ESP_LOGI(TAG, "Busy Timeout");
+      if (debug_enabled)
+        ESP_LOGI(TAG, "Busy Timeout");
       break;
     }
   }
 }
 
-void Gdew075C64::_sleep(){
-  // Flash sleep  
+void Gdew075C64::_sleep()
+{
   IO.cmd(0x02);
-  _waitBusy("Power Off");
+  _waitBusy("power_off");
   IO.cmd(0x07); // Deep sleep
-  IO.data(0xa5);
+  IO.data(0xA5);
 }
 
-void Gdew075C64::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void Gdew075C64::_rotate(uint16_t &x, uint16_t &y, uint16_t &w, uint16_t &h)
 {
   switch (getRotation())
   {
-    case 1:
-      swap(x, y);
-      swap(w, h);
-      x = GDEW075C64_WIDTH - x - w - 1;
-      break;
-    case 2:
-      x = GDEW075C64_WIDTH - x - w - 1;
-      y = GDEW075C64_HEIGHT - y - h - 1;
-      break;
-    case 3:
-      swap(x, y);
-      swap(w, h);
-      y = GDEW075C64_HEIGHT - y - h - 1;
-      break;
+  case 1:
+    swap(x, y);
+    swap(w, h);
+    x = GDEW075C64_WIDTH - x - w - 1;
+    break;
+  case 2:
+    x = GDEW075C64_WIDTH - x - w - 1;
+    y = GDEW075C64_HEIGHT - y - h - 1;
+    break;
+  case 3:
+    swap(x, y);
+    swap(w, h);
+    y = GDEW075C64_HEIGHT - y - h - 1;
+    break;
   }
 }
 
-void Gdew075C64::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
+void Gdew075C64::drawPixel(int16_t x, int16_t y, uint16_t color)
+{
+  if ((x < 0) || (x >= width()) || (y < 0) || (y >= height()))
+    return;
   switch (getRotation())
   {
-    case 1:
-      swap(x, y);
-      x = GDEW075C64_WIDTH - x - 1;
-      break;
-    case 2:
-      x = GDEW075C64_WIDTH - x - 1;
-      y = GDEW075C64_HEIGHT - y - 1;
-      break;
-    case 3:
-      swap(x, y);
-      y = GDEW075C64_HEIGHT - y - 1;
-      break;
+  case 1:
+    swap(x, y);
+    x = GDEW075C64_WIDTH - x - 1;
+    break;
+  case 2:
+    x = GDEW075C64_WIDTH - x - 1;
+    y = GDEW075C64_HEIGHT - y - 1;
+    break;
+  case 3:
+    swap(x, y);
+    y = GDEW075C64_HEIGHT - y - 1;
+    break;
   }
   uint16_t i = x / 8 + y * GDEW075C64_WIDTH / 8;
 
-  // This formulas are from gxEPD that apparently got the color right:
   _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
-  _color_buffer[i] = (_color_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  _color[i] = (_color[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
   if (color == EPD_WHITE) return;
   else if (color == EPD_BLACK) _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-  else if (color == EPD_RED) _color_buffer[i] = (_color_buffer[i] | (1 << (7 - x % 8)));
+  else if (color == EPD_RED) _color[i] = (_color[i] | (1 << (7 - x % 8)));
   else
   {
-    if ((color & 0xF100) > (0xF100 / 2)) _color_buffer[i] = (_color_buffer[i] | (1 << (7 - x % 8)));
+    if ((color & 0xF100) > (0xF100 / 2)) _color[i] = (_color[i] | (1 << (7 - x % 8)));
     else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
     {
       _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
   }
-}
-
-/**
- * There should be a smarter way to do this
- * if you find it, just make a PR
- * 0x04 RED
- * 0x03 WHITE 
- * 0x00 BLACK
- */
-void Gdew075C64::_send8pixel(uint8_t black, uint8_t red)
-{ 
-  // This loops 4 times, recollects 2 pixels, and sends them to IO.data (Is very slow like it is)
-  for (uint8_t j = 0; j < 8; ++j)
-  {
-    uint8_t pix2 = (black & 0x80) ? 0x00 : (red & 0x80) ? 0x04 : 0x03; 
-    pix2 <<= 4;
-    black <<= 1;
-    red <<= 1;
-    j++;
-    pix2 |= (black & 0x80) ? 0x00 : (red & 0x80) ? 0x04 : 0x03; 
-    black <<= 1;
-    red <<= 1;
-
-    IO.dataBuffer(pix2);
-  }
-
 }
