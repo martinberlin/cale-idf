@@ -58,6 +58,6 @@ class Gdew075C64 : public Epd
     // Command & data structs
     
     static const epd_power_4 epd_wakeup_power;
-    static const epd_init_1 epd_pll;
     static const epd_init_4 epd_resolution;
+    static const epd_init_3 epd_boost;
 };

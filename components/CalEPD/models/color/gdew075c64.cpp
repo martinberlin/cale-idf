@@ -21,6 +21,10 @@ DRAM_ATTR const epd_init_4 Gdew075C64::epd_resolution = {
            0xE0},
     4};
 
+DRAM_ATTR const epd_init_3 Gdew075C64::epd_boost={
+0x06,{0xC7,0xCC,0x28},3
+};
+
 // Constructor
 Gdew075C64::Gdew075C64(EpdSpi &dio) : Adafruit_GFX(GDEW075C64_WIDTH, GDEW075C64_HEIGHT),
                                     Epd(GDEW075C64_WIDTH, GDEW075C64_HEIGHT), IO(dio)
@@ -84,6 +88,12 @@ void Gdew075C64::_wakeUp()
     IO.data(epd_resolution.data[i]);
   }
 
+  printf("Boost\n"); // Handles the intensity of the colors displayed
+  IO.cmd(epd_boost.cmd);
+  for (int i=0;i<sizeof(epd_boost.data);++i) {
+    IO.data(epd_boost.data[i]);
+  }
+  
   // Not sure if 0x15 is really needed, seems to work the same without it too
   IO.cmd(0x15);  // Dual SPI
   IO.data(0x00); // MM_EN, DUSPI_EN
