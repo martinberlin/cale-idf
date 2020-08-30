@@ -5,3 +5,4 @@
 #define EPD_LIGHTGREY 0xC618      /* 192, 192, 192 */
 #define EPD_WHITE     0xFFFF
 #define EPD_RED       0xF800      /* 255,   0,   0 */
+#define EPD_YELLOW    0xF800 

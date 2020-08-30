@@ -26,7 +26,7 @@ DRAM_ATTR const epd_init_4 Gdew075C64::epd_boost={
 0x06,{
   0x17,
   0x17,
-  0x15, /* Top part of the display get's more color on 0x16. On 0x18 get's too yellow and desbords on left side */
+  0x25, /* Top part of the display get's more color on 0x16. On 0x18 get's too yellow and desbords on left side. On 0x17 is shit */
   0x17},4
 };
 
