@@ -25,6 +25,7 @@ class Gdep015OC1 : public Epd
 {
   public:
     Gdep015OC1(EpdSpi& IO);
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     

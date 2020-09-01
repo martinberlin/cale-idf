@@ -143,9 +143,13 @@ void Gdew0583z21::update()
   
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
-
-  //vTaskDelay(pdMS_TO_TICKS(1000));
   _sleep();
+}
+
+void Gdew0583z21::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+{
+  printf("Color epapers from Goodisplay do not support partial update. Full update triggered\n");
+  update();
 }
 
 void Gdew0583z21::_waitBusy(const char* message){

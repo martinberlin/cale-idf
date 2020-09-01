@@ -15,41 +15,37 @@
 #include "soc/rtc_wdt.h"
 #include <gdew_colors.h>
 
-#define GDEW075T7_WIDTH 800
-#define GDEW075T7_HEIGHT 480
+#define GDEW075C64_WIDTH 800
+#define GDEW075C64_HEIGHT 480
 
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
 // We are not adding page support so here this is our Buffer size
-#define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 8)
+#define GDEW075C64_BUFFER_SIZE (uint32_t(GDEW075C64_WIDTH) * uint32_t(GDEW075C64_HEIGHT) / 8)
 // 8 pix of this color in a buffer byte:
-#define GDEW075T7_8PIX_BLACK 0x00
-#define GDEW075T7_8PIX_WHITE 0xFF
+#define GDEW075C64_8PIX_BLACK 0x00
+#define GDEW075C64_8PIX_WHITE 0xFF
 
-class Gdew075T7 : public Epd
+class Gdew075C64 : public Epd
 {
   public:
    
-    Gdew075T7(EpdSpi& IO);
-    uint8_t colors_supported = 1;
+    Gdew075C64(EpdSpi& IO);
+    uint8_t colors_supported = 3;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
     // EPD tests 
     void init(bool debug = false);
-    void initFullUpdate();
-    void initPartialUpdate();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
-    // Alternative method to updateWindow
-    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void update();
 
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GDEW075T7_BUFFER_SIZE];
+    uint8_t _buffer[GDEW075C64_BUFFER_SIZE];
+    uint8_t _color[GDEW075C64_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
     
@@ -60,17 +56,8 @@ class Gdew075T7 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     
     // Command & data structs
-    // LUT tables for this display are filled with zeroes at the end with writeLuts()
-    static const epd_init_42 lut_20_LUTC_partial;
-    static const epd_init_42 lut_21_LUTWW_partial;
-    static const epd_init_42 lut_22_LUTKW_partial;
-    static const epd_init_42 lut_23_LUTWK_partial;
-    static const epd_init_42 lut_24_LUTKK_partial;
-    static const epd_init_42 lut_25_LUTBD_partial;
     
     static const epd_power_4 epd_wakeup_power;
-    static const epd_init_1 epd_panel_setting_full;
-    static const epd_init_1 epd_panel_setting_partial;
-    static const epd_init_1 epd_pll;
     static const epd_init_4 epd_resolution;
+    static const epd_init_4 epd_boost;
 };

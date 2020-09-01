@@ -27,6 +27,7 @@ class Gdew0583T7 : public Epd
   public:
    
     Gdew0583T7(EpdSpi& IO);
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void init(bool debug = false);

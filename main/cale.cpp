@@ -25,12 +25,14 @@
 // 1 channel SPI epaper displays example:
 //#include <gdew0583t7.h>
 //#include <gdew075T8.h>
-#include <gdew0583z21.h>
+//#include <gdew0583z21.h>
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
+#include "gdeh0213b73.h"
 EpdSpi io;
-Gdew0583z21 display(io);
+Gdeh0213b73 display(io);
+//Gdew0583z21 display(io);
 
 // Plastic Logic test: 
 //#include <plasticlogic021.h>

@@ -27,12 +27,14 @@ class Gdew0583z21 : public Epd
   public:
    
     Gdew0583z21(EpdSpi& IO);
+    uint8_t colors_supported = 3;
     
     void init(bool debug = false);
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void fillScreen(uint16_t color);
     void update();
-    
+    // Color epapers from Goodisplay do not support partial update
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
 
   private:
