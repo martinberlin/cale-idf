@@ -546,6 +546,8 @@ void wifi_init_sta(void)
 
 void app_main(void)
 {
+    printf("CalEPD version: %s\n", CALEPD_VERSION);
+    
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)

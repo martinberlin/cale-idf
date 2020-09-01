@@ -337,7 +337,7 @@ void Gdeh0213b73::_wakeUp(){
 
 void Gdeh0213b73::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
-  printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
+  if (debug_enabled) printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
   cmd(0x44);
   IO.data(Xstart);
   IO.data(Xend);
@@ -350,7 +350,7 @@ void Gdeh0213b73::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint
 
 void Gdeh0213b73::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
-  printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
+  if (debug_enabled)  printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
   cmd(0x4e);
   IO.data(addrX);
   cmd(0x4f);
@@ -365,7 +365,6 @@ void Gdeh0213b73::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 //ram_entry_mode = 0x02; // y-increment, x-decrement
 void Gdeh0213b73::_setRamDataEntryMode(uint8_t em)
 {
-  printf("_setRamDataEntryMode\n");
   const uint16_t xPixelsPar = GDEH0213B73_X_PIXELS - 1;
   const uint16_t yPixelsPar = GDEH0213B73_Y_PIXELS - 1;
   em = gx_uint16_min(em, 0x03);

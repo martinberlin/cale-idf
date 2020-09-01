@@ -56,9 +56,9 @@ void demo_chars(){
 
 void app_main(void)
 {
-   printf("CALE-IDF fonts demo\n\n");
+   printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Show available Dynamic Random Access Memory available after display.init()
-   printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
+   printf("Fonts-demo. Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
    // Bootstrap epaper class
