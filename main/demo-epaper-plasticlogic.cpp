@@ -50,7 +50,8 @@ void print_title(std::string title, uint16_t color = EPD_BLACK, int16_t x = 2){
 
 void app_main(void)
 {
-   printf("CalEPD epaper research. Plasticlogic.com test\n");
+   printf("CalEPD version: %s for Plasticlogic.com\n", CALEPD_VERSION);
+   
    /** Color constants that the epaper supports:
     EPD_BLACK 0x00
     EPD_DGRAY 0x01

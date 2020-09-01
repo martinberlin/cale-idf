@@ -74,6 +74,7 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
 
 void app_main(void)
 {
+   printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
 
@@ -82,27 +83,29 @@ void app_main(void)
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
-   // Make some rectangles showing the different shades of gray
-   // fillRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color)
-   uint8_t clearFromBottom = 100;
+   uint16_t foregroundColor = EPD_WHITE;
+   // Make some rectangles showing the different colors or grays
+   if (display.colors_supported>1) {
+      foregroundColor = EPD_RED;
+   }
   
    uint16_t firstBlock = 200;
-   display.fillRect(    1,1,rectW, firstBlock,EPD_RED);
+   display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW,1,rectW, firstBlock,EPD_BLACK);
-   display.fillRect(rectW*2,1,rectW,firstBlock,EPD_RED); 
+   display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
    display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_BLACK);
 
    display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
-   display.fillRect(rectW,firstBlock,rectW,firstBlock,EPD_RED);
+   display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
    display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
-   display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,EPD_RED);
+   display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
    display.setCursor(display.width()/2-150,display.height()-90);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("800*480 Why not Yellow if is cheaper than Red?");
+   display.println("This can work for both red or yellow Goodisplay");
    display.update();
    return;
 }
