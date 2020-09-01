@@ -217,4 +217,4 @@ If you like this component and it made your life easier please consider becoming
 ❤ Sponsor  on the top right
 
 ♢ For cryptocurrency users is also possible to donathe Ethereum: 
-0x68cEAB84F33776a7Fac977B2Bdc0D50933344086 (Martin Fasani ETH Wallet address)
+0x68cEAB84F33776a7Fac977B2Bdc0D50933344086    (ETH Wallet address)
