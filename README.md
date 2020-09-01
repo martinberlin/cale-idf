@@ -210,3 +210,11 @@ GxEPD has been a great resource to start with. For CalEPD component, we mantain 
 Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays. Please note that there are no plans to port this to Arduino-framework. This repository was specially made with the purpouse to explore Espressif's own IoT development framework.
 
 Thanks to all the developers interested to test this. Special mentions for @IoTPanic, Spectre and others that pushed me to improve my C++ skills.
+
+### Sponsoring
+
+If you like this component and it made your life easier please consider becoming a sponsor where you can donate as little as 2 u$ per month. Just click on:
+❤ Sponsor  on the top right
+
+♢ For cryptocurrency users is also possible to donathe Ethereum: 
+0x68cEAB84F33776a7Fac977B2Bdc0D50933344086 (Martin Fasani ETH Wallet address)
