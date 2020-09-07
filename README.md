@@ -216,5 +216,8 @@ Thanks to all the developers interested to test this. Special mentions for @IoTP
 If you like this component and it made your life easier please consider becoming a sponsor where you can donate as little as 2 u$ per month. Just click on:
 ❤ Sponsor  on the top right
 
-♢ For cryptocurrency users is also possible to donathe Ethereum: 
-0x68cEAB84F33776a7Fac977B2Bdc0D50933344086    (ETH Wallet address)
+♢ For cryptocurrency users is also possible to help this project transferring Ethereum:
+
+0x68cEAB84F33776a7Fac977B2Bdc0D50933344086
+
+We are thankful for the support and contributions so far!
