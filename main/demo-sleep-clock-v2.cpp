@@ -219,7 +219,7 @@ void updateClock() {
    uint8_t hour12convert = 0;
    for(uint8_t hourI = 0; hourI < 12; hourI++) {
        //printf("hourI: %d hourX: %d\n", hourI, rectWhour*hourI);
-       hour12convert = (nvs_hour>11) ? nvs_hour-12 : nvs_hour;
+       hour12convert = (nvs_hour>12) ? nvs_hour-13 : nvs_hour;
        rectXHour = (rectWhour*hourI == 0) ? 1 : rectWhour*hourI;
      if ((hourI+1) == hour12convert) {
      display.fillRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
