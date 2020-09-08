@@ -1,5 +1,5 @@
 /*
- * - - - - - - - - Deepsleep clock example - - - - - - - - - - - - - - - - - - - - 
+ * - - - - - - - - Deepsleep clock example - - - v2 will draw additional graphics
  * Please note that the intention of this clock is not to be precise. 
  * It uses the ability of ESP32 to deepsleep combined with the epaper persistance
  * to make a simple clock that consumes as minimum as possible.
@@ -38,14 +38,13 @@ bool debugVerbose = false;
 #define DOTSTAR_CLK 12
 
 // Important configuration. The class should match your epaper display model:
-//#include <gdew075T7.h>
-//#include <gdew027w3.h> // -> Needs to be changed to your model
-//#include <gdep015OC1.h> 
+
+// -> Needs to ↓ suit to your model
 #include <heltec0151.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
 Hel0151 display(io); // -> Needs to match your epaper
 
-//Gdew075T7 display(io);
+
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=HiD+d,M";

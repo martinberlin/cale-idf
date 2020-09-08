@@ -14,6 +14,10 @@
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
+    if (debug) {
+        printf("MOSI: %d CLK: %d\nSPI_CS: %d DC: %d RST: %d BUSY: %d\n\n", CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK,
+        CONFIG_EINK_SPI_CS,CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+    }
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);

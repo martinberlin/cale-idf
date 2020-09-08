@@ -1,11 +1,11 @@
 /*
- * - - - - - - - - Deepsleep clock example - - - - - v1 is intented for wristwatch - 
+ * - - - - - - - - Deepsleep clock example - - - - - v1 is intented for simple wristwatch  - 
  * Please note that the intention of this clock is not to be precise. 
  * It uses the ability of ESP32 to deepsleep combined with the epaper persistance
  * to make a simple clock that consumes as minimum as possible.
  * Just a simple: Sleep every N minutes, increment EPROM variable, refresh epaper.
  * And once a day or every hour, a single HTTP request to sync the hour online. 
- * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -31,7 +31,7 @@
 #include "esp_http_client.h"
 #include "esp_sleep.h"
 
-bool debugVerbose = true;
+bool debugVerbose = false;
 // TinyPICO.com Dotstar or S2 with Neopixel led. Turn down power and set data /clk Gpios
 #define DOTSTAR_PWR 13
 #define DOTSTAR_DATA 2
@@ -205,9 +205,29 @@ void updateClock() {
    display.print(minuteBuffer);
 
    // Show last update message
-   display.setFont(&Ubuntu_M8pt8b);
+   /* display.setFont(&Ubuntu_M8pt8b);
    display.setCursor(10,display.height()-20);
-   display.print(nvs_last_sync_message);
+   display.print(nvs_last_sync_message); */
+
+    // Draw rectangles for hour
+   // Sizes are calculated dividing the screen in equal parts so it may not be perfect for all models
+   //uint8_t rectWday  = display.width()/7; // 7 rectangles for each day of the week
+   uint8_t rectWhour = display.width()/12; // 12 rectangles for each hour
+   uint8_t rectXHour = 0;
+   uint8_t rectYHour = display.height()-20;
+   uint8_t rectHeightHour = 4;
+   uint8_t hour12convert = 0;
+   for(uint8_t hourI = 0; hourI < 12; hourI++) {
+       //printf("hourI: %d hourX: %d\n", hourI, rectWhour*hourI);
+       hour12convert = (nvs_hour>12) ? nvs_hour-13 : nvs_hour;
+       rectXHour = (rectWhour*hourI == 0) ? 1 : rectWhour*hourI;
+     if ((hourI+1) == hour12convert) {
+     display.fillRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
+     } else {
+     display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
+     }
+   }
+   
    // Partial update box calculation
     uint16_t x = 0;
     uint16_t y = 0;

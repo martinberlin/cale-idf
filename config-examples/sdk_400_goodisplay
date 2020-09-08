@@ -146,15 +146,19 @@ CONFIG_ESP_MAXIMUM_RETRY=5
 CONFIG_EINK_SPI_MOSI=23
 CONFIG_EINK_SPI_CLK=18
 CONFIG_EINK_SPI_CS=5
-CONFIG_EINK_DC=22
-CONFIG_EINK_RST=21
-CONFIG_EINK_BUSY=32
+CONFIG_EINK_DC=26
+CONFIG_EINK_RST=25
+CONFIG_EINK_BUSY=27
+
+#
+# Important: Leave the rest of unconfigured GPIOs to -1 unless multi-SPI channels (wave12I48) or Plasticlogic EPDs
+#
 
 #
 # CS2 and MISO pins apply only to Plasticlogic.com epaper displays
 #
-CONFIG_EINK_SPI_CS2=4
-CONFIG_EINK_SPI_MISO=19
+CONFIG_EINK_SPI_CS2=0
+CONFIG_EINK_SPI_MISO=-1
 
 #
 # Config below applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins (14 pins)

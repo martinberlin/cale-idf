@@ -23,26 +23,19 @@
  * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
  */
 // 1 channel SPI epaper displays example:
-//#include <gdew0583t7.h>
-//#include <gdew075T8.h>
-//#include <gdew0583z21.h>
 //#include <gdew075T7.h>
-//#include <gdew042t2.h>
+#include <gdew042t2.h>
 //#include <gdew027w3.h>
-#include "gdeh0213b73.h"
+//#include "gdeh0213b73.h"
 EpdSpi io;
-Gdeh0213b73 display(io);
-//Gdew0583z21 display(io);
+Gdew042t2 display(io);
 
-// Plastic Logic test: 
-//#include <plasticlogic021.h>
-//EpdSpi2Cs io;
-//PlasticLogic021 display(io);
+// Plastic Logic test: Check cale-grayscale.cpp
 
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
-/* // Otherwise you will run out of DRAM very shortly!
-#include "wave12i48.h" // Only to use with Edp4Spi IO
+// Otherwise you will run out of DRAM very shortly!
+/* #include "wave12i48.h" // Only to use with Edp4Spi IO
 Epd4Spi io;
 Wave12I48 display(io); */
 
@@ -372,8 +365,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         if (bmpDebug) 
             printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        /* vTaskDelay(14000 / portTICK_PERIOD_MS);
-        deepsleep(); */
+        vTaskDelay(14000 / portTICK_PERIOD_MS);
+        deepsleep();
         break;
 
     case HTTP_EVENT_DISCONNECTED:
