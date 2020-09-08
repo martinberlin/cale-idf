@@ -123,8 +123,8 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # CALE Configuration
 #
-CONFIG_ESP_WIFI_SSID="KabelBox-A210"
-CONFIG_ESP_WIFI_PASSWORD="14237187131701431551"
+CONFIG_ESP_WIFI_SSID="WLAN-724300"
+CONFIG_ESP_WIFI_PASSWORD="50238634630558382093"
 CONFIG_CALE_SCREEN_URL="http://img.cale.es/bmp/fasani/5e5926e25a985"
 CONFIG_CALE_BEARER_TOKEN=""
 CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER=60
@@ -135,12 +135,46 @@ CONFIG_ESP_MAXIMUM_RETRY=5
 #
 # Display Configuration
 #
+
+#
+# Fill only EPD entries for single SPI displays (Good display/Waveshare)
+#
+
+#
+# Mosi and Clock should be set for any epaper
+#
 CONFIG_EINK_SPI_MOSI=23
 CONFIG_EINK_SPI_CLK=18
 CONFIG_EINK_SPI_CS=5
 CONFIG_EINK_DC=21
 CONFIG_EINK_RST=0
 CONFIG_EINK_BUSY=22
+
+#
+# Important: Leave the rest of unconfigured GPIOs to -1 unless multi-SPI channels (wave12I48) or Plasticlogic EPDs
+#
+
+#
+# CS2 and MISO pins apply only to Plasticlogic.com epaper displays
+#
+CONFIG_EINK_SPI_CS2=4
+CONFIG_EINK_SPI_MISO=19
+
+#
+# Config below applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins (14 pins)
+#
+
+#
+# | S2 | M2 |
+#
+
+#
+# -----------
+#
+
+#
+# | M1 | S1 |
+#
 CONFIG_EINK_SPI_M1_CS=0
 CONFIG_EINK_SPI_S1_CS=0
 CONFIG_EINK_SPI_M2_CS=0
