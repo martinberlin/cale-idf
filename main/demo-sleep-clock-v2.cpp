@@ -217,14 +217,17 @@ void updateClock() {
    uint8_t rectYHour = display.height()-20;
    uint8_t rectHeightHour = 4;
    uint8_t hour12convert = 0;
-   for(uint8_t hourI = 0; hourI < 12; hourI++) {
-       //printf("hourI: %d hourX: %d\n", hourI, rectWhour*hourI);
-       hour12convert = (nvs_hour>12) ? nvs_hour-13 : nvs_hour;
-       rectXHour = (rectWhour*hourI == 0) ? 1 : rectWhour*hourI;
-     if ((hourI+1) == hour12convert) {
-     display.fillRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
+    //printf("hourI: %d hourX: %d\n", hourI, rectWhour*hourI);
+
+   for(uint8_t hourI = 1; hourI < 13; hourI++) {
+       
+       hour12convert = (nvs_hour>12) ? nvs_hour-12 : nvs_hour;
+       rectXHour = (rectWhour*(hourI-1) == 0) ? 1 : rectWhour*hourI;
+
+     if (hourI == hour12convert) {
+       display.fillRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
      } else {
-     display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
+       display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
      }
    }
    
