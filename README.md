@@ -2,6 +2,7 @@
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and the Wiki is the perfect place to make updates that are not branch dependant.
+CalEPD supports currently the most popular epaper sizes and two color models. If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
 
 **CALE does only 3 things at the moment and is very easy to set up:**
 
@@ -10,7 +11,6 @@ Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for lates
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
 And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
-
 
     RELEASES
     v.0.9.6 First color epaper: Gdew0583z21 B/W/RED
@@ -22,13 +22,14 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
     ROADMAP
     Rest of 2020 Enabling PNG support and compression
     2020-Sep Optimmizing instantiation and configuration
-    2020-Aug Adding color epapers
+    2020-Aug Adding color epapers 5.83 and 7.5 inches
     2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
     
 ## News
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
 - [Gdew0583z21](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583z21.h) Good Display 5.83 b/w/r 3 color eink added. Refresh takes like 10 seconds but the red looks amazing. No grays or partial update is supported in color models.
+7.5 inch color model from Goodisplay is also added.
 - [Gdew0583t7](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583t7.h) Good Display 5.83 b/w model added after testing. In the next weeks I will focus on getting grayscales and additional colors to work.
 - Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
 
@@ -37,7 +38,7 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 - [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
 - [Adafruit GFX for ESP-IDF](https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF) My own fork of Adafruit display library
 
-They are at the moment included without git submodules so we an develop fast without updating them all the time. But they are also available to be used as your project ESP-IDF components.
+They are at the moment included without git submodules so we can develop fast without updating them all the time. But they are also available to be used as your project ESP-IDF components.
 
 ## Configuration
 
