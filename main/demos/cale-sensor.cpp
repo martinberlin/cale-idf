@@ -400,7 +400,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-static void http_post(void)
+static void http_post()
 {
     activate_sensor_1 = false;
     trigger_sensor_1 = false;
@@ -449,6 +449,8 @@ static void http_post(void)
                  CONFIG_CALE_SCREEN_URL,
                  esp_http_client_get_status_code(client),
                  esp_http_client_get_content_length(client));
+
+        esp_http_client_cleanup(client);
     }
     else
     {
