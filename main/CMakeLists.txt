@@ -1,7 +1,9 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-     SRCS "cale.cpp"
+    # SRCS "cale.cpp"
+
+    SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
     # SRCS "cale-grayscale.cpp"
 
@@ -9,7 +11,7 @@ idf_component_register(
 
     # SRCS "demo-epaper.cpp"
     # SRCS "demo-sleep-clock.cpp"
-    #  SRCS "demo-sleep-clock-v2.cpp"
+    # SRCS "demo-sleep-clock-v2.cpp"
     # SRCS "demo-fonts.cpp"
 
     # Demo only for plasticlogic.com epapers:
