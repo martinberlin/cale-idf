@@ -1,3 +1,12 @@
+/**
+ * This is just a variation of the official CALE Firmware in main/
+ * Explores how you can add a sensor, in this example a PIR Motion Detection Sensor AM312
+ * That is attached to an interrupt and triggers a system restart
+ * The DEMO goal is to be used with https://cale.es/apis > Image gallery so it can make a new request based on a user interaction
+ * 
+ * Disclaimer: The ideal would be to call http_post() again so it saves time and does not need to connect to WiFi again but
+ * if failed most probably since it's called from an interrupt (And you cannot even do a printf on an event alike)
+ */
 #include "string.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -10,6 +19,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "esp_sleep.h"
+#include "soc/rtc_wdt.h"       // Watchdog control
 // - - - - HTTP Client includes:
 #include "esp_netif.h"
 #include "esp_err.h"
@@ -42,9 +52,11 @@ Gdew075C64 display(io);
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
 
+// Please notice that enabling this will stay on WiFi to make next request as soon as possible
 bool enable_sensor_1 = true;    // Activate only if you have a rising sensor in pin defined at ESP_TRIGGER_SENSOR1
-bool activate_sensor_1 = false; // Handler flag to avoid activating interrupt when is not ready
 
+bool activate_sensor_1 = false; // Handler flag to avoid activating interrupt when is not ready
+bool trigger_sensor_1 = false;  // Handler on true will call again http_post() for a new image
 // IP is sent per post for logging purpouses. Authentication: Bearer token in the headers
 char espIpAddress[16];
 char bearerToken[74] = "";
@@ -375,7 +387,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             ets_printf("Activating sensor in GPIO %d\n", CONFIG_ESP_TRIGGER_SENSOR1);
             activate_sensor_1 = true;
         } else {
-            deepsleep();
+            //deepsleep();
+            
         }
         
         break;
@@ -390,6 +403,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 static void http_post(void)
 {
     activate_sensor_1 = false;
+    trigger_sensor_1 = false;
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
@@ -447,9 +461,9 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     // Request new image
     if (activate_sensor_1) {
-        ets_printf("Interrupt sensor 1 called: Restarting to request image again\n"); 
-        //http_post(); // It does not accept esp_http_client_perform from this interrupt
-        esp_restart();
+        ets_printf("Interrupt sensor 1 called\n");
+        trigger_sensor_1 = true;
+        //http_post(); // Does not accept esp_http_client_perform from this interrupt. Calling it in a while(true) on app_main()
     } else {
         ets_printf("Sensor 1 not ready\n");
     }
@@ -567,8 +581,7 @@ void app_main(void)
 {
     printf("CalEPD version: %s\n", CALEPD_VERSION);
 
-
-    // Sensor that goes HI when detects something (Ex. triggering a new image request in an exposition)
+    // Sensor that goes HIGH when detects something (Ex. triggering a new image request in an exposition)
     gpio_config_t io_conf;
     //interrupt of rising edge
     io_conf.intr_type = GPIO_INTR_POSEDGE;
@@ -578,10 +591,12 @@ void app_main(void)
     io_conf.pull_up_en = (gpio_pullup_t)1;
     gpio_config(&io_conf);
     
-    // Install gpio isr service
-    esp_err_t isr = gpio_install_isr_service(0);
-    printf("ISR trigger install response: 0x%x\n", isr);
-    gpio_isr_handler_add((gpio_num_t)CONFIG_ESP_TRIGGER_SENSOR1, gpio_isr_handler, (void*) 1);
+    // Install gpio isr service only if there is a sensor
+    if (enable_sensor_1) {
+        esp_err_t isr = gpio_install_isr_service(0);
+        printf("ISR trigger install response: 0x%x\n", isr);
+        gpio_isr_handler_add((gpio_num_t)CONFIG_ESP_TRIGGER_SENSOR1, gpio_isr_handler, (void*) 1);
+    }
 
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -604,5 +619,16 @@ void app_main(void)
 
     http_post();
 
-    // Just test if Epd works: Compile the demo-epaper.cpp example modifying main/CMakeLists
+    if (enable_sensor_1) {
+        while (activate_sensor_1)
+        {
+            if (trigger_sensor_1) {
+                printf("New HTTP Post image request\n");
+                http_post();
+            }
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            rtc_wdt_feed();
+        }
+    }
+    
 }
