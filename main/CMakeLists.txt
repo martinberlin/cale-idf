@@ -9,7 +9,7 @@ idf_component_register(
 
     # Generic demos for any displays
 
-    # SRCS "demos/demo-epaper.cpp"
+     SRCS "demos/demo-epaper.cpp"
     # SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
     # SRCS "demos/demo-fonts.cpp"

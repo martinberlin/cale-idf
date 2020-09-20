@@ -13,6 +13,7 @@ set(srcs
     # 3 colors Goodisplay
     "models/color/gdew0583z21.cpp"
     "models/color/gdew075c64.cpp"
+    "models/color/gdeh042Z96.cpp"
 
     # Plasticlogic.com Flex epaper models:
     "models/plasticlogic/epdspi2cs.cpp"

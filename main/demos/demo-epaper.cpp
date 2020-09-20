@@ -12,7 +12,7 @@
 
 // Color
 //#include <gdew0583z21.h>
-#include <gdew075c64.h>
+#include <gdeh042Z96.h>
 
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
@@ -22,7 +22,8 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdew075C64 display(io);
+Gdeh042Z96 display(io);
+//Gdew075C64 display(io);
 //Gdew0583z21 display(io);
 //Gdew075T7 display(io);
 //Gdew042t2 display(io);
@@ -52,7 +53,7 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.setCursor(box_x, cursor_y + 40);
    display.println("PARTIAL");
    display.println("REFRESH");
-   display.updateWindow(box_x, box_y, box_w, box_h, true);
+   //display.updateWindow(box_x, box_y, box_w, box_h, true);
 }
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
