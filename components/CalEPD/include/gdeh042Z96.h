@@ -22,6 +22,8 @@
 
 #define GDEH042Z96_8PIX_BLACK 0x00
 #define GDEH042Z96_8PIX_WHITE 0xFF
+#define GDEH042Z96_8PIX_RED 0xFF
+#define GDEH042Z96_8PIX_RED_WHITE 0x00
 
 // Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdeh042Z96 : public Epd

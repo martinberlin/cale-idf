@@ -35,34 +35,31 @@ void Gdeh042Z96::init(bool debug)
 
 void Gdeh042Z96::fillScreen(uint16_t color)
 {
-  uint8_t data_black = GDEH042Z96_8PIX_WHITE;
-  uint8_t data_red = GDEH042Z96_8PIX_WHITE;
-  switch (color)
-  {
-  case EPD_BLACK:
-    data_black = GDEH042Z96_8PIX_BLACK;
-    data_red = GDEH042Z96_8PIX_WHITE;
-    break;
-  case EPD_WHITE:
-    data_black = GDEH042Z96_8PIX_WHITE;
-    data_red = GDEH042Z96_8PIX_WHITE;
-    break;
-  case EPD_RED:
-    data_black = GDEH042Z96_8PIX_WHITE;
-    data_red = GDEH042Z96_8PIX_BLACK;
-    break;
+  uint8_t black = GDEH042Z96_8PIX_WHITE;
+  uint8_t red = GDEH042Z96_8PIX_RED_WHITE;
+  if (color == EPD_WHITE) {
+
+  } else if (color == EPD_BLACK) {
+    black = GDEH042Z96_8PIX_BLACK;
+    printf("fillScreen BLACK SELECTED\n");
+  } else if (color == EPD_RED) {
+    red = GDEH042Z96_8PIX_RED;
+    printf("fillScreen RED SELECTED\n");
+  } else if ((color & 0xF100) > (0xF100 / 2)) {
+    red = 0xFF;
+    printf("fillScreen RED 0xFF\n");
+  } else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) {
+    black = 0xFF;
+    printf("fillScreen BLACK 0xFF\n");
   }
   
   for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
   {
-    _black_buffer[x] = data_black;
-  }
-    for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
-  {
-    _red_buffer[x] = data_red;
+    _black_buffer[x] = black;
+    _red_buffer[x] = red;
   }
 
-  if (debug_enabled) printf("fillScreen(%d) black/red _buffer len:%d\n",color,sizeof(_black_buffer));
+  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n",color,sizeof(_black_buffer));
 }
 
 void Gdeh042Z96::_wakeUp(){
@@ -130,15 +127,18 @@ void Gdeh042Z96::update()
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
-
+  
+  // BLACK: Write RAM for black(0)/white (1)
   IO.cmd(0x24);
   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
   uint16_t i = 0;
   uint8_t xLineBytes = GDEH042Z96_WIDTH/8;
   uint8_t x1buf[xLineBytes];
+  // Curiosity doing it x++ is mirrored
+
     for(uint16_t y =  1; y <= GDEH042Z96_HEIGHT; y++) {
         for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : 0x00;
+          uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEH042Z96_8PIX_WHITE;
           x1buf[x-1] = data;
           if (x==xLineBytes) { // Flush the X line buffer to SPI
             IO.data(x1buf,sizeof(x1buf));
@@ -146,13 +146,15 @@ void Gdeh042Z96::update()
           ++i;
         }
     }
-    // RED
+  
+  // RED: Write RAM for red(1)/white (0)
+  i = 0;
   IO.cmd(0x26);
     for(uint16_t y =  1; y <= GDEH042Z96_HEIGHT; y++) {
         for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : 0x00;
+          uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH042Z96_8PIX_RED_WHITE;
           x1buf[x-1] = data;
-          if (x==xLineBytes) { // Flush the X line buffer to SPI
+          if (x==xLineBytes) {
             IO.data(x1buf,sizeof(x1buf));
           }
           ++i;
@@ -222,8 +224,9 @@ void Gdeh042Z96::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 
 void Gdeh042Z96::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
-
-  // check rotation, move pixel around if necessary
+  // MIRROR Issue. Swap X axis (For sure there is a smarter solution than this one)
+  x = width()-x;
+  // Check rotation, move pixel around if necessary
   switch (getRotation())
   {
     case 1:
@@ -241,18 +244,23 @@ void Gdeh042Z96::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GDEH042Z96_WIDTH / 8;
 
+  // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
+  switch (color)
+  {
+  case EPD_BLACK:
+    color = EPD_WHITE;
+    break;
+  case EPD_WHITE:
+    color = EPD_BLACK;
+    break;
+  }
+
   // This formulas are from gxEPD that apparently got the color right:
-  _black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
-  _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  _black_buffer[i] = (_black_buffer[i] & (GDEH042Z96_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
+  _red_buffer[i] = (_red_buffer[i] & (GDEH042Z96_8PIX_RED ^ (1 << (7 - x % 8)))); // white
+
   if (color == EPD_WHITE) return;
   else if (color == EPD_BLACK) _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
   else if (color == EPD_RED) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-  else
-  {
-    if ((color & 0xF100) > (0xF100 / 2)) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-    else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
-    {
-      _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-    }
-  }
+
 }

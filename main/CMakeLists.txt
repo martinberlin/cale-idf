@@ -3,7 +3,7 @@ idf_component_register(
     
     # SRCS "cale.cpp"
 
-    SRCS "demos/cale-sensor.cpp"
+    # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
     # SRCS "cale-grayscale.cpp"
 

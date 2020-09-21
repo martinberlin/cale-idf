@@ -79,7 +79,7 @@ void app_main(void)
    // Test Epd class
    display.init(false);
 
-   display.setRotation(2);
+   //display.setRotation(2);
    //display.fillScreen(EPD_WHITE);
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
@@ -87,26 +87,30 @@ void app_main(void)
    uint16_t foregroundColor = EPD_WHITE;
    // Make some rectangles showing the different colors or grays
    if (display.colors_supported>1) {
+      printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
+   /* display.fillScreen(EPD_RED);
+   display.update();
+   return; // STOP  */
   
-   uint16_t firstBlock = 200;
+   uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
-   display.fillRect(rectW,1,rectW, firstBlock,EPD_BLACK);
+   display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_BLACK);
+   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE);
 
    display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
    display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
    display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
-   display.setCursor(display.width()/2-150,display.height()-90);
+   display.setCursor(display.width()/2-130,display.height()-104);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("This can work for both red or yellow Goodisplay");
+   display.println("Gdeh042Z96 class for    Goodisplay 400x300");
    display.update();
    return;
 }
