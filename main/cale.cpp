@@ -24,11 +24,12 @@
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-#include <gdew042t2.h>
+//#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//#include "gdeh0213b73.h"
+//#include <gdeh0213b73.h>
+#include <gdew0583z21.h>
 EpdSpi io;
-Gdew042t2 display(io);
+Gdew0583z21 display(io);
 
 // Plastic Logic test: Check cale-grayscale.cpp
 
@@ -360,6 +361,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
+        countDataEventCalls=0;
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
         if (bmpDebug) 

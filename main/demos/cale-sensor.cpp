@@ -354,6 +354,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     // The ultimate mission: Send the X / Y pixel to the GFX Buffer
                     display.drawPixel(drawX, drawY, color);
+                    /* if (drawX>= 780) {
+                      ets_printf("%x ",color);
+                    } */
 
                     totalDrawPixels++;
                     ++drawX;
@@ -375,6 +378,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
+        // RESET countDataEventCalls:
+        countDataEventCalls=0;
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
 
@@ -400,8 +405,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
+uint16_t no_cache = 0;
+
 static void http_post()
 {
+    // This makes me realize the esp_http_client_perform(client) is not filling the display buffer again (only first time called)
+    display.fillScreen(EPD_WHITE);
+
     activate_sensor_1 = false;
     trigger_sensor_1 = false;
     /**
@@ -422,8 +432,15 @@ static void http_post()
     strlcpy(post_data, "ip=", postsize);
     strlcat(post_data, espIpAddress, postsize);
 
+    char post_url[200];
+    strlcpy(post_url, CONFIG_CALE_SCREEN_URL, sizeof(post_url));
+    // Is not a cache issue but for a static no-dynamic image this can come handy:
+    strlcat(post_url, "?", sizeof(post_url));
+    strlcat(post_url, std::to_string(no_cache).c_str(), sizeof(post_url));
+    no_cache++;
+
     esp_http_client_config_t config = {
-        .url = CONFIG_CALE_SCREEN_URL,
+        .url = post_url,
         .method = HTTP_METHOD_POST,
         .timeout_ms = 9000,
         .event_handler = _http_event_handler,
@@ -435,7 +452,7 @@ static void http_post()
     strlcpy(bearerToken, "Bearer: ", sizeof(bearerToken));
     strlcat(bearerToken, CONFIG_CALE_BEARER_TOKEN, sizeof(bearerToken));
     
-    ets_printf("POST data: %s\n%s\n", post_data, bearerToken);
+    printf("POST data: %s\n%s\nURL: %s\n\n", post_data, bearerToken, post_url);
 
     esp_http_client_set_header(client, "Authorization", bearerToken);
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
@@ -449,14 +466,13 @@ static void http_post()
                  CONFIG_CALE_SCREEN_URL,
                  esp_http_client_get_status_code(client),
                  esp_http_client_get_content_length(client));
-
-        esp_http_client_cleanup(client);
     }
     else
     {
         ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
-    //ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
+    
+    esp_http_client_cleanup(client);
 }
 
 static void IRAM_ATTR gpio_isr_handler(void* arg)
