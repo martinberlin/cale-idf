@@ -4,13 +4,6 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-DRAM_ATTR const epd_init_4 Gdeh042Z96::epd_resolution={
-  0x61,{GDEH042Z96_WIDTH/256,
-  GDEH042Z96_WIDTH%256,
-  GDEH042Z96_HEIGHT/256,
-  GDEH042Z96_HEIGHT%256
-},4};
-
 // Constructor
 Gdeh042Z96::Gdeh042Z96(EpdSpi& dio): 
   Adafruit_GFX(GDEH042Z96_WIDTH, GDEH042Z96_HEIGHT),
@@ -114,18 +107,11 @@ void Gdeh042Z96::_wakeUp(){
     IO.cmd(0x4F); 
     IO.data(0x2B);
     IO.data(0x01);
-
-  //resolution setting
-  /* IO.cmd(epd_resolution.cmd);
-  for (int i=0;i<epd_resolution.databytes;++i) {
-    IO.data(epd_resolution.data[i]);
-  } */
 }
 
 void Gdeh042Z96::update()
 {
   uint64_t startTime = esp_timer_get_time();
-  _using_partial_mode = false;
   _wakeUp();
   
   // BLACK: Write RAM for black(0)/white (1)

@@ -40,17 +40,13 @@ class Gdeh042Z96 : public Epd
     void fillScreen(uint16_t color);
     void update();
 
-    // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
-
   private:
     EpdSpi& IO;
 
     uint8_t _black_buffer[GDEH042Z96_BUFFER_SIZE];
     uint8_t _red_buffer[GDEH042Z96_BUFFER_SIZE];
-    bool _using_partial_mode = false;
-    bool _initial = true;
 
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    bool _initial = true;
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);

@@ -34,8 +34,14 @@ void Gdeh042Z21::_wakeUp(){
   IO.cmd(0x04);  
   _waitBusy("epd_wakeup");; //waiting for the electronic paper IC to release the idle signal
     
-  IO.cmd(0x00); //panel setting
+  IO.cmd(0x00);  //panel setting
   IO.data(0x0f); // LUT from OTP 400x300: No large initialization commands with this IC driver
+
+  // Without this Black appeared washed out near RED
+  IO.cmd(0x06);  //panel setting
+  IO.data(0x17); // Boost soft start
+  IO.data(0x18);
+  IO.data(0x18);
 }
 
 void Gdeh042Z21::_waitBusy(const char* message){
