@@ -121,7 +121,7 @@ void Gdeh042Z21::update()
         for(uint16_t x = 1; x <= xLineBytes; x++) {
           uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH042Z21_8PIX_RED_WHITE;
           //printf("%x ",data);
-          x1buf[x-1] = GDEH042Z21_8PIX_RED_WHITE; // data
+          x1buf[x-1] = data;
           if (x==xLineBytes) {
             IO.data(x1buf,sizeof(x1buf));
           }
@@ -163,31 +163,21 @@ void Gdeh042Z21::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   uint16_t i = x / 8 + y * GDEH042Z21_WIDTH / 8;
-  // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
-  switch (color)
-  {
-  case EPD_BLACK:
-    color = EPD_WHITE;
-    break;
-  case EPD_WHITE:
-    color = EPD_BLACK;
-    break;
-  }
-
+  
   // This formulas are from gxEPD that apparently got the color right:
-  _black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // black
-  _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8))); // white pixel
+  _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));     // white pixel
 
   if (color == EPD_WHITE) {
-    printf("w ");
+    //printf("w:%x ",_black_buffer[i]);
     return;
   }
   else if (color == EPD_BLACK) {
-    _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-    printf("B ");
+    _black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+    //printf("B ");
   }
   else if (color == EPD_RED) {
-    _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
+    _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
     //printf("R %x ",_red_buffer[i]);
   }
 }
@@ -199,19 +189,17 @@ void Gdeh042Z21::fillScreen(uint16_t color)
   uint8_t black = GDEH042Z21_8PIX_WHITE;
   uint8_t red = GDEH042Z21_8PIX_RED_WHITE;
   if (color == EPD_WHITE) {
-    printf("fillScreen WHITE\n");
+    if (debug_enabled) printf("fillScreen WHITE\n");
   } else if (color == EPD_BLACK) {
     black = GDEH042Z21_8PIX_BLACK;
-    printf("fillScreen BLACK SELECTED\n");
+    if (debug_enabled) printf("fillScreen BLACK SELECTED\n");
   } else if (color == EPD_RED) {
     red = GDEH042Z21_8PIX_RED;
-    printf("fillScreen RED SELECTED\n");
+    if (debug_enabled) printf("fillScreen RED SELECTED\n");
   } else if ((color & 0xF100) > (0xF100 / 2)) {
     red = 0xFF;
-    printf("fillScreen RED 0xFF\n");
   } else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) {
     black = 0xFF;
-    printf("fillScreen BLACK 0xFF\n");
   }
   
   for (uint16_t x = 0; x < sizeof(_black_buffer); x++)

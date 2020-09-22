@@ -65,8 +65,8 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     //Attach the EPD to the SPI bus
     ret=spi_bus_add_device(EPD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-    // debug_enabled
-    if (true) {
+    
+    if (debug_enabled) {
       printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
       frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
       CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
