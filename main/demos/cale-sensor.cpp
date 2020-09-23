@@ -108,16 +108,15 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 
 bool with_color = true; // Candidate for Kconfig
 uint32_t rowSize;
-uint32_t rowByteCounter;
-uint16_t w;
-uint16_t h;
+uint32_t rowByteCounter=0;
+uint16_t w, h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
 bool whitish, colored;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
-uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
+uint16_t bPointer = 0; // Byte pointer - Attention drawPixel has uint16_t
 uint16_t imageBytesRead = 0;
 uint32_t dataLenTotal = 0;
 uint32_t in_bytes = 0;
@@ -126,7 +125,6 @@ uint8_t in_bits = 0; // for depth <= 8
 bool isReadingImage = false;
 bool isSupportedBitmap = true;
 bool isPaddingAware = false;
-uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
@@ -188,10 +186,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmp.depth == 1)
             {
                 isPaddingAware = true;
-                ESP_LOGI(TAG, "BMP isPaddingAware:  1 bit depth are 4 bit padded. Wikipedia gave me a lesson.");
+                ESP_LOGI(TAG, "BMP isPaddingAware:  1 bit depth are 4 bit padded");
             }
             if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false)
-            { // uncompressed is handled
+            { // Only uncompressed is handled
                 isSupportedBitmap = false;
                 ESP_LOGE(TAG, "BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 0 or 3\n");
             }
@@ -211,7 +209,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmp.height < 0)
             {
                 bmp.height = -bmp.height;
-                //flip = false;
             }
             w = bmp.width;
             h = bmp.height;
@@ -293,7 +290,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 ets_printf("Start reading image. bPointer: %d\n", bPointer);
             }
         }
-        forCount = 0;
+
         // LOOP all the received Buffer but start on ImageOffset if first call
         for (uint32_t byteIndex = bPointer; byteIndex < evt->data_len; ++byteIndex)
         {
@@ -367,7 +364,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             rowByteCounter++;
             imageBytesRead++;
-            forCount++;
         }
 
         if (bmpDebug)
@@ -378,8 +374,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
-        // RESET countDataEventCalls:
-        countDataEventCalls=0;
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
 
@@ -406,6 +400,18 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 }
 
 uint16_t no_cache = 0;
+
+void reset_http_image_globals() {
+    countDataEventCalls=0;
+    dataLenTotal=0;
+    imageBytesRead = 0;
+    isSupportedBitmap = true;
+    isReadingImage = false;
+    isPaddingAware = false;
+    drawX = 0;
+    drawY = 0;
+    rowByteCounter=0;
+}
 
 static void http_post()
 {
@@ -471,7 +477,8 @@ static void http_post()
     {
         ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
-    
+    // RESET global variables used in esp_http_client_init
+    reset_http_image_globals();
     esp_http_client_cleanup(client);
 }
 
