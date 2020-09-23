@@ -39,13 +39,11 @@ bool debugVerbose = false;
 
 // Important configuration. The class should match your epaper display model:
 //#include <gdew075T7.h>
-//#include <gdew027w3.h> // -> Needs to be changed to your model
-//#include <gdep015OC1.h> 
-#include <heltec0151.h> 
-EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
-Hel0151 display(io); // -> Needs to match your epaper
+#include "gdeh0213b73.h"
+EpdSpi io;
+Gdeh0213b73 display(io);
 
-//Gdew075T7 display(io);
+
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=HiD+d,+M";
@@ -57,7 +55,7 @@ int sleepMinutes = 4;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = -1;        // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
+uint8_t syncHour1 = 0;        // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
 uint8_t syncHour2 = 6;         // Same here, 2nd request to Sync hour 
 bool forceSync = false;        // IMPORTANT: Should be always false since on true is for debugging and will sync on every wakeup!
 // This microsCorrection represents the program time and will be discounted from deepsleep
@@ -120,8 +118,6 @@ void updateClock() {
 
    display.init(debugVerbose);
    display.fillScreen(backgroundColor);
-   
-   //display.update();return; // In case you want to clean screen and get out
    display.setRotation(CONFIG_DISPLAY_ROTATION); // Set this in "Cale configuration" -> idf.py menuconfig
    display.setFont(&Ubuntu_M16pt8b);
    display.setTextColor(textColor);
@@ -131,10 +127,12 @@ void updateClock() {
        case 200:
         display.setCursor(10,52);
        break;
-
+       case 250:
+        display.setCursor(40,25);
+       break;
        // Add more case's to adapt the cursor to your display size
        default: 
-       display.setCursor(40,30);
+        display.setCursor(40,30);
        break;
    }
    
@@ -168,11 +166,13 @@ void updateClock() {
    // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
    switch(display.width()) {
        case 200:
-       display.setCursor(5, 120);
+        display.setCursor(5, 120);
        break;
-       
+       case 250:
+        display.setCursor(36, 86);
+       break;
        default:
-       display.setCursor(90, 80);
+        display.setCursor(90, 80);
        break;
    }
    
@@ -212,23 +212,24 @@ void updateClock() {
     // Draw rectangles for hour
    // Sizes are calculated dividing the screen in equal parts so it may not be perfect for all models
    //uint8_t rectWday  = display.width()/7; // 7 rectangles for each day of the week
-   uint8_t rectWhour = display.width()/12; // 12 rectangles for each hour
+   uint8_t rectWhour = (display.width()-2)/12; // 12 rectangles for each hour
    uint8_t rectXHour = 0;
    uint8_t rectYHour = display.height()-20;
-   uint8_t rectHeightHour = 4;
+   uint8_t rectHeightHour = 6;
    uint8_t hour12convert = 0;
-    //printf("hourI: %d hourX: %d\n", hourI, rectWhour*hourI);
+   uint16_t widthHour = 0;
 
    for(uint8_t hourI = 1; hourI < 13; hourI++) {
-       
        hour12convert = (nvs_hour>12) ? nvs_hour-12 : nvs_hour;
-       rectXHour = (rectWhour*(hourI-1) == 0) ? 1 : rectWhour*hourI;
-
+       rectXHour = (rectWhour*(hourI-1) == 0) ? 1 : rectWhour*(hourI-1);
+    
      if (hourI == hour12convert) {
-       display.fillRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
-     } else {
-       display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,EPD_BLACK);
-     }
+        widthHour = rectWhour*nvs_minute/59;
+        display.fillRect(rectXHour, rectYHour, widthHour,rectHeightHour,textColor);
+        printf("hourI: %d rectXHour: %d min: %d rectWhour: %d widthHour: %d\n", 
+                    hourI, rectXHour, nvs_minute, rectWhour, widthHour);
+     } 
+     display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,textColor); 
    }
    
    // Partial update box calculation
@@ -242,8 +243,9 @@ void updateClock() {
    {
        /* partial update    x  y  width               height                  */
    case 1:
-       printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
+       
        if (supportsPartialUpdate) {
+           printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
         display.updateWindow(x, y, w, h, true);
        } else {
         display.update(); 
