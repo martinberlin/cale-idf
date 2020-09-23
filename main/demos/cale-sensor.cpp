@@ -71,7 +71,6 @@ extern "C"
 static const char *TAG = "CALE";
 
 uint16_t countDataEventCalls = 0;
-uint32_t countDataBytes = 0;
 
 struct BmpHeader
 {
@@ -130,7 +129,7 @@ static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
 uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for depth <= 8 b/w
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
-uint16_t totalDrawPixels = 0;
+uint32_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
 
@@ -262,7 +261,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         {
             ets_printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n",
                    bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
-            ets_printf("Is reading image: %d\n", isReadingImage);
+            ets_printf("Is reading:%d\n", isReadingImage);
         }
 
         // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
@@ -310,7 +309,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             {
                 while (in_bits != 0)
                 {
-
                     uint16_t pn = (in_byte >> bitshift) & bitmask;
                     whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
                     colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
@@ -351,7 +349,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     // The ultimate mission: Send the X / Y pixel to the GFX Buffer
                     display.drawPixel(drawX, drawY, color);
-                    /* if (drawX>= 780) {
+
+                    // Extreme debug ;)
+                    /* if (drawY>460 && drawX>= 700) {
                       ets_printf("%x ",color);
                     } */
 
@@ -380,14 +380,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         if (bmpDebug) 
             ets_printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        vTaskDelay(14000 / portTICK_PERIOD_MS);
+        vTaskDelay(15000 / portTICK_PERIOD_MS);
         
         if (CONFIG_ESP_TRIGGER_SENSOR1 && enable_sensor_1) {
             ets_printf("Activating sensor in GPIO %d\n", CONFIG_ESP_TRIGGER_SENSOR1);
             activate_sensor_1 = true;
         } else {
-            //deepsleep();
-            
+            deepsleep();
         }
         
         break;
@@ -404,20 +403,24 @@ uint16_t no_cache = 0;
 void reset_http_image_globals() {
     countDataEventCalls=0;
     dataLenTotal=0;
-    imageBytesRead = 0;
+    imageBytesRead=0;
     isSupportedBitmap = true;
     isReadingImage = false;
     isPaddingAware = false;
     drawX = 0;
     drawY = 0;
     rowByteCounter=0;
+    totalDrawPixels=0;
+    bitmask = 0xFF;
+    in_bytes = 0;
+    in_byte = 0;
+    in_bits = 0;
+    printf("reset_http_image_globals called. Free heap: %d bytes\n",
+    xPortGetFreeHeapSize());
 }
 
 static void http_post()
 {
-    // This makes me realize the esp_http_client_perform(client) is not filling the display buffer again (only first time called)
-    display.fillScreen(EPD_WHITE);
-
     activate_sensor_1 = false;
     trigger_sensor_1 = false;
     /**
@@ -639,8 +642,7 @@ void app_main(void)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
-    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printf("Free heap RAM: %d (After epaper instantiation)\n", xPortGetFreeHeapSize());
 
     http_post();
 
