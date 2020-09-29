@@ -38,8 +38,9 @@ class Gdeh042Z21 : public Epd
     
     void fillScreen(uint16_t color);
     void update();
-
+    void setModel(std::string set_model);
     // This are already inherited from Epd: write(uint8_t); print(const std::string& text);println(same);
+    std::string model = "GDEH042Z15";
 
   private:
     EpdSpi& IO;

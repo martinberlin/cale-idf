@@ -24,7 +24,14 @@ void Gdeh042Z21::init(bool debug)
 
     //Reset the display
     IO.reset(20);
+    //setModel("GDEW042C37"); // Can be commented and set from your app_main()
     fillScreen(EPD_WHITE);
+}
+
+// Model setter. GDEH042Z15 is default but this class supports also GDEH042Z21  and  GDEW042C37
+void Gdeh042Z21::setModel(std::string set_model) {
+  model = set_model;
+  printf("EPAPER model set to %s\n", set_model.c_str());
 }
 
 void Gdeh042Z21::_wakeUp(){
@@ -37,11 +44,15 @@ void Gdeh042Z21::_wakeUp(){
   IO.cmd(0x00);  //panel setting
   IO.data(0x0f); // LUT from OTP 400x300: No large initialization commands with this IC driver
 
-  // Without this Black appeared washed out near RED
-  IO.cmd(0x06);  //panel setting
-  IO.data(0x17); // Boost soft start
-  IO.data(0x18);
-  IO.data(0x18);
+  
+  // Without this Black appeared washed out near RED. If colors appear washed out try to "use boost soft start"
+  if (model=="Gdeh042Z21") {
+    printf("Sending additional boost soft start settings for %s\n", model.c_str());
+    IO.cmd(0x06);  //panel setting
+    IO.data(0x17); // Boost soft start
+    IO.data(0x18);
+    IO.data(0x18);
+  }
 }
 
 void Gdeh042Z21::_waitBusy(const char* message){
