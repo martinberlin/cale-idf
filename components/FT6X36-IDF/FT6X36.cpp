@@ -27,10 +27,10 @@ FT6X36::FT6X36(int8_t intPin)
 // Destructor should detach interrupt to the pin
 FT6X36::~FT6X36()
 {
-	//detachInterrupt(digitalPinToInterrupt(_intPin));
+	gpio_isr_handler_remove((gpio_num_t)CONFIG_TOUCH_INT);
 }
 
-void FT6X36::isr()
+void IRAM_ATTR FT6X36::isr(void* arg)
 {
 	if (_instance)
 		_instance->onInterrupt();
@@ -66,10 +66,10 @@ bool FT6X36::begin(uint8_t threshold)
     io_conf.pull_up_en = (gpio_pullup_t)1;
     gpio_config(&io_conf);
 
-	esp_err_t isr = gpio_install_isr_service(0);
-    printf("ISR trigger install response: 0x%x\n", isr);
+	esp_err_t isr_service = gpio_install_isr_service(0);
+    printf("ISR trigger install response: 0x%x\n", isr_service);
 	// Correct this: 
-    //gpio_isr_handler_add((gpio_num_t)CONFIG_TOUCH_INT, FT6X36::isr, (void*) 1);
+    gpio_isr_handler_add((gpio_num_t)CONFIG_TOUCH_INT, isr, (void*) 1);
 
 	//attachInterrupt(digitalPinToInterrupt(_intPin), FT6X36::isr, FALLING);
 	writeRegister8(FT6X36_REG_DEVICE_MODE, 0x00);

@@ -7,7 +7,10 @@
 #include "driver/i2c.h"
 #include "sdkconfig.h"
 
-static const char *TAG = "i2c-example";
+#ifndef ft6x36_h
+#define ft6x36_h
+
+static const char *TAG = "i2c-touch";
 //#define I2C_DEBUG 1 - renamed to TOUCH_I2C_DEBUG
 
 // I2C Constants
@@ -19,8 +22,7 @@ static const char *TAG = "i2c-example";
 #define ACK_VAL 0x0                             /*!< I2C ack value */
 #define NACK_VAL 0x1                            /*!< I2C nack value */
 
-SemaphoreHandle_t print_mux = NULL;
-
+//SemaphoreHandle_t print_mux = NULL;
 
 #define FT6X36_ADDR						0x38
 
@@ -115,7 +117,7 @@ struct TPoint
 
 class FT6X36
 {
-	static void isr();
+	static void IRAM_ATTR isr(void* arg);
 public:
     // TwoWire * wire will be replaced by ESP-IDF https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
 	FT6X36(int8_t intPin);
@@ -152,3 +154,4 @@ private:
 	bool _dragMode = false;
 };
 
+#endif

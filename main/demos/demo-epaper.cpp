@@ -1,19 +1,20 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
+#include "FT6X36.h"
 // Should match with your epaper module, size
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
 //#include <gdew075T7.h>
-//#include <gdew027w3.h>
+#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-
+// INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
+FT6X36 ts(CONFIG_TOUCH_INT);
 // Color
 //#include <gdew0583z21.h>
-#include <gdeh042Z96.h>
-
+//#include <gdeh042Z96.h>
+//#include <gdeh042Z21.h>
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
@@ -22,13 +23,7 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdeh042Z96 display(io);
-//Gdew075C64 display(io);
-//Gdew0583z21 display(io);
-//Gdew075T7 display(io);
-//Gdew042t2 display(io);
-//Gdew0583T7 display(io);
-//Gdew027w3 display(io);
+Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
 // FONT used for title / message body - Only after display library
