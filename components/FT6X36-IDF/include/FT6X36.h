@@ -2,8 +2,25 @@
 #include <cstdlib>
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
+#include <stdio.h>
+#include "esp_log.h"
+#include "driver/i2c.h"
+#include "sdkconfig.h"
+
+static const char *TAG = "i2c-example";
 //#define I2C_DEBUG 1 - renamed to TOUCH_I2C_DEBUG
-//#define FT6X36_DEBUG 1
+
+// I2C Constants
+#define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
+#define I2C_MASTER_RX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
+
+#define ACK_CHECK_EN 0x1                        /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_DIS 0x0                       /*!< I2C master will not check ack from slave */
+#define ACK_VAL 0x0                             /*!< I2C ack value */
+#define NACK_VAL 0x1                            /*!< I2C nack value */
+
+SemaphoreHandle_t print_mux = NULL;
+
 
 #define FT6X36_ADDR						0x38
 
@@ -47,6 +64,15 @@
 #define FT6X36_PMODE_MONITOR			0x01
 #define FT6X36_PMODE_STANDBY			0x02
 #define FT6X36_PMODE_HIBERNATE			0x03
+
+/* Possible values returned by FT6X36_GEST_ID_REG */
+#define FT6X36_GEST_ID_NO_GESTURE       0x00
+#define FT6X36_GEST_ID_MOVE_UP          0x10
+#define FT6X36_GEST_ID_MOVE_RIGHT       0x14
+#define FT6X36_GEST_ID_MOVE_DOWN        0x18
+#define FT6X36_GEST_ID_MOVE_LEFT        0x1C
+#define FT6X36_GEST_ID_ZOOM_IN          0x48
+#define FT6X36_GEST_ID_ZOOM_OUT         0x49
 
 #define FT6X36_VENDID					0x11
 #define FT6206_CHIPID					0x06
@@ -106,7 +132,7 @@ private:
 	void onInterrupt();
 	void readData(void);
 	void writeRegister8(uint8_t reg, uint8_t val);
-	uint8_t readRegister8(uint8_t reg);
+	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
 	void fireEvent(TPoint point, TEvent e);
 
 	static FT6X36 * _instance;

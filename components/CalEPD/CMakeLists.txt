@@ -32,7 +32,7 @@ set(srcs
     "epd4spi.cpp"
     )
 
-# If the project does not use a touch display component FT6X36-IDF can be removed
+# If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"

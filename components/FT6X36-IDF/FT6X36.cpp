@@ -5,7 +5,22 @@ FT6X36 *FT6X36::_instance = nullptr;
 FT6X36::FT6X36(int8_t intPin)
 {
 	_instance = this;
+	int i2c_master_port = 1;
 
+	i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = CONFIG_TOUCH_SDA;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num = CONFIG_TOUCH_SDL;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = CONFIG_I2C_MASTER_FREQUENCY;
+    i2c_param_config(i2c_master_port, &conf);
+    esp_err_t i2c_driver = i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+	if (i2c_driver == ESP_OK) {
+		printf("i2c_driver started correctly\n");
+	} else {
+		printf("i2c_driver error: %d\n", i2c_driver);
+	}
 	_intPin = intPin;
 }
 
@@ -23,23 +38,43 @@ void FT6X36::isr()
 
 bool FT6X36::begin(uint8_t threshold)
 {
-	if (readRegister8(FT6X36_REG_PANEL_ID) != FT6X36_VENDID)
+	uint8_t data_panel_id;
+	readRegister8(FT6X36_REG_PANEL_ID, &data_panel_id);
+
+	if (data_panel_id != FT6X36_VENDID) {
+		printf("FT6X36_VENDID does not match. Received:%d Expected:%d\n",data_panel_id,FT6X36_VENDID);
 		return false;
+		}
 
-	uint8_t id = readRegister8(FT6X36_REG_CHIPID);
-	if (id != FT6206_CHIPID && id != FT6236_CHIPID && id != FT6336_CHIPID)
+	uint8_t chip_id;
+	readRegister8(FT6X36_REG_CHIPID, &chip_id);
+	if (chip_id != FT6206_CHIPID && chip_id != FT6236_CHIPID && chip_id != FT6336_CHIPID) {
+		printf("FT6206_CHIPID does not match. Received:%d\n",chip_id);
 		return false;
+	}	
 
-	gpio_set_direction((gpio_num_t)CONFIG_TOUCH_INT, GPIO_MODE_INPUT);
-    gpio_set_pull_mode((gpio_num_t)CONFIG_TOUCH_INT, GPIO_PULLUP_ONLY);
+	//gpio_set_direction((gpio_num_t)CONFIG_TOUCH_INT, GPIO_MODE_INPUT);
+    //gpio_set_pull_mode((gpio_num_t)CONFIG_TOUCH_INT, GPIO_PULLUP_ONLY);
 
+    // Sensor that goes HIGH when detects something (Ex. triggering a new image request in an exposition)
+    gpio_config_t io_conf;
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.pin_bit_mask = 1ULL<<CONFIG_TOUCH_INT;  
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = (gpio_pullup_t)1;
+    gpio_config(&io_conf);
+
+	esp_err_t isr = gpio_install_isr_service(0);
+    printf("ISR trigger install response: 0x%x\n", isr);
+	// Correct this: 
+    //gpio_isr_handler_add((gpio_num_t)CONFIG_TOUCH_INT, FT6X36::isr, (void*) 1);
 
 	//attachInterrupt(digitalPinToInterrupt(_intPin), FT6X36::isr, FALLING);
-
 	writeRegister8(FT6X36_REG_DEVICE_MODE, 0x00);
 	writeRegister8(FT6X36_REG_THRESHHOLD, threshold);
 	writeRegister8(FT6X36_REG_TOUCHRATE_ACTIVE, 0x0E);
-
 	return true;
 }
 
@@ -55,12 +90,18 @@ void FT6X36::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 
 uint8_t FT6X36::touched()
 {
-	uint8_t n = readRegister8(FT6X36_REG_NUM_TOUCHES);
-	if (n > 2)
+	uint8_t data_buf;
+    esp_err_t ret = readRegister8(FT6X36_REG_NUM_TOUCHES, &data_buf);
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Error reading from device: %s", esp_err_to_name(ret));
+	 }
+
+	if (data_buf > 2)
 	{
-		n = 0;
+		data_buf = 0;
 	}
-	return n;
+
+	return data_buf;
 }
 
 void FT6X36::loop()
@@ -153,20 +194,12 @@ void FT6X36::readData(void)
 		//data[i] = Wire.read();
 		data[i] = 0;
 #if defined(CONFIG_FT6X36_DEBUG) && CONFIG_FT6X36_DEBUG==1
-	Serial.println("REGISTERS:");
+	printf("REGISTERS:\n");
 	for (int16_t i = 0; i < size; i++)
 	{
-		Serial.print("0x");
-		Serial.print(i, HEX);
-		Serial.print(" = 0x");
-		Serial.println(data[i], HEX);
+		printf("0x%x=0x%x\n", i, data[i]);
 	}
-
-	Serial.println();
-	Serial.print("TOUCHES: ");
-	Serial.println(data[FT6X36_REG_NUM_TOUCHES]);
-	Serial.print("GESTURE: ");
-	Serial.println(data[FT6X36_REG_GESTURE_ID]);
+	printf("TOUCHES: %d  GESTURE: %d\n", data[FT6X36_REG_NUM_TOUCHES], data[FT6X36_REG_GESTURE_ID]);
 #endif
 	_touches = data[FT6X36_REG_NUM_TOUCHES];
 
@@ -185,6 +218,14 @@ void FT6X36::readData(void)
 
 void FT6X36::writeRegister8(uint8_t reg, uint8_t value)
 {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, reg , ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, value , ACK_CHECK_EN);
+	i2c_master_stop(cmd);
+    i2c_master_cmd_begin(I2C_NUM_0, cmd, 100 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
 	// Needs to be replaced by ESP-IDF I2C master
 	/* 
 	_wire->beginTransmission(FT6X36_ADDR);
@@ -194,9 +235,22 @@ void FT6X36::writeRegister8(uint8_t reg, uint8_t value)
 	*/
 }
 
-uint8_t FT6X36::readRegister8(uint8_t reg)
+uint8_t FT6X36::readRegister8(uint8_t reg, uint8_t *data_buf)
 {
-	uint8_t value = 0;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
+	// Research: Why it's started a 2nd time here
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
+
+    i2c_master_read_byte(cmd, data_buf, I2C_MASTER_NACK);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+	//FT6X36_REG_GESTURE_ID
+
 	// Needs to be replaced by ESP-IDF I2C master
 	/* 
 	_wire->beginTransmission(FT6X36_ADDR);
@@ -207,13 +261,10 @@ uint8_t FT6X36::readRegister8(uint8_t reg)
 	uint8_t value = _wire->read();
 	*/
 #if defined(CONFIG_TOUCH_I2C_DEBUG) && CONFIG_TOUCH_I2C_DEBUG==1
-	Serial.print("REG 0x");
-	Serial.print(reg, HEX);
-	Serial.print(": 0x");
-	Serial.println(value, HEX);
+	printf("REG 0x%x: 0x%x\n",reg,ret);
 #endif
 
-	return value;
+	return ret;
 }
 
 void FT6X36::fireEvent(TPoint point, TEvent e)
@@ -223,6 +274,7 @@ void FT6X36::fireEvent(TPoint point, TEvent e)
 }
 
 #ifdef FT6X36_DEBUG
+/* 
 void FT6X36::debugInfo()
 {
 	Serial.print("TH_DIFF: ");
@@ -258,6 +310,7 @@ void FT6X36::debugInfo()
 	Serial.print("FOCALTECH_ID: ");
 	Serial.println(readRegister8(FT6X36_REG_PANEL_ID));
 	Serial.print("STATE: ");
-	Serial.println(readRegister8(FT6X36_REG_STATE));
+	Serial.println(readRegister8(FT6X36_REG_STATE)); 
+	*/
 }
 #endif
