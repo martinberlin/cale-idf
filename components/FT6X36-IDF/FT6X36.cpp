@@ -5,7 +5,6 @@ FT6X36 *FT6X36::_instance = nullptr;
 FT6X36::FT6X36(int8_t intPin)
 {
 	_instance = this;
-	int i2c_master_port = 1;
 
 	i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
@@ -14,8 +13,8 @@ FT6X36::FT6X36(int8_t intPin)
     conf.scl_io_num = CONFIG_TOUCH_SDL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = CONFIG_I2C_MASTER_FREQUENCY;
-    i2c_param_config(i2c_master_port, &conf);
-    esp_err_t i2c_driver = i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+    i2c_param_config(I2C_NUM_0, &conf);
+    esp_err_t i2c_driver = i2c_driver_install(I2C_NUM_0, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 	if (i2c_driver == ESP_OK) {
 		printf("i2c_driver started correctly\n");
 	} else {
@@ -32,6 +31,7 @@ FT6X36::~FT6X36()
 
 void IRAM_ATTR FT6X36::isr(void* arg)
 {
+	ets_printf("ISR ");
 	if (_instance)
 		_instance->onInterrupt();
 }
@@ -42,16 +42,18 @@ bool FT6X36::begin(uint8_t threshold)
 	readRegister8(FT6X36_REG_PANEL_ID, &data_panel_id);
 
 	if (data_panel_id != FT6X36_VENDID) {
-		printf("FT6X36_VENDID does not match. Received:%d Expected:%d\n",data_panel_id,FT6X36_VENDID);
+		printf("FT6X36_VENDID does not match. Received:0x%x Expected:0x%x\n",data_panel_id,FT6X36_VENDID);
 		return false;
 		}
+		printf("FT6X36_PANEL_ID: %x\n",data_panel_id);
 
 	uint8_t chip_id;
 	readRegister8(FT6X36_REG_CHIPID, &chip_id);
 	if (chip_id != FT6206_CHIPID && chip_id != FT6236_CHIPID && chip_id != FT6336_CHIPID) {
-		printf("FT6206_CHIPID does not match. Received:%d\n",chip_id);
+		printf("FT6206_CHIPID does not match. Received:0x%x\n",chip_id);
 		return false;
-	}	
+	}
+	printf("FT6206_CHIPID: %x\n",chip_id);
 
 	//gpio_set_direction((gpio_num_t)CONFIG_TOUCH_INT, GPIO_MODE_INPUT);
     //gpio_set_pull_mode((gpio_num_t)CONFIG_TOUCH_INT, GPIO_PULLUP_ONLY);
@@ -59,7 +61,7 @@ bool FT6X36::begin(uint8_t threshold)
     // Sensor that goes HIGH when detects something (Ex. triggering a new image request in an exposition)
     gpio_config_t io_conf;
     //interrupt of rising edge
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
     io_conf.pin_bit_mask = 1ULL<<CONFIG_TOUCH_INT;  
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
@@ -181,14 +183,6 @@ void FT6X36::readData(void)
 {
 	const uint8_t size = 16;
 	uint8_t data[size];
-	// Needs to be replaced by ESP-IDF I2C master
-	/* 
-	_wire->beginTransmission(FT6X36_ADDR);
-	_wire->write(0);
-	_wire->endTransmission(); 
-	_wire->requestFrom((uint8_t)FT6X36_ADDR, size);
-	*/
-
 	
 	for (uint8_t i = 0; i < size; i++)
 		//data[i] = Wire.read();
@@ -224,7 +218,7 @@ void FT6X36::writeRegister8(uint8_t reg, uint8_t value)
 	i2c_master_write_byte(cmd, reg , ACK_CHECK_EN);
 	i2c_master_write_byte(cmd, value , ACK_CHECK_EN);
 	i2c_master_stop(cmd);
-    i2c_master_cmd_begin(I2C_NUM_0, cmd, 100 / portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
 	// Needs to be replaced by ESP-IDF I2C master
 	/* 
