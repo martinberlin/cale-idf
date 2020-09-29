@@ -83,6 +83,10 @@ static const char *TAG = "i2c-touch";
 
 #define FT6X36_DEFAULT_THRESHOLD		22
 
+// From: https://github.com/lvgl/lv_port_esp32/blob/master/components/lvgl_esp32_drivers/lvgl_touch/ft6x36.h
+#define FT6X36_MSB_MASK                 0x0F
+#define FT6X36_LSB_MASK                 0xFF
+
 enum class TRawEvent
 {
 	PressDown,
@@ -132,13 +136,14 @@ public:
 
 private:
 	void onInterrupt();
-	void readData(void);
+	bool readData(void);
 	void writeRegister8(uint8_t reg, uint8_t val);
 	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
 	void fireEvent(TPoint point, TEvent e);
-
+	uint8_t read8(uint8_t regName);
+	
 	static FT6X36 * _instance;
-	//TwoWire * _wire = nullptr;
+	
 	uint8_t _intPin;
 
 	void(*_isrHandler)() = nullptr;

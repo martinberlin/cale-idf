@@ -31,7 +31,7 @@ FT6X36::~FT6X36()
 
 void IRAM_ATTR FT6X36::isr(void* arg)
 {
-	ets_printf("ISR ");
+	//ets_printf("ISR ");
 	if (_instance)
 		_instance->onInterrupt();
 }
@@ -172,42 +172,78 @@ void FT6X36::processTouch()
 void FT6X36::onInterrupt()
 {
 	_isrCounter++;
-
+    //ets_printf("c:%d\n",_isrCounter);
 	if (_isrHandler)
 	{
 		_isrHandler();
 	}
 }
 
-void FT6X36::readData(void)
-{
-	const uint8_t size = 16;
-	uint8_t data[size];
-	
-	for (uint8_t i = 0; i < size; i++)
-		//data[i] = Wire.read();
-		data[i] = 0;
-#if defined(CONFIG_FT6X36_DEBUG) && CONFIG_FT6X36_DEBUG==1
-	printf("REGISTERS:\n");
-	for (int16_t i = 0; i < size; i++)
-	{
-		printf("0x%x=0x%x\n", i, data[i]);
-	}
-	printf("TOUCHES: %d  GESTURE: %d\n", data[FT6X36_REG_NUM_TOUCHES], data[FT6X36_REG_GESTURE_ID]);
-#endif
-	_touches = data[FT6X36_REG_NUM_TOUCHES];
+uint8_t FT6X36::read8(uint8_t regName) {
+	uint8_t buf;
+	readRegister8(regName, &buf);
+	return buf;
+}
 
-	const uint8_t addrShift = 6;
-	for (uint8_t i = 0; i < 2; i++)
-	{
-		_touchX[i] = data[FT6X36_REG_P1_XH + i * addrShift] & 0x0F;
-		_touchX[i] <<= 8;
-		_touchX[i] |= data[FT6X36_REG_P1_XL + i * addrShift];
-		_touchY[i] = data[FT6X36_REG_P1_YH + i * addrShift] & 0x0F;
-		_touchY[i] <<= 8;
-		_touchY[i] |= data[FT6X36_REG_P1_YL + i * addrShift];
-		_touchEvent[i] = data[FT6X36_REG_P1_XH + i * addrShift] >> 6;
-	}
+bool FT6X36::readData(void)
+{
+	uint8_t data_xy[4];         // 2 bytes X | 2 bytes Y
+    uint8_t touch_pnt_cnt;      // Number of detected touch points
+    int16_t last_x = 0;  // 12bit pixel value
+    int16_t last_y = 0;  // 12bit pixel value
+
+    readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
+	if (touch_pnt_cnt==0) return 0;
+
+	printf("TOUCHES:%d\n",touch_pnt_cnt);
+
+
+    // Read X value
+    i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
+
+    i2c_master_start(i2c_cmd);
+    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(i2c_cmd, FT6X36_REG_P1_XH, I2C_MASTER_ACK);
+
+    i2c_master_start(i2c_cmd);
+    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
+
+    i2c_master_read_byte(i2c_cmd, &data_xy[0], I2C_MASTER_ACK);     // reads FT6X36_P1_XH_REG
+    i2c_master_read_byte(i2c_cmd, &data_xy[1], I2C_MASTER_NACK);    // reads FT6X36_P1_XL_REG
+    i2c_master_stop(i2c_cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, i2c_cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(i2c_cmd);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Error getting X coordinates: %s", esp_err_to_name(ret));
+        // no touch detected
+        return false;
+    }
+
+    // Read Y value
+    i2c_cmd = i2c_cmd_link_create();
+
+    i2c_master_start(i2c_cmd);
+    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(i2c_cmd, FT6X36_REG_P1_YH, I2C_MASTER_ACK);
+
+    i2c_master_start(i2c_cmd);
+    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
+
+    i2c_master_read_byte(i2c_cmd, &data_xy[2], I2C_MASTER_ACK);     // reads FT6X36_P1_YH_REG
+    i2c_master_read_byte(i2c_cmd, &data_xy[3], I2C_MASTER_NACK);    // reads FT6X36_P1_YL_REG
+    i2c_master_stop(i2c_cmd);
+    ret = i2c_master_cmd_begin(I2C_NUM_0, i2c_cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(i2c_cmd);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Error getting Y coordinates: %s", esp_err_to_name(ret));
+        return false;
+    }
+
+    last_x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
+    last_y = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
+	
+	printf("X: %d Y: %d\n", last_x, last_y);
+	return true;
 }
 
 void FT6X36::writeRegister8(uint8_t reg, uint8_t value)
@@ -220,13 +256,6 @@ void FT6X36::writeRegister8(uint8_t reg, uint8_t value)
 	i2c_master_stop(cmd);
     i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-	// Needs to be replaced by ESP-IDF I2C master
-	/* 
-	_wire->beginTransmission(FT6X36_ADDR);
-	_wire->write(reg);
-	_wire->write(value);
-	_wire->endTransmission();
-	*/
 }
 
 uint8_t FT6X36::readRegister8(uint8_t reg, uint8_t *data_buf)
@@ -243,18 +272,10 @@ uint8_t FT6X36::readRegister8(uint8_t reg, uint8_t *data_buf)
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-	//FT6X36_REG_GESTURE_ID
 
-	// Needs to be replaced by ESP-IDF I2C master
-	/* 
-	_wire->beginTransmission(FT6X36_ADDR);
-	_wire->write(reg);
-	_wire->endTransmission();
-
-	_wire->requestFrom((uint8_t)FT6X36_ADDR, (uint8_t)1);
-	uint8_t value = _wire->read();
-	*/
-#if defined(CONFIG_TOUCH_I2C_DEBUG) && CONFIG_TOUCH_I2C_DEBUG==1
+	
+	//FT6X36_REG_GESTURE_ID. Check if it can be read!
+#if defined(FT6X36_DEBUG) && FT6X36_DEBUG==1
 	printf("REG 0x%x: 0x%x\n",reg,ret);
 #endif
 
@@ -267,12 +288,10 @@ void FT6X36::fireEvent(TPoint point, TEvent e)
 		_touchHandler(point, e);
 }
 
-#ifdef FT6X36_DEBUG
-/* 
 void FT6X36::debugInfo()
 {
-	Serial.print("TH_DIFF: ");
-	Serial.println(readRegister8(FT6X36_REG_FILTER_COEF));
+	printf("TH_DIFF: %d ", read8(FT6X36_REG_FILTER_COEF));
+	/* 
 	Serial.print("CTRL: ");
 	Serial.println(readRegister8(FT6X36_REG_CTRL));
 	Serial.print("TIMEENTERMONITOR: ");
@@ -304,7 +323,6 @@ void FT6X36::debugInfo()
 	Serial.print("FOCALTECH_ID: ");
 	Serial.println(readRegister8(FT6X36_REG_PANEL_ID));
 	Serial.print("STATE: ");
-	Serial.println(readRegister8(FT6X36_REG_STATE)); 
+	Serial.println(readRegister8(FT6X36_REG_STATE));  
 	*/
 }
-#endif

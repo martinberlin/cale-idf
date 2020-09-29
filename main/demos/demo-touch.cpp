@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "FT6X36.h"
+#include "soc/rtc_wdt.h"
 #include <gdew027w3.h>
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
@@ -105,6 +106,7 @@ void printTouchInfo(TPoint p, TEvent e)
 
 void touch(TPoint p, TEvent e)
 {
+  //printf("touch() called"); // Working
   printTouchInfo(p, e);
 }
 
@@ -128,4 +130,10 @@ void app_main(void)
   
    ts.begin();
    ts.registerTouchHandler(touch);
+
+   while (true) {
+          ts.loop();
+          vTaskDelay(10 / portTICK_PERIOD_MS);
+          rtc_wdt_feed();
+        }
 }
