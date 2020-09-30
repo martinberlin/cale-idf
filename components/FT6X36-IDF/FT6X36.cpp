@@ -32,8 +32,7 @@ FT6X36::~FT6X36()
 
 void IRAM_ATTR FT6X36::isr(void* arg)
 {
-	if (_instance)
-		_instance->onInterrupt();
+   _instance->onInterrupt();
 }
 
 bool FT6X36::begin(uint8_t threshold)
@@ -81,6 +80,7 @@ void FT6X36::registerIsrHandler(void (*fn)())
 void FT6X36::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 {
 	_touchHandler = fn;
+	if (CONFIG_FT6X36_DEBUG) printf("Touch handler function registered\n");
 }
 
 uint8_t FT6X36::touched()
@@ -101,9 +101,7 @@ uint8_t FT6X36::touched()
 
 void FT6X36::loop()
 {
-	while (_isrCounter > 0)
-	{
-		_isrCounter--;
+	if (_isrInterrupt)	{
 		processTouch();
 	}
 }
@@ -161,7 +159,8 @@ void FT6X36::processTouch()
 
 void FT6X36::onInterrupt()
 {
-	_isrCounter++;
+	_isrInterrupt = true;
+	
 	if (_isrHandler)
 	{
 		_isrHandler();
@@ -182,7 +181,7 @@ bool FT6X36::readData(void)
     readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
 	if (touch_pnt_cnt==0) return 0;
 
-	printf("TOUCHES:%d\n",touch_pnt_cnt);
+	ets_printf("TOUCHES:%d\n",touch_pnt_cnt);
 
 
     // Read X value
@@ -231,7 +230,8 @@ bool FT6X36::readData(void)
 	_touchEvent[0] = data_xy[0] >> 5;
 	
 	if (CONFIG_FT6X36_DEBUG)
-	printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	ets_printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	_isrInterrupt = false; // Mark interrupt as processed
 	return true;
 }
 

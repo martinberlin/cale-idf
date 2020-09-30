@@ -145,6 +145,7 @@ private:
 	void(*_isrHandler)() = nullptr;
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	volatile uint8_t _isrCounter = 0;
+	bool _isrInterrupt = false;
 	
 	uint8_t _touches;
 	uint16_t _touchX[2], _touchY[2], _touchEvent[2];
