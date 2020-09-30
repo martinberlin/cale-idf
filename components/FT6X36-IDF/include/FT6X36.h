@@ -9,10 +9,6 @@
 
 #ifndef ft6x36_h
 #define ft6x36_h
-
-static const char *TAG = "i2c-touch";
-//#define I2C_DEBUG 1 - renamed to TOUCH_I2C_DEBUG
-
 // I2C Constants
 #define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */

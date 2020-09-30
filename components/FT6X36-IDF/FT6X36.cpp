@@ -1,6 +1,7 @@
 #include "FT6X36.h"
 
 FT6X36 *FT6X36::_instance = nullptr;
+static const char *TAG = "i2c-touch";
 
 FT6X36::FT6X36(int8_t intPin)
 {
@@ -63,7 +64,7 @@ bool FT6X36::begin(uint8_t threshold)
     gpio_config(&io_conf);
 
 	esp_err_t isr_service = gpio_install_isr_service(0);
-    printf("ISR trigger install response: 0x%x\n", isr_service);
+    printf("ISR trigger install response: 0x%x %s\n", isr_service, (isr_service==0)?"ESP_OK":"");
     gpio_isr_handler_add((gpio_num_t)CONFIG_TOUCH_INT, isr, (void*) 1);
 
 	writeRegister8(FT6X36_REG_DEVICE_MODE, 0x00);
