@@ -12,6 +12,8 @@ EpdSpi io;
 Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
+// Only debugging:
+//#define DEBUG_COUNT_TOUCH
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
@@ -28,7 +30,7 @@ uint16_t lineSpacing = 18;
 uint16_t circleColor = EPD_BLACK;
 uint16_t circleRadio = 10;
 
-void drawClearButton(){
+void drawUX(){
     display.fillRoundRect(1,1,blockWidth,blockHeight,8,EPD_BLACK);
     display.setTextColor(EPD_WHITE);
     display.setCursor(5,blockHeight-(lineSpacing*2));
@@ -53,10 +55,15 @@ void drawClearButton(){
     display.print("CLEAR");
     
 }
+uint16_t t_counter = 0;
 
-
-void printTouchInfo(TPoint p, TEvent e)
+void touchEvent(TPoint p, TEvent e)
 {
+  #if defined(DEBUG_COUNT_TOUCH) && DEBUG_COUNT_TOUCH==1
+    ++t_counter;
+    ets_printf("e %x %d  ",e,t_counter); // Working
+  #endif
+
   if (e != TEvent::Tap && e != TEvent::DragStart && e != TEvent::DragMove && e != TEvent::DragEnd)
     return;
 
@@ -85,12 +92,12 @@ void printTouchInfo(TPoint p, TEvent e)
   if (p.x<blockWidth && p.y>198) { // Clear screen to white
     display.fillScreen(EPD_WHITE);
     circleColor = EPD_BLACK;
-    drawClearButton();
+    drawUX();
     display.update();
   } else if (p.x<blockWidth && p.y<198 && p.y>132) { // Clear screen to black
     display.fillScreen(EPD_BLACK);
     circleColor = EPD_WHITE;
-    drawClearButton();
+    drawUX();
     display.update();
   } else if (p.x<blockWidth && p.y<132 && p.y>66) { // Set circle color to white
     circleColor = EPD_WHITE;
@@ -102,12 +109,6 @@ void printTouchInfo(TPoint p, TEvent e)
     display.fillCircle(p.x, p.y, circleRadio, circleColor);
     display.updateWindow(p.x-circleRadio, p.y-circleRadio, circleRadio*2, circleRadio*2+1);
   }
-}
-
-void touch(TPoint p, TEvent e)
-{
-  //printf("touch() called"); // Working
-  printTouchInfo(p, e);
 }
 
 void app_main(void)
@@ -125,15 +126,22 @@ void app_main(void)
       foregroundColor = EPD_RED;
    }
 
-   drawClearButton();
+   drawUX();
    display.update();
   
    ts.begin();
-   ts.registerTouchHandler(touch);
+   ts.registerTouchHandler(touchEvent);
+   
+   if (true) {
+    uint8_t c=0;
+    while (true) {
+            ts.loop();
 
-   while (true) {
-          ts.loop();
-          vTaskDelay(10 / portTICK_PERIOD_MS);
-          rtc_wdt_feed();
-        }
+            vTaskDelay(10/portTICK_PERIOD_MS);
+            if (c%8) {
+              rtc_wdt_feed();
+            }
+            ++c;
+          }
+      }
 }

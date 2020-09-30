@@ -303,15 +303,15 @@ void Gdew027w3::_wakeUp(){
 void Gdew027w3::update()
 {
   _wakeUp();
-  printf("BUFF Size:%d\n",sizeof(_buffer));
+  _using_partial_mode = false;
 
-  if (_initial) {       // init clean old data
+  /* if (_initial) {       // init clean old data
     IO.cmd(0x10);
     for (uint16_t x = 0; x < GDEW027W3_BUFFER_SIZE; x++){
       IO.data(0xFF);
     }
     _initial=false;
-  } 
+  } */
 
   IO.cmd(0x13);        // update current data
   for (uint16_t x = 0; x < GDEW027W3_BUFFER_SIZE; x++){
