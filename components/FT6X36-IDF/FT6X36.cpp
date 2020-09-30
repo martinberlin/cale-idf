@@ -227,7 +227,7 @@ bool FT6X36::readData(void)
 
     _touchX[0] = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
     _touchY[0] = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-	_touchEvent[0] = data_xy[0] >> 5;
+	_touchEvent[0] = data_xy[0] >> 7;
 	
 	if (CONFIG_FT6X36_DEBUG)
 	ets_printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
