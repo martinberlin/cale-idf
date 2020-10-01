@@ -6,6 +6,11 @@
 
 /*
 History & fail record: https://twitter.com/martinfasani/status/1265762052880175107
+
+Please note that with Good Display Gdew027w3-T
+found some gray background when starting the epaper with this
+LUT tables. The class called       Gdew027w3T 
+uses the "LUT from OTP" instead of this and seems to work better
 */
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
@@ -155,10 +160,6 @@ DRAM_ATTR const epd_init_42 Gdew027w3::lut_24_bb_partial={
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 },42};
 
-// Partial Update Delay, may have an influence on degradation
-#define GDEW027W3_PU_DELAY 100
-
-
 // Constructor
 Gdew027w3::Gdew027w3(EpdSpi& dio): 
   Adafruit_GFX(GDEW027W3_WIDTH, GDEW027W3_HEIGHT),
@@ -166,8 +167,18 @@ Gdew027w3::Gdew027w3(EpdSpi& dio):
 {
   printf("Gdew027w3() %d*%d\n",
   GDEW027W3_WIDTH, GDEW027W3_HEIGHT);  
+  // For the record, begining of the fight: https://twitter.com/martinfasani/status/1265762052880175107
+}
 
-  //printf("\n\n\n____________DO NOT USE: https://twitter.com/martinfasani/status/1265762052880175107");
+//Initialize the display
+void Gdew027w3::init(bool debug)
+{
+    debug_enabled = debug;
+    if (debug_enabled) printf("Gdew027w3::init(%d)\n", debug);
+    IO.init(5, debug); // 5 MHz frequency
+
+    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    fillScreen(EPD_WHITE);
 }
 
 void Gdew027w3::initFullUpdate(){
@@ -230,17 +241,6 @@ void Gdew027w3::initPartialUpdate(){
     IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
     
     if (debug_enabled) printf("initPartialUpdate() LUT\n");
-}
-
-//Initialize the display
-void Gdew027w3::init(bool debug)
-{
-    debug_enabled = debug;
-    if (debug_enabled) printf("Gdew027w3::init(%d)\n", debug);
-    IO.init(4, debug); // 4MHz frequency
-
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
-    fillScreen(EPD_WHITE);
 }
 
 void Gdew027w3::fillScreen(uint16_t color)
@@ -391,7 +391,7 @@ void Gdew027w3::_writeToWindow(uint8_t command, uint16_t xs, uint16_t ys, uint16
       IO.data(~data);
     }
   }
-  //delay(2);
+  vTaskDelay(pdMS_TO_TICKS(2));
 }
 
 void Gdew027w3::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)

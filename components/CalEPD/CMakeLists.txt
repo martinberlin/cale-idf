@@ -6,6 +6,7 @@ set(srcs
     "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
+    "models/gdew027w3T.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/heltec0151.cpp"
