@@ -102,6 +102,9 @@ void Gdew027w3T::init(bool debug)
 }
 
 void Gdew027w3T::initPartialUpdate(){
+    IO.cmd(0x00);  //Panel setting for fast partial
+    IO.data(0xbf);
+
     IO.cmd(0x82);  //vcom_DC setting
     IO.data(0x08);
 
@@ -175,10 +178,12 @@ void Gdew027w3T::_wakeUp(){
 
   
   // Original boost codes from Good display example - Makes partial update slow
-  /* IO.cmd(epd_panel_setting.cmd);  // CMD: 0x00 DATA: 0xbf
-  IO.data(epd_panel_setting.data[0]); */
+  IO.cmd(epd_panel_setting.cmd);  // CMD: 0x00 DATA: 0xbf
+  IO.data(epd_panel_setting.data[0]);
+  // This two panel setting and PLL are the ones that make partial refresh work super fast
+  //IO.data(0xbf);    //KW-BF   KWR-AF  BWROTP 0f
 
-  IO.cmd(0xF8);         //boost 1
+  /* IO.cmd(0xF8);         //boost 1
   IO.data(0x60);
   IO.data(0xa5);
 
@@ -188,10 +193,9 @@ void Gdew027w3T::_wakeUp(){
 
   IO.cmd(0xF8);         //boost 3
   IO.data(0x7C);
-  IO.data(0x00); 
-  // This two panel setting and PLL are the ones that make partial refresh work super fast
-  IO.cmd(0x00); //panel setting
-  IO.data(0xbf);    //KW-BF   KWR-AF  BWROTP 0f 
+  IO.data(0x00); */ 
+  
+
   IO.cmd(0x30); //PLL setting
   IO.data(0x3a);   //90 50HZ  3A 100HZ   29 150Hz 39 200HZ 31 171HZ
 
