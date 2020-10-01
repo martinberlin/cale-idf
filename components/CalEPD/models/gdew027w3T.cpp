@@ -23,6 +23,63 @@ DRAM_ATTR const epd_init_1 Gdew027w3T::epd_vcom2={
 0x50,{0x97},1
 };
 
+//partial screen update LUT
+DRAM_ATTR const epd_init_44 Gdew027w3T::lut_20_vcomDC_partial={
+0x20, {
+  0x00, 0x00,
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+},44};
+
+DRAM_ATTR const epd_init_42 Gdew027w3T::lut_21_ww_partial={
+0x21, {
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew027w3T::lut_22_bw_partial={
+0x22, {
+  0x80, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew027w3T::lut_23_wb_partial={
+0x23, {
+  0x40, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew027w3T::lut_24_bb_partial={
+0x24, {
+  0x00, 0x19, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+},42};
+
 // Constructor
 Gdew027w3T::Gdew027w3T(EpdSpi& dio): 
   Adafruit_GFX(GDEW027W3_WIDTH, GDEW027W3_HEIGHT),
@@ -44,6 +101,42 @@ void Gdew027w3T::init(bool debug)
     fillScreen(EPD_WHITE);
 }
 
+void Gdew027w3T::initPartialUpdate(){
+    IO.cmd(0x82);  //vcom_DC setting
+    IO.data(0x08);
+
+    IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING
+    IO.data(0x17); //WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
+
+    uint8_t index = 0;
+    IO.cmd(lut_20_vcomDC_partial.cmd);
+    for (index = 0; index < lut_20_vcomDC_partial.databytes; index++) {
+      IO.data(lut_20_vcomDC_partial.data[index]);
+    }
+   
+    IO.cmd(lut_21_ww_partial.cmd);
+    for (index = 0; index < lut_21_ww_partial.databytes; index++) {
+      IO.data(lut_21_ww_partial.data[index]);
+    }
+
+    IO.cmd(lut_22_bw_partial.cmd);
+    for (index = 0; index < lut_22_bw_partial.databytes; index++) {
+      IO.data(lut_22_bw_partial.data[index]);
+    }
+
+    IO.cmd(lut_23_wb_partial.cmd);
+    for (index = 0; index < lut_23_wb_partial.databytes; index++) {
+      IO.data(lut_23_wb_partial.data[index]);
+    }
+
+    IO.cmd(lut_24_bb_partial.cmd);
+    for (index = 0; index < lut_24_bb_partial.databytes; index++) {
+      IO.data(lut_24_bb_partial.data[index]);
+    }
+    
+    if (debug_enabled) printf("initPartialUpdate() LUT\n");
+}
+
 void Gdew027w3T::fillScreen(uint16_t color)
 {
   // 0xFF = 8 pixels black, 0x00 = 8 pix. white
@@ -60,22 +153,30 @@ void Gdew027w3T::_wakeUp(){
   printf("wakeup() start commands\n");
   IO.reset(10);
 
+  IO.cmd(0x01); //POWER SETTING
+  IO.data(0x03);
+  IO.data(0x00);
+  IO.data(0x2b);
+  IO.data(0x2b);
 
   //KW-BF   KWR-AF  BWROTP 0f
   IO.cmd(epd_soft_start.cmd);     // boost
   for (int i=0;i<epd_soft_start.databytes;++i) {
       IO.data(epd_soft_start.data[i]);
   }
+  IO.cmd(epd_extra_setting.cmd);  // CMD: 0x16 DATA: 0x00
+  IO.data(epd_extra_setting.data[0]);
 
   IO.cmd(0x04);
   _waitBusy("epd_wakeup_power:ON");
   _isAsleep = false;
 
-  IO.cmd(epd_extra_setting.cmd);  // CMD: 0x16 DATA: 0x00
-  IO.data(epd_extra_setting.data[0]);
+
+
   
-  IO.cmd(epd_panel_setting.cmd);  // CMD: 0x00 DATA: 0xbf
-  IO.data(epd_panel_setting.data[0]);
+  // Original boost codes from Good display example - Makes partial update slow
+  /* IO.cmd(epd_panel_setting.cmd);  // CMD: 0x00 DATA: 0xbf
+  IO.data(epd_panel_setting.data[0]); */
 
   IO.cmd(0xF8);         //boost 1
   IO.data(0x60);
@@ -87,7 +188,15 @@ void Gdew027w3T::_wakeUp(){
 
   IO.cmd(0xF8);         //boost 3
   IO.data(0x7C);
-  IO.data(0x00);
+  IO.data(0x00); 
+  // This two panel setting and PLL are the ones that make partial refresh work super fast
+  IO.cmd(0x00); //panel setting
+  IO.data(0xbf);    //KW-BF   KWR-AF  BWROTP 0f 
+  IO.cmd(0x30); //PLL setting
+  IO.data(0x3a);   //90 50HZ  3A 100HZ   29 150Hz 39 200HZ 31 171HZ
+
+  IO.cmd(0x82); //vcom_DC setting
+  IO.data(0x08);   //0x28:-2.0V,0x12:-0.9V
 
   vTaskDelay(2/portTICK_RATE_MS); // delay(2)
 
@@ -100,6 +209,14 @@ void Gdew027w3T::update()
 {
   _wakeUp();
   _using_partial_mode = false;
+
+  if (_initial) {
+    IO.cmd(0x10);
+    for (uint16_t x = 0; x < GDEW027W3_BUFFER_SIZE; x++){
+      IO.data(0xFF); // 0xFF is white
+    } 
+    _initial = false;
+  }
 
   IO.cmd(0x13);        // update current data
   for (uint16_t x = 0; x < GDEW027W3_BUFFER_SIZE; x++){
@@ -114,6 +231,12 @@ void Gdew027w3T::update()
 
   IO.cmd(0x12);        // display refresh
   _waitBusy("update");
+
+  IO.cmd(0x10);        // update old data
+  for (uint16_t x = 0; x < GDEW027W3_BUFFER_SIZE; x++){
+    uint8_t pixel = sizeof(_buffer) ? ~_buffer[x] : 0xFF;
+    IO.data(pixel);
+  }
 
   if (_sleep_after_update) {
     _sleep();
@@ -184,7 +307,7 @@ void Gdew027w3T::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   // Only if sleep state is true:
   if (!_using_partial_mode || _isAsleep==true) _wakeUp();
   _using_partial_mode = true;
-
+  initPartialUpdate();
   _writeToWindow(0x15, x, y, x, y, w, h);
   _refreshWindow(x, y, w, h);   
   _waitBusy("updateWindow");

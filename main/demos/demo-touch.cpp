@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include "FT6X36.h"
 #include "soc/rtc_wdt.h"
+//#include <gdew027w3.h>
 #include <gdew027w3T.h>
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
@@ -10,13 +11,13 @@ FT6X36 ts(CONFIG_TOUCH_INT);
 
 EpdSpi io;
 Gdew027w3T display(io);
-//Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
+//Gdew027w3 display(io); // Does not work correctly yet - moved to /fix
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-#include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 
 extern "C"
 {
@@ -132,6 +133,7 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   //display.setFont(&Ubuntu_M8pt8b);
    //display.setRotation(2);
    
    printf("display.colors_supported:%d\n", display.colors_supported);  
@@ -142,13 +144,12 @@ void app_main(void)
    // Instantiate touch 
    ts.begin();
    ts.registerTouchHandler(touchEvent);
-   
   
     uint8_t c=0;
     while (true) {
         ts.loop();
 
-        vTaskDelay(6/portTICK_PERIOD_MS);
+        vTaskDelay(10/portTICK_PERIOD_MS);
         if (c%8) {
           rtc_wdt_feed();
         }
