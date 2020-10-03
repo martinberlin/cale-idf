@@ -119,21 +119,13 @@ void FT6X36::processTouch()
 
 	//printf("pt:%d ",_touchEvent[n]);
 
-	if (event == TRawEvent::PressDown)
+	if (event == TRawEvent::PressDown || event == TRawEvent::Contact)
 	{
 		_points[0] = point;
 		_pointIdx = 1;
 		_dragMode = false;
 		_touchStartTime = esp_timer_get_time()/1000;
 		fireEvent(point, TEvent::TouchStart);
-	}
-	else if (event == TRawEvent::Contact)
-	{
-		if (_pointIdx < 10)
-		{
-			_points[_pointIdx] = point;
-			_pointIdx += 1;
-		}
 	}
 	else if (event == TRawEvent::LiftUp)
 	{
@@ -145,7 +137,7 @@ void FT6X36::processTouch()
 			fireEvent(point, TEvent::DragEnd);
 			_dragMode = false;
 		}
-		if (_points[0].aboutEqual(point) && _touchEndTime - _touchStartTime <= 500)
+		if (_points[0].aboutEqual(point) && _touchEndTime - _touchStartTime <= 300)
 		{
 			fireEvent(point, TEvent::Tap);
 			_points[0] = {0, 0};
@@ -180,9 +172,6 @@ bool FT6X36::readData(void)
 
     readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
 	if (touch_pnt_cnt==0) return 0;
-
-	ets_printf("TOUCHES:%d\n",touch_pnt_cnt);
-
 
     // Read X value
     i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
@@ -227,7 +216,7 @@ bool FT6X36::readData(void)
 
     _touchX[0] = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
     _touchY[0] = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-	_touchEvent[0] = data_xy[0] >> 6;
+	_touchEvent[0] = data_xy[0] >> 7;
 	
 	if (CONFIG_FT6X36_DEBUG)
 	ets_printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
