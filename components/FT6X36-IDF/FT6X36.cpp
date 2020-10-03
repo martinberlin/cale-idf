@@ -3,6 +3,9 @@
 FT6X36 *FT6X36::_instance = nullptr;
 static const char *TAG = "i2c-touch";
 
+//The semaphore indicating I2C is ready to read the touch
+SemaphoreHandle_t TouchSemaphore = xSemaphoreCreateMutex();
+
 FT6X36::FT6X36(int8_t intPin)
 {
 	_instance = this;
@@ -32,7 +35,10 @@ FT6X36::~FT6X36()
 
 void IRAM_ATTR FT6X36::isr(void* arg)
 {
-   _instance->onInterrupt();
+     //Give the semaphore.
+    BaseType_t mustYield=false;
+    xSemaphoreGiveFromISR(TouchSemaphore, &mustYield);
+    if (mustYield) portYIELD_FROM_ISR();
 }
 
 bool FT6X36::begin(uint8_t threshold)
@@ -101,9 +107,7 @@ uint8_t FT6X36::touched()
 
 void FT6X36::loop()
 {
-	if (_isrInterrupt)	{
-		processTouch();
-	}
+	processTouch();
 }
 
 void FT6X36::processTouch()
@@ -112,6 +116,8 @@ void FT6X36::processTouch()
 	uint8_t n = 0;
 	TRawEvent event = (TRawEvent)_touchEvent[n];
 	TPoint point{_touchX[n], _touchY[n]};
+
+	//printf("pt:%d ",_touchEvent[n]);
 
 	if (event == TRawEvent::PressDown)
 	{
@@ -128,15 +134,6 @@ void FT6X36::processTouch()
 			_points[_pointIdx] = point;
 			_pointIdx += 1;
 		}
-		if (!_dragMode && _points[0].aboutEqual(point) && (esp_timer_get_time()/1000) - _touchStartTime > 300)
-		{
-			_dragMode = true;
-			fireEvent(point, TEvent::DragStart);
-		}
-		else if (_dragMode)
-			fireEvent(point, TEvent::DragMove);
-
-		fireEvent(point, TEvent::TouchMove);
 	}
 	else if (event == TRawEvent::LiftUp)
 	{
@@ -148,7 +145,7 @@ void FT6X36::processTouch()
 			fireEvent(point, TEvent::DragEnd);
 			_dragMode = false;
 		}
-		if (_points[0].aboutEqual(point) && _touchEndTime - _touchStartTime <= 300)
+		if (_points[0].aboutEqual(point) && _touchEndTime - _touchStartTime <= 500)
 		{
 			fireEvent(point, TEvent::Tap);
 			_points[0] = {0, 0};
@@ -175,6 +172,9 @@ uint8_t FT6X36::read8(uint8_t regName) {
 
 bool FT6X36::readData(void)
 {
+	// Wait until ISR interruption is ready to read touch
+	xSemaphoreTake(TouchSemaphore, portMAX_DELAY);
+
 	uint8_t data_xy[4];         // 2 bytes X | 2 bytes Y
     uint8_t touch_pnt_cnt;      // Number of detected touch points
 
@@ -227,11 +227,11 @@ bool FT6X36::readData(void)
 
     _touchX[0] = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
     _touchY[0] = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-	_touchEvent[0] = data_xy[0] >> 7;
+	_touchEvent[0] = data_xy[0] >> 6;
 	
 	if (CONFIG_FT6X36_DEBUG)
 	ets_printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	_isrInterrupt = false; // Mark interrupt as processed
+	
 	return true;
 }
 
