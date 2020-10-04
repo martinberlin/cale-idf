@@ -131,6 +131,17 @@ public:
 	void loop();
 	void processTouch();
 	void debugInfo();
+	void setRotation(uint8_t rotation);
+	void setTouchWidth(uint16_t width);
+	void setTouchHeight(uint16_t height);
+	    // Very smart template from EPD to swap x,y:
+    template <typename T> static inline void
+    swap(T& a, T& b)
+    {
+      T t = a;
+      a = b;
+      b = t;
+    }
 
 private:
 	void onInterrupt();
@@ -148,7 +159,11 @@ private:
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	volatile uint8_t _isrCounter = 0;
 	bool _isrInterrupt = false;
-	
+	// Make touch rotation aware:
+	uint8_t _rotation = 0;
+	uint16_t _touch_width = 0;
+	uint16_t _touch_height = 0;
+
 	uint8_t _touches;
 	uint16_t _touchX[2], _touchY[2], _touchEvent[2];
 	TPoint _points[10];

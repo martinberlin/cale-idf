@@ -214,12 +214,31 @@ bool FT6X36::readData(void)
         return false;
     }
 
-    _touchX[0] = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
-    _touchY[0] = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
+    uint16_t x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
+    uint16_t y = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
 	_touchEvent[0] = data_xy[0] >> 7;
 	
+	// Make _touchX[0] and _touchY[0] rotation aware
+	  switch (_rotation)
+  {
+	case 1:
+	    swap(x, y);
+		y = _touch_width - y -1;
+		break;
+	case 2:
+		x = _touch_width - x - 1;
+		y = _touch_height - y - 1;
+		break;
+	case 3:
+		swap(x, y);
+		x = _touch_height - x - 1;
+		break;
+  }
+	_touchX[0] = x;
+	_touchY[0] = y;
+	
 	if (CONFIG_FT6X36_DEBUG)
-	ets_printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	  printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	
 	return true;
 }
@@ -276,4 +295,18 @@ void FT6X36::debugInfo()
 	printf("      DISTANCE_ZOOM: %d           CIPHER: %d\n", read8(FT6X36_REG_DISTANCE_ZOOM), read8(FT6X36_REG_CHIPID));
 	printf("             G_MODE: %d         PWR_MODE: %d\n", read8(FT6X36_REG_INTERRUPT_MODE), read8(FT6X36_REG_POWER_MODE));
 	printf("             FIRMID: %d     FOCALTECH_ID: %d     STATE: %d\n", read8(FT6X36_REG_FIRMWARE_VERSION), read8(FT6X36_REG_PANEL_ID), read8(FT6X36_REG_STATE));
+}
+
+void FT6X36::setRotation(uint8_t rotation) {
+	_rotation = rotation;
+}
+
+void FT6X36::setTouchWidth(uint16_t width) {
+	printf("touch w:%d\n",width);
+	_touch_width = width;
+}
+
+void FT6X36::setTouchHeight(uint16_t height) {
+	printf("touch h:%d\n",height);
+	_touch_height = height;
 }

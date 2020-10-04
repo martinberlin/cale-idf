@@ -18,6 +18,7 @@ Gdew027w3T display(io);
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
+uint8_t display_rotation = 0;
 
 extern "C"
 {
@@ -32,8 +33,25 @@ uint16_t circleColor = EPD_BLACK;
 uint16_t circleRadio = 10;
 uint16_t selectTextColor  = EPD_WHITE;
 uint16_t selectBackground = EPD_BLACK;
+template <typename T> static inline void
+swap(T& a, T& b)
+{
+  T t = a;
+  a = b;
+  b = t;
+}
 
 void drawUX(){
+    // when it's vertical orientation 
+    if (display.getRotation()==1 || display.getRotation()==3)
+    {
+      //swap(blockWidth,blockHeight);
+      blockWidth = display.width()/4;
+      blockHeight = 42;
+    } else {
+      blockHeight = display.height()/4;
+      blockWidth = 42;
+    }
     if (circleRadio==10) {
       selectTextColor  = EPD_WHITE;
       selectBackground = EPD_BLACK;
@@ -43,8 +61,8 @@ void drawUX(){
     }
     display.setTextColor(selectTextColor);
     display.fillRoundRect(1,1,blockWidth,blockHeight,8,selectBackground);
-    display.setCursor(5,blockHeight-(lineSpacing*2));
-    display.println("10 px");display.println(" CIRCLE");
+    display.setCursor(5,blockHeight-(lineSpacing));
+    display.println("10px");
 
     if (circleRadio==20) {
       selectTextColor  = EPD_WHITE;
@@ -56,20 +74,20 @@ void drawUX(){
     display.fillRoundRect(1,blockHeight,blockWidth,blockHeight,8,selectBackground);
     display.drawRoundRect(1,blockHeight,blockWidth,blockHeight,8,selectTextColor);
     display.setTextColor(selectTextColor);
-    display.setCursor(5,blockHeight*2-(lineSpacing*2));
-    display.println("20 px");display.println(" CIRCLE");
+    display.setCursor(5,blockHeight*2-(lineSpacing));
+    display.println("20px");
 
     display.fillRoundRect(1,blockHeight*2,blockWidth,blockHeight,4,EPD_BLACK);
     display.setTextColor(EPD_WHITE);
     display.setCursor(5,blockHeight*3-lineSpacing);
-    display.println("CLEAR");
+    display.println("CLS");
 
     // 200
     display.fillRoundRect(1,blockHeight*3,blockWidth,blockHeight,8,EPD_WHITE);
     display.drawRoundRect(1,blockHeight*3,blockWidth,blockHeight,8,EPD_BLACK);
     display.setTextColor(EPD_BLACK);
     display.setCursor(5,blockHeight*4-lineSpacing);
-    display.print("CLEAR");
+    display.print("ROT");
     
 }
 uint16_t t_counter = 0;
@@ -105,20 +123,37 @@ void touchEvent(TPoint p, TEvent e)
   }
 
   printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
+  // Button coordinates need to be adapted depending on rotation
+  uint16_t button4_max = 198;
+  uint16_t button4_min = 132;
+  uint16_t button3 = 66;
+  if (display.getRotation()==1 || display.getRotation()==3)
+    {
+      uint8_t blocks = display.height()/4;
+      button4_max = blocks*3;
+      button4_min = blocks*2;
+      button3 = blocks;
+    } 
 
-  if (p.x<blockWidth && p.y>198) { // Clear screen to white
+  if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
+    if (display.getRotation()>3) {
+      display_rotation=0;
+    } else {
+      display_rotation++;
+    }
     display.fillScreen(EPD_WHITE);
-    circleColor = EPD_BLACK;
+    display.setRotation(display_rotation);
+    ts.setRotation(display_rotation);
     drawUX();
     display.update();
-  } else if (p.x<blockWidth && p.y<198 && p.y>132) { // Clear screen to black
+  } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to black
     display.fillScreen(EPD_BLACK);
     circleColor = EPD_WHITE;
     drawUX();
     display.update();
-  } else if (p.x<blockWidth && p.y<132 && p.y>66) { // Set circle color to white
+  } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
     circleRadio = 20;
-  } else if (p.x<blockWidth && p.y<66 && p.y>1) {
+  } else if (p.x<blockWidth && p.y<button3 && p.y>1) {
     circleRadio = 10;
 
   } else {
@@ -138,22 +173,19 @@ void app_main(void)
    
    printf("display.colors_supported:%d\n", display.colors_supported);  
    drawUX();
-  
+   display.setRotation(display_rotation);
    display.update();
-  
+   
    // Instantiate touch 
    ts.begin();
+   ts.setTouchHeight(display.height());
+   ts.setTouchWidth(display.width());
+   ts.setRotation(display.getRotation());
    ts.registerTouchHandler(touchEvent);
   
     uint8_t c=0;
-    while (true) {
+    for (;;) {
         ts.loop();
-
-        vTaskDelay(10/portTICK_PERIOD_MS);
-        if (c%8) {
-          rtc_wdt_feed();
-        }
-        ++c;
       }
       
 }
