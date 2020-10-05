@@ -176,10 +176,9 @@ void app_main(void)
    display.setRotation(display_rotation);
    display.update();
    
-   // Instantiate touch 
-   ts.begin();
-   ts.setTouchHeight(display.height());
-   ts.setTouchWidth(display.width());
+   // Instantiate touch. Important pass here the 3 required variables including display width and height
+   ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
+   
    ts.setRotation(display.getRotation());
    ts.registerTouchHandler(touchEvent);
   

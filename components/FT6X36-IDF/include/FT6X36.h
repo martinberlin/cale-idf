@@ -124,7 +124,7 @@ public:
     // TwoWire * wire will be replaced by ESP-IDF https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
 	FT6X36(int8_t intPin);
 	~FT6X36();
-	bool begin(uint8_t threshold = FT6X36_DEFAULT_THRESHOLD);
+	bool begin(uint8_t threshold = FT6X36_DEFAULT_THRESHOLD, uint16_t width = 0, uint16_t height = 0);
 	void registerIsrHandler(void(*fn)());
 	void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
 	uint8_t touched();

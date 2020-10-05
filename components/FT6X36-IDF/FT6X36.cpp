@@ -41,8 +41,14 @@ void IRAM_ATTR FT6X36::isr(void* arg)
     if (mustYield) portYIELD_FROM_ISR();
 }
 
-bool FT6X36::begin(uint8_t threshold)
+bool FT6X36::begin(uint8_t threshold, uint16_t width, uint16_t height)
 {
+	_touch_width = width;
+	_touch_height = height;
+	if (width == 0 || height ==0) {
+		ESP_LOGE(TAG,"begin(uint8_t threshold, uint16_t width, uint16_t height) did not receive the width / height so touch cannot be rotation aware");
+	}
+
 	uint8_t data_panel_id;
 	readRegister8(FT6X36_REG_PANEL_ID, &data_panel_id);
 
