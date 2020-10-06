@@ -17,7 +17,7 @@ EpdSpi io;
 Gdew027w3T display(io, ts);
 
 // Only debugging:
-//#define DEBUG_COUNT_TOUCH
+//#define DEBUG_COUNT_TOUCH 1
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
@@ -189,9 +189,9 @@ void app_main(void)
    // So this is not needed:
    // ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
 
-   ts.registerTouchHandler(touchEvent);
+   display.registerTouchHandler(touchEvent);
   
   for (;;) {
-      ts.loop();
+      display.touchLoop();
     }
 }

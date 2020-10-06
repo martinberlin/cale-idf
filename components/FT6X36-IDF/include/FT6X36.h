@@ -146,7 +146,8 @@ public:
       a = b;
       b = t;
     }
-
+	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
+	
 private:
 	void onInterrupt();
 	bool readData(void);
@@ -160,7 +161,7 @@ private:
 	uint8_t _intPin;
 
 	void(*_isrHandler)() = nullptr;
-	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
+	
 	volatile uint8_t _isrCounter = 0;
 	bool _isrInterrupt = false;
 	// Make touch rotation aware:

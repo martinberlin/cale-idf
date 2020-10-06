@@ -96,7 +96,7 @@ void Gdew027w3T::init(bool debug)
     IO.init(5, debug); // 5 MHz frequency
 
     // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
-    Touch.begin(20, width(), height());
+    Touch.begin(22, width(), height());
     
     printf("IO & touch initialized. Free heap:%d\n",xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
@@ -405,4 +405,11 @@ void Gdew027w3T::displayRotation(uint8_t rotation) {
   }
   setRotation(rotation);
   Touch.setRotation(rotation);
+}
+void Gdew027w3T::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
+{
+	Touch._touchHandler = fn;
+}
+void Gdew027w3T::touchLoop(){
+  Touch.loop();
 }
