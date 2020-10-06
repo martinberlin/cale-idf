@@ -39,6 +39,9 @@ class Gdew027w3T : public Epd
     void update();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
+    // TOUCH related
+    void displayRotation(uint8_t rotation); // Rotates both Epd & Touch
+    
 
   private:
     EpdSpi& IO;

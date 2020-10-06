@@ -55,24 +55,14 @@ class Gdew027w3 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
     // Command & data structs
-    static const epd_init_44 lut_20_vcomDC;
-    static const epd_init_42 lut_21_ww;
-    static const epd_init_42 lut_22_bw;
-    static const epd_init_42 lut_23_wb;
-    static const epd_init_42 lut_24_bb;
-
+    static const epd_init_3 epd_soft_start;
+    static const epd_init_1 epd_panel_setting;
+    static const epd_init_1 epd_extra_setting;
+    static const epd_init_1 epd_vcom2;
+    // Partial LUT tables (Otherwise partial update lasts long)
     static const epd_init_44 lut_20_vcomDC_partial;
     static const epd_init_42 lut_21_ww_partial;
     static const epd_init_42 lut_22_bw_partial;
     static const epd_init_42 lut_23_wb_partial;
     static const epd_init_42 lut_24_bb_partial;
-
-    static const epd_power_4 epd_wakeup_power;
-    static const epd_init_3 epd_soft_start;
-    static const epd_init_1 epd_panel_setting;
-    static const epd_init_1 epd_extra_setting;
-    static const epd_init_1 epd_pll;
-    static const epd_init_4 epd_resolution;
-    static const epd_init_1 epd_vcom1;
-    static const epd_init_1 epd_vcom2;
 };

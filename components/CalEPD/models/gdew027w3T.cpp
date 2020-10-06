@@ -5,8 +5,6 @@
 #include "freertos/task.h"
 
 // This class is refactored to cope with Good display Arduino example
-
-
 DRAM_ATTR const epd_init_3 Gdew027w3T::epd_soft_start={
 0x06,{0x07,0x07,0x17},3
 };
@@ -97,7 +95,10 @@ void Gdew027w3T::init(bool debug)
     if (debug_enabled) printf("Gdew027w3T::init(%d)\n", debug);
     IO.init(5, debug); // 5 MHz frequency
 
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
+    Touch.begin(20, width(), height());
+    
+    printf("IO & touch initialized. Free heap:%d\n",xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 
@@ -392,4 +393,16 @@ void Gdew027w3T::drawPixel(int16_t x, int16_t y, uint16_t color) {
     } else {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
+}
+
+/**
+ * Helper method to set both epaper and touch rotation
+ */
+void Gdew027w3T::displayRotation(uint8_t rotation) {
+  if (rotation>3) {
+    printf("INVALID rotation value (valid: 0 to 3) rotation*90 -> clockwise");
+    return;
+  }
+  setRotation(rotation);
+  Touch.setRotation(rotation);
 }

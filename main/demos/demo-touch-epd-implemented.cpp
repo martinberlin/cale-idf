@@ -1,17 +1,20 @@
+/**
+ * The difference with the demo-touch.cpp demo is that:
+ * 
+ * In this demo Epd class gdew027w3T is used.
+ * This class expects EpdSPI and FT6X36 to be injected. Meaning that then touch methods
+ * can triggered directly from gdew027w3T class and also that would be automatic rotation aware
+ */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "FT6X36.h"
-#include "soc/rtc_wdt.h"
-//#include <gdew027w3.h>
 #include <gdew027w3T.h>
 
-// Needs to be modified after touch is integrated in Epd class
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
 EpdSpi io;
 Gdew027w3T display(io, ts);
-//Gdew027w3 display(io); // Does not work correctly yet - moved to /fix
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
@@ -122,7 +125,9 @@ void touchEvent(TPoint p, TEvent e)
     break;
   }
 
+  #if defined(DEBUG_COUNT_TOUCH)
   printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
+  #endif
   // Button coordinates need to be adapted depending on rotation
   uint16_t button4_max = 198;
   uint16_t button4_min = 132;
@@ -142,10 +147,11 @@ void touchEvent(TPoint p, TEvent e)
       display_rotation++;
     }
     display.fillScreen(EPD_WHITE);
-    display.setRotation(display_rotation);
-    ts.setRotation(display_rotation);
+    // We don't use method setRotation but instead displayRotation that rotates both eink drawPixel & touch coordinates
+    display.displayRotation(display_rotation);
     drawUX();
     display.update();
+
   } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
     display.fillScreen(EPD_WHITE);
     circleColor = EPD_BLACK;
@@ -168,23 +174,24 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   // Optional font setting, empty picks small default
    //display.setFont(&Ubuntu_M8pt8b);
-   //display.setRotation(2);
+
+   // displayRotation includes both epaper + touch rotation
+   display.displayRotation(display_rotation);
    
-   printf("display.colors_supported:%d\n", display.colors_supported);  
+   printf("display.colors_supported:%d display.rotation: %d\n", display.colors_supported,display_rotation);  
    drawUX();
-   display.setRotation(display_rotation);
+  
    display.update();
    
-   // Instantiate touch. Important pass here the 3 required variables including display width and height
-   // This part needs to be modified after touch is integrated in EPD Class:
-   /* ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
-   ts.setRotation(display.getRotation());
-   ts.registerTouchHandler(touchEvent); */
+   // Instantiate touch. In this class touch is already instantiated on the display init
+   // So this is not needed:
+   // ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
+
+   ts.registerTouchHandler(touchEvent);
   
-    uint8_t c=0;
-    for (;;) {
-        //ts.loop();
-      }
-      
+  for (;;) {
+      ts.loop();
+    }
 }

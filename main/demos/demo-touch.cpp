@@ -3,15 +3,13 @@
 #include "freertos/task.h"
 #include "FT6X36.h"
 #include "soc/rtc_wdt.h"
-//#include <gdew027w3.h>
-#include <gdew027w3T.h>
+#include <gdew027w3.h>
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
 
 EpdSpi io;
-Gdew027w3T display(io);
-//Gdew027w3 display(io); // Does not work correctly yet - moved to /fix
+Gdew027w3 display(io);
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
@@ -178,11 +176,9 @@ void app_main(void)
    
    // Instantiate touch. Important pass here the 3 required variables including display width and height
    ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
-   
    ts.setRotation(display.getRotation());
    ts.registerTouchHandler(touchEvent);
   
-    uint8_t c=0;
     for (;;) {
         ts.loop();
       }

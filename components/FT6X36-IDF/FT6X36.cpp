@@ -124,31 +124,18 @@ void FT6X36::processTouch()
 	TPoint point{_touchX[n], _touchY[n]};
 
 	//printf("pt:%d ",_touchEvent[n]);
-
-	if (event == TRawEvent::PressDown || event == TRawEvent::Contact)
+	
+	// Only TAP detected for now
+	if (event == TRawEvent::Contact)
 	{
 		_points[0] = point;
 		_pointIdx = 1;
-		_dragMode = false;
-		_touchStartTime = esp_timer_get_time()/1000;
-		fireEvent(point, TEvent::TouchStart);
+		fireEvent(point, TEvent::Tap);
 	}
-	else if (event == TRawEvent::LiftUp)
+	if (event == TRawEvent::LiftUp)
 	{
-		_points[9] = point;
-		_touchEndTime = esp_timer_get_time()/1000;
 		fireEvent(point, TEvent::TouchEnd);
-		if (_dragMode)
-		{
-			fireEvent(point, TEvent::DragEnd);
-			_dragMode = false;
-		}
-		if (_points[0].aboutEqual(point) && _touchEndTime - _touchStartTime <= 300)
-		{
-			fireEvent(point, TEvent::Tap);
-			_points[0] = {0, 0};
-			_touchStartTime = 0;
-		}
+
 	}
 }
 
@@ -222,7 +209,8 @@ bool FT6X36::readData(void)
 
     uint16_t x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
     uint16_t y = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-	_touchEvent[0] = data_xy[0] >> 7;
+	// This is not right. Is not getting the 0x03   [7:6] 1st event flag
+	_touchEvent[0] = data_xy[0] >> 6;
 	
 	// Make _touchX[0] and _touchY[0] rotation aware
 	  switch (_rotation)
@@ -244,7 +232,7 @@ bool FT6X36::readData(void)
 	_touchY[0] = y;
 	
 	if (CONFIG_FT6X36_DEBUG)
-	  printf("X: %d Y: %d T: %d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	  printf("X:%d Y:%d T:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	
 	return true;
 }
