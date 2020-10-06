@@ -146,9 +146,9 @@ void touchEvent(TPoint p, TEvent e)
     ts.setRotation(display_rotation);
     drawUX();
     display.update();
-  } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to black
-    display.fillScreen(EPD_BLACK);
-    circleColor = EPD_WHITE;
+  } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
+    display.fillScreen(EPD_WHITE);
+    circleColor = EPD_BLACK;
     drawUX();
     display.update();
   } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
