@@ -81,9 +81,9 @@ DRAM_ATTR const epd_init_42 Gdew027w3T::lut_24_bb_partial={
 },42};
 
 // Constructor
-Gdew027w3T::Gdew027w3T(EpdSpi& dio): 
+Gdew027w3T::Gdew027w3T(EpdSpi& dio, FT6X36& ts): 
   Adafruit_GFX(GDEW027W3_WIDTH, GDEW027W3_HEIGHT),
-  Epd(GDEW027W3_WIDTH, GDEW027W3_HEIGHT), IO(dio)
+  Epd(GDEW027W3_WIDTH, GDEW027W3_HEIGHT), IO(dio), Touch(ts)
 {
   printf("Gdew027w3T() %d*%d\n",
   GDEW027W3_WIDTH, GDEW027W3_HEIGHT);  

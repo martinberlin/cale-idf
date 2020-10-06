@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include "FT6X36.h" // Touch interface
 
 // Controller: IL91874  Note: This is the display that the T5S from TTGO use
 #define GDEW027W3_WIDTH 176
@@ -24,7 +25,7 @@
 class Gdew027w3T : public Epd
 {
   public:
-    Gdew027w3T(EpdSpi& IO);
+    Gdew027w3T(EpdSpi& IO, FT6X36& ts);
     
     uint8_t colors_supported = 1;
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
@@ -41,6 +42,7 @@ class Gdew027w3T : public Epd
 
   private:
     EpdSpi& IO;
+    FT6X36& Touch;
     uint8_t _buffer[GDEW027W3_BUFFER_SIZE];
     bool color = false;
     bool _initial = true;

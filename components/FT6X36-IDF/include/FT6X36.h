@@ -131,10 +131,14 @@ public:
 	void loop();
 	void processTouch();
 	void debugInfo();
+	// Helper functions to make the touch display aware
 	void setRotation(uint8_t rotation);
 	void setTouchWidth(uint16_t width);
 	void setTouchHeight(uint16_t height);
-	    // Very smart template from EPD to swap x,y:
+	// Pending implementation. How much x->touch y↓touch is placed (In case is smaller than display)
+	void setXoffset(uint16_t x_offset);
+	void setYoffset(uint16_t y_offset);
+	// Smart template from EPD to swap x,y:
     template <typename T> static inline void
     swap(T& a, T& b)
     {
