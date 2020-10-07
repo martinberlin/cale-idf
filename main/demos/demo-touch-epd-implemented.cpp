@@ -141,6 +141,7 @@ void touchEvent(TPoint p, TEvent e)
     } 
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
+    printf("Rotation pressed\n");
     if (display.getRotation()>3) {
       display_rotation=0;
     } else {
@@ -153,16 +154,19 @@ void touchEvent(TPoint p, TEvent e)
     display.update();
 
   } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
+    printf("CLS pressed\n");
     display.fillScreen(EPD_WHITE);
     circleColor = EPD_BLACK;
     drawUX();
     display.update();
   } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
+    printf("20px radio pressed\n");
     circleRadio = 20;
   } else if (p.x<blockWidth && p.y<button3 && p.y>1) {
     circleRadio = 10;
 
   } else {
+    printf("Draw a %d px circle\n", circleRadio);
     // Print a small circle in selected color
     display.fillCircle(p.x, p.y, circleRadio, circleColor);
     display.updateWindow(p.x-circleRadio, p.y-circleRadio, circleRadio*2, circleRadio*2+1);
@@ -192,6 +196,6 @@ void app_main(void)
    display.registerTouchHandler(touchEvent);
   
   for (;;) {
-      display.touchLoop();
-    }
+    display.touchLoop();
+  }
 }

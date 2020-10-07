@@ -117,6 +117,8 @@ struct TPoint
 	}
 };
 
+
+
 class FT6X36
 {
 	static void IRAM_ATTR isr(void* arg);
@@ -155,15 +157,14 @@ private:
 	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
 	void fireEvent(TPoint point, TEvent e);
 	uint8_t read8(uint8_t regName);
-	
+
+	bool _isrInterrupt = false;
 	static FT6X36 * _instance;
 	
 	uint8_t _intPin;
 
 	void(*_isrHandler)() = nullptr;
 	
-	volatile uint8_t _isrCounter = 0;
-	bool _isrInterrupt = false;
 	// Make touch rotation aware:
 	uint8_t _rotation = 0;
 	uint16_t _touch_width = 0;

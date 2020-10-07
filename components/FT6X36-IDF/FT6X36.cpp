@@ -35,10 +35,11 @@ FT6X36::~FT6X36()
 
 void IRAM_ATTR FT6X36::isr(void* arg)
 {
-     //Give the semaphore.
+    // Give the semaphore.
     BaseType_t mustYield=false;
     xSemaphoreGiveFromISR(TouchSemaphore, &mustYield);
     if (mustYield) portYIELD_FROM_ISR();
+	_instance->onInterrupt();
 }
 
 bool FT6X36::begin(uint8_t threshold, uint16_t width, uint16_t height)
@@ -118,12 +119,17 @@ void FT6X36::loop()
 
 void FT6X36::processTouch()
 {
+	// Wait until ISR interruption is ready to read touch
+	xSemaphoreTake(TouchSemaphore, portMAX_DELAY);
+	if (!_isrInterrupt) return;
+
 	readData();
+	if (_isrInterrupt) {
 	uint8_t n = 0;
 	TRawEvent event = (TRawEvent)_touchEvent[n];
 	TPoint point{_touchX[n], _touchY[n]};
 
-	//printf("pt:%d ",_touchEvent[n]);
+	//printf("pt:%d c:%d ",_touchEvent[n], _isrCounter);
 	
 	// Only TAP detected for now
 	if (event == TRawEvent::Contact)
@@ -137,16 +143,16 @@ void FT6X36::processTouch()
 		fireEvent(point, TEvent::TouchEnd);
 
 	}
+	_isrInterrupt=false;
+	}
 }
 
 void FT6X36::onInterrupt()
 {
-	_isrInterrupt = true;
-	
-	if (_isrHandler)
-	{
-		_isrHandler();
-	}
+	_isrInterrupt=true;
+	//if (_isrHandler) {
+	//	_isrHandler();
+	//}
 }
 
 uint8_t FT6X36::read8(uint8_t regName) {
@@ -157,9 +163,6 @@ uint8_t FT6X36::read8(uint8_t regName) {
 
 bool FT6X36::readData(void)
 {
-	// Wait until ISR interruption is ready to read touch
-	xSemaphoreTake(TouchSemaphore, portMAX_DELAY);
-
 	uint8_t data_xy[4];         // 2 bytes X | 2 bytes Y
     uint8_t touch_pnt_cnt;      // Number of detected touch points
 
