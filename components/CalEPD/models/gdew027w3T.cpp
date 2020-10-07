@@ -400,8 +400,8 @@ void Gdew027w3T::drawPixel(int16_t x, int16_t y, uint16_t color) {
  */
 void Gdew027w3T::displayRotation(uint8_t rotation) {
   if (rotation>3) {
-    printf("INVALID rotation value (valid: 0 to 3) rotation*90 -> now set to 0\n");
-    rotation=0;
+    printf("INVALID rotation value (valid: 0 to 3, got %d) rotation*90\n",rotation);
+    return;
   }
   setRotation(rotation);
   Touch.setRotation(rotation);

@@ -141,8 +141,8 @@ void touchEvent(TPoint p, TEvent e)
     } 
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
-    printf("Rotation pressed\n");
-    if (display.getRotation()>3) {
+    printf("Rotation pressed. display.getRotation() %d\n", display.getRotation());
+    if (display.getRotation()==3) {
       display_rotation=0;
     } else {
       display_rotation++;
