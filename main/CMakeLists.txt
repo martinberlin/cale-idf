@@ -1,7 +1,7 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    #  SRCS "cale.cpp"
+     SRCS "cale.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
@@ -12,7 +12,7 @@ idf_component_register(
     
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"
-    SRCS "demos/demo-touch-epd-implemented.cpp"
+    #SRCS "demos/demo-touch-epd-implemented.cpp"
 
     # Generic demos for any displays
     # SRCS "demos/demo-sleep-clock.cpp"

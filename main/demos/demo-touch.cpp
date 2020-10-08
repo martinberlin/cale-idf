@@ -1,3 +1,14 @@
+/**
+ * This is a demo to be used with Good Display 2.7 touch epaper 
+ * http://www.e-paper-display.com/products_detail/productId=406.html 264*176 px monochome epaper
+ * GDEW027W3-T has on the top layer a FocalTech I2C touch panel, with a INT pin that goes LOW on each touch event
+ * 
+ * In this demo we use the FT6X36 separated from the epaper class. The demo just presents a simple UX with 4 buttons.
+ * And let's the user select 10 or 20 px circle that is stamped on the free area on touch, Clear screen and rotate.
+ * In the demo-touch-epd-implemented the FT6X36 is injected in gdew027w3T class. There are two different ways of using it.
+ * We recommend to use the gdew027w3T class so rotating the display is easier and less error prone.
+ */ 
+
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -7,12 +18,12 @@
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
-
 EpdSpi io;
 Gdew027w3 display(io);
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
+
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
@@ -134,7 +145,7 @@ void touchEvent(TPoint p, TEvent e)
     } 
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
-    if (display.getRotation()>3) {
+    if (display.getRotation()==3) {
       display_rotation=0;
     } else {
       display_rotation++;
@@ -167,7 +178,6 @@ void app_main(void)
    // Test Epd class
    display.init(false);
    //display.setFont(&Ubuntu_M8pt8b);
-   //display.setRotation(2);
    
    printf("display.colors_supported:%d\n", display.colors_supported);  
    drawUX();

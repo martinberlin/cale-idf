@@ -1,4 +1,7 @@
 /**
+ * This is a demo to be used with Good Display 2.7 touch epaper 
+ * http://www.e-paper-display.com/products_detail/productId=406.html 264*176 px monochome epaper
+ * 
  * The difference with the demo-touch.cpp demo is that:
  * 
  * In this demo Epd class gdew027w3T is used.
