@@ -1,8 +1,17 @@
 ![CALE Logo](/config-examples/assets/cale-idf.svg)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
-Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. This will grow slowly and the Wiki is the perfect place to make updates that are not branch dependant.
-CalEPD supports currently the most popular epaper sizes and two color models. If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
+On latest release, CalEPD has also support for FocalTech I2C touch panel, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
+Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
+CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83 and 7.5 inches).
+
+- Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+
+## Requesting for new models
+
+If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
+
+## CALE Firmware
 
 **CALE does only 3 things at the moment and is very easy to set up:**
 
@@ -20,18 +29,16 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
     v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
 
     ROADMAP
-    Rest of 2020 Enabling PNG support and compression
-    2020-Sep Optimmizing instantiation and configuration
+    Rest of 2020 Enabling touch support to enable UX design in ESP32
+    2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
     2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
     
 ## News
 
-- Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
-- [Gdew0583z21](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583z21.h) Good Display 5.83 b/w/r 3 color eink added. Refresh takes like 10 seconds but the red looks amazing. No grays or partial update is supported in color models.
-7.5 inch color model from Goodisplay is also added.
-- [Gdew0583t7](https://github.com/martinberlin/cale-idf/wiki/Model-gdew0583t7.h) Good Display 5.83 b/w model added after testing. In the next weeks I will focus on getting grayscales and additional colors to work.
 - Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
+
+[News section has been moved to the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 **CALE-IDF uses this components:**
 
@@ -50,6 +57,12 @@ And then set the image configuration and deepsleep minutes. Here you can also se
 
 ![Display config](/config-examples/assets/menuconfig-cale.png)
 
+Optionally if you use touch, for example with 2.7 inches gdew027w3-T epaper, you should configure also FT6X36 Gpios:
+
+![Optional Touch panel](/config-examples/assets/menuconfig-touch.png)
+
+Needs 3.3v, a common GND, SDA, SCL for I2C communication, and a input INT pin that signalizes on Low that there is touch data ready.
+
 ## CalEPD component
 
 [CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as possible, leaving as much memory as possible for your Firmwmare. Note that still, the graphics library buffer, depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels it runs stable and there is still free DRAM for more.
@@ -61,8 +74,6 @@ And then set the image configuration and deepsleep minutes. Here you can also se
 **refactor/oop** -> Making the components base, most actual branch, where new models are added. Only after successfull testing they will be merged in master. Inestable branch do not use on Firmware that you ship to a client.
 
 tft_test         -> Original SPI master example from ESP-IDF 4 just refactored as a C++ class. Will be kept for historic reasons
-
-The aim is to learn good how to code and link classes as git submodules in order to program the epaper display driver the same way. The goal is to have a tiny "human readable" code in cale.cpp main file and that the rest is encapsulated in classes.
 
 ### Epaper demos
 
@@ -208,6 +219,7 @@ UPDATE: Saved for historical reasons. After starting this project I heavily adop
 ### Credits 
 
 GxEPD has been a great resource to start with. For CalEPD component, we mantain same Constants only without the **Gx prefix** and use the same driver nomenclature as GxEPD library, just in small case.
+[Strange-v](https://github.com/strange-v/FT6X36) for the creation of the FocalTech touch library, that I forked to make the FT6X36-IDF component.
 Hats off to Jean-Marc Zingg that was the first one to make such a great resource supporting so many Eink displays. Please note that there are no plans to port this to Arduino-framework. This repository was specially made with the purpouse to explore Espressif's own IoT development framework.
 
 Thanks to all the developers interested to test this. Special mentions for @IoTPanic, Spectre and others that pushed me to improve my C++ skills.
