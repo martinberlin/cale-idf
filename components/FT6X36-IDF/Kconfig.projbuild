@@ -1,4 +1,4 @@
-menu "Touch FT8X36 Configuration"
+menu "Touch FT6X36 Configuration"
     comment "The touch chip needs an I2C port and one input GPIO"
     config TOUCH_SDA
         int "I2C data SDA"
