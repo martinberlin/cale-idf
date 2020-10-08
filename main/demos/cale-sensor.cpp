@@ -1,3 +1,12 @@
+/**
+ * This is just a variation of the official CALE Firmware in main/
+ * Explores how you can add a sensor, in this example a PIR Motion Detection Sensor AM312
+ * That is attached to an interrupt and triggers a system restart
+ * The DEMO goal is to be used with https://cale.es/apis > Image gallery so it can make a new request based on a user interaction
+ * 
+ * Disclaimer: The ideal would be to call http_post() again so it saves time and does not need to connect to WiFi again but
+ * if failed most probably since it's called from an interrupt (And you cannot even do a printf on an event alike)
+ */
 #include "string.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -10,6 +19,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "esp_sleep.h"
+#include "soc/rtc_wdt.h"       // Watchdog control
 // - - - - HTTP Client includes:
 #include "esp_netif.h"
 #include "esp_err.h"
@@ -23,26 +33,30 @@
  * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
  */
 // 1 channel SPI epaper displays example:
-//#include <gdew075T7.h>
+#include <gdew075c64.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
-#include <gdew0583z21.h>
+//#include "gdeh0213b73.h"
 EpdSpi io;
-Gdew0583z21 display(io);
-
+//Gdew042t2 display(io);
+Gdew075C64 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
-/* #include "wave12i48.h" // Only to use with Edp4Spi IO
-Epd4Spi io;
-Wave12I48 display(io); */
+//#include "wave12i48.h" // Only to use with Edp4Spi IO
+//Epd4Spi io;
+//Wave12I48 display(io);
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
 
+// Please notice that enabling this will stay on WiFi to make next request as soon as possible
+bool enable_sensor_1 = true;    // Activate only if you have a rising sensor in pin defined at ESP_TRIGGER_SENSOR1
+
+bool activate_sensor_1 = false; // Handler flag to avoid activating interrupt when is not ready
+bool trigger_sensor_1 = false;  // Handler on true will call again http_post() for a new image
 // IP is sent per post for logging purpouses. Authentication: Bearer token in the headers
 char espIpAddress[16];
 char bearerToken[74] = "";
@@ -57,7 +71,6 @@ extern "C"
 static const char *TAG = "CALE";
 
 uint16_t countDataEventCalls = 0;
-uint32_t countDataBytes = 0;
 
 struct BmpHeader
 {
@@ -94,16 +107,15 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
 
 bool with_color = true; // Candidate for Kconfig
 uint32_t rowSize;
-uint32_t rowByteCounter;
-uint16_t w;
-uint16_t h;
+uint32_t rowByteCounter=0;
+uint16_t w, h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
 bool whitish, colored;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
-uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
+uint16_t bPointer = 0; // Byte pointer - Attention drawPixel has uint16_t
 uint16_t imageBytesRead = 0;
 uint32_t dataLenTotal = 0;
 uint32_t in_bytes = 0;
@@ -112,13 +124,12 @@ uint8_t in_bits = 0; // for depth <= 8
 bool isReadingImage = false;
 bool isSupportedBitmap = true;
 bool isPaddingAware = false;
-uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
 uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for depth <= 8 b/w
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
-uint16_t totalDrawPixels = 0;
+uint32_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
 
@@ -174,10 +185,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmp.depth == 1)
             {
                 isPaddingAware = true;
-                ESP_LOGI(TAG, "BMP isPaddingAware:  1 bit depth are 4 bit padded. Wikipedia gave me a lesson.");
+                ESP_LOGI(TAG, "BMP isPaddingAware:  1 bit depth are 4 bit padded");
             }
             if (((bmp.planes == 1) && ((bmp.format == 0) || (bmp.format == 3))) == false)
-            { // uncompressed is handled
+            { // Only uncompressed is handled
                 isSupportedBitmap = false;
                 ESP_LOGE(TAG, "BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 0 or 3\n");
             }
@@ -192,12 +203,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
 
             if (bmpDebug)
-                printf("ROW Size %d\n", rowSize);
+                ets_printf("ROW Size %d\n", rowSize);
 
             if (bmp.height < 0)
             {
                 bmp.height = -bmp.height;
-                //flip = false;
             }
             w = bmp.width;
             h = bmp.height;
@@ -218,7 +228,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 // Color-palette location:
                 bPointer = bmp.imageOffset - (4 << bmp.depth);
                 if (bmpDebug)
-                    printf("Palette location: %d\n\n", bPointer);
+                    ets_printf("Palette location: %d\n\n", bPointer);
 
                 for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++)
                 {
@@ -239,7 +249,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
                     // DEBUG Colors - TODO: Double check Palette!!
                     if (bmpDebug)
-                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
+                        ets_printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
                 }
             }
             imageBytesRead += evt->data_len;
@@ -249,9 +259,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
         if (bmpDebug)
         {
-            printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n",
+            ets_printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n",
                    bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
-            printf("Is reading image: %d\n", isReadingImage);
+            ets_printf("Is reading:%d\n", isReadingImage);
         }
 
         // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
@@ -259,7 +269,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         {
             imageBytesRead = dataLenTotal;
             if (bmpDebug)
-                printf("IF read<offset UPDATE bytesRead:%d\n", imageBytesRead);
+                ets_printf("IF read<offset UPDATE bytesRead:%d\n", imageBytesRead);
             return ESP_OK;
         }
         else
@@ -269,17 +279,17 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             {
                 bPointer = bmp.imageOffset;
                 isReadingImage = true;
-                printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n", bPointer);
+                ets_printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n", bPointer);
             }
             if (!isReadingImage)
             {
                 bPointer = bmp.imageOffset - imageBytesRead;
                 imageBytesRead += bPointer;
                 isReadingImage = true;
-                printf("Start reading image. bPointer: %d\n", bPointer);
+                ets_printf("Start reading image. bPointer: %d\n", bPointer);
             }
         }
-        forCount = 0;
+
         // LOOP all the received Buffer but start on ImageOffset if first call
         for (uint32_t byteIndex = bPointer; byteIndex < evt->data_len; ++byteIndex)
         {
@@ -287,7 +297,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
-                printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
+                ets_printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
             }
             in_bits = 8;
 
@@ -299,7 +309,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             {
                 while (in_bits != 0)
                 {
-
                     uint16_t pn = (in_byte >> bitshift) & bitmask;
                     whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
                     colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
@@ -341,6 +350,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     // The ultimate mission: Send the X / Y pixel to the GFX Buffer
                     display.drawPixel(drawX, drawY, color);
 
+                    // Extreme debug ;)
+                    /* if (drawY>460 && drawX>= 700) {
+                      ets_printf("%x ",color);
+                    } */
+
                     totalDrawPixels++;
                     ++drawX;
                 }
@@ -350,25 +364,31 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             rowByteCounter++;
             imageBytesRead++;
-            forCount++;
         }
 
         if (bmpDebug)
-            printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
+            ets_printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
 
         // Hexa dump:
         //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
         break;
 
     case HTTP_EVENT_ON_FINISH:
-        countDataEventCalls=0;
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
+
         if (bmpDebug) 
-            printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
+            ets_printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        vTaskDelay(14000 / portTICK_PERIOD_MS);
-        deepsleep();
+        vTaskDelay(15000 / portTICK_PERIOD_MS);
+        
+        if (CONFIG_ESP_TRIGGER_SENSOR1 && enable_sensor_1) {
+            ets_printf("Activating sensor in GPIO %d\n", CONFIG_ESP_TRIGGER_SENSOR1);
+            activate_sensor_1 = true;
+        } else {
+            deepsleep();
+        }
+        
         break;
 
     case HTTP_EVENT_DISCONNECTED:
@@ -378,8 +398,31 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-static void http_post(void)
+uint16_t no_cache = 0;
+
+void reset_http_image_globals() {
+    countDataEventCalls=0;
+    dataLenTotal=0;
+    imageBytesRead=0;
+    isSupportedBitmap = true;
+    isReadingImage = false;
+    isPaddingAware = false;
+    drawX = 0;
+    drawY = 0;
+    rowByteCounter=0;
+    totalDrawPixels=0;
+    bitmask = 0xFF;
+    in_bytes = 0;
+    in_byte = 0;
+    in_bits = 0;
+    printf("reset_http_image_globals called. Free heap: %d bytes\n",
+    xPortGetFreeHeapSize());
+}
+
+static void http_post()
 {
+    activate_sensor_1 = false;
+    trigger_sensor_1 = false;
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
@@ -398,8 +441,15 @@ static void http_post(void)
     strlcpy(post_data, "ip=", postsize);
     strlcat(post_data, espIpAddress, postsize);
 
+    char post_url[200];
+    strlcpy(post_url, CONFIG_CALE_SCREEN_URL, sizeof(post_url));
+    // Is not a cache issue but for a static no-dynamic image this can come handy:
+    strlcat(post_url, "?", sizeof(post_url));
+    strlcat(post_url, std::to_string(no_cache).c_str(), sizeof(post_url));
+    no_cache++;
+
     esp_http_client_config_t config = {
-        .url = CONFIG_CALE_SCREEN_URL,
+        .url = post_url,
         .method = HTTP_METHOD_POST,
         .timeout_ms = 9000,
         .event_handler = _http_event_handler,
@@ -411,12 +461,14 @@ static void http_post(void)
     strlcpy(bearerToken, "Bearer: ", sizeof(bearerToken));
     strlcat(bearerToken, CONFIG_CALE_BEARER_TOKEN, sizeof(bearerToken));
     
-    printf("POST data: %s\n%s\n", post_data, bearerToken);
+    printf("POST data: %s\n%s\nURL: %s\n\n", post_data, bearerToken, post_url);
 
     esp_http_client_set_header(client, "Authorization", bearerToken);
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
     
+    // Here it hangs if you call it again from an interrupt:
     esp_err_t err = esp_http_client_perform(client);
+
     if (err == ESP_OK)
     {
         ESP_LOGI(TAG, "\nIMAGE URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
@@ -428,7 +480,21 @@ static void http_post(void)
     {
         ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
-    //ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
+    // RESET global variables used in esp_http_client_init
+    reset_http_image_globals();
+    esp_http_client_cleanup(client);
+}
+
+static void IRAM_ATTR gpio_isr_handler(void* arg)
+{
+    // Request new image
+    if (activate_sensor_1) {
+        ets_printf("Interrupt sensor 1 called\n");
+        trigger_sensor_1 = true;
+        //http_post(); // Does not accept esp_http_client_perform from this interrupt. Calling it in a while(true) on app_main()
+    } else {
+        ets_printf("Sensor 1 not ready\n");
+    }
 }
 
 /* FreeRTOS event group to signal when we are connected*/
@@ -542,7 +608,24 @@ void wifi_init_sta(void)
 void app_main(void)
 {
     printf("CalEPD version: %s\n", CALEPD_VERSION);
+
+    // Sensor that goes HIGH when detects something (Ex. triggering a new image request in an exposition)
+    gpio_config_t io_conf;
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.pin_bit_mask = 1ULL<<CONFIG_ESP_TRIGGER_SENSOR1;  
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = (gpio_pullup_t)1;
+    gpio_config(&io_conf);
     
+    // Install gpio isr service only if there is a sensor
+    if (enable_sensor_1) {
+        esp_err_t isr = gpio_install_isr_service(0);
+        printf("ISR trigger install response: 0x%x\n", isr);
+        gpio_isr_handler_add((gpio_num_t)CONFIG_ESP_TRIGGER_SENSOR1, gpio_isr_handler, (void*) 1);
+    }
+
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -559,10 +642,20 @@ void app_main(void)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
-    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printf("Free heap RAM: %d (After epaper instantiation)\n", xPortGetFreeHeapSize());
 
     http_post();
 
-    // Just test if Epd works: Compile the demo-epaper.cpp example modifying main/CMakeLists
+    if (enable_sensor_1) {
+        while (activate_sensor_1)
+        {
+            if (trigger_sensor_1) {
+                printf("New HTTP Post image request\n");
+                http_post();
+            }
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            rtc_wdt_feed();
+        }
+    }
+    
 }

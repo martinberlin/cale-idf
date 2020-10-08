@@ -1,0 +1,23 @@
+menu "Touch FT8X36 Configuration"
+    comment "The touch chip needs an I2C port and one input GPIO"
+    config TOUCH_SDA
+        int "I2C data SDA"
+        range 0 35
+        default 21
+    config TOUCH_SDL
+        int "I2C clock SDL"
+        range 0 37
+        default 22
+    config TOUCH_INT
+        int "Touch interrupt: On LOW reads the data via I2C (Input pullup)"
+        range -1 34
+        default 17
+    config I2C_MASTER_FREQUENCY
+        int "I2C Frequency"
+        range 50000 500000
+
+    config FT6X36_DEBUG
+        int "FT6X36 debug: On 1 will output FocalTech touch events via serial"
+        range 0 1
+        default 0
+endmenu

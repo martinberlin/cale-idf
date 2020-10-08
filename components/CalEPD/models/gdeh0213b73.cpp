@@ -102,7 +102,7 @@ void Gdeh0213b73::init(bool debug)
 
 void Gdeh0213b73::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0xFF : 0x00;
+  uint8_t data = (color == EPD_WHITE) ? 0x00 : 0xFF;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = data;

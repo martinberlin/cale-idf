@@ -1,19 +1,20 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
+#include "FT6X36.h"
 // Should match with your epaper module, size
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
 //#include <gdew075T7.h>
-//#include <gdew027w3.h>
+#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-
+// INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
+FT6X36 ts(CONFIG_TOUCH_INT);
 // Color
 //#include <gdew0583z21.h>
-#include <gdew075c64.h>
-
+//#include <gdeh042Z96.h>
+//#include <gdeh042Z21.h>
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
@@ -22,12 +23,7 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdew075C64 display(io);
-//Gdew0583z21 display(io);
-//Gdew075T7 display(io);
-//Gdew042t2 display(io);
-//Gdew0583T7 display(io);
-//Gdew027w3 display(io);
+Gdew027w3 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
 // FONT used for title / message body - Only after display library
@@ -52,7 +48,7 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.setCursor(box_x, cursor_y + 40);
    display.println("PARTIAL");
    display.println("REFRESH");
-   display.updateWindow(box_x, box_y, box_w, box_h, true);
+   //display.updateWindow(box_x, box_y, box_w, box_h, true);
 }
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
@@ -78,7 +74,7 @@ void app_main(void)
    // Test Epd class
    display.init(false);
 
-   display.setRotation(2);
+   //display.setRotation(2);
    //display.fillScreen(EPD_WHITE);
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
@@ -86,26 +82,30 @@ void app_main(void)
    uint16_t foregroundColor = EPD_WHITE;
    // Make some rectangles showing the different colors or grays
    if (display.colors_supported>1) {
+      printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
+   /* display.fillScreen(EPD_RED);
+   display.update();
+   return; // STOP  */
   
-   uint16_t firstBlock = 200;
+   uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
-   display.fillRect(rectW,1,rectW, firstBlock,EPD_BLACK);
+   display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_BLACK);
+   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE);
 
    display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
    display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
    display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
-   display.setCursor(display.width()/2-150,display.height()-90);
+   display.setCursor(display.width()/2-130,display.height()-104);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("This can work for both red or yellow Goodisplay");
+   display.println("Gdeh042Z96 class for    Goodisplay 400x300");
    display.update();
    return;
 }

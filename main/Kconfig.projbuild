@@ -29,6 +29,11 @@ menu "CALE Configuration"
         range 5 1440
         default 60
     
+    config ESP_TRIGGER_SENSOR1
+        int "RISING: Trigger when the pin goes from LOW to HIGH (Leave on 0 to disable)"
+        range 0 33
+        default 27
+
     config DISPLAY_ROTATION
         int "Display rotation: 0 = default 1 = 90° clockwise 2 = 180° 3 = 270°"
         range 0 3

@@ -76,7 +76,7 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
         frequency = 50;
         multiplier = 1;
     }
-    //Config Frequency and SS GPIO
+    // Config Frequency and SS GPIO
     spi_device_interface_config_t devcfg={
         .mode=0,  //SPI mode 0
         .clock_speed_hz=frequency*multiplier*1000,  // DEBUG: 50000 - No debug usually 4 Mhz
@@ -89,11 +89,11 @@ void Epd4Spi::init(uint8_t frequency=4,bool debug=false){
     ret=spi_bus_initialize(EPD_HOST, &buscfg, DMA_CHAN);
     ESP_ERROR_CHECK(ret);
 
-    //Attach the EPD to the SPI bus
+    // Attach the EPD to the SPI bus
     ret=spi_bus_add_device(EPD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-    // debug_enabled
-    if (true) {
+    
+    if (debug_enabled) {
       printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d\n",
       frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK);
         }

@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include "FT6X36.h" // Touch interface
 
 // Controller: IL91874  Note: This is the display that the T5S from TTGO use
 #define GDEW027W3_WIDTH 176
@@ -21,10 +22,10 @@
 #define GDEW027W3_8PIX_BLACK 0xFF
 #define GDEW027W3_8PIX_WHITE 0x00
 
-class Gdew027w3 : public Epd
+class Gdew027w3T : public Epd
 {
   public:
-    Gdew027w3(EpdSpi& IO);
+    Gdew027w3T(EpdSpi& IO, FT6X36& ts);
     
     uint8_t colors_supported = 1;
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
@@ -38,13 +39,22 @@ class Gdew027w3 : public Epd
     void update();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
+    // TOUCH related
+    void displayRotation(uint8_t rotation); // Rotates both Epd & Touch
+    void touchLoop();
+    void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
+    void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 
   private:
     EpdSpi& IO;
+    FT6X36& Touch;
     uint8_t _buffer[GDEW027W3_BUFFER_SIZE];
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
+    bool _isAsleep = false;
+    // This option can help to save energy consumption
+    bool _sleep_after_update = true;
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _partialRamArea(uint8_t command, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _writeToWindow(uint8_t command, uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h);
