@@ -13,6 +13,11 @@ PlasticLogic014::PlasticLogic014(EpdSpi2Cs& dio):
   PLOGIC014_WIDTH, PLOGIC014_HEIGHT);
 }
 
+// Destructor
+PlasticLogic014::~PlasticLogic014() {
+  IO.release();
+}
+
 //Initialize the display
 void PlasticLogic014::init(bool debug)
 {

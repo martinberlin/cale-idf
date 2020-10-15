@@ -28,7 +28,7 @@
 class Gdeh042Z21 : public Epd
 {
   public:
-   
+    // & Copy contructor: Copying the injected IO into our class so we can access IO methods
     Gdeh042Z21(EpdSpi& IO);
     uint8_t colors_supported = 3;
     

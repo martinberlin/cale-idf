@@ -15,6 +15,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 
+// Shared struct(s) for different models
 typedef struct {
     uint8_t cmd;
     uint8_t data[100];
@@ -24,7 +25,7 @@ typedef struct {
 typedef struct {
     uint8_t cmd;
     uint8_t data[42];
-    uint8_t databytes; //No of data in data; 0xFF = end of cmds.
+    uint8_t databytes; //No of data in data; Could be done also using sizeOf
 } epd_init_42;
 
 typedef struct {

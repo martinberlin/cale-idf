@@ -14,9 +14,9 @@
 #include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
-PlasticLogic011 display(io);
+//PlasticLogic011 display(io);
 //PlasticLogic014 display(io);
-//PlasticLogic021 display(io);
+PlasticLogic021 display(io);
 bool playShortDemo = true;
 
 
@@ -83,7 +83,7 @@ void app_main(void)
    uint16_t delayPartial = 500;
    display.setFont(&Ubuntu_M24pt8b);
 
-   printf("display.width: %d pix\n", display.width());
+   //printf("display.width: %d pix\n", display.width());
    switch (display.width())
    {
    case 148:
@@ -99,7 +99,7 @@ void app_main(void)
       display.setCursor(50,50);
       break;
    }
-   printf("celsius: %d degrees", display.readTemperature());
+   printf("celsius: %d degrees\n", display.readTemperature());
    display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
    display.update();
 
@@ -132,10 +132,8 @@ void app_main(void)
    vTaskDelay(2000 / portTICK_PERIOD_MS);
    display.clearScreen();
 
-   if (playShortDemo) {
-   display.update();
-   return; // STOP
-   }
+   if (!playShortDemo) {
+   
    // MONO does not support grays:
    uint8_t delayMono = 100;
    print_title("mono update", EPD_BLACK, 1);
@@ -175,5 +173,13 @@ void app_main(void)
    display.update(EPD_UPD_PART);
    vTaskDelay(delayPartial / portTICK_PERIOD_MS);
    display.clearScreen();
+   } else {
+      display.update();
+   }
 
+   printf("Free heap: %d\n", xPortGetFreeHeapSize());
+   vTaskDelay(500 / portTICK_PERIOD_MS);
+   // Release SPI connection
+   io.release();
+   vTaskDelay(1000 / portTICK_PERIOD_MS);
 }

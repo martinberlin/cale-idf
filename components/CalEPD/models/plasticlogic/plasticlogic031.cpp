@@ -13,6 +13,11 @@ PlasticLogic031::PlasticLogic031(EpdSpi2Cs& dio):
   PLOGIC031_WIDTH, PLOGIC031_HEIGHT, PLOGIC031_BUFFER_SIZE);
 }
 
+// Destructor
+PlasticLogic031::~PlasticLogic031() {
+  IO.release();
+}
+
 //Initialize the display
 void PlasticLogic031::init(bool debug)
 {

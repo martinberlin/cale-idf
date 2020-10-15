@@ -16,7 +16,14 @@
 
 void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
-    
+        // debug_enabled
+        // debug: 50000  0.5 Mhz so we can sniff the SPI commands with a Slave
+    uint16_t multiplier = 1000;
+    if (true) {
+      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d MISO: %d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
+      frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_MISO, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
+      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+        }
     //Initialize GPIOs direction & initial states. MOSI/MISO are setup by SPI interface
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS2, GPIO_MODE_OUTPUT);
@@ -40,8 +47,7 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         .max_transfer_sz=17520
     };
     // max_transfer_sz   4Kb is the defaut SPI transfer size if 0
-    // debug: 50000  0.5 Mhz so we can sniff the SPI commands with a Slave
-    uint16_t multiplier = 1000;
+    
     if (debug_enabled) {
         frequency = 50;
         multiplier = 1;
@@ -63,13 +69,17 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
     //Attach the EPD to the SPI bus
     ret=spi_bus_add_device(EPD_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-    // debug_enabled
-    if (true) {
-      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
-      frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
-      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
-        }
+
     }
+
+// Release SPI connection
+void EpdSpi2Cs::release() {
+    printf("Releasing SPI bus\n");
+    esp_err_t ret;
+    ret = spi_bus_remove_device(spi);
+    ESP_ERROR_CHECK(ret);
+    printf("Free heap: %d after releasing SPI\n", xPortGetFreeHeapSize());
+}
 
 /* Send a command to the Epaper. Uses spi_device_polling_transmit, which waits
  * until the transfer is complete. 
