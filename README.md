@@ -231,6 +231,6 @@ If you like this component and it made your life easier please consider becoming
 
 ♢ For cryptocurrency users is also possible to help this project transferring Ethereum:
 
-0x68cEAB84F33776a7Fac977B2Bdc0D50933344086
+    0x65B7EF685E5B493603740310A84268c6D59f58B5
 
 We are thankful for the support and contributions so far!
