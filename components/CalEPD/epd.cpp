@@ -75,6 +75,10 @@ void Epd::print(const std::string& text){
    }
 }
 
+void Epd::print(const char c){
+     write(uint8_t(c));
+}
+
 void Epd::println(const std::string& text){
    for(auto c : text) {
      if (c==195 || c==194) continue; // Skip to next letter

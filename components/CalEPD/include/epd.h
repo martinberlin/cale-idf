@@ -113,6 +113,7 @@ class Epd : public virtual Adafruit_GFX
     // hook to Adafruit_GFX::write
     size_t write(uint8_t);
     void print(const std::string& text);
+    void print(const char c);
     void println(const std::string& text);
     void newline();
   // Methods that should be accesible by inheriting this abstract class
