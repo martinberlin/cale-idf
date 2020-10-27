@@ -17,7 +17,7 @@
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8px)
 //#define DEBUG_TOUCH_COUNT 1
-//#define DEBUG_TOUCH_KEY 1
+#define DEBUG_TOUCH_KEY 1
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
@@ -59,6 +59,7 @@ uint16_t cursor_y = 20;
 uint16_t cursor_y_line_height = 9; // Font dependant
 // Measuring the X start of the SPACE key
 uint16_t key_space_x = 0;
+uint8_t key_space_width = 40;
 // Width and height of the area that will be partial updated in the epaper when pressing a Key
 // This pixel distance should be relative to the chosen font:
 uint8_t cursor_x_offset = 9;
@@ -124,7 +125,7 @@ void drawUX(){
       impression_idx++;
     }
 
-    //LINE 3: Y -> M + SPACE
+    //LINE 3: Y -> M + SPACE + CLS (Clear Screen)
     impression_idx = 0;
     key_x = 1;
     key_y += key_width_1;
@@ -137,9 +138,14 @@ void drawUX(){
       key_x+=key_width_1;
       impression_idx++;
     }
-    display.drawRect(key_space_x,key_y,display.width()-key_space_x-1,key_width_1,EPD_BLACK);
-    display.setCursor(key_x+20, key_y+10);
+    
+    display.drawRect(key_space_x,key_y,key_space_width,key_width_1,EPD_BLACK);
+    display.setCursor(key_x+5, key_y+10);
     display.print("SPACE");
+
+    display.drawRect(key_space_x+key_space_width,key_y,key_space_width-1,key_width_1,EPD_BLACK);
+    display.setCursor(key_space_x+key_space_width+7, key_y+10);
+    display.print("CLS");
 
     // Set cursor and default font for the Write area
     if (use_custom_font) {
@@ -202,11 +208,22 @@ void touchEvent(TPoint p, TEvent e)
         display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset);
       }
     }
-    if (p.x>key_space_x) {
+    if (p.x>key_space_x && p.x<key_space_x+key_space_width) {
       #if defined(DEBUG_TOUCH_KEY)
         printf("SPACE Key\n");
       #endif
         display.setCursor(display.getCursorX()+cursor_space, display.getCursorY());
+    }
+    if (p.x>key_space_x+key_space_width) {
+      #if defined(DEBUG_TOUCH_KEY)
+        printf("CLS Key\n");
+      #endif
+        display.fillRect(0,0,display.width(),line1_ystart,EPD_WHITE);
+        display.updateWindow(0,0,display.width()-1,line1_ystart);
+        // Reset cursors
+        cursor_x = 10;
+        cursor_y = 20;
+        display.setCursor(cursor_x,cursor_y);
     }
   }
 
