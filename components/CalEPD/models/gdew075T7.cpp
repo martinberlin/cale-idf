@@ -209,9 +209,11 @@ void Gdew075T7::update()
   IO.cmd(0x12);
   _waitBusy("update");
   uint64_t updateTime = esp_timer_get_time();
-
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
+  
+  // Additional 2 seconds wait before sleeping since in low temperatures full update takes longer
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
 
   _sleep();
 }
