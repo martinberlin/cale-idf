@@ -30,7 +30,7 @@ class Gdeh116Z91 : public Epd
   public:
    
     Gdeh116Z91(EpdSpi& IO);
-    uint8_t colors_supported = 1;
+    uint8_t colors_supported = 3;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -49,11 +49,11 @@ class Gdeh116Z91 : public Epd
     
     void _wakeUp();
     void _sleep();
+    void _full_update();
     void _waitBusy(const char* message);
     void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     
-    // Command & data structs
-    // LUT tables for this display are filled with zeroes at the end with writeLuts()
+    // Initialization commands
     static const epd_init_5 soft_start;
 };

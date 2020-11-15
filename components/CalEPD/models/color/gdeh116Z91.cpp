@@ -126,9 +126,8 @@ void Gdeh116Z91::update()
   }
 
   uint64_t endTime = esp_timer_get_time();
-  IO.cmd(0x12);
-
-  _waitBusy("update");
+  _full_update();
+  
   uint64_t updateTime = esp_timer_get_time();
 
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
@@ -222,4 +221,12 @@ void Gdeh116Z91::drawPixel(int16_t x, int16_t y, uint16_t color)
       _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
   }
+}
+
+void Gdeh116Z91::_full_update()
+{
+  IO.cmd(0x22); //Display Update Control
+  IO.data(0xF7);   
+  IO.cmd(0x20);
+  _waitBusy("Full update");
 }
