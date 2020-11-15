@@ -13,12 +13,12 @@ idf_component_register(
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"
     #SRCS "demos/demo-touch-epd-implemented.cpp"
-    SRCS "demos/demo-touch-keyboard.cpp"
+    #SRCS "demos/demo-touch-keyboard.cpp"
 
     # Generic demos for any displays
     # SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
-    # SRCS "demos/demo-fonts.cpp"
+    SRCS "demos/demo-fonts.cpp"
 
     # Demo only for plasticlogic.com epapers:
     # SRCS "demos/demo-epaper-plasticlogic.cpp"

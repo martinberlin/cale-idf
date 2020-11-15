@@ -3,16 +3,16 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdew042t2.h>
+/* #include <gdew042t2.h>
 #include <gdew0583t7.h>
 #include <gdew075T7.h>
 #include <gdew075T8.h>
-#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
+#include <gdew027w3.h> */
+#include <gdeh116Z91.h>
 // Single SPI EPD
 EpdSpi io;
 //Gdew075T8 display(io);
-Gdew075T7 display(io);
+Gdeh116Z91 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
