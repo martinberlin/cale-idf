@@ -63,17 +63,21 @@ void app_main(void)
 
    // Bootstrap epaper class
    display.init(false);
-   // Store your epapers all white, just turn true:
+   // Store your epapers all white and stop here:
+   display.fillScreen(EPD_WHITE);
    if (false) {
-   display.fillScreen(EPD_WHITE); 
    display.update();
    return;
    }
+
+   
    display.setRotation(2); // 0 - 12.48 w/USB pointing down
-   display.fillScreen(EPD_BLACK);
 
    display.setCursor(10,40);
-   display.setTextColor(EPD_WHITE);
+   display.setTextColor(EPD_RED);
+   display.println("Hello ATC");
+
+   display.setTextColor(EPD_BLACK);
    
    display.setFont(&Ubuntu_M16pt8b);
 

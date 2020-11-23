@@ -24,7 +24,7 @@ void Gdeh116Z91::init(bool debug)
     printf("Gdeh116Z91::init(debug:%d)\n", debug);
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
-  fillScreen(EPD_WHITE);
+  //fillScreen(EPD_WHITE);
 }
 
 void Gdeh116Z91::fillScreen(uint16_t color)
@@ -36,7 +36,9 @@ void Gdeh116Z91::fillScreen(uint16_t color)
   else if (color == EPD_RED) red = 0xFF;
   else if ((color & 0xF100) > (0xF100 / 2))  red = 0xFF;
   else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) black = 0xFF;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+  
+  // Error was that with an uint16_t unsigned you can hold only 65535 and this buffer is bigger
+  for (uint32_t x = 0; x < sizeof(_buffer); x++)
   {
     _buffer[x] = black;
     _color[x] = red;
