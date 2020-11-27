@@ -1,5 +1,11 @@
 ![CALE Logo](/config-examples/assets/cale-idf.svg)
 
+### Requirements
+
+* esp32 or esp32S2
+* Espressif IDF framework 4.2
+* An SPI epaper (see wiki for supported models)
+
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 On latest release, CalEPD has also support for FocalTech I2C touch panel, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
