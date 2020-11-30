@@ -22,7 +22,7 @@ menu "Display Configuration"
         range -1 34
         default 26
     config EINK_BUSY
-        int "EPD: GPIO for Busy signal - DONE here for 1 SPI one way einks"
+        int "EPD: GPIO for Busy signal - DONE for Good Display/Waveshare einks! Leave rest on 0 unless is Wave12I48 or PlasticLogic"
         range -1 39
         default 35
     
