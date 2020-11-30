@@ -13,6 +13,7 @@ set(srcs
     
     # 3 colors Goodisplay
     "models/color/gdew0583z21.cpp"
+    "models/color/gdew075z09.cpp"
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
