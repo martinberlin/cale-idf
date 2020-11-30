@@ -10,9 +10,9 @@
 #include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 // Single SPI EPD
-EpdSpi io;
+//EpdSpi io;
 //Gdew075T8 display(io);
-Gdew075T7 display(io);
+//Gdew075T7 display(io);
 //Gdew042t2 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
@@ -21,10 +21,11 @@ Gdew075T7 display(io);
 // Multi-SPI 4 channels EPD only - 12.48 Epaper display
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
-/* #include "wave12i48.h" // Only to use with Edp4Spi IO
+//#include "wave12i48.h" // Only to use with Edp4Spi IO
+#include "wave12i48BR.h" // Only to use with Edp4Spi IO, Black Red model
 Epd4Spi io;
-Wave12I48 display(io);
- */
+Wave12I48RB display(io);
+
 
 
 // FONT used for title / message body - Only after display library
@@ -71,6 +72,7 @@ void app_main(void)
    }
    display.setRotation(2); // 0 - 12.48 w/USB pointing down
    display.fillScreen(EPD_BLACK);
+
 
    display.setCursor(10,40);
    display.setTextColor(EPD_WHITE);
