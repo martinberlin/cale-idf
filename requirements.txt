@@ -1,3 +1,4 @@
-# Intent to draw dependencies on Github
+# Intent to draw dependencies on Github. FT6X36-IDF is optional only when you use an epaper with I2C touch panel
 Adafruit-GFX-Library-ESP-IDF=1.7.6-idf
-CalEPD=0.9
+CalEPD=1.0
+FT6X36-IDF=1.0
