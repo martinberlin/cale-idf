@@ -176,6 +176,21 @@ void Wave12I48RB::_wakeUp(){
   IO.cmdS2(epd_panel_setting_full.cmd);
   IO.dataS2(0x23);
 
+  printf("Power setting (new)\n");
+  // POWER SETTING
+  IO.cmdM1(0x01);
+  IO.dataM1(0x07);
+  IO.dataM1(0x17);	//VGH=20V,VGL=-20V
+  IO.dataM1(0x3F);	//VDH=15V
+  IO.dataM1(0x3F);  //VDL=-15V
+  IO.dataM1(0x0d);
+  IO.cmdM2(0x01);
+  IO.dataM2(0x07);
+  IO.dataM2(0x17);	//VGH=20V,VGL=-20V
+  IO.dataM2(0x3F);	//VDH=15V
+  IO.dataM2(0x3F);  //VDL=-15V
+  IO.dataM2(0x0d);
+
   // booster soft start
   IO.cmdM1(0x06);
   IO.dataM1(0x17);	//A
@@ -188,7 +203,6 @@ void Wave12I48RB::_wakeUp(){
   IO.dataM2(0x39);
   IO.dataM2(0x17);
 
-  printf("Resolution setting\n");
   IO.cmdM1(epd_resolution_m1s2.cmd);
   for (int i=0;i<epd_resolution_m1s2.databytes;++i) {
     IO.dataM1(epd_resolution_m1s2.data[i]);
@@ -219,8 +233,7 @@ void Wave12I48RB::_wakeUp(){
   IO.cmdM1S1M2S2(0x60);  //TCON
   IO.dataM1S1M2S2(0x22);
 
-  // Power setting
-  IO.cmdM1(0xE0);
+  IO.cmdM1(0xE0);        // Power setting
   IO.cmdM1(0x01);
   IO.cmdM2(0xE0);
   IO.cmdM2(0x01);
@@ -232,11 +245,7 @@ void Wave12I48RB::_wakeUp(){
   IO.cmdM1(0x1c);
   IO.cmdM2(0x82);
   IO.cmdM2(0x1c);
-  //IO.cmdM1S1M2S2(0xe0);  //Cascade setting
-  //IO.dataM1S1M2S2(0x03);
-    
-  //IO.cmdM1S1M2S2(0xe5);//Force temperature
-  //IO.dataM1S1M2S2(0x00);
+  
   // Acording to Waveshare/GoodDisplay code this needs LUT Tables
   // Comment next line if it does not work. 
   _setLut();
