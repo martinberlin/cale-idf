@@ -104,7 +104,7 @@ void Wave12I48RB::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Wave12I48RB::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug (Increasing up to 6 still works but no noticiable speed change)
-    IO.init(4, false);
+    IO.init(4, debug_enabled);
 
     fillScreen(EPD_WHITE);
     printf("\nAvailable heap after Epd init:%d\n",xPortGetFreeHeapSize());
@@ -132,6 +132,7 @@ void Wave12I48RB::_powerOn(){
 }
 
 void Wave12I48RB::_setLut(){
+  printf("\nSending LUT init tables\n");
   uint8_t count = 0;
   IO.cmdM1S1M2S2(0x20);							//vcom
   for(count=0; count<60; count++) {
@@ -167,6 +168,7 @@ void Wave12I48RB::_setLut(){
 void Wave12I48RB::_wakeUp(){
   IO.reset(200);
   // Panel setting
+  printf("Panel setting\n");
   IO.cmdM1(epd_panel_setting_full.cmd);
   IO.dataM1(epd_panel_setting_full.data[0]);
   IO.cmdS1(epd_panel_setting_full.cmd);
@@ -176,7 +178,7 @@ void Wave12I48RB::_wakeUp(){
   IO.cmdS2(epd_panel_setting_full.cmd);
   IO.dataS2(0x23);
 
-  printf("Power setting (new)\n");
+  printf("Power setting\n");
   // POWER SETTING
   IO.cmdM1(0x01);
   IO.dataM1(0x07);
@@ -203,6 +205,7 @@ void Wave12I48RB::_wakeUp(){
   IO.dataM2(0x39);
   IO.dataM2(0x17);
 
+  printf("\nResolution setting\n");
   IO.cmdM1(epd_resolution_m1s2.cmd);
   for (int i=0;i<epd_resolution_m1s2.databytes;++i) {
     IO.dataM1(epd_resolution_m1s2.data[i]);
@@ -220,19 +223,23 @@ void Wave12I48RB::_wakeUp(){
     IO.dataS2(epd_resolution_m1s2.data[i]);
   }
   
+  printf("\nDu SPI\n");
   IO.cmdM1S1M2S2(0x15);  // DUSPI
   IO.dataM1S1M2S2(0x20);
 
+  printf("\nPLL\n");
   IO.cmdM1S1M2S2(0x30);  // PLL
   IO.dataM1S1M2S2(0x08);
 
+  printf("\nVcom and data interval\n");
   IO.cmdM1S1M2S2(0x50);  //Vcom and data interval setting
   IO.dataM1S1M2S2(0x31); //Border KW
   IO.dataM1S1M2S2(0x07);
 
+  printf("\nTCON\n");
   IO.cmdM1S1M2S2(0x60);  //TCON
   IO.dataM1S1M2S2(0x22);
-
+  
   IO.cmdM1(0xE0);        // Power setting
   IO.cmdM1(0x01);
   IO.cmdM2(0xE0);
@@ -258,6 +265,10 @@ void Wave12I48RB::update()
   
   printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
   uint32_t i = 0;
+
+  printf("STOP here before refresh (Remove, this is only debug)\n");
+  return;
+
   IO.cmdM1S1M2S2(0x13);
 
   /*
