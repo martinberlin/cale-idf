@@ -3,7 +3,7 @@
 ### Requirements
 
 * esp32 or esp32S2
-* Espressif IDF framework 4.2
+* Espressif IDF framework 4.3
 * An SPI epaper (see wiki for supported models)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
