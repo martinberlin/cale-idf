@@ -127,7 +127,6 @@ public:
 	FT6X36(int8_t intPin);
 	~FT6X36();
 	bool begin(uint8_t threshold = FT6X36_DEFAULT_THRESHOLD, uint16_t width = 0, uint16_t height = 0);
-	void registerIsrHandler(void(*fn)());
 	void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
 	uint8_t touched();
 	void loop();
@@ -151,19 +150,14 @@ public:
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	
 private:
-	void onInterrupt();
 	bool readData(void);
 	void writeRegister8(uint8_t reg, uint8_t val);
 	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
 	void fireEvent(TPoint point, TEvent e);
 	uint8_t read8(uint8_t regName);
-
-	bool _isrInterrupt = false;
 	static FT6X36 * _instance;
 	
 	uint8_t _intPin;
-
-	void(*_isrHandler)() = nullptr;
 	
 	// Make touch rotation aware:
 	uint8_t _rotation = 0;
