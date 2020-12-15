@@ -15,6 +15,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 
+// Shared struct(s) for different models
 typedef struct {
     uint8_t cmd;
     uint8_t data[100];
@@ -24,7 +25,7 @@ typedef struct {
 typedef struct {
     uint8_t cmd;
     uint8_t data[42];
-    uint8_t databytes; //No of data in data; 0xFF = end of cmds.
+    uint8_t databytes; //No of data in data; Could be done also using sizeOf
 } epd_init_42;
 
 typedef struct {
@@ -112,6 +113,7 @@ class Epd : public virtual Adafruit_GFX
     // hook to Adafruit_GFX::write
     size_t write(uint8_t);
     void print(const std::string& text);
+    void print(const char c);
     void println(const std::string& text);
     void newline();
   // Methods that should be accesible by inheriting this abstract class

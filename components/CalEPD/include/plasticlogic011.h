@@ -23,7 +23,7 @@ class PlasticLogic011 : public PlasticLogic
 {
   public:
     PlasticLogic011(EpdSpi2Cs& IO);
-    
+    ~PlasticLogic011();
     void init(bool debug = false);
     void clearScreen();
     void update(uint8_t updateMode=EPD_UPD_FULL);

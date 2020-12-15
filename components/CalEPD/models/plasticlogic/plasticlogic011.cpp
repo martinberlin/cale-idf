@@ -13,6 +13,12 @@ PlasticLogic011::PlasticLogic011(EpdSpi2Cs& dio):
   PLOGIC011_WIDTH, PLOGIC011_HEIGHT);
 }
 
+// Destructor
+PlasticLogic011::~PlasticLogic011() {
+  // Disconnect from SPI
+  IO.release();
+}
+
 //Initialize the display
 void PlasticLogic011::init(bool debug)
 {
