@@ -241,17 +241,17 @@ void Wave12I48RB::_wakeUp(){
   IO.dataM1S1M2S2(0x22);
   
   IO.cmdM1(0xE0);        // Power setting
-  IO.cmdM1(0x01);
+  IO.dataM1(0x01);
   IO.cmdM2(0xE0);
-  IO.cmdM2(0x01);
+  IO.dataM2(0x01);
 
   IO.cmdM1S1M2S2(0xE3);
   IO.dataM1S1M2S2(0x00);
 
   IO.cmdM1(0x82);
-  IO.cmdM1(0x1c);
+  IO.dataM1(0x1c);
   IO.cmdM2(0x82);
-  IO.cmdM2(0x1c);
+  IO.dataM2(0x1c);
   
   // Acording to Waveshare/GoodDisplay code this needs LUT Tables
   // Comment next line if it does not work. 
