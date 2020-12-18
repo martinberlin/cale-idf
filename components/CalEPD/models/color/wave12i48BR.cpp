@@ -266,22 +266,21 @@ void Wave12I48RB::update()
   printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
   uint32_t i = 0;
 
-  printf("STOP here before refresh (Remove, this is only debug)\n");
-  return;
-
-  IO.cmdM1S1M2S2(0x13);
-
-  /*
+    /*
    DISPLAYS:
   __________
   | S2 | M2 |
   -----------
   | M1 | S1 |
   -----------
+  Buffer transmit command:
+    0x10 -> BLACK
+    0x13 -> RED
   */
+  
+  IO.cmdM1S1M2S2(0x10); // Black buffer
   uint8_t x1buf[81];
   uint8_t x2buf[82];
-
   // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
