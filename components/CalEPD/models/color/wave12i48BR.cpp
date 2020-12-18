@@ -241,9 +241,9 @@ void Wave12I48RB::_wakeUp(){
   IO.dataM1S1M2S2(0x22);
   
   IO.cmdM1(0xE0);        // Power setting
-  IO.cmdM1(0x01);
+  IO.dataM1(0x01);
   IO.cmdM2(0xE0);
-  IO.cmdM2(0x01);
+  IO.dataM2(0x01);
 
   IO.cmdM1S1M2S2(0xE3);
   IO.dataM1S1M2S2(0x00);
