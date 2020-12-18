@@ -266,9 +266,6 @@ void Wave12I48RB::update()
   printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
   uint32_t i = 0;
 
-  printf("STOP here before refresh (Remove, this is only debug)\n");
-  return;
-
   IO.cmdM1S1M2S2(0x13);
 
   /*
