@@ -6,14 +6,14 @@
 #include "freertos/task.h"
 
 // KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
-DRAM_ATTR const epd_init_1 Wave12I48RB::epd_panel_setting_full={
+const epd_init_1 Wave12I48RB::epd_panel_setting_full={
 0x00,{0x2f},1
 };
 
-DRAM_ATTR const epd_init_4 Wave12I48RB::epd_resolution_m1s2={
+const epd_init_4 Wave12I48RB::epd_resolution_m1s2={
 0x61,{0x02,0x88,0x01,0xEC},4};
 
-DRAM_ATTR const epd_init_4 Wave12I48RB::epd_resolution_m2s1={
+const epd_init_4 Wave12I48RB::epd_resolution_m2s1={
 0x61,{0x02,0x90,0x01,0xEC},4};
 
 // LUT Tables
@@ -113,11 +113,11 @@ void Wave12I48RB::init(bool debug)
 
 void Wave12I48RB::fillScreen(uint16_t color)
 {
-  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer_black));
   uint8_t data = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK : WAVE12I48_8PIX_WHITE;
-  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  for (uint32_t x = 0; x < sizeof(_buffer_black); x++)
   {
-    _buffer[x] = data;
+    _buffer_black[x] = data;
   }
 }
 
@@ -168,7 +168,7 @@ void Wave12I48RB::_setLut(){
 void Wave12I48RB::_wakeUp(){
   IO.reset(200);
   // Panel setting
-  printf("Panel setting\n");
+  printf("_wakeUp() initial epaper bootstrap: Panel setting\n");
   IO.cmdM1(epd_panel_setting_full.cmd);
   IO.dataM1(epd_panel_setting_full.data[0]);
   IO.cmdS1(epd_panel_setting_full.cmd);
@@ -205,7 +205,7 @@ void Wave12I48RB::_wakeUp(){
   IO.dataM2(0x39);
   IO.dataM2(0x17);
 
-  printf("\nResolution setting\n");
+  printf("Resolution setting\n");
   IO.cmdM1(epd_resolution_m1s2.cmd);
   for (int i=0;i<epd_resolution_m1s2.databytes;++i) {
     IO.dataM1(epd_resolution_m1s2.data[i]);
@@ -223,20 +223,16 @@ void Wave12I48RB::_wakeUp(){
     IO.dataS2(epd_resolution_m1s2.data[i]);
   }
   
-  printf("\nDu SPI\n");
   IO.cmdM1S1M2S2(0x15);  // DUSPI
   IO.dataM1S1M2S2(0x20);
 
-  printf("\nPLL\n");
   IO.cmdM1S1M2S2(0x30);  // PLL
   IO.dataM1S1M2S2(0x08);
 
-  printf("\nVcom and data interval\n");
   IO.cmdM1S1M2S2(0x50);  //Vcom and data interval setting
   IO.dataM1S1M2S2(0x31); //Border KW
   IO.dataM1S1M2S2(0x07);
 
-  printf("\nTCON\n");
   IO.cmdM1S1M2S2(0x60);  //TCON
   IO.dataM1S1M2S2(0x22);
   
@@ -263,9 +259,8 @@ void Wave12I48RB::update()
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   
-  printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
+  printf("Sending BLACK buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
   uint32_t i = 0;
-
     /*
    DISPLAYS:
   __________
@@ -277,14 +272,49 @@ void Wave12I48RB::update()
     0x10 -> BLACK
     0x13 -> RED
   */
-  
-  IO.cmdM1S1M2S2(0x10); // Black buffer
   uint8_t x1buf[81];
   uint8_t x2buf[82];
+
+  IO.cmdM1S1M2S2(0x10); // Black buffer
   // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
-          uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_black[i] : 0x00;
+
+        if (y <= 492) {  // S2 & M2 area
+          if (x <= 81) { // 648/8 -> S2
+            x1buf[x-1] = data;
+          } else {       // M2
+            x2buf[x-82] = data;
+          }
+
+          if (x==WAVE12I48_WIDTH/8) {  // Send the complete X line for S2 & M2
+                IO.dataS2(x1buf,sizeof(x1buf));
+                IO.dataM2(x2buf,sizeof(x2buf));
+          }
+
+        } else {         // M1 & S1
+          if (x <= 81) { // 648/8 -> M1
+            x1buf[x-1] = data;
+          } else {       // S1
+            x2buf[x-82] = data;
+          }
+
+          if (x==WAVE12I48_WIDTH/8) { // Send the complete X line for M1 & S1
+              IO.dataM1(x1buf,sizeof(x1buf));
+              IO.dataS1(x2buf,sizeof(x2buf));
+          }
+        }
+          ++i;
+        }
+  }
+
+  i = 0;
+  printf("Sending RED buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  IO.cmdM1S1M2S2(0x13); // Red buffer
+  for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
+        for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_red[i] : 0x00;
 
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2
@@ -314,6 +344,7 @@ void Wave12I48RB::update()
         }
   }
   uint64_t endTime = esp_timer_get_time();
+  
   _powerOn();
   uint64_t powerOnTime = esp_timer_get_time();
   printf("\nAvailable heap after Epd update: %d bytes\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
@@ -453,11 +484,20 @@ void Wave12I48RB::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint32_t i = x / 8 + y * WAVE12I48_WIDTH / 8;
 
-  if (color) {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    } else {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  _buffer_black[i] = (_buffer_black[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  _buffer_red[i] = (_buffer_red[i] & (0xFF ^ (1 << (7 - x % 8)))); // white
+  if (color == EPD_WHITE) return;
+
+  else if (color == EPD_BLACK) _buffer_black[i] = (_buffer_black[i] | (1 << (7 - x % 8)));
+  else if (color == EPD_RED) _buffer_red[i] = (_buffer_red[i] | (1 << (7 - x % 8)));
+  else
+  {
+    if ((color & 0xF100) > (0xF100 / 2)) _buffer_red[i] = (_buffer_red[i] | (1 << (7 - x % 8)));
+    else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
+    {
+      _buffer_black[i] = (_buffer_black[i] | (1 << (7 - x % 8)));
     }
+  }
 }
 
 void Wave12I48RB::clear(){
