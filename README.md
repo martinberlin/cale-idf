@@ -71,7 +71,7 @@ Needs 3.3v, a common GND, SDA, SCL for I2C communication, and a input INT pin th
 
 ## CalEPD component
 
-[CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as possible, leaving as much memory as possible for your Firmwmare. Note that still, the graphics library buffer, depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels it runs stable and there is still free DRAM for more.
+[CalEPD is an ESP-IDF component](https://github.com/martinberlin/CalEPD) to drive epaper displays with ESP32 / ESP32S2 and it's what is sending the graphics buffer to your epaper behind the scenes. It's designed to be a light C++ component to have a small memory footprint and run as fast as posible, leaving as much memory as possible for your program. Note that the pixels buffer, takes 1 byte to store 8 pixels on each color, so depending on your epaper size may need external PSRAM. Up to 800 * 480 pixels on a monochrome eink it runs stable and there is still free DRAM for more.
 
 ## Branches
 
