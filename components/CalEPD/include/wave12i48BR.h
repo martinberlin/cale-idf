@@ -19,8 +19,10 @@
 #define WAVE12I48_HEIGHT 984
 
 // 8 pix of this color in a buffer byte:
-#define WAVE12I48_8PIX_BLACK 0x00
-#define WAVE12I48_8PIX_WHITE 0xFF
+#define WAVE12I48_8PIX_BLACK_INK   0xFF
+#define WAVE12I48_8PIX_BLACK_CLEAR 0x00
+#define WAVE12I48_8PIX_RED_CLEAR 0xFF
+#define WAVE12I48_8PIX_RED_INK   0x00
 
 // Buffer size in bytes
 #define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)

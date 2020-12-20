@@ -66,10 +66,12 @@ void app_main(void)
    display.init(false);
    // Store your epapers all white, just turn true:
    if (false) {
-   display.fillScreen(EPD_WHITE); 
-   display.update();
-   return;
+     display.fillScreen(EPD_RED); 
+     display.update();
+     return;
    }
+
+
    display.setRotation(2); // 0 - 12.48 w/USB pointing down
    display.fillScreen(EPD_BLACK);
 

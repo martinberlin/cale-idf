@@ -113,11 +113,18 @@ void Wave12I48RB::init(bool debug)
 
 void Wave12I48RB::fillScreen(uint16_t color)
 {
-  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer_black));
-  uint8_t data = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK : WAVE12I48_8PIX_WHITE;
-  for (uint32_t x = 0; x < sizeof(_buffer_black); x++)
+  
+  uint8_t data_black = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK_INK : WAVE12I48_8PIX_BLACK_CLEAR;
+
+  uint8_t data_red = (color == EPD_RED) ? WAVE12I48_8PIX_RED_INK : WAVE12I48_8PIX_RED_CLEAR;
+
+  //if (debug_enabled) 
+  printf("fillScreen(%x) BLACK(%x) RED(%x) Buffer size:%d\n", color, data_black, data_red,  WAVE12I48_BUFFER_SIZE);
+
+  for (uint32_t x = 0; x < WAVE12I48_BUFFER_SIZE; x++)
   {
-    _buffer_black[x] = data;
+    _buffer_black[x] = data_black;
+    _buffer_red[x] = data_red;
   }
 }
 
@@ -259,7 +266,7 @@ void Wave12I48RB::update()
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   
-  printf("Sending BLACK buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  printf("\nSending BLACK buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
   uint32_t i = 0;
     /*
    DISPLAYS:
@@ -280,6 +287,10 @@ void Wave12I48RB::update()
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
           uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_black[i] : 0x00;
+
+          if(y<=1) {  // DEBUG remove after testing
+                  printf("%x ",data);
+                }
 
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2
@@ -310,15 +321,23 @@ void Wave12I48RB::update()
   }
 
   i = 0;
-  printf("Sending RED buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  printf("\nSending RED buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
   IO.cmdM1S1M2S2(0x13); // Red buffer
+
+  /**
+   * NOTE: Is possible that RED is inverted. In that case just bitwise negate the data
+   */
+
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
           uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_red[i] : 0x00;
 
+        if(y<=1) {  // DEBUG remove after testing
+                  printf("%x ",data);
+                }
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2
-            x1buf[x-1] = data;
+            x1buf[x-1] = data;  // bitwise invert: ~ data
           } else {       // M2
             x2buf[x-82] = data;
           }
