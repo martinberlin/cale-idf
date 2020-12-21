@@ -19,9 +19,10 @@
 #define WAVE12I48_HEIGHT 984
 
 // 8 pix of this color in a buffer byte:
+// black channel inverted in update()
 #define WAVE12I48_8PIX_BLACK_INK   0xFF
 #define WAVE12I48_8PIX_BLACK_CLEAR 0x00
-// Red channel looks inverted: But now is inverted on the update()
+
 #define WAVE12I48_8PIX_RED_INK   0xFF
 #define WAVE12I48_8PIX_RED_CLEAR 0x00
 

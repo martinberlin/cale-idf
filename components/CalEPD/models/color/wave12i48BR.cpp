@@ -286,7 +286,8 @@ void Wave12I48RB::update()
   // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
-          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_black[i] : WAVE12I48_8PIX_BLACK_CLEAR;
+          // bitwise invert: ~ data
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? ~_buffer_black[i] : WAVE12I48_8PIX_BLACK_CLEAR;
 
           if(y<=1) {  // DEBUG remove after testing
                   printf("%x ",data);
@@ -327,8 +328,7 @@ void Wave12I48RB::update()
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
 
-          // bitwise invert: ~ data
-          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? ~_buffer_red[i] : WAVE12I48_8PIX_RED_CLEAR;
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_red[i] : WAVE12I48_8PIX_RED_CLEAR;
 
         if(y<=1) {  // DEBUG remove after testing
                   printf("%x ",data);
@@ -528,7 +528,7 @@ void Wave12I48RB::clear(){
     IO.cmdM1(0x13);
     for(uint16_t y = 492; y < 984; y++)
         for(uint16_t x = 0; x < 81; x++) {
-            IO.dataM1(0xff);
+            IO.dataM1(0x00);
         }
 
     //S1 part 656*492
@@ -540,7 +540,7 @@ void Wave12I48RB::clear(){
     IO.cmdS1(0x13);
     for(uint16_t y = 492; y < 984; y++)
         for(uint16_t x = 81; x < 163; x++) {
-            IO.dataS1(0xff);
+            IO.dataS1(0x00);
         }
 
     //M2 part 656*492
@@ -552,7 +552,7 @@ void Wave12I48RB::clear(){
     IO.cmdM2(0x13);
     for(uint16_t y = 0; y < 492; y++)
         for(uint16_t x = 81; x < 163; x++) {
-            IO.dataM2(0xff);
+            IO.dataM2(0x00);
         }
 
     //S2 part 648*492
@@ -564,6 +564,6 @@ void Wave12I48RB::clear(){
     IO.cmdS2(0x13);
     for(uint16_t y = 0; y < 492; y++)
         for(uint16_t x = 0; x < 81; x++) {
-            IO.dataS2(0xff);
+            IO.dataS2(0x00);
         }
 }
