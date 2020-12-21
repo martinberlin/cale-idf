@@ -17,6 +17,7 @@ set(srcs
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
+    "models/color/wave12i48BR.cpp"
 
     # Plasticlogic.com Flex epaper models:
     "models/plasticlogic/epdspi2cs.cpp"
