@@ -79,7 +79,7 @@ void app_main(void)
    display.setCursor(10,40);
    display.setTextColor(EPD_WHITE);
    
-   display.setFont(&Ubuntu_M16pt8b);
+   display.setFont(&Ubuntu_M12pt8b);
 
    display.println("German characters test");
    display.println("° äöü ÄÖÜ ß");
