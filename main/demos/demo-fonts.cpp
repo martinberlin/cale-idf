@@ -35,8 +35,8 @@ Wave12I48RB display(io);
 //#include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
-#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
-#include <Fonts/ubuntu/Ubuntu_M20pt8b.h>
+//#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
+//#include <Fonts/ubuntu/Ubuntu_M20pt8b.h>
 
 extern "C"
 {
@@ -99,18 +99,13 @@ void app_main(void)
    display.println("");
    display.print("\nUbuntu 12pt");
    display.setFont(&Ubuntu_M12pt8b);
+   display.setTextColor(EPD_RED);
    demo_chars();
-/*
-   display.println("");
-   display.print("\nUbuntu 16pt");
-   display.setFont(&Ubuntu_M16pt8b);
-   demo_chars();
-   
-   display.println("");
-   display.print("\nUbuntu 20pt");
-   display.setFont(&Ubuntu_M20pt8b);
-   demo_chars();   
-   */
+
+   // Let's draw one 100px radius circle Black and another on the right 120px radius Red
+   display.fillCircle(300,300, 100, EPD_BLACK);
+
+   display.fillCircle(600,300, 120, EPD_RED);
 
    display.update();
 }
