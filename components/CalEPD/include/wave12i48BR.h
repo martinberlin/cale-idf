@@ -21,9 +21,10 @@
 // 8 pix of this color in a buffer byte:
 #define WAVE12I48_8PIX_BLACK_INK   0xFF
 #define WAVE12I48_8PIX_BLACK_CLEAR 0x00
-// Red channel looks inverted: But now is inverted on the update()
-#define WAVE12I48_8PIX_RED_INK   0xFF
-#define WAVE12I48_8PIX_RED_CLEAR 0x00
+// Red channel looks inverted in Waveshare example Clean method:
+// https://github.com/waveshare/12.48inch-e-paper/blob/master/Arduino/12in48epd/src/EPD_12in48b.cpp#L160
+#define WAVE12I48_8PIX_RED_INK   0x00
+#define WAVE12I48_8PIX_RED_CLEAR 0xFF
 
 // Buffer size in bytes
 #define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)
