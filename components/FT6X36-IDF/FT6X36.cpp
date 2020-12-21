@@ -3,8 +3,8 @@
 FT6X36 *FT6X36::_instance = nullptr;
 static const char *TAG = "i2c-touch";
 
-//The semaphore indicating I2C is ready to read the touch
-SemaphoreHandle_t TouchSemaphore = xSemaphoreCreateMutex();
+//Handle indicating I2C is ready to read the touch
+SemaphoreHandle_t TouchSemaphore = xSemaphoreCreateBinary();
 
 FT6X36::FT6X36(int8_t intPin)
 {
@@ -31,15 +31,6 @@ FT6X36::FT6X36(int8_t intPin)
 FT6X36::~FT6X36()
 {
 	gpio_isr_handler_remove((gpio_num_t)CONFIG_TOUCH_INT);
-}
-
-void IRAM_ATTR FT6X36::isr(void* arg)
-{
-    // Give the semaphore.
-    BaseType_t mustYield=false;
-    xSemaphoreGiveFromISR(TouchSemaphore, &mustYield);
-    if (mustYield) portYIELD_FROM_ISR();
-	_instance->onInterrupt();
 }
 
 bool FT6X36::begin(uint8_t threshold, uint16_t width, uint16_t height)
@@ -69,10 +60,11 @@ bool FT6X36::begin(uint8_t threshold, uint16_t width, uint16_t height)
 	
     // INT pin triggers the callback function on the Falling edge of the GPIO
     gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.intr_type = GPIO_INTR_NEGEDGE; // GPIO_INTR_NEGEDGE repeats always interrupt
     io_conf.pin_bit_mask = 1ULL<<CONFIG_TOUCH_INT;  
     io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pull_up_en = (gpio_pullup_t)1; //  pull-up mode
+    io_conf.pull_down_en = (gpio_pulldown_t) 0; // disable pull-down mode
+    io_conf.pull_up_en   = (gpio_pullup_t) 1;   // pull-up mode
     gpio_config(&io_conf);
 
 	esp_err_t isr_service = gpio_install_isr_service(0);
@@ -83,11 +75,6 @@ bool FT6X36::begin(uint8_t threshold, uint16_t width, uint16_t height)
 	writeRegister8(FT6X36_REG_THRESHHOLD, threshold);
 	writeRegister8(FT6X36_REG_TOUCHRATE_ACTIVE, 0x0E);
 	return true;
-}
-
-void FT6X36::registerIsrHandler(void (*fn)())
-{
-	_isrHandler = fn;
 }
 
 void FT6X36::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
@@ -117,42 +104,38 @@ void FT6X36::loop()
 	processTouch();
 }
 
-void FT6X36::processTouch()
+void IRAM_ATTR FT6X36::isr(void* arg)
 {
-	// Wait until ISR interruption is ready to read touch
-	xSemaphoreTake(TouchSemaphore, portMAX_DELAY);
-	if (!_isrInterrupt) return;
-
-	readData();
-	if (_isrInterrupt) {
-	uint8_t n = 0;
-	TRawEvent event = (TRawEvent)_touchEvent[n];
-	TPoint point{_touchX[n], _touchY[n]};
-
-	//printf("pt:%d c:%d ",_touchEvent[n], _isrCounter);
-	
-	// Only TAP detected for now
-	if (event == TRawEvent::Contact)
-	{
-		_points[0] = point;
-		_pointIdx = 1;
-		fireEvent(point, TEvent::Tap);
-	}
-	if (event == TRawEvent::LiftUp)
-	{
-		fireEvent(point, TEvent::TouchEnd);
-
-	}
-	_isrInterrupt=false;
-	}
+	/* Un-block the interrupt processing task now */
+    xSemaphoreGive(TouchSemaphore);
+	//xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
 
-void FT6X36::onInterrupt()
+void FT6X36::processTouch()
 {
-	_isrInterrupt=true;
-	//if (_isrHandler) {
-	//	_isrHandler();
-	//}
+	/* Task move to Block state to wait for interrupt event */
+	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY)) {
+		readData();
+		uint8_t n = 0;
+		TRawEvent event = (TRawEvent)_touchEvent[n];
+		TPoint point{_touchX[n], _touchY[n]};
+
+		
+		printf("pt:%d\n",_touchEvent[n]);
+		
+		// Only TAP detected for now
+		if (event == TRawEvent::Contact)
+		{
+			_points[0] = point;
+			_pointIdx = 1;
+			fireEvent(point, TEvent::Tap);
+		}
+		if (event == TRawEvent::LiftUp)
+		{
+			fireEvent(point, TEvent::TouchEnd);
+
+		}
+	}
 }
 
 uint8_t FT6X36::read8(uint8_t regName) {
