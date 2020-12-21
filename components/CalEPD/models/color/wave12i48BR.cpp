@@ -286,7 +286,7 @@ void Wave12I48RB::update()
   // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
-          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_black[i] : 0x00;
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_black[i] : WAVE12I48_8PIX_BLACK_CLEAR;
 
           if(y<=1) {  // DEBUG remove after testing
                   printf("%x ",data);
@@ -324,20 +324,18 @@ void Wave12I48RB::update()
   printf("\nSending RED buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
   IO.cmdM1S1M2S2(0x13); // Red buffer
 
-  /**
-   * NOTE: Is possible that RED is inverted. In that case just bitwise negate the data
-   */
-
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
-          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer_red[i] : 0x00;
+
+          // bitwise invert: ~ data
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? ~_buffer_red[i] : WAVE12I48_8PIX_RED_CLEAR;
 
         if(y<=1) {  // DEBUG remove after testing
                   printf("%x ",data);
                 }
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2
-            x1buf[x-1] = data;  // bitwise invert: ~ data
+            x1buf[x-1] = data;
           } else {       // M2
             x2buf[x-82] = data;
           }
