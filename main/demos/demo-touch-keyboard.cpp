@@ -244,7 +244,6 @@ void app_main(void)
    printf("display.colors_supported:%d display.rotation: %d\n", display.colors_supported,display.getRotation());  
    drawUX();
   
-   display.update();
    display.registerTouchHandler(touchEvent);
   
   for (;;) {
