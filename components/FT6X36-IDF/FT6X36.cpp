@@ -131,6 +131,7 @@ void FT6X36::processTouch()
 			break;
 
 		case TRawEvent::Contact:
+				// Dragging makes no sense IMHO. Since the X & Y are not getting updated while dragging
 				// Dragging && _points[0].aboutEqual(point) - Not used IDEA 2:  && (lastEvent == 2)
 				if (!_dragMode && 
 					 (abs(lastX-_touchX[n]) <= maxDeviation || abs(lastY-_touchY[n])<=maxDeviation) && 
