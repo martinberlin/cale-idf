@@ -114,74 +114,78 @@ void IRAM_ATTR FT6X36::isr(void* arg)
 void FT6X36::processTouch()
 {
 	/* Task move to Block state to wait for interrupt event */
-	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY)) {
-		readData();
-		uint8_t n = 0;
-		TRawEvent event = (TRawEvent)_touchEvent[n];
-		TPoint point{_touchX[n], _touchY[n]};
+	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
+	readData();
+	uint8_t n = 0;
+	TRawEvent event = (TRawEvent)_touchEvent[n];
+	TPoint point{_touchX[n], _touchY[n]};
 
-		
-		//printf("pt:%d\n",_touchEvent[n]);
+	switch (event) {
 
-	if (event == TRawEvent::PressDown)
-		{
-			_points[0] = point;
-			_pointIdx = 1;
-			_dragMode = false;
-			// Note: Is in microseconds. Ref https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
-			_touchStartTime = esp_timer_get_time()/1000;
-			fireEvent(point, TEvent::TouchStart);
-			if (CONFIG_FT6X36_DEBUG) printf("EV: TouchStart time %lu\n", _touchStartTime);
-		}
+		case TRawEvent::PressDown:
+				_points[0] = point;
+				_dragMode = false;
+				// Note: Is in microseconds. Ref https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
+				_touchStartTime = esp_timer_get_time()/1000;
+				fireEvent(point, TEvent::TouchStart);
+			break;
 
-		else if (event == TRawEvent::Contact)
-		{
-			_touchStartTime = esp_timer_get_time()/1000;
-			if (_pointIdx < 10)
-			{
-				_points[_pointIdx] = point;
-				_pointIdx += 1;
-			}
+		case TRawEvent::Contact:
+				// Dragging && _points[0].aboutEqual(point) - Not used IDEA 2:  && (lastEvent == 2)
+				if (!_dragMode && 
+					 (abs(lastX-_touchX[n]) <= maxDeviation || abs(lastY-_touchY[n])<=maxDeviation) && 
+				     esp_timer_get_time()/1000 - _touchStartTime > 300) {
+					_dragMode = true;
+					fireEvent(point, TEvent::DragStart);
+					if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragStart\n");
+				} else if (_dragMode) {
+
+					fireEvent(point, TEvent::DragMove);
+					if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragMove\n");
+				}
+				fireEvent(point, TEvent::TouchMove);
+
+			   // For me the _touchStartTime shouold be set in both PressDown & Contact events, but after Drag detection
+		        _touchStartTime = esp_timer_get_time()/1000;
+				break;
+
+		case TRawEvent::LiftUp:
 			
-			if (!_dragMode  && _points[0].aboutEqual(point) && esp_timer_get_time()/1000 - _touchStartTime > 300)
-			{
-				_dragMode = true;
-				fireEvent(point, TEvent::DragStart);
-				if (CONFIG_FT6X36_DEBUG) printf("EV: DragStart\n");
-			}
-			else if (_dragMode) {
-				fireEvent(point, TEvent::DragMove);
-				if (CONFIG_FT6X36_DEBUG) printf("EV: DragMove\n");
-			}
-			fireEvent(point, TEvent::TouchMove);
-		}
-
-		else if (event == TRawEvent::LiftUp)
-		{
 			_points[9] = point;
 			_touchEndTime = esp_timer_get_time()/1000;
+
+			//printf("TIMEDIFF: %lu End: %lu\n", _touchEndTime - _touchStartTime, _touchEndTime);
+
 			fireEvent(point, TEvent::TouchEnd);
 			if (_dragMode)
 			{
 				fireEvent(point, TEvent::DragEnd);
-				if (CONFIG_FT6X36_DEBUG) printf("EV: DragEnd\n");
+				if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragEnd\n");
 				_dragMode = false;
 			}
-
-			printf("Endtime: %lu TIMEDIFF: %lu\n",  _touchEndTime, _touchEndTime - _touchStartTime);
-
-			// _points[0].aboutEqual(point)  - Check why is this in place on orig. library
-			if ( _touchEndTime - _touchStartTime <= 1000)
-			{
+		
+			if ( _touchEndTime - _touchStartTime <= 900) {
+				// Do not get why this: _points[0].aboutEqual(point) (Original library)
 				fireEvent(point, TEvent::Tap);
 				_points[0] = {0, 0};
 				_touchStartTime = 0;
-				if (CONFIG_FT6X36_DEBUG) printf("EV: Tap\n");
+				if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: Tap\n");
+				_dragMode = false;
 			}
-		} 
+			
+			break;
 
-		}
+			case TRawEvent::NoEvent:
+			 // Do nothing
+			   if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: NoEvent\n");
+			break;
+	}
+	// Store lastEvent
+	lastEvent = (int) event;
+	lastX = _touchX[0];
+	lastY = _touchY[0];
 }
+
 
 uint8_t FT6X36::read8(uint8_t regName) {
 	uint8_t buf;
@@ -219,7 +223,7 @@ bool FT6X36::readData(void)
     i2c_cmd_link_delete(cmd);
 
 	if (CONFIG_FT6X36_DEBUG) {
-		printf("REGISTERS:\n");
+		//printf("REGISTERS:\n");
 		for (int16_t i = 0; i < data_size; i++)
 		{
 			printf("%x:%x ", i, data[i]);
@@ -264,8 +268,9 @@ bool FT6X36::readData(void)
 		break;
   }
 
+	printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	if (CONFIG_FT6X36_DEBUG) {
-	  printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	  //printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	  //printf("X1:%d Y1:%d EVENT:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
 	}
 	return true;

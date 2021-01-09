@@ -109,11 +109,12 @@ struct TPoint
 {
 	uint16_t x;
 	uint16_t y;
-
+	/**
+	 * This is being used in the original library but I'm not using it in this implementation
+	 */
 	bool aboutEqual(const TPoint point)
 	{
-		const uint8_t maxDeviation = 5;
-		return abs(x - point.x) <= maxDeviation && abs(y - point.y) <= maxDeviation;
+		return abs(x - point.x) <= 5 && abs(y - point.y) <= 5;
 	}
 };
 
@@ -170,7 +171,11 @@ private:
 	uint8_t _pointIdx = 0;
 	unsigned long _touchStartTime = 0;
 	unsigned long _touchEndTime = 0;
+    uint8_t lastEvent = 3; // No event
+	uint16_t lastX = 0;
+	uint16_t lastY = 0;
 	bool _dragMode = false;
+	const uint8_t maxDeviation = 5;
 };
 
 #endif
