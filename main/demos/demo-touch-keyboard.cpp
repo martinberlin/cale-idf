@@ -16,8 +16,8 @@
 // Optional font for the writing box:
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8px)
-//#define DEBUG_TOUCH_COUNT 1
-#define DEBUG_TOUCH_KEY 1
+#define DEBUG_TOUCH_COUNT 1
+//#define DEBUG_TOUCH_KEY 1
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
@@ -160,8 +160,12 @@ void touchEvent(TPoint p, TEvent e)
 {
   #if defined(DEBUG_TOUCH_COUNT)
     ++t_counter;
-    printf("X: %d Y: %d count:%d\n", p.x, p.y, t_counter);
+    //printf("X: %d Y: %d count:%d Ev:%d\n", p.x, p.y, t_counter, int(e));
   #endif
+
+  // Trigger keys only on TAP
+  if (e != TEvent::Tap) return;
+
   
   // First the Y line IFs
   if (p.y>line1_ystart && p.y<line2_ystart) {         // LINE 1
@@ -244,7 +248,6 @@ void app_main(void)
    printf("display.colors_supported:%d display.rotation: %d\n", display.colors_supported,display.getRotation());  
    drawUX();
   
-   display.update();
    display.registerTouchHandler(touchEvent);
   
   for (;;) {

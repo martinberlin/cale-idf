@@ -20,4 +20,8 @@ menu "Touch FT6X36 Configuration"
         int "FT6X36 debug: On 1 will output FocalTech touch events via serial"
         range 0 1
         default 0
+    config FT6X36_DEBUG_EVENTS
+        int "FT6X36 debug events: On 1 will output touch events only"
+        range 0 1
+        default 0
 endmenu
