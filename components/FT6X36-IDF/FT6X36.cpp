@@ -121,28 +121,66 @@ void FT6X36::processTouch()
 		TPoint point{_touchX[n], _touchY[n]};
 
 		
-		printf("pt:%d\n",_touchEvent[n]);
+		//printf("pt:%d\n",_touchEvent[n]);
 
-		if (event == TRawEvent::PressDown){
-		   _touchStartTime = esp_timer_get_time();
-		}
-
-		// Only TAP detected for now
-		if (event == TRawEvent::Contact || event == TRawEvent::LiftUp)
+	if (event == TRawEvent::PressDown)
 		{
 			_points[0] = point;
 			_pointIdx = 1;
-			_touchDifferenceTime = esp_timer_get_time() - _touchStartTime;
-			printf("Time touch-release=%lu\n",_touchDifferenceTime);
+			_dragMode = false;
+			// Note: Is in microseconds. Ref https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
+			_touchStartTime = esp_timer_get_time()/1000;
+			fireEvent(point, TEvent::TouchStart);
+			if (CONFIG_FT6X36_DEBUG) printf("EV: TouchStart time %lu\n", _touchStartTime);
+		}
 
-			if (_touchDifferenceTime <= 300) {
+		else if (event == TRawEvent::Contact)
+		{
+			_touchStartTime = esp_timer_get_time()/1000;
+			if (_pointIdx < 10)
+			{
+				_points[_pointIdx] = point;
+				_pointIdx += 1;
+			}
+			
+			if (!_dragMode  && _points[0].aboutEqual(point) && esp_timer_get_time()/1000 - _touchStartTime > 300)
+			{
+				_dragMode = true;
+				fireEvent(point, TEvent::DragStart);
+				if (CONFIG_FT6X36_DEBUG) printf("EV: DragStart\n");
+			}
+			else if (_dragMode) {
+				fireEvent(point, TEvent::DragMove);
+				if (CONFIG_FT6X36_DEBUG) printf("EV: DragMove\n");
+			}
+			fireEvent(point, TEvent::TouchMove);
+		}
+
+		else if (event == TRawEvent::LiftUp)
+		{
+			_points[9] = point;
+			_touchEndTime = esp_timer_get_time()/1000;
+			fireEvent(point, TEvent::TouchEnd);
+			if (_dragMode)
+			{
+				fireEvent(point, TEvent::DragEnd);
+				if (CONFIG_FT6X36_DEBUG) printf("EV: DragEnd\n");
+				_dragMode = false;
+			}
+
+			printf("Endtime: %lu TIMEDIFF: %lu\n",  _touchEndTime, _touchEndTime - _touchStartTime);
+
+			// _points[0].aboutEqual(point)  - Check why is this in place on orig. library
+			if ( _touchEndTime - _touchStartTime <= 1000)
+			{
 				fireEvent(point, TEvent::Tap);
 				_points[0] = {0, 0};
 				_touchStartTime = 0;
+				if (CONFIG_FT6X36_DEBUG) printf("EV: Tap\n");
 			}
-		}
+		} 
 
-	}
+		}
 }
 
 uint8_t FT6X36::read8(uint8_t regName) {
@@ -154,11 +192,11 @@ uint8_t FT6X36::read8(uint8_t regName) {
 bool FT6X36::readData(void)
 {
 	esp_err_t ret;
-	uint8_t data_size = 16;
+	uint8_t data_size = 16;     // Discarding last 2: 0x0E & 0x0F as not relevant
 	uint8_t data[data_size];
     uint8_t touch_pnt_cnt;      // Number of detected touch points
     readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
-	printf("NUM_TOUCHES:%d\n",touch_pnt_cnt);
+	//printf("NUM_TOUCHES:%d\n",touch_pnt_cnt);
 
     // Read data
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -180,41 +218,55 @@ bool FT6X36::readData(void)
     ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
 
-	printf("REGISTERS:\n");
-	for (int16_t i = 0; i < data_size; i++)
-	{
-		printf("%x:%x ", i, data[i]);
+	if (CONFIG_FT6X36_DEBUG) {
+		printf("REGISTERS:\n");
+		for (int16_t i = 0; i < data_size; i++)
+		{
+			printf("%x:%x ", i, data[i]);
+		}
+		printf("\n");
 	}
-	printf("- - - \n");
 
-    return ret;
-    /* uint16_t x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
-    uint16_t y = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-
-	_touchEvent[0] = data_xy[0] >> 6; */
+    const uint8_t addrShift = 6;
 	
-	// Make _touchX[0] and _touchY[0] rotation aware
-/* 	  switch (_rotation)
+	// READ X, Y and Touch events (X 2)
+	for (uint8_t i = 0; i < 2; i++)
+	{
+		_touchX[i] = data[FT6X36_REG_P1_XH + i * addrShift] & 0x0F;
+		_touchX[i] <<= 8;
+		_touchX[i] |= data[FT6X36_REG_P1_XL + i * addrShift];
+		_touchY[i] = data[FT6X36_REG_P1_YH + i * addrShift] & 0x0F;
+		_touchY[i] <<= 8;
+		_touchY[i] |= data[FT6X36_REG_P1_YL + i * addrShift];
+		_touchEvent[i] = data[FT6X36_REG_P1_XH + i * addrShift] >> 6;
+	}
+	
+	// Make _touchX[idx] and _touchY[idx] rotation aware
+	switch (_rotation)
   {
 	case 1:
-	    swap(x, y);
-		y = _touch_width - y -1;
+	    swap(_touchX[0], _touchY[0]);
+		swap(_touchX[1], _touchY[1]);
+		_touchY[0] = _touch_width - _touchY[0] -1;
+		_touchY[1] = _touch_width - _touchY[1] -1;
 		break;
 	case 2:
-		x = _touch_width - x - 1;
-		y = _touch_height - y - 1;
+		_touchX[0] = _touch_width - _touchX[0] - 1;
+		_touchX[1] = _touch_width - _touchX[1] - 1;
+		_touchY[0] = _touch_height - _touchY[0] - 1;
+		_touchY[1] = _touch_height - _touchY[1] - 1;
 		break;
 	case 3:
-		swap(x, y);
-		x = _touch_height - x - 1;
+		swap(_touchX[0], _touchY[0]);
+		swap(_touchX[1], _touchY[1]);
+		_touchX[0] = _touch_height - _touchX[0] - 1;
+		_touchX[1] = _touch_height - _touchX[1] - 1;
 		break;
   }
-	_touchX[0] = x;
-	_touchY[0] = y; */
 
 	if (CONFIG_FT6X36_DEBUG) {
-	  printf("X0:%d Y0:%d T0:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	  //printf("X1:%d Y1:%d T1:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
+	  printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	  //printf("X1:%d Y1:%d EVENT:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
 	}
 	return true;
 }

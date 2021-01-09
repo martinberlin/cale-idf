@@ -169,7 +169,7 @@ private:
 	TPoint _points[10];
 	uint8_t _pointIdx = 0;
 	unsigned long _touchStartTime = 0;
-	unsigned long _touchDifferenceTime = 0;
+	unsigned long _touchEndTime = 0;
 	bool _dragMode = false;
 };
 
