@@ -122,19 +122,26 @@ void FT6X36::processTouch()
 
 		
 		printf("pt:%d\n",_touchEvent[n]);
-		
+
+		if (event == TRawEvent::PressDown){
+		   _touchStartTime = esp_timer_get_time();
+		}
+
 		// Only TAP detected for now
-		if (event == TRawEvent::Contact)
+		if (event == TRawEvent::Contact || event == TRawEvent::LiftUp)
 		{
 			_points[0] = point;
 			_pointIdx = 1;
-			fireEvent(point, TEvent::Tap);
-		}
-		if (event == TRawEvent::LiftUp)
-		{
-			fireEvent(point, TEvent::TouchEnd);
+			_touchDifferenceTime = esp_timer_get_time() - _touchStartTime;
+			printf("Time touch-release=%lu\n",_touchDifferenceTime);
 
+			if (_touchDifferenceTime <= 300) {
+				fireEvent(point, TEvent::Tap);
+				_points[0] = {0, 0};
+				_touchStartTime = 0;
+			}
 		}
+
 	}
 }
 
@@ -146,60 +153,48 @@ uint8_t FT6X36::read8(uint8_t regName) {
 
 bool FT6X36::readData(void)
 {
-	uint8_t data_xy[4];         // 2 bytes X | 2 bytes Y
+	esp_err_t ret;
+	uint8_t data_size = 16;
+	uint8_t data[data_size];
     uint8_t touch_pnt_cnt;      // Number of detected touch points
-
     readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
-	if (touch_pnt_cnt==0) return 0;
+	printf("NUM_TOUCHES:%d\n",touch_pnt_cnt);
 
-    // Read X value
-    i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
-
-    i2c_master_start(i2c_cmd);
-    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write_byte(i2c_cmd, FT6X36_REG_P1_XH, I2C_MASTER_ACK);
-
-    i2c_master_start(i2c_cmd);
-    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
-
-    i2c_master_read_byte(i2c_cmd, &data_xy[0], I2C_MASTER_ACK);     // reads FT6X36_P1_XH_REG
-    i2c_master_read_byte(i2c_cmd, &data_xy[1], I2C_MASTER_NACK);    // reads FT6X36_P1_XL_REG
-    i2c_master_stop(i2c_cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, i2c_cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(i2c_cmd);
+    // Read data
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (FT6X36_ADDR<<1), ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, 0, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting X coordinates: %s", esp_err_to_name(ret));
-        // no touch detected
-        return false;
+        return ret;
     }
 
-    // Read Y value
-    i2c_cmd = i2c_cmd_link_create();
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (FT6X36_ADDR<<1)|1, ACK_CHECK_EN);
+    i2c_master_read(cmd, data, data_size,  I2C_MASTER_LAST_NACK);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
 
-    i2c_master_start(i2c_cmd);
-    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write_byte(i2c_cmd, FT6X36_REG_P1_YH, I2C_MASTER_ACK);
+	printf("REGISTERS:\n");
+	for (int16_t i = 0; i < data_size; i++)
+	{
+		printf("%x:%x ", i, data[i]);
+	}
+	printf("- - - \n");
 
-    i2c_master_start(i2c_cmd);
-    i2c_master_write_byte(i2c_cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
-
-    i2c_master_read_byte(i2c_cmd, &data_xy[2], I2C_MASTER_ACK);     // reads FT6X36_P1_YH_REG
-    i2c_master_read_byte(i2c_cmd, &data_xy[3], I2C_MASTER_NACK);    // reads FT6X36_P1_YL_REG
-    i2c_master_stop(i2c_cmd);
-    ret = i2c_master_cmd_begin(I2C_NUM_0, i2c_cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(i2c_cmd);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting Y coordinates: %s", esp_err_to_name(ret));
-        return false;
-    }
-
-    uint16_t x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
+    return ret;
+    /* uint16_t x = ((data_xy[0] & FT6X36_MSB_MASK) << 8) | (data_xy[1] & FT6X36_LSB_MASK);
     uint16_t y = ((data_xy[2] & FT6X36_MSB_MASK) << 8) | (data_xy[3] & FT6X36_LSB_MASK);
-	// This is not right. Is not getting the 0x03   [7:6] 1st event flag
-	_touchEvent[0] = data_xy[0] >> 6;
+
+	_touchEvent[0] = data_xy[0] >> 6; */
 	
 	// Make _touchX[0] and _touchY[0] rotation aware
-	  switch (_rotation)
+/* 	  switch (_rotation)
   {
 	case 1:
 	    swap(x, y);
@@ -215,11 +210,12 @@ bool FT6X36::readData(void)
 		break;
   }
 	_touchX[0] = x;
-	_touchY[0] = y;
-	
-	if (CONFIG_FT6X36_DEBUG)
-	  printf("X:%d Y:%d T:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	
+	_touchY[0] = y; */
+
+	if (CONFIG_FT6X36_DEBUG) {
+	  printf("X0:%d Y0:%d T0:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
+	  //printf("X1:%d Y1:%d T1:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
+	}
 	return true;
 }
 
