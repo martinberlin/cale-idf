@@ -16,8 +16,8 @@
 // Optional font for the writing box:
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8px)
-#define DEBUG_TOUCH_COUNT 1
-//#define DEBUG_TOUCH_KEY 1
+#define DEBUG_TOUCH_COUNT 0
+#define DEBUG_TOUCH_KEY 0
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
@@ -28,6 +28,9 @@ extern "C"
 {
    void app_main();
 }
+// Turn true to use only partial update when clearing the screen
+// Is faster but never cleans completely the draw area like a full update
+bool ClearUsesPartialUpdate = false;
 
 // Some GFX constants. Some of them are defined in drawUX()
 uint16_t line1_ystart = 90;
@@ -160,7 +163,7 @@ void touchEvent(TPoint p, TEvent e)
 {
   #if defined(DEBUG_TOUCH_COUNT)
     ++t_counter;
-    //printf("X: %d Y: %d count:%d Ev:%d\n", p.x, p.y, t_counter, int(e));
+    printf("X: %d Y: %d count:%d Ev:%d\n", p.x, p.y, t_counter, int(e));
   #endif
 
   // Trigger keys only on TAP
@@ -174,7 +177,7 @@ void touchEvent(TPoint p, TEvent e)
       if (p.x>line1_x[idx] && p.x<line1_x[idx]+key_width_1) {
         // No idea why comes sometimes a strange 255 character (Out of the uint_8?)
         if ((uint8_t)key_line1[idx]<65 || (uint8_t)key_line1[idx]>90) break; 
-        #if defined(DEBUG_TOUCH_KEY)
+        #if defined(DEBUG_TOUCH_KEY) && DEBUG_TOUCH_KEY==1
           printf("LINE 1 KEY:%c cX:%d cY:%d | Tx:%d Ty:%d\n",key_line1[idx], display.getCursorX(), display.getCursorY(), p.x, p.y);
         #endif
         // Check if the cursor arrived to the end of the X visible space
@@ -190,7 +193,7 @@ void touchEvent(TPoint p, TEvent e)
       if (p.x>line2_x[idx] && p.x<line2_x[idx]+key_width_1) {
         if ((uint8_t)key_line2[idx]<65 || (uint8_t)key_line2[idx]>90) break; 
         
-        #if defined(DEBUG_TOUCH_KEY)
+        #if defined(DEBUG_TOUCH_KEY) && DEBUG_TOUCH_KEY==1
           printf("LINE 2 KEY:%c cX:%d cY:%d | Tx:%d Ty:%d\n",key_line2[idx], display.getCursorX(), display.getCursorY(), p.x, p.y);
         #endif
         if (display.getCursorX()>display.width()-cursor_x_offset) writeCarriageReturn();
@@ -204,7 +207,7 @@ void touchEvent(TPoint p, TEvent e)
     for (uint8_t idx = 0; idx < line3_size; idx++) {
       if (p.x>line3_x[idx] && p.x<line3_x[idx]+key_width_1) {
         if ((uint8_t)key_line3[idx]<65 || (uint8_t)key_line3[idx]>90) break;
-        #if defined(DEBUG_TOUCH_KEY)
+        #if defined(DEBUG_TOUCH_KEY) && DEBUG_TOUCH_KEY==1
           printf("LINE 3 KEY:%c cX:%d cY:%d | Tx:%d Ty:%d\n",key_line3[idx], display.getCursorX(), display.getCursorY(), p.x, p.y);
         #endif
         if (display.getCursorX()>display.width()-cursor_x_offset) writeCarriageReturn();
@@ -213,27 +216,28 @@ void touchEvent(TPoint p, TEvent e)
       }
     }
     if (p.x>key_space_x && p.x<key_space_x+key_space_width) {
-      #if defined(DEBUG_TOUCH_KEY)
+      #if defined(DEBUG_TOUCH_KEY) && DEBUG_TOUCH_KEY==1
         printf("SPACE Key\n");
       #endif
         display.setCursor(display.getCursorX()+cursor_space, display.getCursorY());
     }
     if (p.x>key_space_x+key_space_width) {
-      #if defined(DEBUG_TOUCH_KEY)
+      #if defined(DEBUG_TOUCH_KEY) && DEBUG_TOUCH_KEY==1
         printf("CLS Key\n");
       #endif
+
+      if (ClearUsesPartialUpdate) {
         display.fillRect(0,0,display.width(),line1_ystart,EPD_WHITE);
         display.updateWindow(0,0,display.width()-1,line1_ystart);
         // Reset cursors
         cursor_x = 10;
         cursor_y = 20;
         display.setCursor(cursor_x,cursor_y);
+        } else {
+          esp_restart();
+        }
     }
   }
-
-  //CLEAR NOT Implemented since we use restart in the demo. In case you want to do it, then set a button to do: 
-  // display.fillScreen(EPD_WHITE);
-  // drawUX();
 }
 
 void app_main(void)
