@@ -33,7 +33,20 @@ menu "I2S data bus Configuration"
         int "Data Bus 7"
         range 5 37
         default 22
-    
+
+    config CKV
+        int "Data control line"
+        range 20 25
+        default 25
+    config CKH
+        int "Data clock pin"
+        range 0 5
+        default 5
+    config STH
+        int "Start pulse: enabling data input on the slave device (active low)"
+        range 26 37
+        default 26
+
     config CFG_DATA
         int "Data config register data"
         range 20 25
@@ -46,19 +59,5 @@ menu "I2S data bus Configuration"
         int "Data config register string"
         range 0 19
         default 0
-
-    config CKV
-        int "Data control line"
-        range 20 25
-        default 25
-    config CKV
-        int "Data clock pin"
-        range 0 5
-        default 5    
-
-    config STH
-        int "Start pulse: enabling data input on the slave device (active low)"
-        range 26 37
-        default 26 
 
 endmenu
