@@ -150,3 +150,18 @@ epd_draw_grayscale_image(board_area, (uint8_t*)img_board_data);
 calls: epd_draw_image_lines(area, data, mode, NULL);
 
 That sends the array for each line of the image via I2S to the the display
+
+HOW is the epaper feed with this
+
+There are 2 loops running all the time called from epd_init()
+
+
+  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
+                                           "epd_out", 1 << 12, &fetch_params, 5,
+                                           NULL, 0));
+
+  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))feed_display,
+                                           "epd_render", 1 << 12, &feed_params,
+                                           5, NULL, 1));
+
+This loops are triggered by their respective DMA Semaphores only when there is data to send.
