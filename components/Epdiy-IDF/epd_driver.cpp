@@ -100,14 +100,14 @@ const DRAM_ATTR uint32_t lut_1bpp_white[256] = {
 #endif
 
 // output a row to the display. - static
-void EpdI2SDriver::write_row(uint32_t output_time_dus) {
+void write_row(uint32_t output_time_dus) {
   skipping = 0;
   //MISS
   //epd_output_row(output_time_dus);
 }
 
 // skip a display row
-void IRAM_ATTR EpdI2SDriver::skip_row(uint8_t pipeline_finish_time) {
+void IRAM_ATTR skip_row(uint8_t pipeline_finish_time) {
   // output previously loaded row, fill buffer with no-ops.
   if (skipping < 2) {
     //MISS
@@ -247,7 +247,7 @@ void IRAM_ATTR EpdI2SDriver::calc_epd_input_1bpp(const uint8_t *line_data, uint8
 }
 
 //static
-void IRAM_ATTR EpdI2SDriver::reset_lut(uint8_t *lut_mem, enum DrawMode mode) {
+void IRAM_ATTR reset_lut(uint8_t *lut_mem, enum DrawMode mode) {
   switch (mode) {
   case BLACK_ON_WHITE:
     memset(lut_mem, 0x55, (1 << 16));
@@ -263,7 +263,7 @@ void IRAM_ATTR EpdI2SDriver::reset_lut(uint8_t *lut_mem, enum DrawMode mode) {
 }
 
 //static
-void IRAM_ATTR EpdI2SDriver::update_LUT(uint8_t *lut_mem, uint8_t k,
+void IRAM_ATTR update_LUT(uint8_t *lut_mem, uint8_t k,
                                  enum DrawMode mode) {
   if (mode == BLACK_ON_WHITE || mode == WHITE_ON_WHITE) {
     k = 15 - k;
@@ -290,7 +290,7 @@ void IRAM_ATTR EpdI2SDriver::update_LUT(uint8_t *lut_mem, uint8_t k,
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::nibble_shift_buffer_right(uint8_t *buf, uint32_t len) {
+void IRAM_ATTR nibble_shift_buffer_right(uint8_t *buf, uint32_t len) {
   uint8_t carry = 0xF;
   for (uint32_t i = 0; i < len; i++) {
     uint8_t val = buf[i];
@@ -302,7 +302,7 @@ void IRAM_ATTR EpdI2SDriver::nibble_shift_buffer_right(uint8_t *buf, uint32_t le
 /*
  * bit-shift a buffer `shift` <= 7 bits to the right.
  */
-void IRAM_ATTR EpdI2SDriver::bit_shift_buffer_right(uint8_t *buf, uint32_t len, int shift) {
+void IRAM_ATTR bit_shift_buffer_right(uint8_t *buf, uint32_t len, int shift) {
   uint8_t carry = 0x00;
   for (uint32_t i = 0; i < len; i++) {
     uint8_t val = buf[i];
@@ -363,7 +363,7 @@ void IRAM_ATTR EpdI2SDriver::epd_draw_grayscale_image(Rect_t area, const uint8_t
   epd_draw_image(area, data, BLACK_ON_WHITE);
 }
 
-void IRAM_ATTR EpdI2SDriver::provide_out(OutputParams *params) {
+void IRAM_ATTR provide_out(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
@@ -437,7 +437,7 @@ void IRAM_ATTR EpdI2SDriver::provide_out(OutputParams *params) {
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::feed_display(OutputParams *params) {
+void IRAM_ATTR feed_display(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
@@ -607,7 +607,6 @@ void IRAM_ATTR EpdI2SDriver::epd_draw_image_lines(Rect_t area, const uint8_t *da
 }
 
 void EpdI2SDriver::epd_init() {
-  skipping = 0;
   //epd_base_init(EPD_WIDTH);
   //epd_temperature_init();
 
@@ -619,14 +618,14 @@ void EpdI2SDriver::epd_init() {
 
   // Need to check this:
   // invalid use of member function 'void EpdI2SDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
-  //                                                                  v
-  /* RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
+  // IF used inside class so now methods are out                  v
+  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
                                            "epd_out", 1 << 12, &fetch_params, 5,
-                                           NULL, 0)); */
+                                           NULL, 0));
 
-  /* RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))feed_display,
+  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))feed_display,
                                            "epd_render", 1 << 12, &feed_params,
-                                           5, NULL, 1)); */
+                                           5, NULL, 1));
 
   conversion_lut = (uint8_t *)heap_caps_malloc(1 << 16, MALLOC_CAP_8BIT);
   assert(conversion_lut != NULL);

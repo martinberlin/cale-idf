@@ -96,6 +96,8 @@ typedef struct {
 static OutputParams fetch_params;
 static OutputParams feed_params;
 
+// status tracker for row skipping
+    uint32_t skipping = 0;
 
 class EpdI2SDriver
 {
@@ -226,8 +228,6 @@ class EpdI2SDriver
 
   private:
 
-    void write_row(uint32_t output_time_dus);
-    void IRAM_ATTR skip_row(uint8_t pipeline_finish_time);
     void IRAM_ATTR calc_epd_input_4bpp(
       const uint32_t *line_data,
       uint8_t *epd_input, uint8_t k,
@@ -236,16 +236,6 @@ class EpdI2SDriver
       const uint8_t *line_data, 
       uint8_t *epd_input,
       enum DrawMode mode);
-      
-    void IRAM_ATTR reset_lut(uint8_t *lut_mem, enum DrawMode mode);
-    void IRAM_ATTR update_LUT(uint8_t *lut_mem, uint8_t k, enum DrawMode mode);
-    void IRAM_ATTR nibble_shift_buffer_right(uint8_t *buf, uint32_t len);
-    void IRAM_ATTR bit_shift_buffer_right(uint8_t *buf, uint32_t len, int shift);
-    void IRAM_ATTR feed_display(OutputParams *params);
-    void IRAM_ATTR provide_out(OutputParams *params);
-
-    // status tracker for row skipping
-    uint32_t skipping;
 };
 
 #endif
