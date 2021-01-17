@@ -166,10 +166,10 @@ void I2SDataBus::i2s_bus_init(i2s_bus_config *cfg) {
   dev->timing.val = 0;
 
   // Allocate DMA descriptors
-  i2s_state.buf_a = heap_caps_malloc(cfg->epd_row_width / 4, MALLOC_CAP_DMA);
-  i2s_state.buf_b = heap_caps_malloc(cfg->epd_row_width / 4, MALLOC_CAP_DMA);
-  i2s_state.dma_desc_a = heap_caps_malloc(sizeof(lldesc_t), MALLOC_CAP_DMA);
-  i2s_state.dma_desc_b = heap_caps_malloc(sizeof(lldesc_t), MALLOC_CAP_DMA);
+  i2s_state.buf_a = (uint8_t*) heap_caps_malloc(cfg->epd_row_width / 4, MALLOC_CAP_DMA);
+  i2s_state.buf_b = (uint8_t*) heap_caps_malloc(cfg->epd_row_width / 4, MALLOC_CAP_DMA);
+  i2s_state.dma_desc_a = (volatile lldesc_t*) heap_caps_malloc(sizeof(lldesc_t), MALLOC_CAP_DMA);
+  i2s_state.dma_desc_b = (volatile lldesc_t*) heap_caps_malloc(sizeof(lldesc_t), MALLOC_CAP_DMA);
 
   // and fill them
   fill_dma_desc(i2s_state.dma_desc_a, i2s_state.buf_a, cfg);
