@@ -1,5 +1,5 @@
-#include "epd_driver.h"
-//#include "ed097oc4.h"
+// Common methods that all I2Sbus epapers should inherit
+#include "epd_driver_base.h"
 
 #define RTOS_ERROR_CHECK(x)                                                    \
   do {                                                                         \
@@ -12,8 +12,8 @@
 inline uint32_t min(uint32_t x, uint32_t y) { return x < y ? x : y; }
 inline uint32_t max(uint32_t x, uint32_t y) { return x > y ? x : y; }
 
-
 /* 
+IDEA: Maybe that is the way to go (To define epaper models in menuconfig)
 Proof of concept epapers to start with
 #if defined(CONFIG_EPD_DISPLAY_TYPE_ED097OC4) ||                               \
     defined(CONFIG_EPD_DISPLAY_TYPE_ED060SC4) ||                               \
@@ -120,7 +120,7 @@ void IRAM_ATTR skip_row(uint8_t pipeline_finish_time) {
   skipping++;
 }
 
-void EpdI2SDriver::epd_push_pixels(Rect_t area, short time, int color) {
+void EpdDriver::epd_push_pixels(Rect_t area, short time, int color) {
 
   uint8_t row[EPD_LINE_BYTES] = {0};
 
@@ -161,11 +161,11 @@ void EpdI2SDriver::epd_push_pixels(Rect_t area, short time, int color) {
   //epd_end_frame();
 }
 
-void EpdI2SDriver::epd_clear_area(Rect_t area) {
+void EpdDriver::epd_clear_area(Rect_t area) {
   epd_clear_area_cycles(area, 3, clear_cycle_time);
 }
 
-void EpdI2SDriver::epd_clear_area_cycles(Rect_t area, int cycles, int cycle_time) {
+void EpdDriver::epd_clear_area_cycles(Rect_t area, int cycles, int cycle_time) {
   const short white_time = cycle_time;
   const short dark_time = cycle_time;
 
@@ -179,26 +179,26 @@ void EpdI2SDriver::epd_clear_area_cycles(Rect_t area, int cycles, int cycle_time
   }
 }
 
-Rect_t EpdI2SDriver::epd_full_screen() {
+Rect_t EpdDriver::epd_full_screen() {
   Rect_t area = {.x = 0, .y = 0, .width = EPD_WIDTH, .height = EPD_HEIGHT};
   return area;
 }
 
-void EpdI2SDriver::epd_clear() { 
+void EpdDriver::epd_clear() { 
   epd_clear_area(epd_full_screen()); 
   }
 
 /*
  * Reorder the output buffer to account for I2S FIFO order.
  */
-void EpdI2SDriver::reorder_line_buffer(uint32_t *line_data) {
+void EpdDriver::reorder_line_buffer(uint32_t *line_data) {
   for (uint32_t i = 0; i < EPD_LINE_BYTES / 4; i++) {
     uint32_t val = *line_data;
     *(line_data++) = val >> 16 | ((val & 0x0000FFFF) << 16);
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::calc_epd_input_4bpp(const uint32_t *line_data,
+void IRAM_ATTR EpdDriver::calc_epd_input_4bpp(const uint32_t *line_data,
                                    uint8_t *epd_input, uint8_t k,
                                    const uint8_t *conversion_lut) {
 
@@ -219,7 +219,7 @@ void IRAM_ATTR EpdI2SDriver::calc_epd_input_4bpp(const uint32_t *line_data,
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::calc_epd_input_1bpp(const uint8_t *line_data, uint8_t *epd_input,
+void IRAM_ATTR EpdDriver::calc_epd_input_1bpp(const uint8_t *line_data, uint8_t *epd_input,
                                    enum DrawMode mode) {
 
   uint32_t *wide_epd_input = (uint32_t *)epd_input;
@@ -311,7 +311,7 @@ void IRAM_ATTR bit_shift_buffer_right(uint8_t *buf, uint32_t len, int shift) {
   }
 }
 
-void EpdI2SDriver::epd_draw_pixel(int x, int y, uint8_t color, uint8_t *framebuffer) {
+void EpdDriver::epd_draw_pixel(int x, int y, uint8_t color, uint8_t *framebuffer) {
   if (x < 0 || x >= EPD_WIDTH) {
     return;
   }
@@ -326,7 +326,7 @@ void EpdI2SDriver::epd_draw_pixel(int x, int y, uint8_t color, uint8_t *framebuf
   }
 }
 
-void EpdI2SDriver::epd_copy_to_framebuffer(Rect_t image_area, const uint8_t *image_data,
+void EpdDriver::epd_copy_to_framebuffer(Rect_t image_area, const uint8_t *image_data,
                              uint8_t *framebuffer) {
 
   assert(framebuffer != NULL);
@@ -359,7 +359,7 @@ void EpdI2SDriver::epd_copy_to_framebuffer(Rect_t image_area, const uint8_t *ima
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::epd_draw_grayscale_image(Rect_t area, const uint8_t *data) {
+void IRAM_ATTR EpdDriver::epd_draw_grayscale_image(Rect_t area, const uint8_t *data) {
   epd_draw_image(area, data, BLACK_ON_WHITE);
 }
 
@@ -481,7 +481,7 @@ void IRAM_ATTR feed_display(OutputParams *params) {
   }
 }
 
-void IRAM_ATTR EpdI2SDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_t *ptr,
+void IRAM_ATTR EpdDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_t *ptr,
                                          enum DrawMode mode, int time,
                                          const bool *drawn_lines) {
   //MISS
@@ -562,17 +562,17 @@ void IRAM_ATTR EpdI2SDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_
   //epd_end_frame();
 }
 
-void IRAM_ATTR EpdI2SDriver::epd_draw_frame_1bit(Rect_t area, const uint8_t *ptr,
+void IRAM_ATTR EpdDriver::epd_draw_frame_1bit(Rect_t area, const uint8_t *ptr,
                                    enum DrawMode mode, int time) {
   epd_draw_frame_1bit_lines(area, ptr, mode, time, NULL);
 }
 
-void IRAM_ATTR EpdI2SDriver::epd_draw_image(Rect_t area, const uint8_t *data,
+void IRAM_ATTR EpdDriver::epd_draw_image(Rect_t area, const uint8_t *data,
                               enum DrawMode mode) {
   epd_draw_image_lines(area, data, mode, NULL);
 }
 
-void IRAM_ATTR EpdI2SDriver::epd_draw_image_lines(Rect_t area, const uint8_t *data,
+void IRAM_ATTR EpdDriver::epd_draw_image_lines(Rect_t area, const uint8_t *data,
                                     enum DrawMode mode,
                                     const bool *drawn_lines) {
   uint8_t line[EPD_WIDTH / 2];
@@ -606,7 +606,9 @@ void IRAM_ATTR EpdI2SDriver::epd_draw_image_lines(Rect_t area, const uint8_t *da
   }
 }
 
-void EpdI2SDriver::epd_init() {
+void EpdDriver::epd_init() {
+  // IO needs to be aware of WIDTH / HEIGHT of epaper, hence needs to be injected same as we do for Adafruit GFX
+
   //epd_base_init(EPD_WIDTH);
   //epd_temperature_init();
 
@@ -617,8 +619,8 @@ void EpdI2SDriver::epd_init() {
   feed_params.start_smphr = xSemaphoreCreateBinary();
 
   // Need to check this:
-  // invalid use of member function 'void EpdI2SDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
-  // IF used inside class so now methods are out                  v
+  // invalid use of member function 'void EpdDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
+  // IF used inside class gives errorso now methods are out      v
   RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
                                            "epd_out", 1 << 12, &fetch_params, 5,
                                            NULL, 0));
@@ -632,6 +634,6 @@ void EpdI2SDriver::epd_init() {
   output_queue = xQueueCreate(32, EPD_WIDTH / 2);
 }
 
-void EpdI2SDriver::epd_deinit(){
+void EpdDriver::epd_deinit(){
   //epd_base_deinit();
 }

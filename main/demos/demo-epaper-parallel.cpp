@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "epd_driver.h"
+#include "epd_driver_base.h"
 
 // I2S data bus by vroland
-EpdI2SDriver io;
+//EpdI2SDriver io;
 
 extern "C"
 {

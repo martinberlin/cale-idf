@@ -19,15 +19,18 @@
 #include <string.h>
 
 // FIX: This should be in the epaper class
+// NOTE: IO needs to be aware of WIDTH / HEIGHT of epaper
+//       hence needs to be injected or declared in menuconfig
 #define EPD_WIDTH 960
 #define EPD_HEIGHT 540
-// number of bytes needed for one line of EPD pixel data.
+
+// Number of bytes needed for one line of EPD pixel data.
 #define EPD_LINE_BYTES EPD_WIDTH / 4
 
 #define CLEAR_BYTE 0B10101010
 #define DARK_BYTE 0B01010101
 
-// minimal draw time in ms for a frame layer,
+// Minimal draw time in ms for a frame layer,
 // which will allow all particles to set properly.
 #ifndef MINIMUM_FRAME_TIME
 #define MINIMUM_FRAME_TIME (min(k, 10))
@@ -35,6 +38,7 @@
 
 #ifndef epd_i2s_bus_h
 #define epd_i2s_bus_h
+
 /// An area on the display.
 typedef struct {
   /// Horizontal position.
@@ -97,9 +101,9 @@ static OutputParams fetch_params;
 static OutputParams feed_params;
 
 // status tracker for row skipping
-    uint32_t skipping = 0;
+uint32_t skipping = 0;
 
-class EpdI2SDriver
+class EpdDriver
 {
   public:
     /** Initialize the ePaper display */

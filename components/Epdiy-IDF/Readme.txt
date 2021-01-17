@@ -1,8 +1,14 @@
+Epdiy component is only for parallel epapers driven by 8 GPIO datalines
+plus latch PIN and CLK. It's not for SPI (Use CalEPD for SPI epapers)
+
 The idea is to refactor original class of Epdiy:
 
 https://github.com/vroland/epdiy
 
 As a C++ class to inject into this parallel data-bus displays. First target to drive is the 4.7 inch epaper from LILYGO
+This is by no means ready and is only a raw starts. Please avoid using this code or parts of it in any
+productive environment.
+First epaper target is LILYGO:
 
 ED047TC1 	4.7" 	960 x 540 pixels
 
@@ -13,7 +19,7 @@ As a blueprint I can imagine this is going to happen in the same way as SPI righ
 #include <ED047TC1.h>
 
 // Instantiate the parallel I2S Input/Output class that in turn has it's own Kconfig for the 8 GPIOs + clock
-EpdI2SBus io;
+I2SDataBus io;
 ED047TC1 display(io);
 
 // Do stuff with the epaper
