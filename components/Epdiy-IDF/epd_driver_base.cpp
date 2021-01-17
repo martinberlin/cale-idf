@@ -635,5 +635,222 @@ void EpdDriver::epd_init() {
 }
 
 void EpdDriver::epd_deinit(){
-  //epd_base_deinit();
+  epd_base_deinit();
+}
+
+// Methods for ed097oc4.c in vroland C component
+
+/*
+ * Write bits directly using the registers.
+ * Won't work for some pins (>= 32).
+ */
+inline void EpdDriver::fast_gpio_set_hi(gpio_num_t gpio_num) {
+  GPIO.out_w1ts = (1 << gpio_num);
+}
+
+inline void EpdDriver::fast_gpio_set_lo(gpio_num_t gpio_num) {
+  GPIO.out_w1tc = (1 << gpio_num);
+}
+
+void IRAM_ATTR EpdDriver::busy_delay(uint32_t cycles) {
+  volatile unsigned long counts = XTHAL_GET_CCOUNT() + cycles;
+  while (XTHAL_GET_CCOUNT() < counts) {
+  };
+}
+
+inline void IRAM_ATTR EpdDriver::push_cfg_bit(bool bit) {
+  fast_gpio_set_lo((gpio_num_t)CONFIG_CFG_CLK);
+  if (bit) {
+    fast_gpio_set_hi((gpio_num_t)CONFIG_CFG_DATA);
+  } else {
+    fast_gpio_set_lo((gpio_num_t)CONFIG_CFG_DATA);
+  }
+  fast_gpio_set_hi((gpio_num_t)CONFIG_CFG_CLK);
+}
+
+void EpdDriver::epd_base_init(uint32_t epd_row_width) {
+
+  config_reg_init(&config_reg);
+
+  /* Power Control Output/Off */
+  gpio_set_direction((gpio_num_t)CONFIG_CFG_DATA, GPIO_MODE_OUTPUT);
+  gpio_set_direction((gpio_num_t)CONFIG_CFG_CLK, GPIO_MODE_OUTPUT);
+  gpio_set_direction((gpio_num_t)CONFIG_CFG_STR, GPIO_MODE_OUTPUT);
+
+#if defined(CONFIG_EPD_BOARD_REVISION_V4)
+  // use latch pin as GPIO
+  PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[V4_LATCH_ENABLE], PIN_FUNC_GPIO);
+  ESP_ERROR_CHECK(gpio_set_direction(V4_LATCH_ENABLE, GPIO_MODE_OUTPUT));
+  gpio_set_level(V4_LATCH_ENABLE, 0);
+#endif
+  fast_gpio_set_lo((gpio_num_t)CONFIG_CFG_STR);
+
+  push_cfg(&config_reg);
+
+  // Setup I2S
+  i2s_bus_config i2s_config;
+  // add an offset off dummy bytes to allow for enough timing headroom
+  i2s_config.epd_row_width = epd_row_width + 32;
+  i2s_config.clock = (gpio_num_t)CONFIG_CKH;
+  i2s_config.start_pulse = (gpio_num_t)CONFIG_STH;
+  i2s_config.data_0 = (gpio_num_t)CONFIG_D0;
+  i2s_config.data_1 = (gpio_num_t)CONFIG_D1;
+  i2s_config.data_2 = (gpio_num_t)CONFIG_D2;
+  i2s_config.data_3 = (gpio_num_t)CONFIG_D3;
+  i2s_config.data_4 = (gpio_num_t)CONFIG_D4;
+  i2s_config.data_5 = (gpio_num_t)CONFIG_D5;
+  i2s_config.data_6 = (gpio_num_t)CONFIG_D6;
+  i2s_config.data_7 = (gpio_num_t)CONFIG_D7;
+
+  DataBus.i2s_bus_init(&i2s_config);
+
+  rmt_pulse_init((gpio_num_t)CONFIG_CKV);
+}
+
+void EpdDriver::epd_poweron() { cfg_poweron(&config_reg); }
+
+void EpdDriver::epd_poweroff() { cfg_poweroff(&config_reg); }
+
+void EpdDriver::epd_base_deinit(){
+  epd_poweroff();
+  DataBus.i2s_deinit();
+}
+
+void EpdDriver::epd_start_frame() {
+  while (DataBus.i2s_is_busy() || rmt_busy()) {
+  };
+  config_reg.ep_mode = true;
+  push_cfg(&config_reg);
+
+  pulse_ckv_us(1, 1, true);
+
+  // This is very timing-sensitive!
+  config_reg.ep_stv = false;
+  push_cfg(&config_reg);
+  busy_delay(240);
+  pulse_ckv_us(10, 10, false);
+  config_reg.ep_stv = true;
+  push_cfg(&config_reg);
+  pulse_ckv_us(0, 10, true);
+
+  config_reg.ep_output_enable = true;
+  push_cfg(&config_reg);
+
+  pulse_ckv_us(1, 1, true);
+}
+
+inline void EpdDriver::latch_row() {
+  config_reg.ep_latch_enable = true;
+  push_cfg(&config_reg);
+
+  config_reg.ep_latch_enable = false;
+  push_cfg(&config_reg);
+}
+
+void IRAM_ATTR EpdDriver::epd_skip() {
+#if defined(CONFIG_EPD_DISPLAY_TYPE_ED097TC2) ||                               \
+    defined(CONFIG_EPD_DISPLAY_TYPE_ED133UT2)
+  pulse_ckv_ticks(2, 2, false);
+#else
+  // According to the spec, the OC4 maximum CKV frequency is 200kHz.
+  pulse_ckv_ticks(45, 5, false);
+#endif
+}
+
+void IRAM_ATTR EpdDriver::epd_output_row(uint32_t output_time_dus) {
+
+  while (DataBus.i2s_is_busy() || rmt_busy()) {
+  };
+
+  latch_row();
+
+#if defined(CONFIG_EPD_DISPLAY_TYPE_ED097TC2) ||                               \
+    defined(CONFIG_EPD_DISPLAY_TYPE_ED133UT2)
+  pulse_ckv_ticks(output_time_dus, 1, false);
+#else
+  pulse_ckv_ticks(output_time_dus, 50, false);
+#endif
+
+  DataBus.i2s_start_line_output();
+  DataBus.i2s_switch_buffer();
+}
+
+void EpdDriver::epd_end_frame() {
+  config_reg.ep_output_enable = false;
+  push_cfg(&config_reg);
+  config_reg.ep_mode = false;
+  push_cfg(&config_reg);
+  pulse_ckv_us(1, 1, true);
+  pulse_ckv_us(1, 1, true);
+}
+
+void IRAM_ATTR EpdDriver::epd_switch_buffer() {
+   DataBus.i2s_switch_buffer(); 
+}
+
+uint8_t* IRAM_ATTR EpdDriver::epd_get_current_buffer() {
+  return (uint8_t *)DataBus.i2s_get_current_buffer();
+}
+
+// config_reg_v2
+void EpdDriver::config_reg_init(epd_config_register_t *cfg) {
+  cfg->ep_latch_enable = false;
+  cfg->power_disable = true;
+  cfg->pos_power_enable = false;
+  cfg->neg_power_enable = false;
+  cfg->ep_stv = true;
+  cfg->ep_scan_direction = true;
+  cfg->ep_mode = false;
+  cfg->ep_output_enable = false;
+}
+
+void IRAM_ATTR EpdDriver::push_cfg(const epd_config_register_t *cfg) {
+  fast_gpio_set_lo((gpio_num_t)CONFIG_CFG_STR);
+
+  // push config bits in reverse order
+  push_cfg_bit(cfg->ep_output_enable);
+  push_cfg_bit(cfg->ep_mode);
+  push_cfg_bit(cfg->ep_scan_direction);
+  push_cfg_bit(cfg->ep_stv);
+
+  push_cfg_bit(cfg->neg_power_enable);
+  push_cfg_bit(cfg->pos_power_enable);
+  push_cfg_bit(cfg->power_disable);
+  push_cfg_bit(cfg->ep_latch_enable);
+
+  fast_gpio_set_hi((gpio_num_t)CONFIG_CFG_STR);
+}
+
+void EpdDriver::cfg_poweron(epd_config_register_t *cfg) {
+  // This was re-purposed as power enable.
+  cfg->ep_scan_direction = true;
+  // POWERON
+  cfg->power_disable = false;
+  push_cfg(cfg);
+  busy_delay(100 * 240);
+  cfg->neg_power_enable = true;
+  push_cfg(cfg);
+  busy_delay(500 * 240);
+  cfg->pos_power_enable = true;
+  push_cfg(cfg);
+  busy_delay(100 * 240);
+  cfg->ep_stv = true;
+  push_cfg(cfg);
+  fast_gpio_set_hi((gpio_num_t)CONFIG_STH);
+  // END POWERON
+}
+
+void EpdDriver::cfg_poweroff(epd_config_register_t *cfg) {
+  // This was re-purposed as power enable.
+  cfg->ep_scan_direction = false;
+  // POWEROFF
+  cfg->pos_power_enable = false;
+  push_cfg(cfg);
+  busy_delay(10 * 240);
+  cfg->neg_power_enable = false;
+  push_cfg(cfg);
+  busy_delay(100 * 240);
+  cfg->power_disable = true;
+  push_cfg(cfg);
+  // END POWEROFF
 }

@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "epd_driver_base.h"
+// Needs Epdiy component for paralell epapers driven by I2S Databus driver
+#include "i2s_data_bus.h"
 
 // I2S data bus by vroland
-//EpdI2SDriver io;
+I2SDataBus io;
 
 extern "C"
 {

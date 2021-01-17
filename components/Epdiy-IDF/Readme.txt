@@ -171,3 +171,25 @@ There are 2 loops running all the time called from epd_init()
                                            5, NULL, 1));
 
 This loops are triggered by their respective DMA Semaphores only when there is data to send.
+
+
+PIN configuration
+This GPIO config is for the first epaper added that is LILYGO 4.7 
+
+#
+# I2S data lines and clock. Defaults to LILYGO epaper ED047TC1
+#
+CONFIG_D0=33
+CONFIG_D1=32
+CONFIG_D2=4
+CONFIG_D3=19
+CONFIG_D4=2
+CONFIG_D5=27
+CONFIG_D6=21
+CONFIG_D7=22
+CONFIG_CKV=25
+CONFIG_CKH=5
+CONFIG_STH=26
+CONFIG_CFG_DATA=23
+CONFIG_CFG_CLK=18
+CONFIG_CFG_STR=0

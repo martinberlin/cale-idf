@@ -3,7 +3,8 @@
  * Original component: https://github.com/vroland/epdiy by vroland
  * Refactored by: martinberlin (cale.es)
  */
-
+#pragma once
+#include <i2s_data_bus.h>
 #include "esp_attr.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -17,6 +18,12 @@
 #include "freertos/task.h"
 #include "xtensa/core-macros.h"
 #include <string.h>
+// ed097oc4.c in vroland C component:
+#include "esp_timer.h"
+#include "i2s_data_bus.h"
+#include "rmt_pulse.h"
+#include "xtensa/core-macros.h"
+#include "driver/gpio.h"
 
 // FIX: This should be in the epaper class
 // NOTE: IO needs to be aware of WIDTH / HEIGHT of epaper
@@ -106,6 +113,19 @@ uint32_t skipping = 0;
 class EpdDriver
 {
   public:
+    EpdDriver(I2SDataBus& DataBus);
+
+    typedef struct {
+      bool ep_latch_enable : 1;
+      bool power_disable : 1;
+      bool pos_power_enable : 1;
+      bool neg_power_enable : 1;
+      bool ep_stv : 1;
+      bool ep_scan_direction : 1;
+      bool ep_mode : 1;
+      bool ep_output_enable : 1;
+    } epd_config_register_t;
+  
     /** Initialize the ePaper display */
     void epd_init();
 
@@ -228,14 +248,78 @@ class EpdDriver
     void epd_draw_pixel(int x, int y, uint8_t color, uint8_t *framebuffer);
     
     void reorder_line_buffer(uint32_t *line_data);
-    // All rest will be done by GFX
+    // All rest for drawing functions and fonts handling will be done by Adafruit GFX
+    
+    // config_reg_v2 | Todo maybe a #ifdef will be used on CPP side to support multiple epapers
+    void config_reg_init(epd_config_register_t *cfg);
+    void IRAM_ATTR push_cfg(const epd_config_register_t *cfg);
+    void cfg_poweron(epd_config_register_t *cfg);
+    void cfg_poweroff(epd_config_register_t *cfg);
+
+    // - - - - - - - - - - - - - - - - -
+    // ed097oc4.c in vroland C component:
+
+    void epd_base_init(uint32_t epd_row_width);
+    void epd_base_deinit();
+
+    inline static void fast_gpio_set_hi(gpio_num_t gpio_num);
+    inline static void fast_gpio_set_lo(gpio_num_t gpio_num);
+
+    inline void IRAM_ATTR push_cfg_bit(bool bit);
+    void IRAM_ATTR busy_delay(uint32_t cycles);
+    /**
+     * Start a draw cycle.
+     */
+    void epd_start_frame();
+
+    /**
+     * End a draw cycle.
+     */
+    void epd_end_frame();
+
+    /**
+     * Waits until all previously submitted data has been written.
+     * Then, the following operations are initiated:
+     *
+     *  - Previously submitted data is latched to the output register.
+     *  - The RMT peripheral is set up to pulse the vertical (gate) driver for
+     *  `output_time_dus` / 10 microseconds.
+     *  - The I2S peripheral starts transmission of the current buffer to
+     *  the source driver.
+     *  - The line buffers are switched.
+     *
+     * This sequence of operations allows for pipelining data preparation and
+     * transfer, reducing total refresh times.
+     */
+    void IRAM_ATTR epd_output_row(uint32_t output_time_dus);
+
+    /** Skip a row without writing to it. */
+    void IRAM_ATTR epd_skip();
+    
+    inline void latch_row();
+    
+    /**
+     * Get the currently writable line buffer.
+     */
+    uint8_t* IRAM_ATTR epd_get_current_buffer();
+
+    /**
+     * Switches front and back line buffer.
+     * If the switched-to line buffer is currently in use,
+     * this function blocks until transmission is done.
+     */
+    void IRAM_ATTR epd_switch_buffer();
+
 
   private:
+    I2SDataBus& DataBus;
+    epd_config_register_t config_reg;
 
     void IRAM_ATTR calc_epd_input_4bpp(
       const uint32_t *line_data,
       uint8_t *epd_input, uint8_t k,
       const uint8_t *conversion_lut);
+    
     void IRAM_ATTR calc_epd_input_1bpp(
       const uint8_t *line_data, 
       uint8_t *epd_input,
