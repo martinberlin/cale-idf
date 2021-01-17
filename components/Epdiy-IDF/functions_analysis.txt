@@ -1,0 +1,144 @@
+Functions and analysis of https://github.com/vroland/epdiy
+
+
+
+epd_driver.h - - - - - - - - - - - - - 
+/** Initialize the ePaper display */
+void epd_init();
+
+/** Deinit the ePaper display */
+void epd_deinit();
+
+/** Enable display power supply. */
+void epd_poweron();
+
+/** Disable display power supply. */
+void epd_poweroff();
+
+/** Clear the whole screen by flashing it. */
+void epd_clear();
+
+/**
+ * Clear an area by flashing it.
+ *
+ * @param area: The area to clear.
+ */
+void epd_clear_area(Rect_t area);
+
+/**
+ * Clear an area by flashing it.
+ *
+ * @param area: The area to clear.
+ * @param cycles: The number of black-to-white clear cycles.
+ * @param cycle_time: Length of a cycle. Default: 50 (us).
+ */
+void epd_clear_area_cycles(Rect_t area, int cycles, int cycle_time);
+
+/**
+ * Darken / lighten an area for a given time.
+ *
+ * @param area: The area to darken / lighten.
+ * @param time: The time in us to apply voltage to each pixel.
+ * @param color: 1: lighten, 0: darken.
+ */
+void epd_push_pixels(Rect_t area, short time, int color);
+
+// DRAWING an image
+/**
+ * Same as epd_draw_image, but with the option to specify
+ * which lines of the image should be drawn.
+ *
+ * @param drawn_lines: If not NULL, an array of at least the height of the
+ * image. Every line where the corresponding value in `lines` is `false` will be
+ * skipped.
+ * @param data: The image data, as a buffer of 4 bit wide brightness values.
+ *   Pixel data is packed (two pixels per byte). A byte cannot wrap over
+ * multiple rows, images of uneven width must add a padding nibble per line.
+ * @param mode: Configure image color and assumptions of the display state.
+ * @param drawn_lines: Optional line mask.
+ *   If not NULL, only draw lines which are marked as `true`.
+ */
+void IRAM_ATTR epd_draw_image_lines(Rect_t area, const uint8_t *data,
+                                    enum DrawMode mode,
+                                    const bool *drawn_lines);
+
+                                    /**
+ * @returns Rectancle representing the whole screen area.
+ */
+Rect_t epd_full_screen();
+
+/**
+ * Draw a picture to a given framebuffer.
+ *
+ * @param image_area: The area to copy to. `width` and `height` of the area
+ *   must correspond to the image dimensions in pixels.
+ * @param image_data: The image data, as a buffer of 4 bit wide brightness
+ * values. Pixel data is packed (two pixels per byte). A byte cannot wrap over
+ * multiple rows, images of uneven width must add a padding nibble per line.
+ * @param framebuffer: The framebuffer object,
+ *   which must be `EPD_WIDTH / 2 * EPD_HEIGHT` large.
+ */
+void epd_copy_to_framebuffer(Rect_t image_area, const uint8_t *image_data,
+                             uint8_t *framebuffer);
+
+/**
+ * Draw a pixel a given framebuffer.
+ *
+ * @param x: Horizontal position in pixels.
+ * @param y: Vertical position in pixels.
+ * @param color: The gray value of the line (0-255);
+ * @param framebuffer: The framebuffer to draw to,
+ */
+void epd_draw_pixel(int x, int y, uint8_t color, uint8_t *framebuffer);
+
+// OTHER Draw functions that we will replace by GFX
+
+
+ED097OC4   
+Functions to init, power on /off the display itself
+
+void epd_base_init(uint32_t epd_row_width);
+void epd_base_deinit();
+void epd_poweron();
+void epd_poweroff();
+
+/**
+ * Start a draw cycle.
+ */
+void epd_start_frame();
+
+/**
+ * End a draw cycle.
+ */
+void epd_end_frame();
+
+/**
+ * Waits until all previously submitted data has been written.
+ * Then, the following operations are initiated:
+ *
+ *  - Previously submitted data is latched to the output register.
+ *  - The RMT peripheral is set up to pulse the vertical (gate) driver for
+ *  `output_time_dus` / 10 microseconds.
+ *  - The I2S peripheral starts transmission of the current buffer to
+ *  the source driver.
+ *  - The line buffers are switched.
+ *
+ * This sequence of operations allows for pipelining data preparation and
+ * transfer, reducing total refresh times.
+ */
+void IRAM_ATTR epd_output_row(uint32_t output_time_dus);
+
+/** Skip a row without writing to it. */
+void IRAM_ATTR epd_skip();
+
+/**
+ * Get the currently writable line buffer.
+ */
+uint8_t IRAM_ATTR *epd_get_current_buffer();
+
+/**
+ * Switches front and back line buffer.
+ * If the switched-to line buffer is currently in use,
+ * this function blocks until transmission is done.
+ */
+void IRAM_ATTR epd_switch_buffer();

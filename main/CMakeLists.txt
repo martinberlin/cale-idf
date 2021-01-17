@@ -14,7 +14,7 @@ idf_component_register(
     #SRCS "demos/demo-touch.cpp"
     #SRCS "demos/demo-touch-epd-implemented.cpp"
     
-    SRCS "demos/demo-touch-keyboard.cpp"
+    #SRCS "demos/demo-touch-keyboard.cpp"
 
     # Generic demos for any displays
     # SRCS "demos/demo-sleep-clock.cpp"
@@ -23,6 +23,9 @@ idf_component_register(
 
     # Demo only for plasticlogic.com epapers:
     # SRCS "demos/demo-epaper-plasticlogic.cpp"
+
+    # Only parallel epapers (Driven by I2Sbus)
+    SRCS "demos/demo-epaper-parallel.cpp"
     INCLUDE_DIRS ".")
     
 set(COMPONENTS_DIRS, "components")

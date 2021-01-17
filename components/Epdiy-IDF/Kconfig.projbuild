@@ -1,4 +1,4 @@
-menu "I2S data bus Configuration"
+menu "I2S data bus Configuration (Parallel epaper)"
     comment "I2S data lines and clock. Defaults to LILYGO epaper"
 
     config D0
