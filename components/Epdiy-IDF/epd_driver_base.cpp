@@ -210,16 +210,16 @@ void IRAM_ATTR EpdDriver::calc_epd_input_1bpp(const uint8_t *line_data, uint8_t 
   uint32_t *wide_epd_input = (uint32_t *)epd_input;
   const uint32_t *lut = NULL;
   switch (mode) {
-  case BLACK_ON_WHITE:
-    lut = lut_1bpp_black;
-    break;
-  case WHITE_ON_BLACK:
-  case WHITE_ON_WHITE:
-    lut = lut_1bpp_white;
-    break;
-  default:
-    ESP_LOGW("epd_driver", "unknown draw mode %d!", mode);
-    return;
+    case BLACK_ON_WHITE:
+      lut = lut_1bpp_black;
+      break;
+    case WHITE_ON_BLACK:
+    case WHITE_ON_WHITE:
+      lut = lut_1bpp_white;
+      break;
+    default:
+      ESP_LOGW("epd_driver", "unknown draw mode %d!", mode);
+      return;
   }
 
   // this is reversed for little-endian, but this is later compensated
@@ -592,8 +592,8 @@ void IRAM_ATTR EpdDriver::epd_draw_image_lines(Rect_t area, const uint8_t *data,
 void EpdDriver::epd_init() {
   // IO needs to be aware of WIDTH / HEIGHT of epaper, hence needs to be injected same as we do for Adafruit GFX
 
-  //epd_base_init(EPD_WIDTH);
-  //epd_temperature_init();
+  epd_base_init(EPD_WIDTH);
+  //epd_temperature_init();// Wont implement this for now
 
   fetch_params.done_smphr = xSemaphoreCreateBinary();
   fetch_params.start_smphr = xSemaphoreCreateBinary();
@@ -601,18 +601,17 @@ void EpdDriver::epd_init() {
   feed_params.done_smphr = xSemaphoreCreateBinary();
   feed_params.start_smphr = xSemaphoreCreateBinary();
 
-  // Need to check this:
+  // Need to check this:  
+  // error: cannot convert 'void (EpdDriver::*)(OutputParams*)' to 'TaskFunction_t' {aka 'void (*)(void*)'}
   // invalid use of member function 'void EpdDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
   // IF used inside class gives errorso now methods are out      v
-  /* 
-  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
-                                           "epd_out", 1 << 12, &fetch_params, 5,
-                                           NULL, 0));
+  // HANGS here in an eternal loop: 0x40083f7a: EpdDriver::provide_out(OutputParams*) 
+  xTaskCreatePinnedToCore((void (*)(void *)) &EpdDriver::provide_out,
+                                           "epd_out", 1 << 12, &fetch_params, 5, NULL, 0);
 
-  RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))feed_display,
-                                           "epd_render", 1 << 12, &feed_params,
-                                           5, NULL, 1)); 
-  */
+  xTaskCreatePinnedToCore((void (*)(void *)) &EpdDriver::feed_display,
+                                           "epd_render", 1 << 12, &feed_params, 5, NULL, 1); 
+  
 
   conversion_lut = (uint8_t *)heap_caps_malloc(1 << 16, MALLOC_CAP_8BIT);
   assert(conversion_lut != NULL);
@@ -860,3 +859,73 @@ void IRAM_ATTR EpdDriver::skip_row(uint8_t pipeline_finish_time) {
   }
   skipping++;
 }
+
+// Comes from rmt_pulse.c 
+// static
+void IRAM_ATTR EpdDriver::rmt_interrupt_handler(void *arg) {
+  // Maybe use Semaphores?
+  //rmt_tx_done = true;
+  RMT.int_clr.val = RMT.int_st.val;
+}
+
+void EpdDriver::rmt_pulse_init(gpio_num_t pin) {
+
+  row_rmt_config.rmt_mode = RMT_MODE_TX;
+  // currently hardcoded: use channel 0
+  row_rmt_config.channel = RMT_CHANNEL_1;
+
+  row_rmt_config.gpio_num = pin;
+  row_rmt_config.mem_block_num = 2;
+
+  // Divide 80MHz APB Clock by 8 -> .1us resolution delay
+  row_rmt_config.clk_div = 8;
+
+  row_rmt_config.tx_config.loop_en = false;
+  row_rmt_config.tx_config.carrier_en = false;
+  row_rmt_config.tx_config.carrier_level = RMT_CARRIER_LEVEL_LOW;
+  row_rmt_config.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
+  row_rmt_config.tx_config.idle_output_en = true;
+
+  #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 2, 0) && ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 0, 2)
+    #error "This driver is not compatible with IDF version 4.1.\nPlease use 4.0 or >= 4.2!"
+  #endif
+  // &gRMT_intr_handle
+  esp_intr_alloc(ETS_RMT_INTR_SOURCE, ESP_INTR_FLAG_LEVEL3,
+                 rmt_interrupt_handler, 0, NULL);
+
+  rmt_config(&row_rmt_config);
+  rmt_set_tx_intr_en(row_rmt_config.channel, true);
+}
+
+void IRAM_ATTR EpdDriver::pulse_ckv_ticks(uint16_t high_time_ticks,
+                               uint16_t low_time_ticks, bool wait) {
+  while (!rmt_tx_done) {
+  };
+  volatile rmt_item32_t *rmt_mem_ptr =
+      &(RMTMEM.chan[row_rmt_config.channel].data32[0]);
+  if (high_time_ticks > 0) {
+    rmt_mem_ptr->level0 = 1;
+    rmt_mem_ptr->duration0 = high_time_ticks;
+    rmt_mem_ptr->level1 = 0;
+    rmt_mem_ptr->duration1 = low_time_ticks;
+  } else {
+    rmt_mem_ptr->level0 = 1;
+    rmt_mem_ptr->duration0 = low_time_ticks;
+    rmt_mem_ptr->level1 = 0;
+    rmt_mem_ptr->duration1 = 0;
+  }
+  RMTMEM.chan[row_rmt_config.channel].data32[1].val = 0;
+  rmt_tx_done = false;
+  RMT.conf_ch[row_rmt_config.channel].conf1.mem_rd_rst = 1;
+  RMT.conf_ch[row_rmt_config.channel].conf1.mem_owner = RMT_MEM_OWNER_TX;
+  RMT.conf_ch[row_rmt_config.channel].conf1.tx_start = 1;
+  while (wait && !rmt_tx_done) {
+  };
+}
+
+void IRAM_ATTR EpdDriver::pulse_ckv_us(uint16_t high_time_us, uint16_t low_time_us,
+                            bool wait) {
+  pulse_ckv_ticks(10 * high_time_us, 10 * low_time_us, wait);
+}
+
+bool IRAM_ATTR EpdDriver::rmt_busy() { return !rmt_tx_done; }

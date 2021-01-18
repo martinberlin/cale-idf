@@ -21,9 +21,10 @@
 // ed097oc4.c in vroland C component:
 #include "esp_timer.h"
 #include "i2s_data_bus.h"
-#include "rmt_pulse.h"
 #include "xtensa/core-macros.h"
 #include "driver/gpio.h"
+// rmt_pulse
+#include "driver/rmt.h"
 
 // FIX: This should be in the epaper class
 // NOTE: IO needs to be aware of WIDTH / HEIGHT of epaper
@@ -320,6 +321,50 @@ class EpdDriver
       void IRAM_ATTR skip_row(uint8_t pipeline_finish_time);
       void IRAM_ATTR provide_out(OutputParams *params);
       void IRAM_ATTR feed_display(OutputParams *params);
+
+      // Source: rmt_pulse.c - Emit a pulse of precise length on a pin, using the RMT peripheral.
+      // the RMT channel configuration object
+      // static
+      rmt_config_t row_rmt_config;
+
+      // keep track of wether the current pulse is ongoing
+      volatile bool rmt_tx_done = true;
+      /**
+       * Initializes RMT Channel 0 with a pin for RMT pulsing.
+       * The pin will have to be re-initialized if subsequently used as GPIO.
+       */
+      void rmt_pulse_init(gpio_num_t pin);
+
+      /**
+       * Outputs a single pulse (high -> low) on the configured pin.
+       * This function will always wait for a previous call to finish.
+       *
+       * @param: high_time_us Pulse high time in us.
+       * @param: low_time_us Pulse low time in us.
+       * @param: wait Block until the pulse is finished.
+       */
+      void IRAM_ATTR pulse_ckv_us(uint16_t high_time_us, uint16_t low_time_us,
+                                  bool wait);
+      /**
+       * Indicates if the rmt is currently sending a pulse.
+       */
+      bool IRAM_ATTR rmt_busy();
+
+      /**
+       * Outputs a single pulse (high -> low) on the configured pin.
+       * This function will always wait for a previous call to finish.
+       *
+       * @param: high_time_us Pulse high time clock ticks.
+       * @param: low_time_us Pulse low time in clock ticks.
+       * @param: wait Block until the pulse is finished.
+       */
+      void IRAM_ATTR pulse_ckv_ticks(uint16_t high_time_us, uint16_t low_time_us,
+                                    bool wait);
+
+      /**
+       * Remote peripheral interrupt. Used to signal when transmission is done.
+       */
+      static void IRAM_ATTR rmt_interrupt_handler(void *arg);
 };
 
 #endif

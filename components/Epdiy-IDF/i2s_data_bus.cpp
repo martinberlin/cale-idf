@@ -1,12 +1,12 @@
 #include "i2s_data_bus.h"
 
 // Resets "Start Pulse" signal when the current row output is done.
-static void IRAM_ATTR i2s_int_hdl(void *arg) {
+void IRAM_ATTR I2SDataBus::i2s_int_hdl(void *arg) {
   i2s_dev_t *dev = &I2S1;
   if (dev->int_st.out_done) {
     gpio_set_level((gpio_num_t)CONFIG_STH, 1);
-    // Cannot access class member in static context
-    I2SDataBus::output_done = true;
+    // Cannot access class member in static context. Semaphores?
+    //output_done = true;
   }
   // Clear the interrupt. Otherwise, the whole device would hang.
   dev->int_clr.val = dev->int_raw.val;

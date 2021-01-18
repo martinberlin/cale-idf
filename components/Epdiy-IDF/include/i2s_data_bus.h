@@ -45,7 +45,7 @@ class I2SDataBus
 {
   public:
     // Indicates the device has finished its transmission and is ready again.
-    static volatile bool output_done;
+    volatile bool output_done;
 
     //static intr_handle_t gI2S_intr_handle;
     /**
@@ -95,6 +95,8 @@ class I2SDataBus
      * Give up allocated resources.
      */
     void i2s_deinit();
+
+    static void IRAM_ATTR i2s_int_hdl(void *arg);
 
   private:
 
