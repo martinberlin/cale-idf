@@ -77,20 +77,6 @@ enum DrawFlags {
   DRAW_BACKGROUND = 1 << 0,
 };
 
-/// Font properties.
-typedef struct {
-  /// Foreground color
-  uint8_t fg_color : 4;
-  /// Background color
-  uint8_t bg_color : 4;
-  /// Use the glyph for this codepoint for missing glyphs.
-  uint32_t fallback_glyph;
-  /// Additional flags, reserved for future use
-  uint32_t flags;
-} FontProperties;
-
-// Heap space to use for the EPD output lookup table, which
-// is calculated for each cycle.
 static uint8_t *conversion_lut;
 static QueueHandle_t output_queue;
 
@@ -106,9 +92,6 @@ typedef struct {
 
 static OutputParams fetch_params;
 static OutputParams feed_params;
-
-// status tracker for row skipping
-uint32_t skipping = 0;
 
 class EpdDriver
 {
@@ -250,6 +233,7 @@ class EpdDriver
     void reorder_line_buffer(uint32_t *line_data);
     // All rest for drawing functions and fonts handling will be done by Adafruit GFX
     
+    // NOTE: All this below should be **private** methods not accesible from class implementors
     // config_reg_v2 | Todo maybe a #ifdef will be used on CPP side to support multiple epapers
     void config_reg_init(epd_config_register_t *cfg);
     void IRAM_ATTR push_cfg(const epd_config_register_t *cfg);
@@ -324,6 +308,18 @@ class EpdDriver
       const uint8_t *line_data, 
       uint8_t *epd_input,
       enum DrawMode mode);
+
+    // Heap space to use for the EPD output lookup table, which
+      // is calculated for each cycle.
+
+      // status tracker for row skipping
+      uint32_t skipping = 0;
+
+      // Internal methods that feed display via I2S
+      void write_row(uint32_t output_time_dus);
+      void IRAM_ATTR skip_row(uint8_t pipeline_finish_time);
+      void IRAM_ATTR provide_out(OutputParams *params);
+      void IRAM_ATTR feed_display(OutputParams *params);
 };
 
 #endif

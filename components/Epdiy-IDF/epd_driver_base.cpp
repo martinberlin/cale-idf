@@ -99,25 +99,11 @@ const DRAM_ATTR uint32_t lut_1bpp_white[256] = {
   }
 #endif
 
-// output a row to the display. - static
-void write_row(uint32_t output_time_dus) {
-  skipping = 0;
-  //MISS
-  //epd_output_row(output_time_dus);
-}
 
-// skip a display row
-void IRAM_ATTR skip_row(uint8_t pipeline_finish_time) {
-  // output previously loaded row, fill buffer with no-ops.
-  if (skipping < 2) {
-    //MISS
-    //memset(epd_get_current_buffer(), 0, EPD_LINE_BYTES);
-    //epd_output_row(pipeline_finish_time);
-  } else {
-    //MISS
-    //epd_skip();
-  }
-  skipping++;
+// Constructor
+EpdDriver::EpdDriver(I2SDataBus& dio):DataBus(dio)
+{
+  printf("EpdDriver constructor\n");  
 }
 
 void EpdDriver::epd_push_pixels(Rect_t area, short time, int color) {
@@ -132,7 +118,7 @@ void EpdDriver::epd_push_pixels(Rect_t area, short time, int color) {
   }
   reorder_line_buffer((uint32_t *)row);
 
-  //epd_start_frame();
+  epd_start_frame();
 
   for (int i = 0; i < EPD_HEIGHT; i++) {
     // before are of interest: skip
@@ -140,11 +126,10 @@ void EpdDriver::epd_push_pixels(Rect_t area, short time, int color) {
       skip_row(time);
       // start area of interest: set row data
     } else if (i == area.y) {
-      //MISS
-      /* epd_switch_buffer();
+      epd_switch_buffer();
       memcpy(epd_get_current_buffer(), row, EPD_LINE_BYTES);
       epd_switch_buffer();
-      memcpy(epd_get_current_buffer(), row, EPD_LINE_BYTES); */
+      memcpy(epd_get_current_buffer(), row, EPD_LINE_BYTES);
 
       write_row(time * 10);
       // load nop row if done with area
@@ -363,7 +348,7 @@ void IRAM_ATTR EpdDriver::epd_draw_grayscale_image(Rect_t area, const uint8_t *d
   epd_draw_image(area, data, BLACK_ON_WHITE);
 }
 
-void IRAM_ATTR provide_out(OutputParams *params) {
+void IRAM_ATTR EpdDriver::provide_out(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
@@ -437,7 +422,7 @@ void IRAM_ATTR provide_out(OutputParams *params) {
   }
 }
 
-void IRAM_ATTR feed_display(OutputParams *params) {
+void IRAM_ATTR EpdDriver::feed_display(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
@@ -452,8 +437,8 @@ void IRAM_ATTR feed_display(OutputParams *params) {
       contrast_lut = contrast_cycles_4_white;
       break;
     }
-    //MISS
-    //epd_start_frame();
+    
+    epd_start_frame();
     for (int i = 0; i < EPD_HEIGHT; i++) {
       if (i < area.y || i >= area.y + area.height) {
         skip_row(contrast_lut[params->frame]);
@@ -465,8 +450,8 @@ void IRAM_ATTR feed_display(OutputParams *params) {
       }
       uint8_t output[EPD_WIDTH / 2];
       xQueueReceive(output_queue, output, portMAX_DELAY);
-      //MISS
-      //calc_epd_input_4bpp((uint32_t *)output, epd_get_current_buffer(), params->frame, conversion_lut);
+      
+      calc_epd_input_4bpp((uint32_t *)output, epd_get_current_buffer(), params->frame, conversion_lut);
       write_row(contrast_lut[params->frame]);
     }
     if (!skipping) {
@@ -474,8 +459,8 @@ void IRAM_ATTR feed_display(OutputParams *params) {
       // row.
       write_row(contrast_lut[params->frame]);
     }
-    //MISS
-    //epd_end_frame();
+    
+    epd_end_frame();
 
     xSemaphoreGive(params->done_smphr);
   }
@@ -484,8 +469,7 @@ void IRAM_ATTR feed_display(OutputParams *params) {
 void IRAM_ATTR EpdDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_t *ptr,
                                          enum DrawMode mode, int time,
                                          const bool *drawn_lines) {
-  //MISS
-  //epd_start_frame();
+  epd_start_frame();
   uint8_t line[EPD_WIDTH / 8];
   memset(line, 0, sizeof(line));
 
@@ -549,8 +533,7 @@ void IRAM_ATTR EpdDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_t *
       lp = line;
     }
 
-    //MISS
-    //calc_epd_input_1bpp(lp, epd_get_current_buffer(), mode);
+    calc_epd_input_1bpp(lp, epd_get_current_buffer(), mode);
     write_row(time);
     if (shifted) {
       memset(line, 0, sizeof(line));
@@ -559,7 +542,7 @@ void IRAM_ATTR EpdDriver::epd_draw_frame_1bit_lines(Rect_t area, const uint8_t *
   if (!skipping) {
     write_row(time);
   }
-  //epd_end_frame();
+  epd_end_frame();
 }
 
 void IRAM_ATTR EpdDriver::epd_draw_frame_1bit(Rect_t area, const uint8_t *ptr,
@@ -621,13 +604,15 @@ void EpdDriver::epd_init() {
   // Need to check this:
   // invalid use of member function 'void EpdDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
   // IF used inside class gives errorso now methods are out      v
+  /* 
   RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))provide_out,
                                            "epd_out", 1 << 12, &fetch_params, 5,
                                            NULL, 0));
 
   RTOS_ERROR_CHECK(xTaskCreatePinnedToCore((void (*)(void *))feed_display,
                                            "epd_render", 1 << 12, &feed_params,
-                                           5, NULL, 1));
+                                           5, NULL, 1)); 
+  */
 
   conversion_lut = (uint8_t *)heap_caps_malloc(1 << 16, MALLOC_CAP_8BIT);
   assert(conversion_lut != NULL);
@@ -853,4 +838,25 @@ void EpdDriver::cfg_poweroff(epd_config_register_t *cfg) {
   cfg->power_disable = true;
   push_cfg(cfg);
   // END POWEROFF
+}
+
+
+// Should be also inside the class but collides with CreateTask
+
+// output a row to the display. - static
+void EpdDriver::write_row(uint32_t output_time_dus) {
+  skipping = 0;
+  epd_output_row(output_time_dus);
+}
+
+// skip a display row
+void IRAM_ATTR EpdDriver::skip_row(uint8_t pipeline_finish_time) {
+  // output previously loaded row, fill buffer with no-ops.
+  if (skipping < 2) {
+    memset(epd_get_current_buffer(), 0, EPD_LINE_BYTES);
+    epd_output_row(pipeline_finish_time);
+  } else {
+    epd_skip();
+  }
+  skipping++;
 }

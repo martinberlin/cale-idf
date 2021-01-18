@@ -40,14 +40,14 @@ typedef struct {
   uint32_t epd_row_width;
 } i2s_bus_config;
 
-static intr_handle_t gI2S_intr_handle = NULL;
-// Indicates the device has finished its transmission and is ready again.
-volatile bool output_done = true;
 
 class I2SDataBus
 {
   public:
+    // Indicates the device has finished its transmission and is ready again.
+    static volatile bool output_done;
 
+    //static intr_handle_t gI2S_intr_handle;
     /**
      * Initialize the I2S data bus for communication
      * with a 8bit parallel display interface.
@@ -97,6 +97,8 @@ class I2SDataBus
     void i2s_deinit();
 
   private:
+
+    // Internal debugging
     bool debug_enabled = true;
     // The start pulse pin extracted from the configuration for use in the "done"
     gpio_num_t start_pulse_pin;
@@ -117,4 +119,7 @@ class I2SDataBus
 
     /// The I2S state instance.
     i2s_parallel_state_t i2s_state;
+
+    //static void IRAM_ATTR i2s_int_hdl(void *arg);
+    
 };

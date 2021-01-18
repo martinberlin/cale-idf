@@ -1,11 +1,12 @@
 #include "i2s_data_bus.h"
 
 // Resets "Start Pulse" signal when the current row output is done.
-void IRAM_ATTR i2s_int_hdl(void *arg) {
+static void IRAM_ATTR i2s_int_hdl(void *arg) {
   i2s_dev_t *dev = &I2S1;
   if (dev->int_st.out_done) {
     gpio_set_level((gpio_num_t)CONFIG_STH, 1);
-    output_done = true;
+    // Cannot access class member in static context
+    I2SDataBus::output_done = true;
   }
   // Clear the interrupt. Otherwise, the whole device would hang.
   dev->int_clr.val = dev->int_raw.val;
@@ -178,9 +179,9 @@ void I2SDataBus::i2s_bus_init(i2s_bus_config *cfg) {
   // enable "done" interrupt
   SET_PERI_REG_BITS(I2S_INT_ENA_REG(1), I2S_OUT_DONE_INT_ENA_V, 1,
                     I2S_OUT_DONE_INT_ENA_S);
-               
-  // register interrupt
-  esp_intr_alloc(ETS_I2S1_INTR_SOURCE, 0, i2s_int_hdl, 0, &gI2S_intr_handle);
+  
+  // register interrupt. Removing &gI2S_intr_handle since ooes not work in this context
+  esp_intr_alloc(ETS_I2S1_INTR_SOURCE, 0, i2s_int_hdl, 0, NULL);
 
   // Reset FIFO/DMA
   dev->lc_conf.in_rst = 1;
@@ -213,7 +214,7 @@ void I2SDataBus::i2s_bus_init(i2s_bus_config *cfg) {
 }
 
 void I2SDataBus::i2s_deinit() {
-  esp_intr_free(gI2S_intr_handle);
+  //esp_intr_free(gI2S_intr_handle);
 
   free(i2s_state.buf_a);
   free(i2s_state.buf_b);
