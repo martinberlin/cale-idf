@@ -36,6 +36,7 @@ set(srcs
     "epd.cpp"
     "epdspi.cpp"
     "epd4spi.cpp"
+    "epdParallel.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented

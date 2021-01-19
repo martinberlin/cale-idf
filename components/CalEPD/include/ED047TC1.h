@@ -8,7 +8,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include <string>
-#include <epd.h>
+#include <epdParallel.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
@@ -22,7 +22,7 @@
 // 1 byte of this color in the buffer
 // This needs to be refactored since this display uses 4 bit per pixel
 
-class Ed047TC1 : public Epd
+class Ed047TC1 : public EpdParallel
 {
   public:
     Ed047TC1();
@@ -35,6 +35,9 @@ class Ed047TC1 : public Epd
     void initFullUpdate();
     void initPartialUpdate();
     void clearScreen();
+    void clearArea(Rect_t area);
+    void powerOn();
+    void powerOff();
     
     // Not implemented
     //void fillScreen(uint16_t color);
@@ -47,20 +50,7 @@ class Ed047TC1 : public Epd
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
-    void _PowerOn();
-    void _writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen); // Waits for busy on each command
 
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
-    void _wakeUp();
-
-    void _wakeUp(uint8_t em);
-    void _sleep();
-
-    void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
-    // Command & data structs
-    static const epd_init_30 LUTDefault_full;
-    static const epd_init_30 LUTDefault_part;
-    static const epd_init_3 GDOControl;
 };

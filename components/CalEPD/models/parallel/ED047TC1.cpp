@@ -4,13 +4,10 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-// Partial Update Delay
-#define ED047TC1_PU_DELAY 100
-
 // Constructor
 Ed047TC1::Ed047TC1(): 
   Adafruit_GFX(ED047TC1_WIDTH, ED047TC1_HEIGHT),
-  Epd(ED047TC1_WIDTH, ED047TC1_HEIGHT)
+  EpdParallel(ED047TC1_WIDTH, ED047TC1_HEIGHT)
 {
   printf("Ed047TC1() %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
@@ -49,23 +46,8 @@ void Ed047TC1::clearScreen()
 
 }
 
-uint16_t Ed047TC1::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
-  printf("_setPartialRamArea not used in Ed047TC1");
-  return 0;
-}
-void Ed047TC1::_wakeUp(){
-  printf("_wakeUp not used in Ed047TC1");
-}
-
-/**
- * @deprecated It seems there is no need to do this for now
- */
-void Ed047TC1::_writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen) {
-  
-}
-
-void Ed047TC1::_wakeUp(uint8_t em){
-  
+void Ed047TC1::clearArea(Rect_t area) {
+  epd_clear_area(area);
 }
 
 void Ed047TC1::update()
@@ -73,22 +55,13 @@ void Ed047TC1::update()
   
 }
 
-void Ed047TC1::_PowerOn(void)
+void Ed047TC1::powerOn(void)
 {
   epd_poweron();
 }
 
-void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
-{
-  vTaskDelay(ED047TC1_PU_DELAY/portTICK_RATE_MS); 
-}
-
-void Ed047TC1::_waitBusy(const char* message){
-  
-}
-
-void Ed047TC1::_sleep(){
-  
+void Ed047TC1::powerOff(){
+  epd_poweroff();
 }
 
 void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
