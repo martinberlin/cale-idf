@@ -26,22 +26,20 @@ class Ed047TC1 : public EpdParallel
 {
   public:
     Ed047TC1();
+
+    uint8_t *framebuffer;
     uint8_t colors_supported = 1;
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-    
-    // EPD tests 
+
     void init(bool debug = false);
     void clearScreen();
     void clearArea(Rect_t area);
-
-    void drawPixel(int x, int y, uint8_t color, uint8_t *framebuffer); // , uint8_t *framebuffer
     void powerOn();
     void powerOff();
     
-    // Not implemented
-    //void fillScreen(uint16_t color);
-    void update(uint8_t *framebuffer);
+    //void fillScreen(uint16_t color); // Not implemented
+    void update(); //uint8_t *framebuffer
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 

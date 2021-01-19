@@ -11,12 +11,13 @@ Ed047TC1::Ed047TC1():
 {
   printf("Ed047TC1() %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
-  //framebuffer = (uint8_t *)heap_caps_malloc(EPD_WIDTH * EPD_HEIGHT / 2, MALLOC_CAP_SPIRAM);
-  //memset(framebuffer, 0xFF, EPD_WIDTH * EPD_HEIGHT / 2);
+
+  framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
+  memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
 
 }
 
-void Ed047TC1::drawPixel(int x, int y, uint8_t color, uint8_t *framebuffer) {
+void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
   epd_draw_pixel(x, y, color, framebuffer);
 }
 
@@ -49,7 +50,7 @@ void Ed047TC1::clearArea(Rect_t area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1::update(uint8_t *framebuffer)
+void Ed047TC1::update()
 {
   epd_draw_grayscale_image(epd_full_screen(), framebuffer);
 }
@@ -84,7 +85,7 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
-void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
+/* void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -111,4 +112,4 @@ void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
     } else {
     _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
     }
-}
+} */
