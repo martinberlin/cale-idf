@@ -682,7 +682,7 @@ void IRAM_ATTR epd_draw_grayscale_image(Rect_t area, const uint8_t *data) {
 void IRAM_ATTR provide_out(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
-    printf("provide_out taken\n");
+    //printf("provide_out taken\n");
 
     uint8_t line[EPD_WIDTH / 2];
     memset(line, 255, EPD_WIDTH / 2);
@@ -757,7 +757,7 @@ void IRAM_ATTR provide_out(OutputParams *params) {
 void IRAM_ATTR feed_display(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
-    printf("feed_display taken\n");
+    printf("Feed\n");
 
     Rect_t area = params->area;
     const int *contrast_lut = contrast_cycles_4;

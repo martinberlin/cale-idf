@@ -11,14 +11,13 @@ Ed047TC1::Ed047TC1():
 {
   printf("Ed047TC1() %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
+  //framebuffer = (uint8_t *)heap_caps_malloc(EPD_WIDTH * EPD_HEIGHT / 2, MALLOC_CAP_SPIRAM);
+  //memset(framebuffer, 0xFF, EPD_WIDTH * EPD_HEIGHT / 2);
+
 }
 
-void Ed047TC1::initFullUpdate(){
-    printf("Not implemented yet\n");
-}
-
-void Ed047TC1::initPartialUpdate(){
-    printf("Not implemented yet\n");
+void Ed047TC1::drawPixel(int x, int y, uint8_t color, uint8_t *framebuffer) {
+  epd_draw_pixel(x, y, color, framebuffer);
 }
 
 //Initialize the display
@@ -50,9 +49,9 @@ void Ed047TC1::clearArea(Rect_t area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1::update()
+void Ed047TC1::update(uint8_t *framebuffer)
 {
-  
+  epd_draw_grayscale_image(epd_full_screen(), framebuffer);
 }
 
 void Ed047TC1::powerOn(void)
