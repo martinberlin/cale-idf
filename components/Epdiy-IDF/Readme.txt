@@ -28,6 +28,26 @@ display.update();
 
 - - - - - - - - - - - - - - - - 
 
+NEW IDEA: Plan B -> No C++ refactoring. Just use Epdiy "as is" and make a C++ wrapper around it. 
+It does not make too much sense to refactor it all when it's evolving and supporting more epapers it also runs
+perfectly fine as it is. So it will be a much more seasoned idea to do plan B.
+The old idea and start of the refactoring is inconsistent and just for history purpouses has been moved here:
+https://github.com/martinberlin/cpp-utils/tree/master/epdiy_oop_discarded
+
+
+CONFLICTS:
+
+../components/Adafruit-GFX/GFXfontDiy.h:15:3: note: previous declaration as 'typedef struct GFXglyph GFXglyph'
+ } GFXglyph
+
+ Needs to be renamed since it's used by Adafruit. Proposed GFXglyphDiy
+
+ ../components/Adafruit-GFX/GFXfontDiy.h:22:3: note: previous declaration as 'typedef struct GFXfontDiy GFXfontDiy'
+ } GFXfontDiy;
+
+Needs to be renamed since it's used by Adafruit. Proposed GFXfontDiyDiy
+
+
 This directory is empty since the class is still in the conception phase and holds only the beginning of the Kconfig PIN configurations.
 
 Program flow (Instantiation from Epdiy epaper TTGO 4.7)

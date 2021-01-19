@@ -1,12 +1,8 @@
-set(srcs 
-    # Common base classes that every model has to inherit
-    "epd_driver_base.cpp"
-    "i2s_data_bus.cpp"
-    )
+set(app_sources "epd_driver.c"
+                "ed097oc4.c"
+                "font.c"
+                "i2s_data_bus.c"
+                "rmt_pulse.c"
+				"epd_temperature.c")
 
-# Not sure what model is the Touch: To be confirmed later
-idf_component_register(SRCS ${srcs}
-                    REQUIRES "Adafruit-GFX"
-                    REQUIRES "FT6X36-IDF"
-                    INCLUDE_DIRS "include"
-)
+idf_component_register(SRCS ${app_sources} INCLUDE_DIRS "include" REQUIRES esp_adc_cal)

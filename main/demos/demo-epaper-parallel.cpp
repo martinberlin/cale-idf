@@ -2,13 +2,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 // Needs Epdiy component for paralell epapers driven by I2S Databus driver
-#include "i2s_data_bus.h"
-// Common methods that all I2Sbus epapers should inherit
-#include "epd_driver_base.h"
+#include "ED047TC1.h"
 
-// I2S data bus by vroland
-I2SDataBus io; // Needs to be injected in EpdDriver
-EpdDriver epaper(io);
+Ed047TC1 display;
 
 extern "C"
 {
@@ -17,8 +13,8 @@ extern "C"
 
 void app_main(void)
 {
-   epaper.epd_init();
-   epaper.epd_poweron();
-   epaper.epd_clear();
-   printf("Simple test: Not usable for now\n");
+   display.init(true);
+   display.clearScreen();
+
+   printf("Simple test: Just doing a bridge class that implements epd_* functions\n");
 }

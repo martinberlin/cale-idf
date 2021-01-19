@@ -27,6 +27,9 @@ set(srcs
     "models/plasticlogic/plasticlogic021.cpp"
     "models/plasticlogic/plasticlogic031.cpp"
 
+    # Parallel epapers supported by Epdiy driver (Component)
+    "models/parallel/ED047TC1.cpp"
+
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
     # Common base classes
@@ -39,6 +42,7 @@ set(srcs
 idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
+                    REQUIRES "Epdiy-IDF"
                     INCLUDE_DIRS "include"
 )
 
