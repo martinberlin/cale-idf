@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "firasans.h"
 // Only for parallel epaper displays driven by I2S DataBus (No SPI)
 // NOTE: This needs Epdiy component https://github.com/vroland/epdiy
 // Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
@@ -10,6 +9,10 @@
 // In the same sectiion Component Config -> ESP32 Specifics -> Enable PSRAM
 #include "ED047TC1.h"
 Ed047TC1 display;
+
+// Include a font
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M36pt7b.h>
 
 extern "C"
 {
@@ -21,7 +24,7 @@ void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 void app_main(void)
 {
    display.init(true);
-   
+   //display.setRotation(1); // Working
    // Clear all screen to white
    display.clearScreen();
 
@@ -39,6 +42,12 @@ void app_main(void)
       }
    }
 
+   // Working!
+   display.setCursor(30,200);
+   display.setFont(&Ubuntu_M36pt7b);
+   display.println("Hello world");
+   display.setCursor(30,250);
+   display.setFont(&Ubuntu_M24pt8b);
+   display.println("This is a TTGO T5 4.7 inch epaper");
    display.update();
-   printf("Simple test: Just doing a bridge class that implements epd_* functions\n");
 }

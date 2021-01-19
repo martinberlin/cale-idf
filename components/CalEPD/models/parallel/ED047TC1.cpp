@@ -17,9 +17,9 @@ Ed047TC1::Ed047TC1():
 
 }
 
-void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
+/* void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
   epd_draw_pixel(x, y, color, framebuffer);
-}
+} */
 
 //Initialize the display
 void Ed047TC1::init(bool debug)
@@ -64,28 +64,8 @@ void Ed047TC1::powerOff(){
   epd_poweroff();
 }
 
-void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
-{
-  switch (getRotation())
-  {
-    case 1:
-      swap(x, y);
-      swap(w, h);
-      x = ED047TC1_WIDTH - x - w - 1;
-      break;
-    case 2:
-      x = ED047TC1_WIDTH - x - w - 1;
-      y = ED047TC1_HEIGHT - y - h - 1;
-      break;
-    case 3:
-      swap(x, y);
-      swap(w, h);
-      y = ED047TC1_HEIGHT - y - h - 1;
-      break;
-  }
-}
 
-/* void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -104,12 +84,7 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
       y = ED047TC1_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * ED047TC1_WIDTH / 8;
 
-  // This is the trick to draw colors right. Genious Jean-Marc
-  if (color) {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    } else {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    }
-} */
+  epd_draw_pixel(x, y, color, framebuffer);
+
+}

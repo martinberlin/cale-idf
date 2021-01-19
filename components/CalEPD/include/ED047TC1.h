@@ -49,7 +49,4 @@ class Ed047TC1 : public EpdParallel
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
-
-    void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-
 };
