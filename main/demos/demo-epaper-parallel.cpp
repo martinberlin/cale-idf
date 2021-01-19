@@ -19,5 +19,6 @@ void app_main(void)
 {
    epaper.epd_init();
    epaper.epd_poweron();
-   printf("Still not implemented");
+   epaper.epd_clear();
+   printf("Simple test: Not usable for now\n");
 }

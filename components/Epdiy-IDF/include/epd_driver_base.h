@@ -77,10 +77,20 @@ enum DrawFlags {
   /// when calculating the size.
   DRAW_BACKGROUND = 1 << 0,
 };
+typedef struct {
+      bool ep_latch_enable : 1;
+      bool power_disable : 1;
+      bool pos_power_enable : 1;
+      bool neg_power_enable : 1;
+      bool ep_stv : 1;
+      bool ep_scan_direction : 1;
+      bool ep_mode : 1;
+      bool ep_output_enable : 1;
+    } epd_config_register_t;
 
 static uint8_t *conversion_lut;
 static QueueHandle_t output_queue;
-
+// Parameters that are passed to "data sink" tasks
 typedef struct {
   const uint8_t *data_ptr;
   SemaphoreHandle_t done_smphr;
@@ -91,25 +101,15 @@ typedef struct {
   const bool *drawn_lines;
 } OutputParams;
 
-static OutputParams fetch_params;
-static OutputParams feed_params;
 
 class EpdDriver
 {
   public:
     EpdDriver(I2SDataBus& DataBus);
 
-    typedef struct {
-      bool ep_latch_enable : 1;
-      bool power_disable : 1;
-      bool pos_power_enable : 1;
-      bool neg_power_enable : 1;
-      bool ep_stv : 1;
-      bool ep_scan_direction : 1;
-      bool ep_mode : 1;
-      bool ep_output_enable : 1;
-    } epd_config_register_t;
-  
+    OutputParams fetch_params;
+    OutputParams feed_params;
+
     /** Initialize the ePaper display */
     void epd_init();
 
@@ -319,7 +319,9 @@ class EpdDriver
       // Internal methods that feed display via I2S
       void write_row(uint32_t output_time_dus);
       void IRAM_ATTR skip_row(uint8_t pipeline_finish_time);
-      void IRAM_ATTR provide_out(OutputParams *params);
+      
+      // Independant from the class right now: 
+      //void IRAM_ATTR provide_out(OutputParams *params);
       void IRAM_ATTR feed_display(OutputParams *params);
 
       // Source: rmt_pulse.c - Emit a pulse of precise length on a pin, using the RMT peripheral.

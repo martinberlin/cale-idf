@@ -348,7 +348,12 @@ void IRAM_ATTR EpdDriver::epd_draw_grayscale_image(Rect_t area, const uint8_t *d
   epd_draw_image(area, data, BLACK_ON_WHITE);
 }
 
-void IRAM_ATTR EpdDriver::provide_out(OutputParams *params) {
+// EpdDriver::  Try to use this outside class
+void IRAM_ATTR provide_out(OutputParams *params) {
+  // NOTE: Outside the class params are received correctly. As a class member no (Why? No idea)
+  Rect_t area = params->area;
+  printf("fetch_params area.w:%d h:%d \n", area.width, area.height);
+
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
@@ -423,11 +428,16 @@ void IRAM_ATTR EpdDriver::provide_out(OutputParams *params) {
 }
 
 void IRAM_ATTR EpdDriver::feed_display(OutputParams *params) {
+  // NOTE: Outside the class params are received correctly. As a class member no (Why? No idea)
+  Rect_t area = params->area;
+  printf("feed_params area.w:%d h:%d \n", area.width, area.height);
+
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
 
     Rect_t area = params->area;
     const int *contrast_lut = contrast_cycles_4;
+
     switch (params->mode) {
     case WHITE_ON_WHITE:
     case BLACK_ON_WHITE:
@@ -601,18 +611,22 @@ void EpdDriver::epd_init() {
   feed_params.done_smphr = xSemaphoreCreateBinary();
   feed_params.start_smphr = xSemaphoreCreateBinary();
 
+  //Test, works when provide_out is defined outside class
+  Rect_t area = {.x = 0, .y = 0, .width = EPD_WIDTH, .height = EPD_HEIGHT};
+  fetch_params.area = area;
+  feed_params.area = area;
+
   // Need to check this:  
   // error: cannot convert 'void (EpdDriver::*)(OutputParams*)' to 'TaskFunction_t' {aka 'void (*)(void*)'}
   // invalid use of member function 'void EpdDriver::provide_out(OutputParams*)' (did you forget the '()' ?)
   // IF used inside class gives errorso now methods are out      v
-  // HANGS here in an eternal loop: 0x40083f7a: EpdDriver::provide_out(OutputParams*) 
-  xTaskCreatePinnedToCore((void (*)(void *)) &EpdDriver::provide_out,
-                                           "epd_out", 1 << 12, &fetch_params, 5, NULL, 0);
+  // HANGS here in an eternal loop: 0x40083f7a: void (*)(void *)) &EpdDriver::provide_out
+  xTaskCreatePinnedToCore((void (*)(void *)) provide_out, "epd_out", 1 << 12, &fetch_params, 5, NULL, 0);
 
-  xTaskCreatePinnedToCore((void (*)(void *)) &EpdDriver::feed_display,
-                                           "epd_render", 1 << 12, &feed_params, 5, NULL, 1); 
+  // This cannot be out from class since calls methods
+  // Using &EpdDriver::feed_display calls the method, but does not pass the feed_params
+  xTaskCreatePinnedToCore((void (*)(void *)) &EpdDriver::feed_display, "epd_render", 1 << 12, &feed_params, 5, NULL, 1); 
   
-
   conversion_lut = (uint8_t *)heap_caps_malloc(1 << 16, MALLOC_CAP_8BIT);
   assert(conversion_lut != NULL);
   output_queue = xQueueCreate(32, EPD_WIDTH / 2);
