@@ -11,7 +11,6 @@
 #include <epdParallel.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include <gdew_colors.h>
 #include "epd_driver.h"
 
 #define HAS_16_LEVELS_GRAY 1
@@ -23,7 +22,6 @@
 #define EPD_WHITISH 223
 #define EPD_SLGRAY 200
 #define EPD_LGRAY 150
-
 #define EPD_GRAY 100
 #define EPD_DGRAY 50
 #define EPD_SDGRAY 25
