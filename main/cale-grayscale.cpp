@@ -31,18 +31,25 @@
 //Gdew027w3 display(io);
 //Gdew075T8 display(io);
 //Gdew042t2 display(io);
-#include <plasticlogic021.h>
-EpdSpi2Cs io;
+//#include <plasticlogic021.h>
+//EpdSpi2Cs io;
 //PlasticLogic011 display(io);
 //PlasticLogic014 display(io);
-PlasticLogic021 display(io);
+//PlasticLogic021 display(io);
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 /* // Otherwise you will run out of DRAM very shortly!
 #include "wave12i48.h" // Only to use with Edp4Spi IO
 Epd4Spi io;
 Wave12I48 display(io); */
-
+// PARALLEL Epapers driven by component Epdiy
+// NOTE: This needs Epdiy component https://github.com/vroland/epdiy
+// Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
+// Display type: LILIGO 4.7 ED047TC1
+// Board: LILIGO T5-4.7 Epaper
+// In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
+#include "parallel/ED047TC1.h"
+Ed047TC1 display;
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
 
@@ -580,6 +587,7 @@ void app_main(void)
     
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init();
+    display.clearScreen();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 

@@ -18,7 +18,11 @@
 #define ED047TC1_WIDTH 960
 #define ED047TC1_HEIGHT 540
 
-#define ED047TC1_BUFFER_SIZE (uint32_t(ED047TC1_WIDTH) * uint32_t(ED047TC1_HEIGHT) / 8)
+// COLOR defines
+#define EPD_WHITE 255
+#define EPD_LGRAY 150
+#define EPD_DGRAY 50
+#define EPD_BLACK 0
 // 1 byte of this color in the buffer
 // This needs to be refactored since this display uses 4 bit per pixel
 
@@ -40,12 +44,12 @@ class Ed047TC1 : public EpdParallel
     
     void fillScreen(uint16_t color);
     void update(enum DrawMode mode = BLACK_ON_WHITE);
+    
     // Partial update of rectangle from buffer to screen, does not power off
+    // Pending implementation
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
   private:
-    uint8_t _buffer[ED047TC1_BUFFER_SIZE];
-    
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;
