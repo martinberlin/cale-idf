@@ -14,15 +14,21 @@
 #include <gdew_colors.h>
 #include "epd_driver.h"
 
-// Controller: IL3829
+#define HAS_16_LEVELS_GRAY 1
 #define ED047TC1_WIDTH 960
 #define ED047TC1_HEIGHT 540
 
-// COLOR defines
+// COLOR defines (Only 8 but actually this epapers have 16 levels)
 #define EPD_WHITE 255
+#define EPD_WHITISH 223
+#define EPD_SLGRAY 200
 #define EPD_LGRAY 150
+
+#define EPD_GRAY 100
 #define EPD_DGRAY 50
+#define EPD_SDGRAY 25
 #define EPD_BLACK 0
+
 // 1 byte of this color in the buffer
 // This needs to be refactored since this display uses 4 bit per pixel
 

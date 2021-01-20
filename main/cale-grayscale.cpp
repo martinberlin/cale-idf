@@ -102,12 +102,36 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
     return result;
 }
 /** COLOR Boundaries for gray 
- *  0x00:Black  0x55:DGray  0xAA:LGray  0xFF White
+ *  0x00:Black 0x55:DGray  0xAA:LGray  0xFF White  -> only 4 grayscales
+ * 
+ *  For 8 gray-levels:
+ *  0: Black 32: DGray  64: Gray  96: LGRAY C8: SLGRAY DF: Whitish FF: White 
  **/
-uint8_t lgray_lb = 0x56; // Near to dark gray
-uint8_t lgray_hb = 0xFA; // Almost white
-uint8_t dgray_lb = 0x01; // Near to black
-uint8_t dgray_hb = 0xA9;
+#ifdef HAS_16_LEVELS_GRAY
+    uint8_t wgray_hb = 0xF0; // 240 Near to white
+    uint8_t wgray_lb = 0xC9; // 201 Near to super light gray
+ 
+    uint8_t slgray_hb = 0xC9;// 201 Near to whitish
+    uint8_t slgray_lb = 0x96;// 150 
+
+    uint8_t lgray_hb = 0x96; // 150 Near to light gray
+    uint8_t lgray_lb = 0x64; // 100 Near to gray
+    
+    uint8_t gray_hb = 0x64;  // 101 Near to light gray
+    uint8_t gray_lb = 0x32;  // 50 Near to dark gray
+    
+    uint8_t dgray_hb = 0x32; // 50 Near to light gray
+    uint8_t dgray_lb = 0x19; // Near to super dark
+
+    uint8_t sdgray_hb = 0x19; // 50 Near to dark gray
+    uint8_t sdgray_lb = 0x0A; // Near to black
+
+#else
+    uint8_t lgray_lb = 0x56; // Near to dark gray
+    uint8_t lgray_hb = 0xFA; // Almost white
+    uint8_t dgray_lb = 0x01; // Near to black
+    uint8_t dgray_hb = 0xA9;
+#endif
 
 uint32_t rowSize;
 uint32_t rowByteCounter;
@@ -116,7 +140,7 @@ uint16_t h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
-bool whitish, color_lgray, color_dgray;
+bool whitish, color_slgray, color_lgray, color_gray, color_dgray, color_sdgray;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
@@ -132,9 +156,17 @@ uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
-uint8_t mono_palette_buffer[max_palette_pixels / 8];  // palette buffer for depth <= 8 b/w
-uint8_t lgray_palette_buffer[max_palette_pixels / 8]; // Light gray
-uint8_t dgray_palette_buffer[max_palette_pixels / 8]; // Dark  gray
+
+uint8_t mono_palette_buffer[max_palette_pixels / 8];         // palette buffer for depth <= 8 b/w
+uint8_t whitish_palette_buffer[max_palette_pixels / 8];      // EPD_WHITISH almost white
+uint8_t lgray_palette_buffer[max_palette_pixels / 8];        // EPD_LGRAY light
+uint8_t dgray_palette_buffer[max_palette_pixels / 8];        // EPD_DGRAY dark
+#ifdef HAS_16_LEVELS_GRAY
+    uint8_t slgray_palette_buffer[max_palette_pixels / 8];   // EPD_SLGRAY super light
+    uint8_t gray_palette_buffer[max_palette_pixels / 8];     // EPD_GRAY
+    uint8_t sdgray_palette_buffer[max_palette_pixels / 8];   // EPD_SDGRAY super dark
+#endif
+
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
@@ -241,20 +273,39 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     red = output_buffer[bPointer++];
                     bPointer++;
 
-                    whitish = ((red > 0x80) && (green > 0x80) && (blue > 0x80));
-                    // Balanced with boundaries defined in global COLORS 
-                    color_lgray = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb); // EPD_LGRAY
-                    color_dgray = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb); // EPD_DGRAY                                     
-                    
+                // Balanced with boundaries defined in global COLORS                               
+                    #ifdef HAS_16_LEVELS_GRAY
+                      whitish = ((red > 0xF0) && (green > 0xF0) && (blue > 0xF0));
+                      color_slgray = (red > slgray_lb && red < slgray_hb) || (green> slgray_lb && green < slgray_hb) || (blue > slgray_lb && blue < slgray_hb);  // EPD_SLGRAY
+                      color_lgray  = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb);        // EPD_LGRAY
+                      color_gray   = (red > gray_lb && red < gray_hb) || (green> gray_lb && green < gray_hb) || (blue > gray_lb && blue < gray_hb);              // EPD_GRAY
+                      color_dgray  = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb);       // EPD_DGRAY
+                      color_sdgray = (red > sdgray_lb && red < sdgray_hb) || (green > sdgray_lb && green < sdgray_hb) || (blue > sdgray_lb && blue < sdgray_hb);   // EPD_SDGRAY   
+                    #else
+                      whitish = ((red > 0x80) && (green > 0x80) && (blue > 0x80));
+                      color_lgray = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb); // EPD_LGRAY
+                      color_dgray = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb); // EPD_DGRAY   
+                    #endif
+
                     if (0 == pn % 8) {
                         mono_palette_buffer[pn / 8] = 0;
                         lgray_palette_buffer[pn / 8] = 0;
                         dgray_palette_buffer[pn / 8] = 0;
+                        #ifdef HAS_16_LEVELS_GRAY
+                        gray_palette_buffer[pn / 8] = 0;
+                        slgray_palette_buffer[pn / 8] = 0;
+                        sdgray_palette_buffer[pn / 8] = 0;
+                        #endif
                         }
                     
                     mono_palette_buffer[pn / 8] |= whitish << pn % 8;                        
                     lgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
                     dgray_palette_buffer[pn / 8] |= color_dgray << pn % 8;
+                    #ifdef HAS_16_LEVELS_GRAY
+                      gray_palette_buffer[pn / 8] |= color_gray << pn % 8;                        
+                      slgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
+                      sdgray_palette_buffer[pn / 8] |= color_sdgray << pn % 8;
+                    #endif
 
                     if (color_lgray) {
                         printf("pn: %d LGRAY: %x\n",pn,color_lgray);
@@ -349,6 +400,20 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     {
                         color = EPD_DGRAY;
                     }
+                    #ifdef HAS_16_LEVELS_GRAY
+                        else if (color_slgray)
+                        {
+                            color = EPD_SLGRAY;
+                        }
+                        else if (color_gray)
+                        {
+                            color = EPD_GRAY;
+                        }
+                        else if (color_sdgray)
+                        {
+                            color = EPD_SDGRAY;
+                        }
+                    #endif
                     
                     else
                     {
