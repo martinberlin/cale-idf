@@ -1,4 +1,4 @@
-#include "ED047TC1.h"
+#include "parallel/ED047TC1.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
@@ -31,28 +31,23 @@ void Ed047TC1::init(bool debug)
     epd_poweron();
 }
 
-//void Ed047TC1::fillScreen(uint16_t color)
+void Ed047TC1::fillScreen(uint16_t color) {
+  // Same as: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
+  epd_fill_rect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color, framebuffer);
+}
 
 void Ed047TC1::clearScreen()
 {
   epd_clear();
-  return;
-  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
-  /* uint8_t data = (color == EPD_BLACK) ? ED047TC1_8PIX_BLACK : ED047TC1_8PIX_WHITE;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
-  {
-    _buffer[x] = data;
-  } */
-
 }
 
 void Ed047TC1::clearArea(Rect_t area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1::update()
+void Ed047TC1::update(enum DrawMode mode)
 {
-  epd_draw_grayscale_image(epd_full_screen(), framebuffer);
+  epd_draw_image(epd_full_screen(), framebuffer, mode);
 }
 
 void Ed047TC1::powerOn(void)

@@ -6,8 +6,8 @@
 // Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
 // Display type: LILIGO 4.7 ED047TC1
 // Board: LILIGO T5-4.7 Epaper
-// In the same sectiion Component Config -> ESP32 Specifics -> Enable PSRAM
-#include "ED047TC1.h"
+// In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
+#include "parallel/ED047TC1.h"
 Ed047TC1 display;
 
 // Include a font
@@ -24,10 +24,16 @@ void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 void app_main(void)
 {
    display.init(true);
-   //display.setRotation(1); // Working
+   //display.setRotation(1); // Rotate screen °90
+
    // Clear all screen to white
    display.clearScreen();
+   
+   delay(1000);
 
+   // Fillscreen with gray
+   display.fillScreen(230);
+   display.update();
    delay(1000);
 
    // Draw some rectangles
@@ -43,6 +49,7 @@ void app_main(void)
    }
 
    // Working!
+   display.setTextColor(255);
    display.setCursor(30,200);
    display.setFont(&Ubuntu_M36pt7b);
    display.println("Hello world");

@@ -38,8 +38,8 @@ class Ed047TC1 : public EpdParallel
     void powerOn();
     void powerOff();
     
-    //void fillScreen(uint16_t color); // Not implemented
-    void update(); //uint8_t *framebuffer
+    void fillScreen(uint16_t color);
+    void update(enum DrawMode mode = BLACK_ON_WHITE);
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
