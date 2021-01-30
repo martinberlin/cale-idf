@@ -18,14 +18,16 @@
 // Controller: Unknown
 #define WAVE5I7COLOR_WIDTH 600
 #define WAVE5I7COLOR_HEIGHT 448
-#define WAVE5I7COLOR_BUFFER_SIZE (uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 8)
+#define WAVE5I7COLOR_BUFFER_SIZE (uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2)
 
 class Wave5i7Color : public Epd
 {
   public:
    
     Wave5i7Color(EpdSpi& IO);
-    uint8_t colors_supported = 3;
+    // Public properties for this display
+    const uint8_t colors_supported = 7;
+    const bool has_partial_update = false;
     
     void init(bool debug = false);
     void drawPixel(int16_t x, int16_t y, uint16_t color);
@@ -35,14 +37,13 @@ class Wave5i7Color : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _black_buffer[WAVE5I7COLOR_BUFFER_SIZE];
-    uint8_t _red_buffer[WAVE5I7COLOR_BUFFER_SIZE];
+    uint8_t _buffer[WAVE5I7COLOR_BUFFER_SIZE];
 
     bool _initial = true;
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-
-    static const epd_init_4 epd_resolution;
+    void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    void _send8pixel(uint8_t black_data, uint8_t color_data);
 };

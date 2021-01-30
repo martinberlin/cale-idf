@@ -1,4 +1,5 @@
 // Epaper: 5.65inch ACeP 7-Color  https://www.waveshare.com/product/displays/e-paper/5.65inch-e-paper-module-f.htm
+// This epaper like most color models does not support partialUpdate
 #include "color/wave5i7Color.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,112 +30,85 @@ void Wave5i7Color::init(bool debug)
 
 void Wave5i7Color::fillScreen(uint16_t color)
 {
-  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_black_buffer));
+  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
 }
 
 void Wave5i7Color::_wakeUp(){
   IO.reset(10);
   _waitBusy("epd_wakeup reset");  //waiting for the electronic paper IC to release the idle signal
-    IO.cmd(0x12);     //SWRESET
-  _waitBusy("epd_wakeup swreset");  //waiting for the electronic paper IC to release the idle signal
 
-  IO.cmd(0x74);
-  IO.data(0x54);
-  IO.cmd(0x7E);
-  IO.data(0x3B);
-  IO.cmd(0x2B);  // Reduce glitch under ACVCOM  
-  IO.data(0x04);
-  IO.data(0x63);
-
-  IO.cmd(0x0C);  // Soft start setting
-  IO.data(0x8B);           
-  IO.data(0x9C);
-  IO.data(0x96);
-  IO.data(0x0F);
-
-  IO.cmd(0x01);  // Set MUX as 300
-  IO.data(0x2B);           
-  IO.data(0x01);
-  IO.data(0x00);     
-
-  IO.cmd(0x11);  // Data entry mode
-  IO.data(0x01);
-  IO.cmd(0x44);
-  IO.data(0x00); // RAM x address start at 0
-  IO.data(0x31); // RAM x address end at 31h(49+1)*8->400
-  IO.cmd(0x45); 
-  IO.data(0x2B);   // RAM y address start at 12Bh     
-  IO.data(0x01);
-  IO.data(0x00); // RAM y address end at 00h     
+  IO.cmd(0x01); //POWER SETTING
+  IO.data(0x37); 
   IO.data(0x00);
-  IO.cmd(0x3C); // board
-  IO.data(0x01); // HIZ
 
-  IO.cmd(0x18);
-  IO.data(0X80);
-  IO.cmd(0x22);
-  IO.data(0XB1);  //Load Temperature and waveform setting.
-  IO.cmd(0x20);
-  //waiting for the electronic paper IC to release the idle signal
-  _waitBusy("epd_wakeup swreset");
-  
+  IO.cmd(0X00); //PANNEL SETTING
+  IO.data(0xCF);
+  IO.data(0x08);
 
-  IO.cmd(0x4E); 
+  IO.cmd(0x06); //boost
+  IO.data(0xc7);
+  IO.data(0xcc);
+  IO.data(0x28);
+
+  IO.cmd(0x30);
+  IO.data(0x3c); //PLL:    0-15:0x3C, 15+:0x3A
+
+  IO.cmd(0X41); //TEMPERATURE SETTING
   IO.data(0x00);
-  IO.cmd(0x4F); 
-  IO.data(0x2B);
-  IO.data(0x01);
+
+  IO.cmd(0X50); //VCOM AND DATA INTERVAL SETTING
+  IO.data(0x77);
+
+  IO.cmd(0X60);  //TCON SETTING
+  IO.data(0x22);
+
+  IO.cmd(0x61);  // Resolution setting 600*448
+  IO.data(0x02); //source 600
+  IO.data(0x58);
+  IO.data(0x01); //gate 448
+  IO.data(0xc0);
+  IO.cmd(0X82);  //VCOM VOLTAGE SETTING
+
+  IO.data(0x28);    //all temperature  range
+  IO.cmd(0xe5); //FLASH MODE
+  IO.data(0x03);
 }
 
 void Wave5i7Color::update()
 {
+  printf("display.update() called\n");
+
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
+  IO.cmd(0x04); // Power on
+  _waitBusy("Power on");
   
-  // BLACK: Write RAM for black(0)/white (1)
-  IO.cmd(0x24);
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint16_t i = 0;
-  uint8_t xLineBytes = WAVE5I7COLOR_WIDTH/8;
-  uint8_t x1buf[xLineBytes];
-  // Curiosity doing it x++ is mirrored
+  // Needed? Is on GxEPD2 but this epaper does not suport partial updates
+  //IO.cmd(0x91); // Partial in
+  //_setPartialRamArea(0, 0, WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT);
+  IO.cmd(0x10);
 
-    for(uint16_t y =  1; y <= WAVE5I7COLOR_HEIGHT; y++) {
-        for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : 0xFF;
-          x1buf[x-1] = data;
-          if (x==xLineBytes) { // Flush the X line buffer to SPI
-            IO.data(x1buf,sizeof(x1buf));
-          }
-          ++i;
-        }
-    }
-  
-  // RED: Write RAM for red(1)/white (0)
-  i = 0;
-  IO.cmd(0x26);
-    for(uint16_t y =  1; y <= WAVE5I7COLOR_HEIGHT; y++) {
-        for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : 0xFF;
-          x1buf[x-1] = data;
-          if (x==xLineBytes) {
-            IO.data(x1buf,sizeof(x1buf));
-          }
-          ++i;
-        }
-    }
+  // Send test buffer (WHITE)
+  for (uint32_t i = 0; i < uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2; i++)
+  {
+    IO.data(0xFF);
+  }
+
+  //IO.cmd(0x92); // Partial out
 
   uint64_t endTime = esp_timer_get_time();
-  IO.cmd(0x22);  //Display Update Control
-  IO.data(0xC7);   
-  IO.cmd(0x20);  //Activate Display Update Sequence
-  _waitBusy("update");
-  uint64_t powerOnTime = esp_timer_get_time();
+  IO.cmd(0x04);  //Display Update Control
+  _waitBusy("update full");
 
+  IO.cmd(0x12);
+  _waitBusy("0x12");
+
+  uint64_t powerOnTime = esp_timer_get_time();
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
-  _sleep();
+  // DEBUG Disable sleep until Buffer is completely written and tested
+  //_sleep();
 }
 
 void Wave5i7Color::_waitBusy(const char* message){
@@ -144,7 +118,7 @@ void Wave5i7Color::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (1){
-    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0) break;
+    if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) break;
     vTaskDelay(1);
     if (esp_timer_get_time()-time_since_boot>2000000)
     {
@@ -155,8 +129,11 @@ void Wave5i7Color::_waitBusy(const char* message){
 }
 
 void Wave5i7Color::_sleep() {
-  IO.cmd(0x10);
-  IO.data(0x01);// power off
+  IO.cmd(0x02);
+  _waitBusy("poweroff");
+
+  IO.cmd(0x07); // deep sleep
+  IO.data(0xA5);
 }
 
 void Wave5i7Color::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -201,7 +178,7 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = WAVE5I7COLOR_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * WAVE5I7COLOR_WIDTH / 8;
+  //uint16_t i = x / 8 + y * WAVE5I7COLOR_WIDTH / 8;
 
   // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
   switch (color)
@@ -224,4 +201,44 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   else if (color == EPD_RED) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
   */
 
+}
+
+
+void Wave5i7Color::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+  uint16_t xe = (x + w - 1) | 0x0007; // byte boundary inclusive (last byte)
+  uint16_t ye = y + h - 1;
+  x &= 0xFFF8; // byte boundary
+  xe |= 0x0007; // byte boundary
+  IO.cmd(0x90); // partial window
+  IO.data(x / 256);
+  IO.data(x % 256);
+  IO.data(xe / 256);
+  IO.data(xe % 256);
+  IO.data(y / 256);
+  IO.data(y % 256);
+  IO.data(ye / 256);
+  IO.data(ye % 256);
+  IO.data(0x00); // distortion on right half
+}
+
+void Wave5i7Color::_send8pixel(uint8_t black_data, uint8_t color_data)
+{
+  for (uint8_t j = 0; j < 8; j++)
+  {
+    uint8_t t = 0x00; // black
+    if (black_data & 0x80); // keep black
+    else if (color_data & 0x80) t = 0x04; //color
+    else t = 0x03; // white
+    t <<= 4;
+    black_data <<= 1;
+    color_data <<= 1;
+    j++;
+    if (black_data & 0x80); // keep black
+    else if (color_data & 0x80) t |= 0x04; //color
+    else t |= 0x03; // white
+    black_data <<= 1;
+    color_data <<= 1;
+    IO.data(t);
+  }
 }

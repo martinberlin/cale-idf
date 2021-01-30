@@ -54,5 +54,6 @@ void app_main(void)
    display.setTextColor(EPD_BLACK);
    display.println("wave5i7Color class for Waveshare 600x448 7 color epaper");
    display.update();
+
    return;
 }
