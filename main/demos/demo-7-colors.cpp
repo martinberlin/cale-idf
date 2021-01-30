@@ -30,25 +30,20 @@ void app_main(void)
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
    uint16_t foregroundColor = EPD_WHITE;
-   // Make some rectangles showing the different colors or grays
-   if (display.colors_supported>1) {
-      printf("display.colors_supported:%d\n", display.colors_supported);
-      foregroundColor = EPD_RED;
-   }
   
    uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
-   display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
+   display.fillRect(rectW,1,rectW, firstBlock,EPD_ORANGE);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE);
+   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_YELLOW);
 
-   display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
+   display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_GREEN);
    display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
-   display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
-   display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
+   display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLUE); 
+   display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,EPD_RED);
 
    display.setCursor(display.width()/2-130,display.height()-104);
-   display.setTextColor(EPD_WHITE);
+   display.setTextColor(EPD_GREEN);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);

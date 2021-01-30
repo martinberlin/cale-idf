@@ -112,7 +112,7 @@ void Wave5i7Color::update()
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   // DEBUG Disable sleep until Buffer is completely written and tested
-  //_sleep();
+  _sleep();
 }
 
 void Wave5i7Color::_waitBusy(const char* message){
@@ -161,6 +161,9 @@ void Wave5i7Color::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
+/**
+ * From GxEPD2 (Jean-Marc)
+ */
 void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
@@ -180,12 +183,7 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = WAVE5I7COLOR_HEIGHT - y - 1;
       break;
   }
-
-
-  // Transpose partial window to 0,0 - TODO: Not sure if I need this (Check and clean)
-  x -= _pw_x;
-  y -= _pw_y;
-  uint32_t i = x / 2 + uint32_t(y) * (_pw_w / 2);
+  uint32_t i = x / 2 + uint32_t(y) * (WAVE5I7COLOR_WIDTH / 2);
   uint8_t pv = _color7(color);
       
   if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
@@ -235,43 +233,3 @@ uint8_t Wave5i7Color::_color7(uint16_t color)
       _prev_color7 = cv7;
       return cv7;
     }
-
-
-void Wave5i7Color::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
-{
-  uint16_t xe = (x + w - 1) | 0x0007; // byte boundary inclusive (last byte)
-  uint16_t ye = y + h - 1;
-  x &= 0xFFF8; // byte boundary
-  xe |= 0x0007; // byte boundary
-  IO.cmd(0x90); // partial window
-  IO.data(x / 256);
-  IO.data(x % 256);
-  IO.data(xe / 256);
-  IO.data(xe % 256);
-  IO.data(y / 256);
-  IO.data(y % 256);
-  IO.data(ye / 256);
-  IO.data(ye % 256);
-  IO.data(0x00); // distortion on right half
-}
-
-void Wave5i7Color::_send8pixel(uint8_t black_data, uint8_t color_data)
-{
-  for (uint8_t j = 0; j < 8; j++)
-  {
-    uint8_t t = 0x00; // black
-    if (black_data & 0x80); // keep black
-    else if (color_data & 0x80) t = 0x04; //color
-    else t = 0x03; // white
-    t <<= 4;
-    black_data <<= 1;
-    color_data <<= 1;
-    j++;
-    if (black_data & 0x80); // keep black
-    else if (color_data & 0x80) t |= 0x04; //color
-    else t |= 0x03; // white
-    black_data <<= 1;
-    color_data <<= 1;
-    IO.data(t);
-  }
-}

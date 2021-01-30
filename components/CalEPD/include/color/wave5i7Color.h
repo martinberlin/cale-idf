@@ -49,7 +49,5 @@ class Wave5i7Color : public Epd
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-    void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void _send8pixel(uint8_t black_data, uint8_t color_data);
     uint8_t _color7(uint16_t color);
 };
