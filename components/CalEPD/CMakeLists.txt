@@ -19,6 +19,9 @@ set(srcs
     "models/color/gdeh042Z21.cpp"
     "models/color/wave12i48BR.cpp"
 
+    # 7 colors Waveshare
+    "models/color/wave5i7Color.cpp"
+
     # Plasticlogic.com Flex epaper models:
     "models/plasticlogic/epdspi2cs.cpp"
     "models/plasticlogic/plasticlogic.cpp"
