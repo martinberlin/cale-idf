@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "FT6X36.h"
-// Demo for 7 color epaper
-// Model: 5.65inch ACeP 7-Color  https://www.waveshare.com/product/displays/e-paper/5.65inch-e-paper-module-f.htm
 #include "color/wave5i7Color.h"
 
 // Single SPI EPD

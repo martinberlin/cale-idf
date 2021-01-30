@@ -14,7 +14,7 @@
 #include <string>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include <wave7colors.h>
+#include <color/wave7colors.h>
 
 // Note: This is the base to inherit for 7 color epapers
 class Epd7Color : public virtual Adafruit_GFX

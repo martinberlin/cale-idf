@@ -13,7 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 // Todo replace by acep_7_colors or declare here
-#include <wave7colors.h>
+#include <color/wave7colors.h>
 
 // Controller: Unknown
 #define WAVE5I7COLOR_WIDTH 600

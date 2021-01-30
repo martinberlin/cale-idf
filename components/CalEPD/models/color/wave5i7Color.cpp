@@ -89,17 +89,25 @@ void Wave5i7Color::update()
   _wakeUp();
   IO.cmd(0x04); // Power on
   _waitBusy("Power on");
-  
-  // Needed? Is on EPD2 but this epaper does not suport partial updates
-  //IO.cmd(0x91); // Partial in
-  //_setPartialRamArea(0, 0, WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT);
 
   IO.cmd(0x10);
 
-  // Send test buffer (WHITE)
-  for (uint32_t i = 0; i < sizeof(_buffer); i++)
+  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+  uint16_t i = 0;
+  uint8_t xLineBytes = WAVE5I7COLOR_WIDTH / 2;
+  uint8_t x1buf[xLineBytes];
+  for (uint16_t y = 1; y <= WAVE5I7COLOR_HEIGHT; y++)
   {
-    IO.data(_buffer[i]);
+    for (uint16_t x = 1; x <= xLineBytes; x++)
+    {
+      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
+      x1buf[x - 1] = data;
+      if (x == xLineBytes)
+      { // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
+      ++i;
+    }
   }
 
   uint64_t endTime = esp_timer_get_time();
