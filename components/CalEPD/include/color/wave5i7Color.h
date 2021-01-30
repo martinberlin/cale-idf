@@ -38,6 +38,11 @@ class Wave5i7Color : public Epd
     EpdSpi& IO;
 
     uint8_t _buffer[WAVE5I7COLOR_BUFFER_SIZE];
+    // TODO: Not sure if I need this properties here since we do not use Partial windows
+    uint16_t _pw_x = 0;
+    uint16_t _pw_y = 0;
+    uint16_t _pw_w = WAVE5I7COLOR_WIDTH;
+    uint16_t _pw_h = WAVE5I7COLOR_HEIGHT;
 
     bool _initial = true;
     void _wakeUp();
@@ -46,4 +51,5 @@ class Wave5i7Color : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     void _setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void _send8pixel(uint8_t black_data, uint8_t color_data);
+    uint8_t _color7(uint16_t color);
 };

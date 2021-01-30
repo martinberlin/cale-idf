@@ -30,6 +30,13 @@ void Wave5i7Color::init(bool debug)
 
 void Wave5i7Color::fillScreen(uint16_t color)
 {
+  uint8_t pv = _color7(color);
+  uint8_t pv2 = pv | pv << 4;
+  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  {
+    _buffer[x] = pv2;
+  }
+
   if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
 }
 
@@ -83,25 +90,22 @@ void Wave5i7Color::update()
   IO.cmd(0x04); // Power on
   _waitBusy("Power on");
   
-  // Needed? Is on GxEPD2 but this epaper does not suport partial updates
+  // Needed? Is on EPD2 but this epaper does not suport partial updates
   //IO.cmd(0x91); // Partial in
   //_setPartialRamArea(0, 0, WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT);
+
   IO.cmd(0x10);
 
   // Send test buffer (WHITE)
-  for (uint32_t i = 0; i < uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2; i++)
+  for (uint32_t i = 0; i < sizeof(_buffer); i++)
   {
-    IO.data(0xFF);
+    IO.data(_buffer[i]);
   }
 
-  //IO.cmd(0x92); // Partial out
-
   uint64_t endTime = esp_timer_get_time();
-  IO.cmd(0x04);  //Display Update Control
-  _waitBusy("update full");
 
   IO.cmd(0x12);
-  _waitBusy("0x12");
+  _waitBusy("0x12 display refresh");
 
   uint64_t powerOnTime = esp_timer_get_time();
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
@@ -157,11 +161,9 @@ void Wave5i7Color::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
-
 void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
-  // MIRROR Issue. Swap X axis (For sure there is a smarter solution than this one)
-  x = width()-x;
+
   // Check rotation, move pixel around if necessary
   switch (getRotation())
   {
@@ -178,30 +180,61 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = WAVE5I7COLOR_HEIGHT - y - 1;
       break;
   }
-  //uint16_t i = x / 8 + y * WAVE5I7COLOR_WIDTH / 8;
 
-  // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
-  switch (color)
-  {
-  case EPD_BLACK:
-    color = EPD_WHITE;
-    break;
-  case EPD_WHITE:
-    color = EPD_BLACK;
-    break;
-  }
 
-  // This formulas are from gxEPD that apparently got the color right:
-  /*   
-  _black_buffer[i] = (_black_buffer[i] & (WAVE5I7COLOR_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
-  _red_buffer[i] = (_red_buffer[i] & (WAVE5I7COLOR_8PIX_RED ^ (1 << (7 - x % 8)))); // white
-
-  if (color == EPD_WHITE) return;
-  else if (color == EPD_BLACK) _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-  else if (color == EPD_RED) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-  */
-
+  // Transpose partial window to 0,0 - TODO: Not sure if I need this (Check and clean)
+  x -= _pw_x;
+  y -= _pw_y;
+  uint32_t i = x / 2 + uint32_t(y) * (_pw_w / 2);
+  uint8_t pv = _color7(color);
+      
+  if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
+    else _buffer[i] = (_buffer[i] & 0x0F) | (pv << 4);
 }
+
+/**
+ * From GxEPD2 (Jean-Marc)
+ * TODO: Should be migrated to Epd7Color base class so is not copied on other models
+ * Converts from color constants to the right 4 bit pixel color in Acep epaper 7 color
+ */
+uint8_t Wave5i7Color::_color7(uint16_t color)
+    {
+      static uint16_t _prev_color = EPD_BLACK;
+      static uint8_t _prev_color7 = 0x00; // black
+      if (color == _prev_color) return _prev_color7;
+      uint8_t cv7 = 0x00;
+      switch (color)
+      {
+        case EPD_BLACK: cv7 = 0x00; break;
+        case EPD_WHITE: cv7 = 0x01; break;
+        case EPD_GREEN: cv7 = 0x02; break;
+        case EPD_BLUE:  cv7 = 0x03; break;
+        case EPD_RED:   cv7 = 0x04; break;
+        case EPD_YELLOW: cv7 = 0x05; break;
+        case EPD_ORANGE: cv7 = 0x06; break;
+        default:
+          {
+            uint16_t red = color & 0xF800;
+            uint16_t green = (color & 0x07E0) << 5;
+            uint16_t blue = (color & 0x001F) << 11;
+            if ((red < 0x8000) && (green < 0x8000) && (blue < 0x8000)) cv7 = 0x00; // black
+            else if ((red >= 0x8000) && (green >= 0x8000) && (blue >= 0x8000)) cv7 = 0x01; // white
+            else if ((red >= 0x8000) && (blue >= 0x8000)) cv7 = red > blue ? 0x04 : 0x03; // red, blue
+            else if ((green >= 0x8000) && (blue >= 0x8000)) cv7 = green > blue ? 0x02 : 0x03; // green, blue
+            else if ((red >= 0x8000) && (green >= 0x8000))
+            {
+              static const uint16_t y2o_lim = ((EPD_YELLOW - EPD_ORANGE) / 2 + (EPD_ORANGE & 0x07E0)) << 5;
+              cv7 = green > y2o_lim ? 0x05 : 0x06; // yellow, orange
+            }
+            else if (red >= 0x8000) cv7 = 0x04; // red
+            else if (green >= 0x8000) cv7 = 0x02; // green
+            else cv7 = 0x03; // blue
+          }
+      }
+      _prev_color = color;
+      _prev_color7 = cv7;
+      return cv7;
+    }
 
 
 void Wave5i7Color::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
