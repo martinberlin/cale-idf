@@ -9,7 +9,7 @@
 // Constructor
 Wave5i7Color::Wave5i7Color(EpdSpi& dio): 
   Adafruit_GFX(WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT),
-  Epd(WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT), IO(dio)
+  Epd7Color(WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT), IO(dio)
 {
   printf("Wave5i7Color() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
   WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT);  
@@ -189,47 +189,3 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
     else _buffer[i] = (_buffer[i] & 0x0F) | (pv << 4);
 }
-
-/**
- * From GxEPD2 (Jean-Marc)
- * TODO: Should be migrated to Epd7Color base class so is not copied on other models
- * Converts from color constants to the right 4 bit pixel color in Acep epaper 7 color
- */
-uint8_t Wave5i7Color::_color7(uint16_t color)
-    {
-      static uint16_t _prev_color = EPD_BLACK;
-      static uint8_t _prev_color7 = 0x00; // black
-      if (color == _prev_color) return _prev_color7;
-      uint8_t cv7 = 0x00;
-      switch (color)
-      {
-        case EPD_BLACK: cv7 = 0x00; break;
-        case EPD_WHITE: cv7 = 0x01; break;
-        case EPD_GREEN: cv7 = 0x02; break;
-        case EPD_BLUE:  cv7 = 0x03; break;
-        case EPD_RED:   cv7 = 0x04; break;
-        case EPD_YELLOW: cv7 = 0x05; break;
-        case EPD_ORANGE: cv7 = 0x06; break;
-        default:
-          {
-            uint16_t red = color & 0xF800;
-            uint16_t green = (color & 0x07E0) << 5;
-            uint16_t blue = (color & 0x001F) << 11;
-            if ((red < 0x8000) && (green < 0x8000) && (blue < 0x8000)) cv7 = 0x00; // black
-            else if ((red >= 0x8000) && (green >= 0x8000) && (blue >= 0x8000)) cv7 = 0x01; // white
-            else if ((red >= 0x8000) && (blue >= 0x8000)) cv7 = red > blue ? 0x04 : 0x03; // red, blue
-            else if ((green >= 0x8000) && (blue >= 0x8000)) cv7 = green > blue ? 0x02 : 0x03; // green, blue
-            else if ((red >= 0x8000) && (green >= 0x8000))
-            {
-              static const uint16_t y2o_lim = ((EPD_YELLOW - EPD_ORANGE) / 2 + (EPD_ORANGE & 0x07E0)) << 5;
-              cv7 = green > y2o_lim ? 0x05 : 0x06; // yellow, orange
-            }
-            else if (red >= 0x8000) cv7 = 0x04; // red
-            else if (green >= 0x8000) cv7 = 0x02; // green
-            else cv7 = 0x03; // blue
-          }
-      }
-      _prev_color = color;
-      _prev_color7 = cv7;
-      return cv7;
-    }
