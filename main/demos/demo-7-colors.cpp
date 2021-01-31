@@ -89,7 +89,7 @@ void app_main(void)
    display.fillRect(rectW*2,firstBlock,rectW,firstBlock,randomColor()); 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,randomColor());
 
-   display.setCursor(display.width()/2-130,display.height()-124);
+   display.setCursor(display.width()/2-130,display.height()-132);
    display.setTextColor(randomColor());
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
@@ -99,7 +99,7 @@ void app_main(void)
    nextSlide();
 
    // Draw some Random color small 2x2 squares in center of the screen
-   for (uint16_t repeat = 1; repeat <= 5000; repeat++)
+   for (uint16_t repeat = 1; repeat <= 10000; repeat++)
    {
       display.fillRect(randomNumber(display.width()), randomNumber(display.height()), 2, 2, randomColor());
    }
