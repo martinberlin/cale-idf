@@ -110,8 +110,10 @@ void Wave5i7Color::update()
         ++i;
       }
     }
-    printf("\nSPI optimization is on. Sending full xLineBytes: %d per SPI (4 bits per pixel)\n\nBuffer size: %d  expected size: %d\n", 
+    if (debug_enabled) {
+      printf("\nSPI optimization is on. Sending full xLineBytes: %d per SPI (4 bits per pixel)\n\nBuffer size: %d  expected size: %d\n", 
      xLineBytes, i, WAVE5I7COLOR_BUFFER_SIZE);
+    }
 
   } else {
     for (uint32_t i = 0; i < sizeof(_buffer); i++) {
