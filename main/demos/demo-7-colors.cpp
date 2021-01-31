@@ -65,6 +65,12 @@ void app_main(void)
    // Update to: false if SPI optimization fails to work as expected
    display.spi_optimized = true;
 
+   // Remove ghosts from last refresh (Didn't find any other workaround)
+   // check: https://github.com/martinberlin/cale-idf/wiki/Model-color-wave5i7color.h#known-issues
+   display.fillScreen(EPD_WHITE);
+   display.update();
+   nextSlide();
+
    //display.setRotation(2);
    // Draw some squares
    // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
