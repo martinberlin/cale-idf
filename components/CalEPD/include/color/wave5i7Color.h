@@ -12,7 +12,6 @@
 #include <epd7color.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-// Todo replace by acep_7_colors or declare here
 #include <color/wave7colors.h>
 
 // Controller: Unknown
@@ -26,6 +25,7 @@ class Wave5i7Color : public Epd7Color
    
     Wave5i7Color(EpdSpi& IO);
     const uint8_t colors_supported = 7;
+    bool spi_optimized = true;
     const bool has_partial_update = false;
     
     void init(bool debug = false);

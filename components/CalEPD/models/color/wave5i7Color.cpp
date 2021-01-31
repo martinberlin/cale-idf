@@ -93,20 +93,29 @@ void Wave5i7Color::update()
   IO.cmd(0x10);
 
   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint16_t i = 0;
-  uint8_t xLineBytes = WAVE5I7COLOR_WIDTH / 2;
-  uint8_t x1buf[xLineBytes];
-  for (uint16_t y = 1; y <= WAVE5I7COLOR_HEIGHT; y++)
-  {
-    for (uint16_t x = 1; x <= xLineBytes; x++)
+  if (spi_optimized) {
+    uint32_t i = 0;
+    uint16_t xLineBytes = WAVE5I7COLOR_WIDTH/2;
+    uint8_t x1buf[xLineBytes];
+    for (uint16_t y = 1; y <= WAVE5I7COLOR_HEIGHT; y++)
     {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
-      x1buf[x - 1] = data;
-      if (x == xLineBytes)
-      { // Flush the X line buffer to SPI
-        IO.data(x1buf, sizeof(x1buf));
+      for (uint16_t x = 1; x <= xLineBytes; x++)
+      {
+        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
+        x1buf[x - 1] = data;
+        if (x == xLineBytes)
+        { // Flush the X line buffer to SPI
+          IO.data(x1buf, sizeof(x1buf));
+        }
+        ++i;
       }
-      ++i;
+    }
+    printf("\nSPI optimization is on. Sending full xLineBytes: %d per SPI (4 bits per pixel)\n\nBuffer size: %d  expected size: %d\n", 
+     xLineBytes, i, WAVE5I7COLOR_BUFFER_SIZE);
+
+  } else {
+    for (uint32_t i = 0; i < sizeof(_buffer); i++) {
+      IO.data(_buffer[i]);
     }
   }
 

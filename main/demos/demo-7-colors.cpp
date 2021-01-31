@@ -20,6 +20,8 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   // Update to: false if SPI optimization fails to work as expected
+   display.spi_optimized = true;
 
    //display.setRotation(2);
    //display.fillScreen(EPD_WHITE);
@@ -44,7 +46,7 @@ void app_main(void)
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("wave5i7Color class for Waveshare 600x448 7 color epaper");
+   display.println("wave5i7Color class for Waveshare\n600x448 7 color epaper");
    display.update();
 
    return;
