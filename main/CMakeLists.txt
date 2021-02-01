@@ -2,7 +2,7 @@ idf_component_register(
     # CALE official ESP-IDF Firmware
     
     #SRCS "cale.cpp"
-    SRCS "cale-7-color.cpp"
+    #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
@@ -24,7 +24,7 @@ idf_component_register(
     # SRCS "demos/demo-fonts.cpp"
 
     # Demo to print 7 colors in Waveshare Acep epapers
-    # SRCS "demos/demo-7-colors.cpp"
+    SRCS "demos/demo-7-colors.cpp"
 
     # Demo only for plasticlogic.com epapers:
     # SRCS "demos/demo-epaper-plasticlogic.cpp"

@@ -41,28 +41,59 @@ void Wave5i7Color::fillScreen(uint16_t color)
 }
 
 void Wave5i7Color::_wakeUp(){
-  IO.reset(10);
-  _waitBusy("epd_wakeup reset");  //waiting for the electronic paper IC to release the idle signal
+  IO.reset(1);
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+  // Wait for the electronic paper IC to release the idle signal
+  _waitBusy("epd_wakeup reset");
 
-  // This are the only essential settings
+  // <Essential settings> in Waveshare's example 
+  IO.cmd(0X00); //PANNEL SETTING
+  IO.data(0xEF);
+  IO.data(0x08);
+
   IO.cmd(0x01); //POWER SETTING
   IO.data(0x37); 
   IO.data(0x00);
+  IO.data(0x23);
+  IO.data(0x23);
+  // </Essential settings>
+  
+  IO.cmd(0x03); //Unknown
+  IO.data(0x00);
 
-  IO.cmd(0X00); //PANNEL SETTING
-  IO.data(0xCF);
-  IO.data(0x08);
+  // Additional settings proposed by Jean-Marc in GxEPD2 (Do not see any visual difference)
+  IO.cmd(0x06); // Booster Soft Start
+  IO.data(0xC7);
+  IO.data(0xC7);
+  IO.data(0x1D);
 
+  IO.cmd(0x30); // PLL Control
+  IO.data(0x3C);    // 50 Hz
+
+  IO.cmd(0x40); // Temperature Sensor Command
+  IO.data(0x00);
+
+  IO.cmd(0x50); // VCOM and Data Interval Setting
+  IO.data(0x37);    // white border
+
+  IO.cmd(0x60); // undocumented
+  IO.data(0x22);
+
+  // <Essential settings> in Waveshare's example 
   IO.cmd(0x61);  // Resolution setting 600*448
   IO.data(0x02); //source 600
   IO.data(0x58);
   IO.data(0x01); //gate 448
   IO.data(0xc0);
+  // </Essential settings>
 
-  IO.cmd(0x06);  // boost
-  IO.data(0xC7);
-  IO.data(0xC7);
-  IO.data(0x5A);
+  IO.cmd(0xE3); // undocumented
+  IO.data(0xAA);
+
+  // Does not make any difference
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  IO.cmd(0x50);  // VCOM and Data Interval Setting
+  IO.data(0x37); // why again?
 }
 
 void Wave5i7Color::update()
@@ -71,8 +102,6 @@ void Wave5i7Color::update()
 
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
-  IO.cmd(0x04); // Power on
-  _waitBusy("Power on");
 
   IO.cmd(0x10);
 
@@ -104,6 +133,9 @@ void Wave5i7Color::update()
       IO.data(_buffer[i]);
     }
   }
+  
+  IO.cmd(0x04); // Power on
+  _waitBusy("Power on");
 
   uint64_t endTime = esp_timer_get_time();
 
@@ -115,7 +147,8 @@ void Wave5i7Color::update()
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   // DEBUG Disable sleep until Buffer is completely written and tested
-  _sleep();
+  //vTaskDelay(1000 / portTICK_PERIOD_MS);
+  //_sleep();
 }
 
 void Wave5i7Color::_waitBusy(const char* message){

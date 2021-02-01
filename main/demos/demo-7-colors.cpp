@@ -67,9 +67,9 @@ void app_main(void)
 
    // Remove ghosts from last refresh (Didn't find any other workaround)
    // check: https://github.com/martinberlin/cale-idf/wiki/Model-color-wave5i7color.h#known-issues
-   display.fillScreen(EPD_WHITE);
-   display.update();
-   nextSlide();
+   //display.fillScreen(EPD_WHITE);
+   //display.update();
+   //nextSlide();
 
    //display.setRotation(2);
    // Draw some squares
@@ -123,6 +123,9 @@ void app_main(void)
    }
    display.update();
    
+   delay(8000);
+   display.fillScreen(EPD_WHITE);
+   display.update(); //End with WHITE screen
    // Do your own example using all GFX functions you want (Check Adafruit GFX documentation)
    return;
 }
