@@ -1,1 +1,1 @@
-#define CALEPD_VERSION "1.0"
+#define CALEPD_VERSION "1.1"
