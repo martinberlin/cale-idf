@@ -44,6 +44,7 @@ void Wave5i7Color::_wakeUp(){
   IO.reset(10);
   _waitBusy("epd_wakeup reset");  //waiting for the electronic paper IC to release the idle signal
 
+  // This are the only essential settings
   IO.cmd(0x01); //POWER SETTING
   IO.data(0x37); 
   IO.data(0x00);
@@ -52,33 +53,16 @@ void Wave5i7Color::_wakeUp(){
   IO.data(0xCF);
   IO.data(0x08);
 
-  IO.cmd(0x06); //boost
-  IO.data(0xc7);
-  IO.data(0xcc);
-  IO.data(0x28);
-
-  IO.cmd(0x30);
-  IO.data(0x3c); //PLL:    0-15:0x3C, 15+:0x3A
-
-  IO.cmd(0X41); //TEMPERATURE SETTING
-  IO.data(0x00);
-
-  IO.cmd(0X50); //VCOM AND DATA INTERVAL SETTING
-  IO.data(0x77);
-
-  IO.cmd(0X60);  //TCON SETTING
-  IO.data(0x22);
-
   IO.cmd(0x61);  // Resolution setting 600*448
   IO.data(0x02); //source 600
   IO.data(0x58);
   IO.data(0x01); //gate 448
   IO.data(0xc0);
-  IO.cmd(0X82);  //VCOM VOLTAGE SETTING
 
-  IO.data(0x28);    //all temperature  range
-  IO.cmd(0xe5); //FLASH MODE
-  IO.data(0x03);
+  IO.cmd(0x06);  // boost
+  IO.data(0xC7);
+  IO.data(0xC7);
+  IO.data(0x5A);
 }
 
 void Wave5i7Color::update()

@@ -531,9 +531,6 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
-    
     // On init(true) activates debug (And makes SPI communication slower too)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
@@ -541,6 +538,11 @@ void app_main(void)
     // Let's clean the epaper to prepare it for a new image
     display.fillScreen(EPD_WHITE);
     display.update();
+
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    wifi_init_sta();
+    
+    
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
     xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
