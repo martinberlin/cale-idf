@@ -9,47 +9,39 @@
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-// - - - - HTTP Client
+#include "esp_sleep.h"
+// - - - - HTTP Client includes:
 #include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
-#include "esp_sleep.h"
-
-// Should match your display model (Check WiKi)
-// 1 channel SPI epaper displays:
-
-//#include <gdew075T8.h>
-//#include <gdew0583t7.h>
-//#include <gdew0583z21.h>
+/**
+ * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
+ * Needs 3 things: 
+ * 1. Include the right class (Check Wiki for supported models)
+ * 2. Instantiate io class, below an example for Good Display/Waveshare epapers
+ * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
+ */
+// 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//EpdSpi io;
-//Gdew0583z21 display(io);
-//Gdew0583T7 display(io);
-//Gdew027w3 display(io);
-//Gdew075T8 display(io);
-//Gdew042t2 display(io);
-//#include <plasticlogic021.h>
-//EpdSpi2Cs io;
-//PlasticLogic011 display(io);
-//PlasticLogic014 display(io);
-//PlasticLogic021 display(io);
+//#include <gdeh0213b73.h>
+//#include <gdew0583z21.h>
+// 7 Color display (Only 2 colors implemented in this demo)
+#include "color/wave5i7Color.h"
+EpdSpi io;
+Wave5i7Color display(io);
+
+// Plastic Logic test: Check cale-grayscale.cpp
+
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
-/* // Otherwise you will run out of DRAM very shortly!
-#include "wave12i48.h" // Only to use with Edp4Spi IO
+// Otherwise you will run out of DRAM very shortly!
+/* #include "wave12i48.h" // Only to use with Edp4Spi IO
 Epd4Spi io;
 Wave12I48 display(io); */
-// PARALLEL Epapers driven by component Epdiy
-// NOTE: This needs Epdiy component https://github.com/vroland/epdiy
-// Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
-// Display type: LILIGO 4.7 ED047TC1
-// Board: LILIGO T5-4.7 Epaper
-// In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
-#include "parallel/ED047TC1.h"
-Ed047TC1 display;
+
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
 
@@ -101,38 +93,8 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
     ((uint8_t *)&result)[3] = output_buffer[startPointer + 3]; // MSB
     return result;
 }
-/** COLOR Boundaries for gray 
- *  0x00:Black 0x55:DGray  0xAA:LGray  0xFF White  -> only 4 grayscales
- * 
- *  For 8 gray-levels:
- *  0: Black 32: DGray  64: Gray  96: LGRAY C8: SLGRAY DF: Whitish FF: White 
- **/
-#ifdef HAS_16_LEVELS_GRAY
-    uint8_t wgray_hb = 0xF0; // 240 Near to white
-    uint8_t wgray_lb = 0xC9; // 201 Near to super light gray
- 
-    uint8_t slgray_hb = 0xC9;// 201 Near to whitish
-    uint8_t slgray_lb = 0x96;// 150 
 
-    uint8_t lgray_hb = 0x96; // 150 Near to light gray
-    uint8_t lgray_lb = 0x64; // 100 Near to gray
-    
-    uint8_t gray_hb = 0x64;  // 101 Near to light gray
-    uint8_t gray_lb = 0x32;  // 50 Near to dark gray
-    
-    uint8_t dgray_hb = 0x32; // 50 Near to light gray
-    uint8_t dgray_lb = 0x19; // Near to super dark
-
-    uint8_t sdgray_hb = 0x19; // 50 Near to dark gray
-    uint8_t sdgray_lb = 0x0A; // Near to black
-
-#else
-    uint8_t lgray_lb = 0x56; // Near to dark gray
-    uint8_t lgray_hb = 0xFA; // Almost white
-    uint8_t dgray_lb = 0x01; // Near to black
-    uint8_t dgray_hb = 0xA9;
-#endif
-
+bool with_color = true; // Candidate for Kconfig
 uint32_t rowSize;
 uint32_t rowByteCounter;
 uint16_t w;
@@ -140,7 +102,7 @@ uint16_t h;
 uint8_t bitmask = 0xFF;
 uint8_t bitshift;
 uint16_t red, green, blue;
-bool whitish, color_slgray, color_lgray, color_gray, color_dgray, color_sdgray;
+bool whitish, colored;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
@@ -156,16 +118,7 @@ uint16_t forCount = 0;
 
 static const uint16_t input_buffer_pixels = 640;      // may affect performance
 static const uint16_t max_palette_pixels = 256;       // for depth <= 8
-
-uint8_t mono_palette_buffer[max_palette_pixels / 8];         // palette buffer for depth <= 8 b/w
-uint8_t whitish_palette_buffer[max_palette_pixels / 8];      // EPD_WHITISH almost white
-uint8_t lgray_palette_buffer[max_palette_pixels / 8];        // EPD_LGRAY light
-uint8_t dgray_palette_buffer[max_palette_pixels / 8];        // EPD_DGRAY dark
-#ifdef HAS_16_LEVELS_GRAY
-    uint8_t slgray_palette_buffer[max_palette_pixels / 8];   // EPD_SLGRAY super light
-    uint8_t gray_palette_buffer[max_palette_pixels / 8];     // EPD_GRAY
-    uint8_t sdgray_palette_buffer[max_palette_pixels / 8];   // EPD_SDGRAY super dark
-#endif
+uint16_t rgb_palette_buffer[max_palette_pixels]; // palette buffer for depth <= 8 for buffered graphics, needed for 7-color display
 
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
@@ -257,6 +210,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             bitshift = 8 - bmp.depth;
 
+            if (bmp.depth == 1)
+                with_color = false;
+
             if (bmp.depth <= 8)
             {
                 if (bmp.depth < 8)
@@ -272,51 +228,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     green = output_buffer[bPointer++];
                     red = output_buffer[bPointer++];
                     bPointer++;
+                    rgb_palette_buffer[pn] = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
 
-                // Balanced with boundaries defined in global COLORS                               
-                    #ifdef HAS_16_LEVELS_GRAY
-                      whitish = ((red > 0xF0) && (green > 0xF0) && (blue > 0xF0));
-                      color_slgray = (red > slgray_lb && red < slgray_hb) || (green> slgray_lb && green < slgray_hb) || (blue > slgray_lb && blue < slgray_hb);  // EPD_SLGRAY
-                      color_lgray  = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb);        // EPD_LGRAY
-                      color_gray   = (red > gray_lb && red < gray_hb) || (green> gray_lb && green < gray_hb) || (blue > gray_lb && blue < gray_hb);              // EPD_GRAY
-                      color_dgray  = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb);       // EPD_DGRAY
-                      color_sdgray = (red > sdgray_lb && red < sdgray_hb) || (green > sdgray_lb && green < sdgray_hb) || (blue > sdgray_lb && blue < sdgray_hb);   // EPD_SDGRAY   
-                    #else
-                      whitish = ((red > 0x80) && (green > 0x80) && (blue > 0x80));
-                      color_lgray = (red > lgray_lb && red < lgray_hb) || (green> lgray_lb && green < lgray_hb) || (blue > lgray_lb && blue < lgray_hb); // EPD_LGRAY
-                      color_dgray = (red > dgray_lb && red < dgray_hb) || (green > dgray_lb && green < dgray_hb) || (blue > dgray_lb && blue < dgray_hb); // EPD_DGRAY   
-                    #endif
-
-                    if (0 == pn % 8) {
-                        mono_palette_buffer[pn / 8] = 0;
-                        lgray_palette_buffer[pn / 8] = 0;
-                        dgray_palette_buffer[pn / 8] = 0;
-                        #ifdef HAS_16_LEVELS_GRAY
-                        gray_palette_buffer[pn / 8] = 0;
-                        slgray_palette_buffer[pn / 8] = 0;
-                        sdgray_palette_buffer[pn / 8] = 0;
-                        #endif
-                        }
-                    
-                    mono_palette_buffer[pn / 8] |= whitish << pn % 8;                        
-                    lgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
-                    dgray_palette_buffer[pn / 8] |= color_dgray << pn % 8;
-                    #ifdef HAS_16_LEVELS_GRAY
-                      gray_palette_buffer[pn / 8] |= color_gray << pn % 8;                        
-                      slgray_palette_buffer[pn / 8] |= color_lgray << pn % 8;
-                      sdgray_palette_buffer[pn / 8] |= color_sdgray << pn % 8;
-                    #endif
-
-                    if (color_lgray) {
-                        printf("pn: %d LGRAY: %x\n",pn,color_lgray);
-                    }
-                    if (color_dgray) {
-                        printf("pn: %d DGRAY: %x\n",pn,color_dgray);
-                    }
-                    // DEBUG Colors
+                    // DEBUG Colors - TODO: Double check Palette!!
                     if (bmpDebug)
-                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, color_lgray);
-                    }
+                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
+                }
             }
             imageBytesRead += evt->data_len;
         }
@@ -356,12 +273,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
         }
         forCount = 0;
-
         // LOOP all the received Buffer but start on ImageOffset if first call
         for (uint32_t byteIndex = bPointer; byteIndex < evt->data_len; ++byteIndex)
         {
             in_byte = output_buffer[byteIndex];
-            
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
@@ -379,46 +294,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 {
 
                     uint16_t pn = (in_byte >> bitshift) & bitmask;
-                    
-                    whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    color_lgray = lgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
-                    color_dgray = dgray_palette_buffer[pn / 8] & (0x1 << pn % 8);
-
                     in_byte <<= bmp.depth;
                     in_bits -= bmp.depth;
-
-                    // Withouth this is coming white first and skips light gray (Research why)
-                    if (whitish && !color_lgray)
-                    {
-                        color = EPD_WHITE;
-                    }
-                    else if (color_lgray)
-                    {
-                        color = EPD_LGRAY;
-                    }
-                    else if (color_dgray)
-                    {
-                        color = EPD_DGRAY;
-                    }
-                    #ifdef HAS_16_LEVELS_GRAY
-                        else if (color_slgray)
-                        {
-                            color = EPD_SLGRAY;
-                        }
-                        else if (color_gray)
-                        {
-                            color = EPD_GRAY;
-                        }
-                        else if (color_sdgray)
-                        {
-                            color = EPD_SDGRAY;
-                        }
-                    #endif
-                    
-                    else
-                    {
-                        color = EPD_BLACK;
-                    }
+                    color = rgb_palette_buffer[pn];
 
                     // bmp.width reached? Then go one line up (Is readed from bottom to top)
                     if (isPaddingAware)
@@ -462,13 +340,14 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_ON_FINISH:
+        countDataEventCalls=0;
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
         if (bmpDebug) 
             printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        /* vTaskDelay(14000 / portTICK_PERIOD_MS);
-        deepsleep(); */
+        vTaskDelay(14000 / portTICK_PERIOD_MS);
+        deepsleep();
         break;
 
     case HTTP_EVENT_DISCONNECTED:
@@ -489,7 +368,9 @@ static void http_post(void)
        http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
        http://cale.es/img/test/1.bmp                -> vertical line
        http://cale.es/img/test/circle.bmp           -> Circle test
+       timeout_ms set to 9 seconds since for large displays a dynamic BMP can take some seconds to be generated
      */
+    
     // POST Send the IP for logging purpouses
     char post_data[22];
     uint8_t postsize = sizeof(post_data);
@@ -499,6 +380,7 @@ static void http_post(void)
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
         .method = HTTP_METHOD_POST,
+        .timeout_ms = 9000,
         .event_handler = _http_event_handler,
         .buffer_size = HTTP_RECEIVE_BUFFER_SIZE
         };
@@ -638,6 +520,8 @@ void wifi_init_sta(void)
 
 void app_main(void)
 {
+    printf("CalEPD version: %s  7 Color demo\n", CALEPD_VERSION);
+    
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -647,13 +531,18 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
+    // On init(true) activates debug (And makes SPI communication slower too)
+    display.init();
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
+    // This 7 color Acep epapers leave a ghost from last refresh if stays for some minutes
+    // Let's clean the epaper to prepare it for a new image
+    display.fillScreen(EPD_WHITE);
+    display.update();
+
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
     
-    //  On  init(true) activates debug (And makes SPI communication slower too)
-    display.init();
-    display.clearScreen();
-    display.setRotation(CONFIG_DISPLAY_ROTATION);
+    
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
     xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));

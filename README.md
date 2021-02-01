@@ -27,6 +27,13 @@ If your epaper model is not there just open an Issue and send us one epaper with
 
 And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
 
+**Different cpp examples:**
+
+- **cale.cpp** Main example to use with monochrome or 3 color epapers from Goodisplay/Waveshare
+- **cale-grayscale.cpp** Example only to use with PlasticLogic epapers
+- **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
+- **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
+
     RELEASES
     v.0.9.6 First color epaper: Gdew0583z21 B/W/RED
     v.0.9.5 [PlasticLogic Added new EPD manufacturer](https://plasticlogic.com)

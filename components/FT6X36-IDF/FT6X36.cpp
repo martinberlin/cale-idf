@@ -138,11 +138,15 @@ void FT6X36::processTouch()
 				     esp_timer_get_time()/1000 - _touchStartTime > 300) {
 					_dragMode = true;
 					fireEvent(point, TEvent::DragStart);
-					if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragStart\n");
+					#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
+						printf("EV: DragStart\n");
+					#endif
+					
 				} else if (_dragMode) {
-
 					fireEvent(point, TEvent::DragMove);
-					if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragMove\n");
+					#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
+						printf("EV: DragMove\n");
+					#endif
 				}
 				fireEvent(point, TEvent::TouchMove);
 
@@ -158,10 +162,11 @@ void FT6X36::processTouch()
 			//printf("TIMEDIFF: %lu End: %lu\n", _touchEndTime - _touchStartTime, _touchEndTime);
 
 			fireEvent(point, TEvent::TouchEnd);
-			if (_dragMode)
-			{
+			if (_dragMode) {
 				fireEvent(point, TEvent::DragEnd);
-				if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: DragEnd\n");
+				#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
+					printf("EV: DragEnd\n");
+				#endif
 				_dragMode = false;
 			}
 		
@@ -170,15 +175,19 @@ void FT6X36::processTouch()
 				fireEvent(point, TEvent::Tap);
 				_points[0] = {0, 0};
 				_touchStartTime = 0;
-				if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: Tap\n");
+
+				#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
+					printf("EV: Tap\n");
+				#endif
 				_dragMode = false;
 			}
 			
 			break;
 
 			case TRawEvent::NoEvent:
-			 // Do nothing
-			   if (CONFIG_FT6X36_DEBUG_EVENTS) printf("EV: NoEvent\n");
+			  #if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
+					printf("EV: NoEvent\n");
+		      #endif
 			break;
 	}
 	// Store lastEvent

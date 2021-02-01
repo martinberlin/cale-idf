@@ -19,6 +19,9 @@ set(srcs
     "models/color/gdeh042Z21.cpp"
     "models/color/wave12i48BR.cpp"
 
+    # 7 colors Waveshare
+    "models/color/wave5i7Color.cpp"
+
     # Plasticlogic.com Flex epaper models:
     "models/plasticlogic/epdspi2cs.cpp"
     "models/plasticlogic/plasticlogic.cpp"
@@ -27,18 +30,24 @@ set(srcs
     "models/plasticlogic/plasticlogic021.cpp"
     "models/plasticlogic/plasticlogic031.cpp"
 
+    # Parallel epapers supported by Epdiy driver (Component)
+    "models/parallel/ED047TC1.cpp"
+
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
     # Common base classes
     "epd.cpp"
+    "epd7color.cpp"
     "epdspi.cpp"
     "epd4spi.cpp"
+    "epdParallel.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
+                    REQUIRES "Epdiy-IDF"
                     INCLUDE_DIRS "include"
 )
 
