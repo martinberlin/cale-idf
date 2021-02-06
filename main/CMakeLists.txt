@@ -6,7 +6,7 @@ idf_component_register(
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
     # Grayscale is also good to test parallel epaper with 16 gray levels
-    SRCS "cale-grayscale.cpp"
+    #SRCS "cale-grayscale.cpp"
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
     # SRCS "demos/demo-epaper.cpp"
@@ -27,6 +27,8 @@ idf_component_register(
 
     # Only parallel epapers (Driven by I2Sbus)
     #SRCS "demos/demo-epaper-parallel.cpp"
+
+    SRCS "demos/demo-epaper-parallel-partial.cpp"
     INCLUDE_DIRS ".")
     
 set(COMPONENTS_DIRS, "components")

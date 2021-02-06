@@ -39,6 +39,8 @@ class Ed047TC1 : public EpdParallel
     uint8_t colors_supported = 1;
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
+    // Return pixel color from Adafruit GFX
+    uint16_t getPixel(int16_t x, int16_t y);
 
     void init(bool debug = false);
     void clearScreen();
@@ -48,13 +50,13 @@ class Ed047TC1 : public EpdParallel
     
     void fillScreen(uint16_t color);
     void update(enum DrawMode mode = BLACK_ON_WHITE);
-    
+
     // Partial update of rectangle from buffer to screen, does not power off
-    // Pending implementation
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
   private:
-    bool color = false;
+    bool _tempalert = false;
     bool _initial = true;
     bool _debug_buffer = false;
+    void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 };
