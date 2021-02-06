@@ -52,6 +52,12 @@ uint16_t randomNumber(uint16_t max) {
   return rand()%max;
 }
 
+void printHey(){
+   display.setCursor(20,30);
+   display.setTextColor(EPD_DGRAY);
+   display.setFont(&Ubuntu_M24pt8b);
+   display.print("HEY");
+}
 
 void app_main(void)
 {
@@ -74,21 +80,13 @@ void app_main(void)
    // Partial update
    //display.fillCircle(x,y,r,EPD_BLACK);
    
-   display.setCursor(20,20);
-   display.setTextColor(EPD_DGRAY);
-   display.setFont(&Ubuntu_M24pt8b);
-   display.print("HEY");
+   printHey();
    display.updateWindow(0,0,200,200);
-  
-   //display.updateWindow(x,y,r*2,r*2);
-   // Full update
-
-/* 
+   
+   
    delay(3000);
-   display.clearScreen();
-   //display.fillCircle(x,y,r,EPD_DGRAY);
-   display.fillRect(x,y,r,r,EPD_GRAY);
-   display.update(); */
-
-
+   display.clearScreen(); 
+   display.fillScreen(EPD_WHITE);
+   printHey();
+   display.update();
 }

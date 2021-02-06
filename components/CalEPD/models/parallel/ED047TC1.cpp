@@ -55,6 +55,13 @@ uint16_t Ed047TC1::getPixel(int16_t x, int16_t y) {
     if ((x >= 0) && (x < width()) && (y >= 0) && (y < height())) {
       // Pixel is in-bounds. Rotate coordinates if needed
       color = framebuffer[y *width()/2 + x/2];
+
+      // This is definitively not right in this method
+      /* if (x % 2) {
+        color = (color & 0xF0) | (color & 0xF0);
+      } else {
+        color = (color & 0xF0) | (color >> 4);
+      } */
       _tempalert = false;
 
     } else {
@@ -94,13 +101,15 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool
   DrawMode mode = BLACK_ON_WHITE;
   uint16_t i = 0;
 
+  // Not sure if reading the pixels like this is fine. 
+  // Fonts come with wind from the right (anti-italics)
   // Send only this area from GFX to our buffer
   for (int16_t y1 = y; y1 <= y+h; y1++)
   {
-    for (int16_t x1 = x; x1 <= x+w; x1++)
+    for (int16_t x1 = x; x1 <= x+w/2; x1++)
     { 
       // Adafruit getPixel(x,y) color does not exist, redirect to our own:
-      // 200 fixed -> square with light gray. Issue is when trying to read the pixel
+      // 0xf0 fixed -> square with light gray. Issue is when trying to read the pixel
       buffer[i] = getPixel(x1,y1);
       
       ++i;
