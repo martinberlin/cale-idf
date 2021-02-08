@@ -54,9 +54,10 @@ uint16_t randomNumber(uint16_t max) {
 
 void printHey(){
    display.setCursor(20,30);
-   display.setTextColor(EPD_DGRAY);
+   display.setTextColor(EPD_LGRAY);
    display.setFont(&Ubuntu_M24pt8b);
    display.print("HEY");
+   display.fillCircle(50,45,15,EPD_LGRAY);
 }
 
 void app_main(void)
@@ -80,11 +81,11 @@ void app_main(void)
    // Partial update
    //display.fillCircle(x,y,r,EPD_BLACK);
    
-   printHey();
-   display.updateWindow(0,0,200,200);
+   printHey();       // x  y 
+   display.updateWindow(0,0,120,100);
+   //return;
    
-   
-   delay(3000);
+   delay(9000);
    display.clearScreen(); 
    display.fillScreen(EPD_WHITE);
    printHey();
