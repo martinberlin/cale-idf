@@ -46,9 +46,9 @@ void Ed047TC1::update(enum DrawMode mode)
   epd_draw_image(epd_full_screen(), framebuffer, mode);
 }
 
-void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
 {
-  //if (using_rotation) _rotate(x, y, w, h);
+  if (using_rotation) _rotate(x, y, w, h);
   if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
@@ -67,9 +67,7 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool
   uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
   memset(buffer, 0xFF, w*h/2);
 
-  DrawMode mode = BLACK_ON_WHITE;
   uint32_t i = 0;
-
   // Crop only this square from the big framebuffer
   for (int16_t y1 = y; y1 < y+h; y1++)
   {
@@ -125,16 +123,17 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
     case 1:
       swap(x, y);
       swap(w, h);
-      x = width() - x - w - 1;
+      x = width() - x - w;
       break;
     case 2:
-      x = width() - x - w - 1;
-      y = height() - y - h - 1;
+      //printf("w:%d -x:%d -w:%d\n",width(),x,w);
+      x = width() - x - w;
+      y = height() - y - h;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = height() - y - h - 1;
+      y = height() - y - h;
       break;
   }
 }

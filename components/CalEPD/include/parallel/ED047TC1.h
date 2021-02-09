@@ -50,7 +50,7 @@ class Ed047TC1 : public EpdParallel
     void update(enum DrawMode mode = BLACK_ON_WHITE);
 
     // Partial update of rectangle from buffer to screen, does not power off
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode = BLACK_ON_WHITE, bool using_rotation = true);
 
   private:
     bool _tempalert = false;

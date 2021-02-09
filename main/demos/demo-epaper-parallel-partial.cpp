@@ -53,41 +53,53 @@ uint16_t randomNumber(uint16_t max) {
 }
 
 void printHey(){
-   display.setCursor(20,30);
+   /* display.setCursor(20,30);
    display.setTextColor(EPD_LGRAY);
    display.setFont(&Ubuntu_M24pt8b);
    display.print("HEY");
    display.fillCircle(50,45,15,EPD_LGRAY);
+   */
+   display.fillCircle(50,50,50, EPD_LGRAY);
 }
 
 void app_main(void)
 {
 
    display.init(true);
-   //display.setRotation(1); // Rotate screen °90
+   //display.setRotation(2); // Rotate screen 180°. Default is 0
 
    // Clear all screen to white
    if (cleanScreenAtStart) {
      display.clearScreen();   
      delay(1000);
    }
-   uint16_t x = 100;
-   uint16_t y = 100;
-   uint16_t r = 60;
-   //uint16_t w = 100;
-   //uint16_t h = 200;
-   //
 
    // Partial update
    //display.fillCircle(x,y,r,EPD_BLACK);
-   
-   printHey();       // x  y 
-   display.updateWindow(0,0,120,100);
-   //return;
-   
-   delay(9000);
-   display.clearScreen(); 
-   display.fillScreen(EPD_WHITE);
-   printHey();
-   display.update();
+   uint16_t radius = 50;
+   uint16_t increment = 30;
+   display.setCursor(20,250);
+   display.setTextColor(EPD_DGRAY);
+   display.setFont(&Ubuntu_M24pt8b);
+   display.print("Demo partial update");
+   /* display.update();
+   return; */
+   display.updateWindow(10,200,500,100);
+
+   for (int16_t x = 0; x < display.width()-(radius*2); x=x+increment) { 
+      if (x) {
+       display.fillCircle(x+radius-increment,150,radius, EPD_WHITE);
+       display.updateWindow(x-increment,100,radius*2,radius*2, WHITE_ON_BLACK);
+      }
+      display.fillCircle(x+radius,150,radius, EPD_DGRAY);
+      display.updateWindow(x,100,radius*2,100);
+   }
+   for (int16_t x = display.width(); x > radius*2; x=x-increment) { 
+      if (x) {
+       display.fillCircle(x+radius+increment,150,radius, EPD_WHITE);
+       display.updateWindow(x+increment,100,radius*2,radius*2, WHITE_ON_BLACK);
+      }
+      display.fillCircle(x+radius,150,radius, EPD_DGRAY);
+      display.updateWindow(x,100,radius*2,100);
+   }
 }
