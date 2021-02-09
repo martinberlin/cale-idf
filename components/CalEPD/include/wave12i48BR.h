@@ -19,12 +19,12 @@
 #define WAVE12I48_HEIGHT 984
 
 // 8 pix of this color in a buffer byte:
+// black channel inverted in update()
 #define WAVE12I48_8PIX_BLACK_INK   0xFF
 #define WAVE12I48_8PIX_BLACK_CLEAR 0x00
-// Red channel looks inverted in Waveshare example Clean method:
-// https://github.com/waveshare/12.48inch-e-paper/blob/master/Arduino/12in48epd/src/EPD_12in48b.cpp#L160
-#define WAVE12I48_8PIX_RED_INK   0x00
-#define WAVE12I48_8PIX_RED_CLEAR 0xFF
+
+#define WAVE12I48_8PIX_RED_INK   0xFF
+#define WAVE12I48_8PIX_RED_CLEAR 0x00
 
 // Buffer size in bytes
 #define WAVE12I48_BUFFER_SIZE (uint32_t(WAVE12I48_WIDTH) * uint32_t(WAVE12I48_HEIGHT) / 8)
@@ -36,7 +36,7 @@ class Wave12I48RB : public Epd
   public:
    
     Wave12I48RB(Epd4Spi& IO);
-    bool colors_supported = 1;
+    bool colors_supported = 3;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
