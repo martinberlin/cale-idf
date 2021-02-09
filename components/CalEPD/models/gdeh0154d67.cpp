@@ -63,19 +63,6 @@ void Gdeh0154d67::_wakeUp(){
   printf("_wakeUp not used in Gdeh0154d67");
 }
 
-/**
- * @deprecated It seems there is no need to do this for now
- */
-void Gdeh0154d67::_writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen) {
-  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY)){
-    _waitBusy("_waitBusy",100);
-  }
-  IO.cmd(cmd);
-  for (int i=0;i<datalen;++i) {
-      IO.data(*pCommandData++);
-  }
-}
-
 void Gdeh0154d67::_wakeUp(uint8_t em){
   printf("wakeup() start commands\n");
 

@@ -1,3 +1,4 @@
+// Contributed by DominicD: https://github.com/martinberlin/cale-idf/issues/31
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,13 +28,10 @@ class Gdeh0154d67 : public Epd
     Gdeh0154d67(EpdSpi& IO);
     uint8_t colors_supported = 1;
     
-    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-    
-    // EPD tests 
     void init(bool debug);
     void initFullUpdate();
     void initPartialUpdate();
-
+    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     void fillScreen(uint16_t color);
     void update();
     // Partial update of rectangle from buffer to screen, does not power off
@@ -46,7 +44,6 @@ class Gdeh0154d67 : public Epd
     bool _initial = true;
     bool _debug_buffer = false;
     void _PowerOn();
-    void _writeCommandData(const uint8_t cmd, const uint8_t* pCommandData, uint8_t datalen); // Waits for busy on each command
     void _setRamDataEntryMode(uint8_t em);
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
