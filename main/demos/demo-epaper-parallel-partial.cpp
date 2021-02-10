@@ -72,34 +72,69 @@ void app_main(void)
    if (cleanScreenAtStart) {
      display.clearScreen();   
      delay(1000);
+     //Stop here if you just want to clean epaper screen:
+     //return;
    }
-
-   // Partial update
-   //display.fillCircle(x,y,r,EPD_BLACK);
-   uint16_t radius = 50;
-   uint16_t increment = 30;
    display.setCursor(20,250);
    display.setTextColor(EPD_DGRAY);
    display.setFont(&Ubuntu_M24pt8b);
    display.print("Demo partial update");
-   /* display.update();
-   return; */
-   display.updateWindow(10,200,500,100);
+   // Taken from C example: https://www2.cs.sfu.ca/CourseCentral/166/tjd/bouncing_ball.html
+   // The bouncing ball test
+   uint16_t x = 100;
+   uint16_t y = 100;
+   uint16_t lastX = x;
+   uint16_t lastY = x;
+   uint16_t count = 0;
+   uint16_t dx = 14;
+   uint16_t dy = 14;
+   uint16_t radius = 30;
+   uint16_t totalFrames = 500;
 
-   for (int16_t x = 0; x < display.width()-(radius*2); x=x+increment) { 
-      if (x) {
-       display.fillCircle(x+radius-increment,150,radius, EPD_WHITE);
-       display.updateWindow(x-increment,100,radius*2,radius*2, WHITE_ON_BLACK);
+   // Don't do this forever! It's a lot of phisical work for the epaper...
+   while (count<totalFrames) { 
+      // Delete last position
+      display.fillCircle(lastX,lastY,radius*2, EPD_WHITE);
+      display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2,WHITE_ON_BLACK);
+
+      x += dx;
+      y += dy;
+
+      // hit the left edge?
+      if (x - radius <= 0) {
+         dx = -dx;
+         x = radius;
       }
-      display.fillCircle(x+radius,150,radius, EPD_DGRAY);
-      display.updateWindow(x,100,radius*2,100);
-   }
-   for (int16_t x = display.width(); x > radius*2; x=x-increment) { 
-      if (x) {
-       display.fillCircle(x+radius+increment,150,radius, EPD_WHITE);
-       display.updateWindow(x+increment,100,radius*2,radius*2, WHITE_ON_BLACK);
+
+      // hit the right edge?
+      if (x + radius >= display.width()) {
+         dx = -dx;
+         x = display.width() - radius*2;
       }
-      display.fillCircle(x+radius,150,radius, EPD_DGRAY);
-      display.updateWindow(x,100,radius*2,100);
+
+      // hit the top edge?
+      if (y - radius <= 0) {
+         dy = -dy;
+         //radius += 10;
+         y = radius;
+      }
+
+      // hit the bottom edge?
+      if (y + radius >= display.height()) {
+         dy = -dy;
+         y = display.height() - radius;
+      }
+      
+      display.fillCircle(x,y,radius, EPD_BLACK);
+      display.updateWindow(x-radius,y-radius,radius*2,radius*2);
+      lastX =x;
+      lastY =y;
+      ++count;
+      if (count%100==0) {
+         printf("%d frames rendered. Still %d left\n", count, totalFrames-count);
+      }
    }
+ 
+ display.clearScreen();   
+ delay(1000);
 }
