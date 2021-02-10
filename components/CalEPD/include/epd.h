@@ -134,11 +134,10 @@ class Epd : public virtual Adafruit_GFX
 
   private:
     // Every display model should implement this private methods
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     virtual void _wakeUp() = 0;
     virtual void _sleep() = 0;
     virtual void _waitBusy(const char* message) = 0;
-    virtual void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h) = 0;
+    
     uint8_t _unicodePerChar(uint8_t c);
     uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display

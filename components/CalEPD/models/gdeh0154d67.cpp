@@ -18,18 +18,18 @@ Gdeh0154d67::Gdeh0154d67(EpdSpi& dio):
 }
 
 void Gdeh0154d67::initFullUpdate(){
-    _wakeUp(0x03);
-    
+    _wakeUp();
+    _partial_mode = false;
     _PowerOn();
-    if (debug_enabled) printf("initFullUpdate() LUT\n");
+    if (debug_enabled) printf("initFullUpdate()\n");
 }
 
 void Gdeh0154d67::initPartialUpdate(){
-    _wakeUp(0x03);
-
+    _partial_mode = true;
+    _wakeUp();
     _PowerOn();
 
-    if (debug_enabled) printf("initPartialUpdate() LUT\n");
+    if (debug_enabled) printf("initPartialUpdate()\n");
 }
 
 //Initialize the display
@@ -55,15 +55,28 @@ void Gdeh0154d67::fillScreen(uint16_t color)
   if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
-uint16_t Gdeh0154d67::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
-  printf("_setPartialRamArea not used in Gdeh0154d67");
-  return 0;
+void Gdeh0154d67::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+  IO.cmd(0x11); // set ram entry mode
+  IO.data(0x03);    // x increase, y increase : normal mode
+  
+  IO.cmd(0x44);
+  IO.data(x / 8);
+  IO.data((x + w - 1) / 8);
+  
+  IO.cmd(0x45);
+  IO.data(y % 256);
+  IO.data(y / 256);
+  IO.data((y + h - 1) % 256);
+  IO.data((y + h - 1) / 256);
+
+  IO.cmd(0x4e);
+  IO.data(x / 8);
+
+  IO.cmd(0x4f);
+  IO.data(y % 256);
+  IO.data(y / 256);
 }
 void Gdeh0154d67::_wakeUp(){
-  printf("_wakeUp not used in Gdeh0154d67");
-}
-
-void Gdeh0154d67::_wakeUp(uint8_t em){
   printf("wakeup() start commands\n");
 
   IO.cmd(0x12);
@@ -72,16 +85,19 @@ void Gdeh0154d67::_wakeUp(uint8_t em){
   IO.data(0xC7);
   IO.data(0x00);
   IO.data(0x00);
+
   IO.cmd(0x3C); // BorderWavefrom
   IO.data(0x05);
   IO.cmd(0x18); // Read built-in temperature sensor
   IO.data(0x80);
-  _setRamDataEntryMode(em);
+  
+  _setPartialRamArea(0, 0, width(), height());
 }
 
 void Gdeh0154d67::update()
 {
   initFullUpdate();
+  _initial_refresh = true;
   printf("BUFF Size:%d\n",sizeof(_buffer));
 
   IO.cmd(0x24);        // update current data
@@ -97,7 +113,7 @@ void Gdeh0154d67::update()
   IO.cmd(0x22);
   IO.data(0xf7);
   IO.cmd(0x20);
-  _waitBusy("_Update_Full", 1200);
+  _waitBusy("_Update_Full", full_refresh_time);
 
   _sleep();
 }
@@ -156,56 +172,38 @@ void Gdeh0154d67::_PowerOn(void)
   IO.cmd(0x22);
   IO.data(0xc0);
   IO.cmd(0x20);
-  _waitBusy("_PowerOn");
+  _waitBusy("_PowerOn", power_on_time);
 }
 
-void Gdeh0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool using_rotation)
 {
+  // Pending: It seems initial update should be full
+  // Not sure if it's necessary let's test before without it
+  //if (_initial_refresh) return update(); // initial update needs be full update
+
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEH0154D67_WIDTH) return;
   if (y >= GDEH0154D67_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GDEH0154D67_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEH0154D67_HEIGHT, y + h) - 1;
-  uint16_t xs_d8 = x / 8;
-  uint16_t xe_d8 = xe / 8;
-  initPartialUpdate();
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate1", 100); // needed ?
-  IO.cmd(0x24);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEH0154D67_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
+  if (!_partial_mode) {
+     initPartialUpdate();
   }
   
+  x -= x % 8; // byte boundary
+  w -= x % 8; // byte boundary
+  int16_t x1 = x < 0 ? 0 : x; // limit
+  int16_t y1 = y < 0 ? 0 : y; // limit
+  int16_t w1 = x + w < int16_t(WIDTH) ? w : int16_t(WIDTH) - x; // limit
+  int16_t h1 = y + h < int16_t(HEIGHT) ? h : int16_t(HEIGHT) - y; // limit
+  w1 -= x1 - x;
+  h1 -= y1 - y;
+  
+  _setPartialRamArea(x1, y1, w1, h1);
+
+  // Send partial update command
   IO.cmd(0x22);
-  IO.data(0xff);
+  IO.data(0xfc);
   IO.cmd(0x20);
-  _waitBusy("partialUpdate2", 300);
-
-  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS); 
-
-  // update erase buffer
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate3", 100); // needed ?
-  IO.cmd(0x24);
-
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEH0154D67_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  }
-  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS); 
+  _waitBusy("_Update_Part", partial_refresh_time);
 }
 
 void Gdeh0154d67::_waitBusy(const char* message, uint16_t busy_time){
@@ -251,10 +249,10 @@ void Gdeh0154d67::_sleep(){
   IO.cmd(0x22); // power off display
   IO.data(0xc3);
   IO.cmd(0x20);
-  _waitBusy("power_off");
+  _waitBusy("power_off", power_off_time);
 }
 
-void Gdeh0154d67::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void Gdeh0154d67::_rotate(int16_t& x, int16_t& y, int16_t& w, int16_t& h)
 {
   switch (getRotation())
   {
