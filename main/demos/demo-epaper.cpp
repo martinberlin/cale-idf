@@ -43,15 +43,13 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.setTextColor(fgcolor);
 
    uint16_t box_w = display.width() - box_x - 10;
-   uint16_t box_h = 120;
+   uint16_t box_h = 60;
    printf("Partial update box x:%d y:%d width:%d height:%d\n", box_x, box_y, box_w, box_h);
    uint16_t cursor_y = box_y + 20;
    display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
-   display.setCursor(box_x, cursor_y + 40);
+   display.setCursor(box_x, cursor_y + 20);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("PARTIAL");
-   display.setCursor(box_x, cursor_y + 70);
-   display.println("REFRESH");
    //display.update(); // Full update works good
    // Partial does not (Black is not full black)
    display.updateWindow(box_x, box_y, box_w, box_h, true);
@@ -81,7 +79,7 @@ void app_main(void)
    display.init(false);
 
    //display.setRotation(2);
-   display.update();
+   //display.update();
    //delay(1000);
 
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
@@ -93,11 +91,11 @@ void app_main(void)
       printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
-   /* display.fillScreen(EPD_RED);
-   display.update();
-   return; // STOP  */
-
+   
+   // draw two different partial updates
    demoPartialUpdate(EPD_BLACK, EPD_WHITE,10,10);
+   delay(2000);
+   demoPartialUpdate(EPD_WHITE, EPD_BLACK,10,100);
    return;
   
    uint16_t firstBlock = display.width()/4;

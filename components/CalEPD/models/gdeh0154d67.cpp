@@ -95,6 +95,7 @@ void Gdeh0154d67::_wakeUp(){
 
 void Gdeh0154d67::update()
 {
+  uint64_t startTime = esp_timer_get_time();
   initFullUpdate();
   _using_partial_mode = false;
   _initial_refresh = true;
@@ -110,10 +111,18 @@ void Gdeh0154d67::update()
       IO.data(~data);
     }
   }
+  uint64_t endTime = esp_timer_get_time();
+
   IO.cmd(0x22);
   IO.data(0xf7);
   IO.cmd(0x20);
   _waitBusy("_Update_Full", full_refresh_time);
+
+  uint64_t updateTime = esp_timer_get_time();
+
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
+         (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
+
 
   _sleep();
 }
@@ -188,10 +197,11 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
     return;
   }
 
-  printf("updateWindow()\n");
-  /* if (!_initial_refresh) {
+  if (!_initial_refresh) {
+    printf("updateWindow() doing initial refresh\n");
     update();
-  } */
+  }
+  uint64_t startTime = esp_timer_get_time();
 
   uint16_t xe = gx_uint16_min(GDEH0154D67_WIDTH, x + w) - 1;
   uint16_t ye = gx_uint16_min(GDEH0154D67_HEIGHT, y + h) - 1;
@@ -214,14 +224,18 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
       IO.data(~data);
     }
   }
-  
+  uint64_t endTime = esp_timer_get_time();
+
   // Update partial
   IO.cmd(0x22);
   IO.data(0xff);
   IO.cmd(0x20);
-  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
+  uint64_t updateTime = esp_timer_get_time();
 
-  return; // Stop here without erasing buffer
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
+         (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
+
+  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
 
     // update erase buffer
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
