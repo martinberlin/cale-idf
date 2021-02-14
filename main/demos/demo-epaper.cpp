@@ -52,6 +52,8 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.println("PARTIAL");
    display.setCursor(box_x, cursor_y + 70);
    display.println("REFRESH");
+   //display.update(); // Full update works good
+   // Partial does not (Black is not full black)
    display.updateWindow(box_x, box_y, box_w, box_h, true);
 }
 
@@ -95,7 +97,7 @@ void app_main(void)
    display.update();
    return; // STOP  */
 
-   demoPartialUpdate(EPD_BLACK,EPD_WHITE,10,10);
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE,10,10);
    return;
   
    uint16_t firstBlock = display.width()/4;

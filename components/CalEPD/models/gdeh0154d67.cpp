@@ -96,6 +96,7 @@ void Gdeh0154d67::_wakeUp(){
 void Gdeh0154d67::update()
 {
   initFullUpdate();
+  _using_partial_mode = false;
   _initial_refresh = true;
   printf("BUFF Size:%d\n",sizeof(_buffer));
 
@@ -124,6 +125,7 @@ void Gdeh0154d67::_setRamDataEntryMode(uint8_t em)
   em = gx_uint16_min(em, 0x03);
   IO.cmd(0x11);
   IO.data(em);
+
   switch (em)
   {
     case 0x00: // x decrease, y decrease
@@ -168,9 +170,8 @@ void Gdeh0154d67::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 
 void Gdeh0154d67::_PowerOn(void)
 {
-  _power_is_on = true;
   IO.cmd(0x22);
-  IO.data(0xc0);
+  IO.data(0xf8);
   IO.cmd(0x20);
   _waitBusy("_PowerOn", power_on_time);
 }
@@ -196,7 +197,9 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   uint16_t ye = gx_uint16_min(GDEH0154D67_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
+
   initPartialUpdate();
+
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("ram_pointer1", 100);
@@ -216,10 +219,11 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   IO.cmd(0x22);
   IO.data(0xff);
   IO.cmd(0x20);
-  _waitBusy("_Update_Part", partial_refresh_time);
-  //vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
+  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
 
-  // update erase buffer
+  return; // Stop here without erasing buffer
+
+    // update erase buffer
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("ram_pointer2", 100);
@@ -234,6 +238,7 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
     }
   }
   vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
+
 }
   
 void Gdeh0154d67::_waitBusy(const char* message, uint16_t busy_time){
@@ -276,7 +281,6 @@ void Gdeh0154d67::_waitBusy(const char* message){
 }
 
 void Gdeh0154d67::_sleep(){
-  _power_is_on = false;
   IO.cmd(0x22); // power off display
   IO.data(0xc3);
   IO.cmd(0x20);
