@@ -207,9 +207,9 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   uint16_t ye = gx_uint16_min(GDEH0154D67_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
-
+  
   initPartialUpdate();
-
+  
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("ram_pointer1", 100);
@@ -234,25 +234,16 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
 
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
-
-  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
-
-    // update erase buffer
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("ram_pointer2", 100);
+  
+  // Clean buffer
+  _wakeUp();
+  _setRamDataEntryMode(0x01);
   IO.cmd(0x24);
-  for (int16_t y1 = y; y1 <= ye; y1++)
+  for (int16_t x1 = xs_d8; x1 <= GDEH0154D67_BUFFER_SIZE; x1++)
   {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
+    IO.data(0xFF);
   }
-  vTaskDelay(GDEH0154D67_PU_DELAY/portTICK_RATE_MS);
-
+  
 }
   
 void Gdeh0154d67::_waitBusy(const char* message, uint16_t busy_time){
