@@ -28,6 +28,7 @@ class Gdeh0154d67 : public Epd
     Gdeh0154d67(EpdSpi& IO);
     uint8_t colors_supported = 1;
     bool _initial_refresh = false;
+    bool _power_is_on = false;
     static const uint16_t power_on_time = 100; // ms, e.g. 95583us
     static const uint16_t power_off_time = 150; // ms, e.g. 140621us
     static const uint16_t full_refresh_time = 2600; // ms, e.g. 2509602us

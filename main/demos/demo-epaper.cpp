@@ -1,17 +1,16 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "FT6X36.h"
 // Should match with your epaper module, size
+//#include <gdep015OC1.h>  // 1.54 old version
+#include <gdeh0154d67.h>
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
 //#include <gdew075T7.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include <gdeh0154d67.h>
-// INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
-FT6X36 ts(CONFIG_TOUCH_INT);
+
 // Color
 //#include <gdew0583z21.h>
 //#include <gdeh042Z96.h>
@@ -25,6 +24,7 @@ Wave12I48 display(io); */
 // Single SPI EPD
 EpdSpi io;
 Gdeh0154d67 display(io);
+//Gdep015OC1 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
 // FONT used for title / message body - Only after display library
@@ -35,6 +35,7 @@ extern "C"
 {
    void app_main();
 }
+void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 
 void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
@@ -47,9 +48,11 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    uint16_t cursor_y = box_y + 20;
    display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
    display.setCursor(box_x, cursor_y + 40);
+   display.setFont(&Ubuntu_M18pt8b);
    display.println("PARTIAL");
+   display.setCursor(box_x, cursor_y + 70);
    display.println("REFRESH");
-   //display.updateWindow(box_x, box_y, box_w, box_h, true);
+   display.updateWindow(box_x, box_y, box_w, box_h, true);
 }
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
@@ -76,7 +79,9 @@ void app_main(void)
    display.init(false);
 
    //display.setRotation(2);
-   //display.fillScreen(EPD_WHITE);
+   display.update();
+   //delay(1000);
+
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
@@ -89,6 +94,9 @@ void app_main(void)
    /* display.fillScreen(EPD_RED);
    display.update();
    return; // STOP  */
+
+   demoPartialUpdate(EPD_BLACK,EPD_WHITE,10,10);
+   return;
   
    uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);

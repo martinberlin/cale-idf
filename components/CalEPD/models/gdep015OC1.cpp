@@ -230,8 +230,14 @@ void Gdep015OC1::_PowerOn(void)
 void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GDEP015OC1_WIDTH) return;
-  if (y >= GDEP015OC1_HEIGHT) return;
+  if (x >= GDEP015OC1_WIDTH) {
+    printf("x:%d exceeded boundary %d\n",x,WIDTH);
+    return;
+  }
+  if (y >= GDEP015OC1_HEIGHT) {
+    printf("y:%d exceeded boundary %d\n",y,HEIGHT);
+    return;
+  }
   uint16_t xe = gx_uint16_min(GDEP015OC1_WIDTH, x + w) - 1;
   uint16_t ye = gx_uint16_min(GDEP015OC1_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
