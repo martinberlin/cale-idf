@@ -180,7 +180,7 @@ void Gdeh0154d67::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 void Gdeh0154d67::_PowerOn(void)
 {
   IO.cmd(0x22);
-  IO.data(0xf8);
+  IO.data(0xc0);
   IO.cmd(0x20);
   _waitBusy("_PowerOn", power_on_time);
 }
