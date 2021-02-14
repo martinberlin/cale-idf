@@ -79,7 +79,7 @@ void app_main(void)
    display.init(false);
 
    //display.setRotation(2);
-   //display.update();
+   //display.update();return;
    //delay(1000);
 
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
@@ -94,7 +94,9 @@ void app_main(void)
    
    // draw two different partial updates
    demoPartialUpdate(EPD_BLACK, EPD_WHITE,10,10);
-   delay(2000);
+   
+   delay(500);
+   // Second repeats bug found with white points over black background
    demoPartialUpdate(EPD_WHITE, EPD_BLACK,10,100);
    return;
   

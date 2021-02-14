@@ -214,20 +214,16 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   _waitBusy("ram_pointer1", 100);
   IO.cmd(0x24);
 
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint8_t x1buf[xe_d8];
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
     {
       uint16_t idx = y1 * (WIDTH / 8) + x1;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      x1buf[x1 - 1] = ~data;
+      IO.data(~data);
     }
-    // Flush the X line buffer to SPI
-    IO.data(x1buf, sizeof(x1buf));
   }
-  
+
   uint64_t endTime = esp_timer_get_time();
 
   // Update partial
@@ -251,12 +247,12 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
     }
     IO.data(x1cbuf, sizeof(x1cbuf));
   }
-
-  uint64_t cleanTime = esp_timer_get_time();
-  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \nclean_buffer:%llu\n%llu total time in millis\n",
+  
+  if (debug_enabled) {
+    uint64_t cleanTime = esp_timer_get_time();
+    printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \nclean_buffer:%llu\n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (cleanTime - updateTime) / 1000, (cleanTime - startTime) / 1000);
-  
-  
+  }
 }
   
 void Gdeh0154d67::_waitBusy(const char* message, uint16_t busy_time){
