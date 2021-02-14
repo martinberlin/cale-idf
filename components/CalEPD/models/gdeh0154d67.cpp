@@ -214,14 +214,18 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   _waitBusy("ram_pointer1", 100);
   IO.cmd(0x24);
 
+  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+  uint8_t x1buf[xe_d8];
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
     {
       uint16_t idx = y1 * (WIDTH / 8) + x1;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
+      x1buf[x1 - 1] = ~data;
     }
+    // Flush the X line buffer to SPI
+    IO.data(x1buf, sizeof(x1buf));
   }
   
   uint64_t endTime = esp_timer_get_time();
@@ -233,24 +237,21 @@ void Gdeh0154d67::updateWindow(int16_t x, int16_t y, int16_t w, int16_t h, bool 
   _waitBusy("partial_update", 100);
   uint64_t updateTime = esp_timer_get_time();
 
-
   // Clean buffer: 0x01 is essential
   _setRamDataEntryMode(0x01);
-
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
   IO.cmd(0x24);
 
   uint8_t xLineBytes = GDEH0154D67_WIDTH / 8;
-  uint8_t x1buf[xLineBytes];
+  uint8_t x1cbuf[xLineBytes];
   for (uint16_t y = 1; y <= GDEH0154D67_HEIGHT; y++)
   {
     for (uint16_t x = 1; x <= xLineBytes; x++)
     {
-      x1buf[x - 1] = 0xFF;
+      x1cbuf[x - 1] = 0xFF;
     }
-    IO.data(x1buf, sizeof(x1buf));
+    IO.data(x1cbuf, sizeof(x1cbuf));
   }
-  
+
   uint64_t cleanTime = esp_timer_get_time();
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \nclean_buffer:%llu\n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (cleanTime - updateTime) / 1000, (cleanTime - startTime) / 1000);
