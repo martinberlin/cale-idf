@@ -535,9 +535,9 @@ void app_main(void)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // This 7 color Acep epapers leave a ghost from last refresh if stays for some minutes
-    // Let's clean the epaper to prepare it for a new image
-    display.fillScreen(EPD_WHITE);
+    // Let's clean the epaper to prepare it for a new image:
     display.update();
+    vTaskDelay(2500 / portTICK_PERIOD_MS);
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
