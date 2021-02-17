@@ -21,6 +21,7 @@ set(srcs
     "models/color/wave12i48BR.cpp"
 
     # 7 colors Waveshare
+    "models/color/wave4i7Color.cpp"
     "models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
