@@ -109,7 +109,13 @@ uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
 uint16_t imageBytesRead = 0;
 uint32_t dataLenTotal = 0;
 uint32_t in_bytes = 0;
-uint8_t in_byte = 0; // for depth <= 8
+uint8_t index24 = 0; // Index for 24 bit
+uint8_t in_byte = 0;  // for depth <= 8
+
+uint16_t in_red = 0;   // for depth 24
+uint16_t in_green = 0; // for depth 24
+uint16_t in_blue = 0;  // for depth 24
+
 uint8_t in_bits = 0; // for depth <= 8
 bool isReadingImage = false;
 bool isSupportedBitmap = true;
@@ -183,10 +189,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 isSupportedBitmap = false;
                 ESP_LOGE(TAG, "BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 0 or 3\n");
             }
-            if (bmp.depth > 8)
+            if (bmp.depth > 24)
             {
                 isSupportedBitmap = false;
-                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
+                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, 8 and 24 bits depth are supported.\n", bmp.depth);
             }
 
             rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
@@ -325,6 +331,39 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 }
             }
             break;
+
+            case 24:
+                // index24  byte per byte comes here 
+                ++index24; // Starts on 1
+                switch (index24)
+                {
+                case 1:
+                    in_blue = (in_byte>> 3) & 0x1f;
+                    break;
+                case 2:
+                    in_green = ((in_byte>> 2) & 0x3f) << 5;;
+                    break;
+                case 3:
+                    in_red = ((in_byte>> 3) & 0x1f) << 11;;
+                    break;
+                }
+                
+                // Every 3rd byte we advance one X
+                if (index24 == 3) {
+                    if (drawX+1 > bmp.width)
+                    {
+                        drawX = 0;
+                        --drawY;
+                    }
+                
+                   totalDrawPixels++;
+                   color = (in_red | in_green | in_blue);
+                   display.drawPixel(drawX, drawY, color);
+                   ++drawX;
+                   index24 = 0;
+                }
+                
+            break;
             }
 
             rowByteCounter++;
@@ -332,8 +371,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             forCount++;
         }
 
-        if (bmpDebug)
-            printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
+        
+        if (bmpDebug) printf("Total drawPixel calls: %d\noutX: %d outY: %d\n", totalDrawPixels, drawX, drawY);
 
         // Hexa dump:
         //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
