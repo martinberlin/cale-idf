@@ -333,18 +333,19 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             break;
 
             case 24:
-                // index24  byte per byte comes here 
-                ++index24; // Starts on 1
+                // index24  3 byte B,G,R counter starts on 1
+                ++index24;
+                // Convert the 24 bits into 16 bit 565 (Adafruit GFX format)
                 switch (index24)
                 {
                 case 1:
-                    in_blue = (in_byte>> 3) & 0x1f;
+                    in_blue  = (in_byte>> 3) & 0x1f;
                     break;
                 case 2:
-                    in_green = ((in_byte>> 2) & 0x3f) << 5;;
+                    in_green = ((in_byte >> 2) & 0x3f) << 5;
                     break;
                 case 3:
-                    in_red = ((in_byte>> 3) & 0x1f) << 11;;
+                    in_red   = ((in_byte >> 3) & 0x1f) << 11;
                     break;
                 }
                 
@@ -365,7 +366,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 
             break;
             }
-
             rowByteCounter++;
             imageBytesRead++;
             forCount++;
