@@ -49,14 +49,14 @@ void Wave4i7Color::_wakeUp(){
 
   // <Essential settings> in Waveshare's example 
   IO.cmd(0X00); //PANNEL SETTING
-  IO.data(0xEF);
-  IO.data(0x08);
+  IO.data(0x2F);
+  IO.data(0x00);
 
   IO.cmd(0x01); //POWER SETTING
   IO.data(0x37); 
   IO.data(0x00);
-  IO.data(0x23);
-  IO.data(0x23);
+  IO.data(0x05);
+  IO.data(0x05);
   // </Essential settings>
   
   IO.cmd(0x03); //Unknown
@@ -68,10 +68,9 @@ void Wave4i7Color::_wakeUp(){
   IO.data(0xC7);
   IO.data(0x1D);
 
-  IO.cmd(0x30); // PLL Control
-  IO.data(0x3C);    // 50 Hz
-
-  IO.cmd(0x40); // Temperature Sensor Command
+  //IO.cmd(0x30); // PLL Control
+  //IO.data(0x3C);    // 50 Hz
+  IO.cmd(0x41);
   IO.data(0x00);
 
   IO.cmd(0x50); // VCOM and Data Interval Setting
@@ -83,18 +82,13 @@ void Wave4i7Color::_wakeUp(){
   // <Essential settings> in Waveshare's example 
   IO.cmd(0x61);  // Resolution setting 600*448
   IO.data(0x02); //source 600
-  IO.data(0x58);
+  IO.data(0x80);
   IO.data(0x01); //gate
-  IO.data(0xc0);
+  IO.data(0x90);
   // </Essential settings>
 
-  IO.cmd(0xE3); // undocumented
+  IO.cmd(0xE3);  //PWS
   IO.data(0xAA);
-
-  // Does not make any difference
-  vTaskDelay(100 / portTICK_PERIOD_MS);
-  IO.cmd(0x50);  // VCOM and Data Interval Setting
-  IO.data(0x37); // why again?
 }
 
 void Wave4i7Color::update()

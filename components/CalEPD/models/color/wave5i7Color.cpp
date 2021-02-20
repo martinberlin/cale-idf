@@ -74,9 +74,9 @@ void Wave5i7Color::_wakeUp(){
   IO.data(0x00);
 
   IO.cmd(0x50); // VCOM and Data Interval Setting
-  IO.data(0x37);    // white border
+  IO.data(0x37);// white border
 
-  IO.cmd(0x60); // undocumented
+  IO.cmd(0x60); // TCON
   IO.data(0x22);
 
   // <Essential settings> in Waveshare's example 
@@ -87,13 +87,13 @@ void Wave5i7Color::_wakeUp(){
   IO.data(0xc0);
   // </Essential settings>
 
-  IO.cmd(0xE3); // undocumented
+  IO.cmd(0xE3); //PWS
   IO.data(0xAA);
 
-  // Does not make any difference
+  // Not sure why it's needed to do this and send VCOM again
   vTaskDelay(100 / portTICK_PERIOD_MS);
   IO.cmd(0x50);  // VCOM and Data Interval Setting
-  IO.data(0x37); // why again?
+  IO.data(0x37);
 }
 
 void Wave5i7Color::update()
