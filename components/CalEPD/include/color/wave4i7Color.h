@@ -15,14 +15,14 @@
 #include <color/wave7colors.h>
 
 // Controller: SPD1656 https://www.waveshare.com/w/upload/b/bf/SPD1656_1.1.pdf
-#define WAVE4I7COLOR_WIDTH 600
-#define WAVE4I7COLOR_HEIGHT 448
+#define WAVE4I7COLOR_WIDTH 640
+#define WAVE4I7COLOR_HEIGHT 400
 #define WAVE4I7COLOR_BUFFER_SIZE (uint32_t(WAVE4I7COLOR_WIDTH) * uint32_t(WAVE4I7COLOR_HEIGHT) / 2)
 
 class Wave4i7Color : public Epd7Color
 {
   public:
-   
+    
     Wave4i7Color(EpdSpi& IO);
     const uint8_t colors_supported = 7;
     bool spi_optimized = true;
