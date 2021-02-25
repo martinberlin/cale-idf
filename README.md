@@ -13,6 +13,18 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
 
+## Fork policy
+
+**Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this two categories:
+
+1. You found a bug and want to suggest a merge request. Then Fork it!
+2. You will contribute adding a new epaper model that does exist.
+3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
+
+All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. Forking is not bookmarking!
+
+We don't like having copies of this without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
+
 ## Requesting for new models
 
 If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
