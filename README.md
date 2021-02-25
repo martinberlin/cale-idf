@@ -15,7 +15,7 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 
 ## Fork policy
 
-**Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this two categories:
+**Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this three categories:
 
 1. You found a bug and want to suggest a merge request. Then Fork it!
 2. You will contribute adding a new epaper model that does exist.
