@@ -13,7 +13,7 @@ menu "CALE Configuration"
             WiFi password (WPA or WPA2)
 
     config CALE_SCREEN_URL
-        string "Screen URL to the Bitmap (Max. 8 bit)"
+        string "Screen URL to the Bitmap (1, 4, 8 or 24 bits per pixel)"
         default "http://cale.es"
         help
             This can be an URL to the image web-service CALE.es
@@ -30,7 +30,7 @@ menu "CALE Configuration"
         default 60
     
     config ESP_TRIGGER_SENSOR1
-        int "RISING: Trigger when the pin goes from LOW to HIGH (Leave on 0 to disable)"
+        int "RISING: Trigger a new image request when the pin goes from LOW to HIGH cale-sensor example (0 to disable)"
         range 0 33
         default 27
 
