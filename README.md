@@ -46,13 +46,6 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 - **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
 - **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
 
-    RELEASES
-    v.0.9.6 First color epaper: Gdew0583z21 B/W/RED
-    v.0.9.5 [PlasticLogic Added new EPD manufacturer](https://plasticlogic.com)
-    v.0.9.2 Wave12I48   Added Waveshare 12.48" multi epaper display
-    v.0.9.1 Gdew075T7   Added Waveshare/Good display 7.5" V2 800*480
-    v.0.9   Gdew0213i5f First testeable version with a 2.13" b/w epaper display Gdew0213i5f
-
     ROADMAP
     Rest of 2020 Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
