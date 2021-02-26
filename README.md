@@ -18,7 +18,7 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 **Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this three categories:
 
 1. You found a bug and want to suggest a merge request. Then Fork it!
-2. You will contribute adding a new epaper model that does exist.
+2. You will contribute adding a new epaper model that does not exist or add a new functionality to an existing one.
 3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
 
 All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. Forking is not bookmarking!
