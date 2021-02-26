@@ -46,7 +46,8 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 - **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
 - **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
 
-    ROADMAP
+ROADMAP
+    
     Rest of 2020 Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
