@@ -12,12 +12,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "FT6X36.h"
-#include <gdew027w3T.h>
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
-EpdSpi io;
-Gdew027w3T display(io, ts);
+#include "parallel/ED047TC1touch.h"
+Ed047TC1t display(ts);
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH 1

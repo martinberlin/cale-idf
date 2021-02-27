@@ -40,10 +40,10 @@ bool debugVerbose = false;
 // Important configuration. The class should match your epaper display model:
 
 // -> Needs to ↓ suit to your model
-#include <heltec0151.h> 
+#include <gdep015OC1.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
-Hel0151 display(io); // -> Needs to match your epaper
-
+//Gdeh0154d67 display(io); // -> Needs to match your epaper
+Gdep015OC1 display(io);
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
