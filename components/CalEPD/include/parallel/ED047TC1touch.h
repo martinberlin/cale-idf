@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include "epd_driver.h"
+#include "FT6X36.h" // Touch interface
 
 #define HAS_16_LEVELS_GRAY 1
 #define ED047TC1_WIDTH 960
@@ -27,10 +28,11 @@
 #define EPD_SDGRAY 25
 #define EPD_BLACK 0
 
-class Ed047TC1 : public EpdParallel
+
+class Ed047TC1t : public EpdParallel
 {
   public:
-    Ed047TC1();
+    Ed047TC1t(FT6X36& ts);
 
     uint8_t *framebuffer;
     uint8_t colors_supported = 1;
@@ -45,12 +47,17 @@ class Ed047TC1 : public EpdParallel
     
     void fillScreen(uint16_t color);
     void update(enum DrawMode mode = BLACK_ON_WHITE);
-    
-    // Partial update of rectangle from buffer to screen, does not power off
-    // Pending implementation
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
+    // Touch methods
+    void touchLoop();
+    void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
+    void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
+    void displayRotation(uint8_t rotation); // Rotates both Epd & Touch
+
   private:
+    FT6X36& Touch;
+
     bool color = false;
     bool _initial = true;
     bool _debug_buffer = false;

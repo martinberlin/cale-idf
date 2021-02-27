@@ -1,6 +1,3 @@
-#ifndef epd_h
-#define epd_h
-
 #include <calepd_version.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,4 +57,3 @@ class EpdParallel : public virtual Adafruit_GFX
     uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display
 };
-#endif
