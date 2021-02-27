@@ -36,7 +36,7 @@ class EpdParallel : public virtual Adafruit_GFX
     void newline();
     
   // Methods that should be accesible by inheriting this abstract class
-  protected: 
+  protected:
     // This should be inherited from this abstract class so we don't repeat in every model
     static inline uint16_t gx_uint16_min(uint16_t a, uint16_t b) {return (a < b ? a : b);};
     static inline uint16_t gx_uint16_max(uint16_t a, uint16_t b) {return (a > b ? a : b);};

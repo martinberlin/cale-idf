@@ -32,6 +32,8 @@ idf_component_register(
 
     # Only parallel epapers (Driven by I2Sbus)
     #SRCS "demos/demo-epaper-parallel.cpp"
+
+    SRCS "demos/demo-epaper-parallel-partial.cpp"
     INCLUDE_DIRS ".")
     
 set(COMPONENTS_DIRS, "components")

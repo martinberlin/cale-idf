@@ -17,10 +17,6 @@ Ed047TC1::Ed047TC1():
 
 }
 
-/* void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  epd_draw_pixel(x, y, color, framebuffer);
-} */
-
 //Initialize the display
 void Ed047TC1::init(bool debug)
 {
@@ -48,6 +44,43 @@ void Ed047TC1::clearArea(Rect_t area) {
 void Ed047TC1::update(enum DrawMode mode)
 {
   epd_draw_image(epd_full_screen(), framebuffer, mode);
+}
+
+void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+{
+  if (using_rotation) _rotate(x, y, w, h);
+  if (x >= ED047TC1_WIDTH) {
+    printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
+    return;
+  }
+  if (y >= ED047TC1_HEIGHT) {
+    printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
+    return;
+  }
+  Rect_t area = {
+    .x = x,
+    .y = y,
+    .width = w,
+    .height = h,
+  };
+
+  uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
+  memset(buffer, 0xFF, w*h/2);
+
+  uint32_t i = 0;
+  // Crop only this square from the big framebuffer
+  for (int16_t y1 = y; y1 < y+h; y1++)
+  {
+    for (int16_t x1 = x; x1 < x+w; x1=x1+2)
+    {
+      // 0xf0 fixed -> square with light gray. Issue is when trying to read the pixel
+      buffer[i] = framebuffer[y1 *ED047TC1_WIDTH / 2 + x1/2];
+      i++;
+    }
+    //printf("buffer y: %d line: %d\n",y1,i);
+  }
+
+  epd_draw_image(area, buffer, mode);
 }
 
 void Ed047TC1::powerOn(void)
@@ -81,5 +114,26 @@ void Ed047TC1::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
 
   epd_draw_pixel(x, y, color, framebuffer);
+}
 
+void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+{
+  switch (getRotation())
+  {
+    case 1:
+      swap(x, y);
+      swap(w, h);
+      x = width() - x - w;
+      break;
+    case 2:
+      //printf("w:%d -x:%d -w:%d\n",width(),x,w);
+      x = width() - x - w;
+      y = height() - y - h;
+      break;
+    case 3:
+      swap(x, y);
+      swap(w, h);
+      y = height() - y - h;
+      break;
+  }
 }
