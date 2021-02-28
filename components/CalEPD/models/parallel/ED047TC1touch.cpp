@@ -62,12 +62,14 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
   }
+  
   Rect_t area = {
     .x = x,
     .y = y,
     .width = w,
     .height = h,
   };
+  
 
   uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
   memset(buffer, 0xFF, w*h/2);

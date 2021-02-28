@@ -179,24 +179,32 @@ TPoint FTttgo::scanPoint()
 	}
      
 	uint16_t x = data[0].x;
-	uint16_t y = _touch_height - data[0].y;
+	uint16_t y = data[0].y;
 
-	// Make _touchX[idx] and _touchY[idx] rotation aware
+	// Make touch rotation aware
 	switch (_rotation)
   {
+	// 0- no rotation: Works OK inverting Y axis
+	case 0:
+	    y = _touch_height - y;
+		break;
+
 	case 1:
+	// There is something wrong. To debug: 
+		//ets_printf("bef. swap X:%d Y:%d\n", x, y);
 	    swap(x, y);
-		y = _touch_width - y -1;
+		y = _touch_width - y;
 		break;
 
 	case 2:
-		x = _touch_width - x - 1;
-		y = _touch_height - y - 1;
+		// Works OK
+		x = _touch_width - x;
 		break;
 
 	case 3:
+		// There is something wrong
 		swap(x, y);
-		x = _touch_height - x - 1;
+		x = _touch_height - x;
 		break;
   }
 

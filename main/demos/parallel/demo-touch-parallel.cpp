@@ -1,11 +1,11 @@
 /**
- * This is a demo to be used with Good Display 2.7 touch epaper 
- * http://www.e-paper-display.com/products_detail/productId=406.html 264*176 px monochome epaper
+ * This is a demo to be used with EPD47 parallel from Lilygo:
+ * https://github.com/martinberlin/cale-idf/wiki/Model-parallel-ED047TC1.h
  * 
- * The difference with the demo-touch.cpp demo is that:
+ * The touch awareness of rotation is not working OK for rotation 1 & 3
+ * Still did not discovered why, if you do just make a pull request!
  * 
- * In this demo Epd class gdew027w3T is used.
- * This class expects EpdSPI and FT6X36 to be injected. Meaning that then touch methods
+ * This class expects FTttgo to be injected. Meaning that then touch methods
  * can triggered directly from gdew027w3T class and also that would be automatic rotation aware
  */
 #include <stdio.h>
@@ -13,13 +13,13 @@
 #include "freertos/task.h"
 #include "FTttgo.h"
 
-// INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
+// INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
 FTttgo ts(CONFIG_TOUCH_INT);
 #include "parallel/ED047TC1touch.h"
 Ed047TC1t display(ts);
 
 // Only debugging:
-//#define DEBUG_COUNT_TOUCH 1
+#define DEBUG_COUNT_TOUCH 1
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
@@ -52,10 +52,10 @@ void drawUX(){
     {
       //swap(blockWidth,blockHeight);
       blockWidth = display.width()/4;
-      blockHeight = 42;
+      blockHeight = 62;
     } else {
       blockHeight = display.height()/4;
-      blockWidth = 42;
+      blockWidth = 62;
     }
     if (circleRadio==10) {
       selectTextColor  = EPD_WHITE;
@@ -108,19 +108,11 @@ void touchEvent(TPoint p, TEvent e)
     return;
 
   std::string eventName = "";
+  // Only Tap supported for now
   switch (e)
   {
   case TEvent::Tap:
     eventName = "tap";
-    break;
-  case TEvent::DragStart:
-    eventName = "DragStart";
-    break;
-  case TEvent::DragMove:
-    eventName = "DragMove";
-    break;
-  case TEvent::DragEnd:
-    eventName = "DragEnd";
     break;
   default:
     eventName = "UNKNOWN";
@@ -143,21 +135,23 @@ void touchEvent(TPoint p, TEvent e)
     } 
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
-    printf("Rotation pressed. display.getRotation() %d\n", display.getRotation());
     if (display.getRotation()==3) {
       display_rotation=0;
     } else {
       display_rotation++;
     }
-    display.fillScreen(EPD_WHITE);
+ 
     // We don't use method setRotation but instead displayRotation that rotates both eink drawPixel & touch coordinates
     display.displayRotation(display_rotation);
+    printf("Rotation pressed. display.setRotation(%d)\n", display.getRotation());
+    
+    display.clearScreen();
     drawUX();
     display.update();
 
   } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
     printf("CLS pressed\n");
-    display.fillScreen(EPD_WHITE);
+    display.clearScreen();
     circleColor = EPD_BLACK;
     drawUX();
     display.update();
@@ -180,6 +174,7 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   display.clearScreen();
    // Optional font setting, empty picks small default
    //display.setFont(&Ubuntu_M8pt8b);
 
