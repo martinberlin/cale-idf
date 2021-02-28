@@ -92,6 +92,7 @@ public:
 	// Pending implementation. How much x->touch y↓touch is placed (In case is smaller than display)
 	void setXoffset(uint16_t x_offset);
 	void setYoffset(uint16_t y_offset);
+	void sleep();
 	// Smart template from EPD to swap x,y:
     template <typename T> static inline void
     swap(T& a, T& b)
@@ -105,11 +106,10 @@ public:
 	TouchData_t data[5];
 	
 private:
-	uint8_t scanPoint();
+	TPoint scanPoint();
 	void writeRegister8(uint8_t reg, uint8_t val);
 	void writeData(uint8_t *data, int len);
 	void readBytes(uint8_t *data, int len);
-
 	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
 	void fireEvent(TPoint point, TEvent e);
 	uint8_t read8(uint8_t regName);

@@ -98,8 +98,9 @@ void FTttgo::processTouch()
 {
 	/* Task move to Block state to wait for interrupt event */
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
-	
-	scanPoint();
+	TPoint point = scanPoint();
+
+	fireEvent(point, TEvent::Tap);
 }
 
 uint8_t FTttgo::read8(uint8_t regName) {
@@ -108,9 +109,10 @@ uint8_t FTttgo::read8(uint8_t regName) {
 	return buf;
 }
 
-uint8_t FTttgo::scanPoint()
+TPoint FTttgo::scanPoint()
 {
-	uint8_t point = 0;
+	TPoint point{0,0};
+	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};
     uint32_t sumL = 0, sumH = 0;
 
@@ -120,35 +122,35 @@ uint8_t FTttgo::scanPoint()
 
     if (buffer[0] == 0xAB) {
         clearFlags();
-        return 0;
+        return point;
     }
 
-    point = buffer[5] & 0xF;
+    pointIdx = buffer[5] & 0xF;
 
-    if (point == 1) {
+    if (pointIdx == 1) {
         buffer[5] = 0xD0;
         buffer[6] = 0x07;
         readBytes( &buffer[5], 2);
         sumL = buffer[5] << 8 | buffer [6];
 
-    } else if (point > 1) {
+    } else if (pointIdx > 1) {
         buffer[5] = 0xD0;
         buffer[6] = 0x07;
-        readBytes( &buffer[5], 5 * (point - 1) + 3);
-        sumL = buffer[5 * point + 1] << 8 | buffer[5 * point + 2];
+        readBytes( &buffer[5], 5 * (pointIdx - 1) + 3);
+        sumL = buffer[5 * pointIdx + 1] << 8 | buffer[5 * pointIdx + 2];
     }
     clearFlags();
 
-    for (int i = 0 ; i < 5 * point; ++i) {
+    for (int i = 0 ; i < 5 * pointIdx; ++i) {
         sumH += buffer[i];
     }
 
     if (sumH != sumL) {
-        point = 0;
+        pointIdx = 0;
     }
-    if (point) {
+    if (pointIdx) {
         uint8_t offset;
-        for (int i = 0; i < point; ++i) {
+        for (int i = 0; i < pointIdx; ++i) {
             if (i == 0) {
                 offset = 0;
             } else {
@@ -164,18 +166,41 @@ uint8_t FTttgo::scanPoint()
             data[i].y = (uint16_t)((buffer[i * 5 + 1 + offset] << 4) | ((buffer[i * 5 + 3 + offset] >> 4) & 0x0F));
             data[i].x = (uint16_t)((buffer[i * 5 + 2 + offset] << 4) | (buffer[i * 5 + 3 + offset] & 0x0F));
 
-            printf("X:%d Y:%d\n", data[i].x, data[i].y);
+            printf("X[%d]:%d Y:%d\n", i, data[i].x, data[i].y);
         }
+
     } else {
-        point = 1;
+        pointIdx = 1;
         data[0].id = (buffer[0] >> 4) & 0x0F;
         data[0].state = 0x06;
         data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
         data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
         printf("X:%d Y:%d\n", data[0].x, data[0].y);
 	}
-    
-	
+     
+	uint16_t x = data[0].x;
+	uint16_t y = _touch_height - data[0].y;
+
+	// Make _touchX[idx] and _touchY[idx] rotation aware
+	switch (_rotation)
+  {
+	case 1:
+	    swap(x, y);
+		y = _touch_width - y -1;
+		break;
+
+	case 2:
+		x = _touch_width - x - 1;
+		y = _touch_height - y - 1;
+		break;
+
+	case 3:
+		swap(x, y);
+		x = _touch_height - x - 1;
+		break;
+  }
+
+	point = {x, y};
     return point;
 	
 }
@@ -251,7 +276,8 @@ void FTttgo::readBytes(uint8_t *data, int len) {
             printf("\r\n");
         }
     } else if (ret == ESP_ERR_TIMEOUT) {
-        ESP_LOGW(TAG, "Bus is busy");
+		// Getting a lot of this!
+        //ESP_LOGW(TAG, "Bus is busy");
     } else {
         ESP_LOGW(TAG, "Read failed");
     }
@@ -282,4 +308,7 @@ void FTttgo::clearFlags() {
 	writeData(buf, sizeof(buf));
 }
 
-//TODO: Add sleep method
+void FTttgo::sleep() {
+	uint8_t buf[2] = {0xD1, 0X05};
+	writeData(buf, sizeof(buf));
+}
