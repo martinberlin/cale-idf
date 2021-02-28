@@ -41,26 +41,9 @@ bool FTttgo::begin(uint8_t threshold, uint16_t width, uint16_t height)
 		ESP_LOGE(TAG,"begin(uint8_t threshold, uint16_t width, uint16_t height) did not receive the width / height so touch cannot be rotation aware");
 	}
 
-	uint8_t data_panel_id;
-	readRegister8(FT6X36_REG_PANEL_ID, &data_panel_id);
-
-	if (data_panel_id != FT6X36_VENDID) {
-		ESP_LOGE(TAG,"FT6X36_VENDID does not match. Received:0x%x Expected:0x%x\n",data_panel_id,FT6X36_VENDID);
-		return false;
-		}
-		ESP_LOGI(TAG, "\tDevice ID: 0x%02x", data_panel_id);
-
-	uint8_t chip_id;
-	readRegister8(FT6X36_REG_CHIPID, &chip_id);
-	if (chip_id != FT6206_CHIPID && chip_id != FT6236_CHIPID && chip_id != FT6336_CHIPID) {
-		ESP_LOGE(TAG,"FT6206_CHIPID does not match. Received:0x%x\n",chip_id);
-		return false;
-	}
-	ESP_LOGI(TAG, "\tFound touch controller with Chip ID: 0x%02x", chip_id);
-	
     // INT pin triggers the callback function on the Falling edge of the GPIO
     gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_INTR_NEGEDGE; // GPIO_INTR_NEGEDGE repeats always interrupt
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
     io_conf.pin_bit_mask = 1ULL<<CONFIG_TOUCH_INT;  
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_down_en = (gpio_pulldown_t) 0; // disable pull-down mode
@@ -71,9 +54,9 @@ bool FTttgo::begin(uint8_t threshold, uint16_t width, uint16_t height)
     printf("ISR trigger install response: 0x%x %s\n", isr_service, (isr_service==0)?"ESP_OK":"");
     gpio_isr_handler_add((gpio_num_t)CONFIG_TOUCH_INT, isr, (void*) 1);
 
-	writeRegister8(FT6X36_REG_DEVICE_MODE, 0x00);
-	writeRegister8(FT6X36_REG_THRESHHOLD, threshold);
-	writeRegister8(FT6X36_REG_TOUCHRATE_ACTIVE, 0x0E);
+	// Wake up: https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/blob/master/src/touch.cpp#L123
+	uint8_t buf[2] = {0xD1, 0X06};
+	writeData(buf, sizeof(buf));
 	return true;
 }
 
@@ -115,87 +98,9 @@ void FTttgo::processTouch()
 {
 	/* Task move to Block state to wait for interrupt event */
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
-	readData();
-	uint8_t n = 0;
-	TRawEvent event = (TRawEvent)_touchEvent[n];
-	TPoint point{_touchX[n], _touchY[n]};
-
-	switch (event) {
-
-		case TRawEvent::PressDown:
-				_points[0] = point;
-				_dragMode = false;
-				// Note: Is in microseconds. Ref https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html
-				_touchStartTime = esp_timer_get_time()/1000;
-				fireEvent(point, TEvent::TouchStart);
-			break;
-
-		case TRawEvent::Contact:
-				// Dragging makes no sense IMHO. Since the X & Y are not getting updated while dragging
-				// Dragging && _points[0].aboutEqual(point) - Not used IDEA 2:  && (lastEvent == 2)
-				if (!_dragMode && 
-					 (abs(lastX-_touchX[n]) <= maxDeviation || abs(lastY-_touchY[n])<=maxDeviation) && 
-				     esp_timer_get_time()/1000 - _touchStartTime > 300) {
-					_dragMode = true;
-					fireEvent(point, TEvent::DragStart);
-					#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
-						printf("EV: DragStart\n");
-					#endif
-					
-				} else if (_dragMode) {
-					fireEvent(point, TEvent::DragMove);
-					#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
-						printf("EV: DragMove\n");
-					#endif
-				}
-				fireEvent(point, TEvent::TouchMove);
-
-			   // For me the _touchStartTime shouold be set in both PressDown & Contact events, but after Drag detection
-		        _touchStartTime = esp_timer_get_time()/1000;
-				break;
-
-		case TRawEvent::LiftUp:
-			
-			_points[9] = point;
-			_touchEndTime = esp_timer_get_time()/1000;
-
-			//printf("TIMEDIFF: %lu End: %lu\n", _touchEndTime - _touchStartTime, _touchEndTime);
-
-			fireEvent(point, TEvent::TouchEnd);
-			if (_dragMode) {
-				fireEvent(point, TEvent::DragEnd);
-				#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
-					printf("EV: DragEnd\n");
-				#endif
-				_dragMode = false;
-			}
-		
-			if ( _touchEndTime - _touchStartTime <= 900) {
-				// Do not get why this: _points[0].aboutEqual(point) (Original library)
-				fireEvent(point, TEvent::Tap);
-				_points[0] = {0, 0};
-				_touchStartTime = 0;
-
-				#if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
-					printf("EV: Tap\n");
-				#endif
-				_dragMode = false;
-			}
-			
-			break;
-
-			case TRawEvent::NoEvent:
-			  #if defined(CONFIG_FT6X36_DEBUG_EVENTS) && CONFIG_FT6X36_DEBUG_EVENTS==1
-					printf("EV: NoEvent\n");
-		      #endif
-			break;
-	}
-	// Store lastEvent
-	lastEvent = (int) event;
-	lastX = _touchX[0];
-	lastY = _touchY[0];
+	
+	scanPoint();
 }
-
 
 uint8_t FTttgo::read8(uint8_t regName) {
 	uint8_t buf;
@@ -203,87 +108,76 @@ uint8_t FTttgo::read8(uint8_t regName) {
 	return buf;
 }
 
-bool FTttgo::readData(void)
+uint8_t FTttgo::scanPoint()
 {
-	esp_err_t ret;
-	uint8_t data_size = 16;     // Discarding last 2: 0x0E & 0x0F as not relevant
-	uint8_t data[data_size];
-    uint8_t touch_pnt_cnt;      // Number of detected touch points
-    readRegister8(FT6X36_REG_NUM_TOUCHES, &touch_pnt_cnt);
-	//printf("NUM_TOUCHES:%d\n",touch_pnt_cnt);
+	uint8_t point = 0;
+    uint8_t buffer[40] = {0};
+    uint32_t sumL = 0, sumH = 0;
 
-    // Read data
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (FT6X36_ADDR<<1), ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, 0, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    if (ret != ESP_OK) {
-        return ret;
+    buffer[0] = 0xD0;
+    buffer[1] = 0x00;
+    readBytes(buffer, 7);
+
+    if (buffer[0] == 0xAB) {
+        clearFlags();
+        return 0;
     }
 
-    cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (FT6X36_ADDR<<1)|1, ACK_CHECK_EN);
-    i2c_master_read(cmd, data, data_size,  I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
+    point = buffer[5] & 0xF;
 
-	if (CONFIG_FT6X36_DEBUG) {
-		//printf("REGISTERS:\n");
-		for (int16_t i = 0; i < data_size; i++)
-		{
-			printf("%x:%x ", i, data[i]);
-		}
-		printf("\n");
+    if (point == 1) {
+        buffer[5] = 0xD0;
+        buffer[6] = 0x07;
+        readBytes( &buffer[5], 2);
+        sumL = buffer[5] << 8 | buffer [6];
+
+    } else if (point > 1) {
+        buffer[5] = 0xD0;
+        buffer[6] = 0x07;
+        readBytes( &buffer[5], 5 * (point - 1) + 3);
+        sumL = buffer[5 * point + 1] << 8 | buffer[5 * point + 2];
+    }
+    clearFlags();
+
+    for (int i = 0 ; i < 5 * point; ++i) {
+        sumH += buffer[i];
+    }
+
+    if (sumH != sumL) {
+        point = 0;
+    }
+    if (point) {
+        uint8_t offset;
+        for (int i = 0; i < point; ++i) {
+            if (i == 0) {
+                offset = 0;
+            } else {
+                offset = 4;
+            }
+            data[i].id =  (buffer[i * 5 + offset] >> 4) & 0x0F;
+            data[i].state = buffer[i * 5 + offset] & 0x0F;
+            if (data[i].state == 0x06) {
+                data[i].state = 0x07;
+            } else {
+                data[i].state = 0x06;
+            }
+            data[i].y = (uint16_t)((buffer[i * 5 + 1 + offset] << 4) | ((buffer[i * 5 + 3 + offset] >> 4) & 0x0F));
+            data[i].x = (uint16_t)((buffer[i * 5 + 2 + offset] << 4) | (buffer[i * 5 + 3 + offset] & 0x0F));
+
+            printf("X:%d Y:%d\n", data[i].x, data[i].y);
+        }
+    } else {
+        point = 1;
+        data[0].id = (buffer[0] >> 4) & 0x0F;
+        data[0].state = 0x06;
+        data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
+        data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
+        printf("X:%d Y:%d\n", data[0].x, data[0].y);
 	}
-
-    const uint8_t addrShift = 6;
+    
 	
-	// READ X, Y and Touch events (X 2)
-	for (uint8_t i = 0; i < 2; i++)
-	{
-		_touchX[i] = data[FT6X36_REG_P1_XH + i * addrShift] & 0x0F;
-		_touchX[i] <<= 8;
-		_touchX[i] |= data[FT6X36_REG_P1_XL + i * addrShift];
-		_touchY[i] = data[FT6X36_REG_P1_YH + i * addrShift] & 0x0F;
-		_touchY[i] <<= 8;
-		_touchY[i] |= data[FT6X36_REG_P1_YL + i * addrShift];
-		_touchEvent[i] = data[FT6X36_REG_P1_XH + i * addrShift] >> 6;
-	}
+    return point;
 	
-	// Make _touchX[idx] and _touchY[idx] rotation aware
-	switch (_rotation)
-  {
-	case 1:
-	    swap(_touchX[0], _touchY[0]);
-		swap(_touchX[1], _touchY[1]);
-		_touchY[0] = _touch_width - _touchY[0] -1;
-		_touchY[1] = _touch_width - _touchY[1] -1;
-		break;
-	case 2:
-		_touchX[0] = _touch_width - _touchX[0] - 1;
-		_touchX[1] = _touch_width - _touchX[1] - 1;
-		_touchY[0] = _touch_height - _touchY[0] - 1;
-		_touchY[1] = _touch_height - _touchY[1] - 1;
-		break;
-	case 3:
-		swap(_touchX[0], _touchY[0]);
-		swap(_touchX[1], _touchY[1]);
-		_touchX[0] = _touch_height - _touchX[0] - 1;
-		_touchX[1] = _touch_height - _touchX[1] - 1;
-		break;
-  }
-
-	printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	if (CONFIG_FT6X36_DEBUG) {
-	  //printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	  //printf("X1:%d Y1:%d EVENT:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
-	}
-	return true;
 }
 
 void FTttgo::writeRegister8(uint8_t reg, uint8_t value)
@@ -296,6 +190,15 @@ void FTttgo::writeRegister8(uint8_t reg, uint8_t value)
 	i2c_master_stop(cmd);
     i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
+}
+
+void FTttgo::writeData(uint8_t *data, int len)
+{
+    if (len==0) return; 
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+	i2c_master_write(cmd, data, len, ACK_CHECK_EN);
+	i2c_master_stop(cmd);
 }
 
 uint8_t FTttgo::readRegister8(uint8_t reg, uint8_t *data_buf)
@@ -322,22 +225,42 @@ uint8_t FTttgo::readRegister8(uint8_t reg, uint8_t *data_buf)
 	return ret;
 }
 
+void FTttgo::readBytes(uint8_t *data, int len) {
+	if (len==0) return; 
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write(cmd, data, 2, ACK_CHECK_EN);
+
+	i2c_master_start(cmd);
+	
+	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_READ, ACK_CHECK_EN);
+	i2c_master_read(cmd, data, len, (i2c_ack_type_t) ACK_VAL);
+	i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+
+	if (ret == ESP_OK) {
+        for (int i = 0; i < len; i++) {
+            printf("0x%02x ", data[i]);
+            if ((i + 1) % 16 == 0) {
+                printf("\r\n");
+            }
+        }
+        if (len % 16) {
+            printf("\r\n");
+        }
+    } else if (ret == ESP_ERR_TIMEOUT) {
+        ESP_LOGW(TAG, "Bus is busy");
+    } else {
+        ESP_LOGW(TAG, "Read failed");
+    }
+}
+
 void FTttgo::fireEvent(TPoint point, TEvent e)
 {
 	if (_touchHandler)
 		_touchHandler(point, e);
-}
-
-void FTttgo::debugInfo()
-{
-	printf("            TH_DIFF: %d             CTRL: %d\n", read8(FT6X36_REG_FILTER_COEF), read8(FT6X36_REG_CTRL));
-	printf("   TIMEENTERMONITOR: %d     PERIODACTIVE: %d\n", read8(FT6X36_REG_TIME_ENTER_MONITOR), read8(FT6X36_REG_TOUCHRATE_ACTIVE));
-	printf("      PERIODMONITOR: %d     RADIAN_VALUE: %d\n", read8(FT6X36_REG_TOUCHRATE_MONITOR), read8(FT6X36_REG_RADIAN_VALUE));
-	printf("  OFFSET_LEFT_RIGHT: %d   OFFSET_UP_DOWN: %d\n", read8(FT6X36_REG_OFFSET_LEFT_RIGHT), read8(FT6X36_REG_OFFSET_UP_DOWN));
-	printf("DISTANCE_LEFT_RIGHT: %d DISTANCE_UP_DOWN: %d\n", read8(FT6X36_REG_DISTANCE_LEFT_RIGHT), read8(FT6X36_REG_DISTANCE_UP_DOWN));
-	printf("      DISTANCE_ZOOM: %d           CIPHER: %d\n", read8(FT6X36_REG_DISTANCE_ZOOM), read8(FT6X36_REG_CHIPID));
-	printf("             G_MODE: %d         PWR_MODE: %d\n", read8(FT6X36_REG_INTERRUPT_MODE), read8(FT6X36_REG_POWER_MODE));
-	printf("             FIRMID: %d     FOCALTECH_ID: %d     STATE: %d\n", read8(FT6X36_REG_FIRMWARE_VERSION), read8(FT6X36_REG_PANEL_ID), read8(FT6X36_REG_STATE));
 }
 
 void FTttgo::setRotation(uint8_t rotation) {
@@ -353,3 +276,10 @@ void FTttgo::setTouchHeight(uint16_t height) {
 	printf("touch h:%d\n",height);
 	_touch_height = height;
 }
+
+void FTttgo::clearFlags() {
+	uint8_t buf[3] = {0xD0, 0X00, 0XAB};
+	writeData(buf, sizeof(buf));
+}
+
+//TODO: Add sleep method
