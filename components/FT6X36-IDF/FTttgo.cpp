@@ -1,3 +1,5 @@
+// This is the first experimental Touch component for the LILYGO EPD47 touch overlay
+// Note: Rotation is only working for certain angles (0 works alright, 2 also) Others still need to be corrected
 #include "FTttgo.h"
 
 FTttgo *FTttgo::_instance = nullptr;
@@ -99,8 +101,14 @@ void FTttgo::processTouch()
 	/* Task move to Block state to wait for interrupt event */
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
 	TPoint point = scanPoint();
+    
+    // This should be measured in LiftUp event (Events not documented)
+    _touchEndTime = esp_timer_get_time()/1000;
 
-	fireEvent(point, TEvent::Tap);
+    if ( _touchEndTime - _touchStartTime <= 20) {
+	  fireEvent(point, TEvent::Tap);
+    }
+    
 }
 
 uint8_t FTttgo::read8(uint8_t regName) {
@@ -111,6 +119,7 @@ uint8_t FTttgo::read8(uint8_t regName) {
 
 TPoint FTttgo::scanPoint()
 {
+    _touchStartTime = esp_timer_get_time()/1000;
 	TPoint point{0,0};
 	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};

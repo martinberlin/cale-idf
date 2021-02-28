@@ -1,3 +1,8 @@
+// This is the first experimental Touch component for the LILYGO EPD47 touch overlay
+// Controller is unknown, no tech specs are available, so far I could only implement as an ESP-IDF component the original example:
+// https://github.com/Xinyuan-LilyGO/LilyGo-EPD47
+// More info about this epaper: 
+// https://github.com/martinberlin/cale-idf/wiki/Model-parallel-ED047TC1.h
 #include <stdint.h>
 #include <cstdlib>
 #include "driver/gpio.h"

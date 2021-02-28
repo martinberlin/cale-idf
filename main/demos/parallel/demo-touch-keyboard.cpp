@@ -61,7 +61,7 @@ uint16_t cursor_y = 40;
 
 // Measuring the X start of the SPACE key
 uint16_t key_space_x = 0;
-uint8_t key_space_width = 40;
+uint8_t key_space_width = 140;
 // Width and height of the area that will be partial updated in the epaper when pressing a Key
 // This pixel distance should be relative to the chosen font:
 uint8_t cursor_x_offset = 9;
@@ -88,23 +88,26 @@ void writeCarriageReturn(){
 void drawUX(){
     // Correct this pixels for your font selection of choice
     if (use_custom_font) {
-        
         cursor_x_offset = 24; // Has to be multiple of 2
         cursor_y_offset = 22; // Has to be multiple of 2
         cursor_space = 6;
         cursor_y_line_height = 18;
+
+        // Set cursor and default 
+        display.setFont(&Ubuntu_M16pt8b);
     }
     // key_width_1: Also measures Height for all lines
     key_width_1 = display.width()/sizeof(key_line1);
     key_width_2 = display.width()/sizeof(key_line2);
     uint16_t key_x = 1;
     uint8_t key_x_offset = 9;
+    uint8_t key_y_offset = 36;
     uint16_t key_y = line1_ystart;
     uint8_t impression_idx = 0;
     // LINE 1: Q -> P
     for (auto c:key_line1) {
       display.drawRect(key_x,key_y,key_width_1,key_width_1,EPD_BLACK);
-      display.setCursor(key_x+key_x_offset, key_y+10);
+      display.setCursor(key_x+key_x_offset, key_y+key_y_offset);
       display.print(c);
       line1_x[impression_idx] = key_x;
       key_x+=key_width_1;
@@ -122,7 +125,7 @@ void drawUX(){
     line2_ystart = key_y;
     for (auto c:key_line2) {
       display.drawRect(key_x,key_y,key_width_2,key_width_1,EPD_BLACK);
-      display.setCursor(key_x+key_x_offset, key_y+10);
+      display.setCursor(key_x+key_x_offset, key_y+key_y_offset);
       display.print(c);
       line2_x[impression_idx] = key_x;
       key_x+=key_width_2;
@@ -136,7 +139,7 @@ void drawUX(){
     line3_ystart = key_y;
     for (auto c:key_line3) {
       display.drawRect(key_x,key_y,key_width_1,key_width_1,EPD_BLACK);
-      display.setCursor(key_x+key_x_offset, key_y+10);
+      display.setCursor(key_x+key_x_offset, key_y+key_y_offset);
       display.print(c);
       line3_x[impression_idx] = key_x;
       key_x+=key_width_1;
@@ -144,17 +147,13 @@ void drawUX(){
     }
     
     display.drawRect(key_space_x,key_y,key_space_width,key_width_1,EPD_BLACK);
-    display.setCursor(key_x+5, key_y+10);
+    display.setCursor(key_x+5, key_y+key_y_offset);
     display.print("SPACE");
 
-    display.drawRect(key_space_x+key_space_width,key_y,key_space_width-1,key_width_1,EPD_BLACK);
-    display.setCursor(key_space_x+key_space_width+7, key_y+10);
+    display.drawRect(key_space_x+key_space_width,key_y,key_width_1,key_width_1,EPD_BLACK);
+    display.setCursor(key_space_x+key_space_width+7, key_y+key_y_offset);
     display.print("CLS");
-
-    // Set cursor and default font for the Write area
-    if (use_custom_font) {
-      display.setFont(&Ubuntu_M16pt8b);
-    }
+    
     display.setCursor(cursor_x,cursor_y);
     display.update();
 }
