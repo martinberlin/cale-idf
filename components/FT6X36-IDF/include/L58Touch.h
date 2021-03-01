@@ -25,57 +25,29 @@
 #define ACK_VAL 0x0                             /*!< I2C ack value */
 #define NACK_VAL 0x1                            /*!< I2C nack value */
 
+#define L58_ADDR						0x5A
 
-#define FT6X36_ADDR						0x5A
-
-#define FT6X36_REG_GESTURE_ID			0x01
-#define FT6X36_REG_NUM_TOUCHES			0x02
-#define FT6X36_DEFAULT_THRESHOLD		22
-
-// From: https://github.com/lvgl/lv_port_esp32/blob/master/components/lvgl_esp32_drivers/lvgl_touch/ft6x36.h
-#define FT6X36_MSB_MASK                 0x0F
-#define FT6X36_LSB_MASK                 0xFF
-
-enum class TRawEvent
-{
-	PressDown,
-	LiftUp,
-	Contact,
-	NoEvent
-};
-
+// Note: We still could not read proper events, so we simulate Tap
 enum class TEvent
 {
 	None,
 	TouchStart,
 	TouchMove,
 	TouchEnd,
-	Tap,
-	DragStart,
-	DragMove,
-	DragEnd
+	Tap
 };
 
 struct TPoint
 {
 	uint16_t x;
 	uint16_t y;
-	/**
-	 * This is being used in the original library but I'm not using it in this implementation
-	 */
-	bool aboutEqual(const TPoint point)
-	{
-		return abs(x - point.x) <= 5 && abs(y - point.y) <= 5;
-	}
 };
-
-
 
 class L58Touch
 {
 	static void IRAM_ATTR isr(void* arg);
 	typedef struct {
-        uint8_t id;
+		uint8_t id;
         uint8_t state;
         uint16_t x;
         uint16_t y;
@@ -85,7 +57,7 @@ public:
     // TwoWire * wire will be replaced by ESP-IDF https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
 	L58Touch(int8_t intPin);
 	~L58Touch();
-	bool begin(uint8_t threshold = FT6X36_DEFAULT_THRESHOLD, uint16_t width = 0, uint16_t height = 0);
+	bool begin(uint16_t width = 0, uint16_t height = 0);
 	void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
 	uint8_t touched();
 	void loop();
@@ -107,8 +79,8 @@ public:
       b = t;
     }
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
-
 	TouchData_t data[5];
+	bool tapSimulationEnabled = true;
 	
 private:
 	TPoint scanPoint();

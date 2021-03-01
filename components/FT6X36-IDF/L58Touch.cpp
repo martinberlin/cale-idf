@@ -36,7 +36,7 @@ L58Touch::~L58Touch()
 	gpio_isr_handler_remove((gpio_num_t)CONFIG_TOUCH_INT);
 }
 
-bool L58Touch::begin(uint8_t threshold, uint16_t width, uint16_t height)
+bool L58Touch::begin(uint16_t width, uint16_t height)
 {
 	_touch_width = width;
 	_touch_height = height;
@@ -69,22 +69,6 @@ void L58Touch::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 	if (CONFIG_FT6X36_DEBUG) printf("Touch handler function registered\n");
 }
 
-uint8_t L58Touch::touched()
-{
-	uint8_t data_buf;
-    esp_err_t ret = readRegister8(FT6X36_REG_NUM_TOUCHES, &data_buf);
-	if (ret != ESP_OK) {
-		ESP_LOGE(TAG, "Error reading from device: %s", esp_err_to_name(ret));
-	 }
-
-	if (data_buf > 2)
-	{
-		data_buf = 0;
-	}
-
-	return data_buf;
-}
-
 void L58Touch::loop()
 {
 	processTouch();
@@ -94,7 +78,6 @@ void IRAM_ATTR L58Touch::isr(void* arg)
 {
 	/* Un-block the interrupt processing task now */
     xSemaphoreGive(TouchSemaphore);
-	//xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
 
 void L58Touch::processTouch()
@@ -106,12 +89,15 @@ void L58Touch::processTouch()
     // This should be measured in LiftUp event (Events not documented)
     _touchEndTime = esp_timer_get_time()/1000;
 
-    // Very primitive way to fire a Tap event without press & liftup
-    // Essentially avoids fast repetition but is not real Tap
-    if ( _touchEndTime - _touchStartTime <= 15) {
+    // Very primitive way to simulate a Tap event without press & liftup
+    if (!tapSimulationEnabled) {
 	  fireEvent(point, TEvent::Tap);
+    } else {
+        // Essentially avoids fast repetition but is not real Tap
+        if (_touchEndTime - _touchStartTime <= 15) {
+            fireEvent(point, TEvent::Tap);
+        }
     }
-    
 }
 
 uint8_t L58Touch::read8(uint8_t regName) {
@@ -193,6 +179,9 @@ TPoint L58Touch::scanPoint()
 	uint16_t x = data[0].x;
 	uint16_t y = data[0].y;
 
+    // Had some hope that state was event, but always come:
+    // id:1 st:6
+    // printf("id:%d st:%d\n", data[0].id, data[0].state);
 	// Make touch rotation aware
 	switch (_rotation)
   {
@@ -225,7 +214,7 @@ void L58Touch::writeRegister8(uint8_t reg, uint8_t value)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, L58_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
 	i2c_master_write_byte(cmd, reg , ACK_CHECK_EN);
 	i2c_master_write_byte(cmd, value , ACK_CHECK_EN);
 	i2c_master_stop(cmd);
@@ -246,19 +235,17 @@ uint8_t L58Touch::readRegister8(uint8_t reg, uint8_t *data_buf)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, L58_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
 	i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
 	// Research: Why it's started a 2nd time here
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (FT6X36_ADDR << 1) | I2C_MASTER_READ, true);
+    i2c_master_write_byte(cmd, (L58_ADDR << 1) | I2C_MASTER_READ, true);
 
     i2c_master_read_byte(cmd, data_buf, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
 
-	
-	//FT6X36_REG_GESTURE_ID. Check if it can be read!
 #if defined(FT6X36_DEBUG) && FT6X36_DEBUG==1
 	printf("REG 0x%x: 0x%x\n",reg,ret);
 #endif
@@ -270,12 +257,12 @@ void L58Touch::readBytes(uint8_t *data, int len) {
 	if (len==0) return; 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, L58_ADDR << 1 | I2C_MASTER_WRITE, ACK_CHECK_EN);
 	i2c_master_write(cmd, data, 2, ACK_CHECK_EN);
 
 	i2c_master_start(cmd);
 	
-	i2c_master_write_byte(cmd, FT6X36_ADDR << 1 | I2C_MASTER_READ, ACK_CHECK_EN);
+	i2c_master_write_byte(cmd, L58_ADDR << 1 | I2C_MASTER_READ, ACK_CHECK_EN);
 	i2c_master_read(cmd, data, len, (i2c_ack_type_t) ACK_VAL);
 	i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);

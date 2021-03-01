@@ -26,7 +26,7 @@ void Ed047TC1t::init(bool debug)
   epd_init();
   epd_poweron();
   // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
-  Touch.begin(22, width(), height());
+  Touch.begin(width(), height());
   printf("Touch initialized. Free heap:%d\n",xPortGetFreeHeapSize());
 
 }
