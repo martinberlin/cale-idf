@@ -1,14 +1,15 @@
 // This is the first experimental Touch component for the LILYGO EPD47 touch overlay
+// Controller: L58  -> https://github.com/Xinyuan-LilyGO/LilyGo-EPD47/files/6059098/L58.V1.0.pdf
 // Note: Rotation is only working for certain angles (0 works alright, 2 also) Others still need to be corrected
-#include "FTttgo.h"
+#include "L58Touch.h"
 
-FTttgo *FTttgo::_instance = nullptr;
+L58Touch *L58Touch::_instance = nullptr;
 static const char *TAG = "i2c-touch";
 
 //Handle indicating I2C is ready to read the touch
 SemaphoreHandle_t TouchSemaphore = xSemaphoreCreateBinary();
 
-FTttgo::FTttgo(int8_t intPin)
+L58Touch::L58Touch(int8_t intPin)
 {
 	_instance = this;
 
@@ -30,12 +31,12 @@ FTttgo::FTttgo(int8_t intPin)
 }
 
 // Destructor should detach interrupt to the pin
-FTttgo::~FTttgo()
+L58Touch::~L58Touch()
 {
 	gpio_isr_handler_remove((gpio_num_t)CONFIG_TOUCH_INT);
 }
 
-bool FTttgo::begin(uint8_t threshold, uint16_t width, uint16_t height)
+bool L58Touch::begin(uint8_t threshold, uint16_t width, uint16_t height)
 {
 	_touch_width = width;
 	_touch_height = height;
@@ -62,13 +63,13 @@ bool FTttgo::begin(uint8_t threshold, uint16_t width, uint16_t height)
 	return true;
 }
 
-void FTttgo::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
+void L58Touch::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 {
 	_touchHandler = fn;
 	if (CONFIG_FT6X36_DEBUG) printf("Touch handler function registered\n");
 }
 
-uint8_t FTttgo::touched()
+uint8_t L58Touch::touched()
 {
 	uint8_t data_buf;
     esp_err_t ret = readRegister8(FT6X36_REG_NUM_TOUCHES, &data_buf);
@@ -84,19 +85,19 @@ uint8_t FTttgo::touched()
 	return data_buf;
 }
 
-void FTttgo::loop()
+void L58Touch::loop()
 {
 	processTouch();
 }
 
-void IRAM_ATTR FTttgo::isr(void* arg)
+void IRAM_ATTR L58Touch::isr(void* arg)
 {
 	/* Un-block the interrupt processing task now */
     xSemaphoreGive(TouchSemaphore);
 	//xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
 
-void FTttgo::processTouch()
+void L58Touch::processTouch()
 {
 	/* Task move to Block state to wait for interrupt event */
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
@@ -105,19 +106,21 @@ void FTttgo::processTouch()
     // This should be measured in LiftUp event (Events not documented)
     _touchEndTime = esp_timer_get_time()/1000;
 
-    if ( _touchEndTime - _touchStartTime <= 20) {
+    // Very primitive way to fire a Tap event without press & liftup
+    // Essentially avoids fast repetition but is not real Tap
+    if ( _touchEndTime - _touchStartTime <= 15) {
 	  fireEvent(point, TEvent::Tap);
     }
     
 }
 
-uint8_t FTttgo::read8(uint8_t regName) {
+uint8_t L58Touch::read8(uint8_t regName) {
 	uint8_t buf;
 	readRegister8(regName, &buf);
 	return buf;
 }
 
-TPoint FTttgo::scanPoint()
+TPoint L58Touch::scanPoint()
 {
     _touchStartTime = esp_timer_get_time()/1000;
 	TPoint point{0,0};
@@ -222,7 +225,7 @@ TPoint FTttgo::scanPoint()
 	
 }
 
-void FTttgo::writeRegister8(uint8_t reg, uint8_t value)
+void L58Touch::writeRegister8(uint8_t reg, uint8_t value)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -234,7 +237,7 @@ void FTttgo::writeRegister8(uint8_t reg, uint8_t value)
     i2c_cmd_link_delete(cmd);
 }
 
-void FTttgo::writeData(uint8_t *data, int len)
+void L58Touch::writeData(uint8_t *data, int len)
 {
     if (len==0) return; 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -243,7 +246,7 @@ void FTttgo::writeData(uint8_t *data, int len)
 	i2c_master_stop(cmd);
 }
 
-uint8_t FTttgo::readRegister8(uint8_t reg, uint8_t *data_buf)
+uint8_t L58Touch::readRegister8(uint8_t reg, uint8_t *data_buf)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -267,7 +270,7 @@ uint8_t FTttgo::readRegister8(uint8_t reg, uint8_t *data_buf)
 	return ret;
 }
 
-void FTttgo::readBytes(uint8_t *data, int len) {
+void L58Touch::readBytes(uint8_t *data, int len) {
 	if (len==0) return; 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -300,32 +303,32 @@ void FTttgo::readBytes(uint8_t *data, int len) {
     }
 }
 
-void FTttgo::fireEvent(TPoint point, TEvent e)
+void L58Touch::fireEvent(TPoint point, TEvent e)
 {
 	if (_touchHandler)
 		_touchHandler(point, e);
 }
 
-void FTttgo::setRotation(uint8_t rotation) {
+void L58Touch::setRotation(uint8_t rotation) {
 	_rotation = rotation;
 }
 
-void FTttgo::setTouchWidth(uint16_t width) {
+void L58Touch::setTouchWidth(uint16_t width) {
 	printf("touch w:%d\n",width);
 	_touch_width = width;
 }
 
-void FTttgo::setTouchHeight(uint16_t height) {
+void L58Touch::setTouchHeight(uint16_t height) {
 	printf("touch h:%d\n",height);
 	_touch_height = height;
 }
 
-void FTttgo::clearFlags() {
+void L58Touch::clearFlags() {
 	uint8_t buf[3] = {0xD0, 0X00, 0XAB};
 	writeData(buf, sizeof(buf));
 }
 
-void FTttgo::sleep() {
+void L58Touch::sleep() {
 	uint8_t buf[2] = {0xD1, 0X05};
 	writeData(buf, sizeof(buf));
 }

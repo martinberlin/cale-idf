@@ -5,16 +5,16 @@
  * The touch awareness of rotation is not working OK for rotation 1 & 3
  * Still did not discovered why, if you do just make a pull request!
  * 
- * This class expects FTttgo to be injected. Meaning that then touch methods
+ * This class expects L58Touch to be injected. Meaning that then touch methods
  * can triggered directly from gdew027w3T class and also that would be automatic rotation aware
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "FTttgo.h"
+#include "L58Touch.h"
 
 // INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
-FTttgo ts(CONFIG_TOUCH_INT);
+L58Touch ts(CONFIG_TOUCH_INT);
 #include "parallel/ED047TC1touch.h"
 Ed047TC1t display(ts);
 

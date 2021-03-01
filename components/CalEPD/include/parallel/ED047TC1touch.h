@@ -12,7 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include "epd_driver.h"
-#include "FTttgo.h" // Touch interface
+#include "L58Touch.h" // Touch interface
 
 #define HAS_16_LEVELS_GRAY 1
 #define ED047TC1_WIDTH 960
@@ -32,7 +32,7 @@
 class Ed047TC1t : public EpdParallel
 {
   public:
-    Ed047TC1t(FTttgo& ts);
+    Ed047TC1t(L58Touch& ts);
 
     uint8_t *framebuffer;
     uint8_t colors_supported = 1;
@@ -57,7 +57,7 @@ class Ed047TC1t : public EpdParallel
     void displayRotation(uint8_t rotation); // Rotates both Epd & Touch
 
   private:
-    FTttgo& Touch;
+    L58Touch& Touch;
 
     bool color = false;
     bool _initial = true;

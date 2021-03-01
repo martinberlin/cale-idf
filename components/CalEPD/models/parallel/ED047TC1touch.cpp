@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 
 // Constructor
-Ed047TC1t::Ed047TC1t(FTttgo& ts): 
+Ed047TC1t::Ed047TC1t(L58Touch& ts):
   Adafruit_GFX(ED047TC1_WIDTH, ED047TC1_HEIGHT),
   EpdParallel(ED047TC1_WIDTH, ED047TC1_HEIGHT),
   Touch(ts)

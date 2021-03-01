@@ -71,7 +71,7 @@ struct TPoint
 
 
 
-class FTttgo
+class L58Touch
 {
 	static void IRAM_ATTR isr(void* arg);
 	typedef struct {
@@ -83,8 +83,8 @@ class FTttgo
 
 public:
     // TwoWire * wire will be replaced by ESP-IDF https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
-	FTttgo(int8_t intPin);
-	~FTttgo();
+	L58Touch(int8_t intPin);
+	~L58Touch();
 	bool begin(uint8_t threshold = FT6X36_DEFAULT_THRESHOLD, uint16_t width = 0, uint16_t height = 0);
 	void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
 	uint8_t touched();
@@ -120,7 +120,7 @@ private:
 	uint8_t read8(uint8_t regName);
 	void clearFlags();
 
-	static FTttgo * _instance;
+	static L58Touch * _instance;
 	uint8_t _intPin;
 	
 	// Make touch rotation aware:

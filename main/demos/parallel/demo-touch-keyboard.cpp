@@ -7,10 +7,10 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "FTttgo.h"
+#include "L58Touch.h"
 
 // INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
-FTttgo ts(CONFIG_TOUCH_INT);
+L58Touch ts(CONFIG_TOUCH_INT);
 #include "parallel/ED047TC1touch.h"
 Ed047TC1t display(ts);
 
