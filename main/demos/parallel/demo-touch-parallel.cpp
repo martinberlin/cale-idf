@@ -104,7 +104,7 @@ void touchEvent(TPoint p, TEvent e)
     ets_printf("e %x %d  ",e,t_counter); // Working
   #endif
 
-  if (e != TEvent::Tap && e != TEvent::DragStart && e != TEvent::DragMove && e != TEvent::DragEnd)
+  if (e != TEvent::Tap)
     return;
 
   std::string eventName = "";
@@ -137,24 +137,28 @@ void touchEvent(TPoint p, TEvent e)
     // We don't use method setRotation but instead displayRotation that rotates both eink drawPixel & touch coordinates
     display.displayRotation(display_rotation);
     printf("Rotation pressed. display.setRotation(%d)\n", display.getRotation());
-    
     display.fillScreen(EPD_WHITE);
     display.clearScreen();
-    
     drawUX();
     display.update();
 
   } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
     printf("CLS pressed\n");
+    display.fillScreen(EPD_WHITE);
     display.clearScreen();
     circleColor = EPD_BLACK;
     drawUX();
     display.update();
+    
   } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
-    printf("20px radio pressed\n");
+    printf("20px pressed. No tap simulation\n");
     circleRadio = 20;
+    ts.tapSimulationEnabled = false;
+
   } else if (p.x<blockWidth && p.y<button3 && p.y>1) {
+    printf("10px pressed. Tap simulation enabled\n");
     circleRadio = 10;
+    ts.tapSimulationEnabled = true;
 
   } else {
     printf("Draw a %d px circle\n", circleRadio);
