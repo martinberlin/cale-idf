@@ -49,14 +49,14 @@ void Ed047TC1::update(enum DrawMode mode)
 void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= ED047TC1_WIDTH) {
+  /* if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
   }
   if (y >= ED047TC1_HEIGHT) {
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
-  }
+  } */
   Rect_t area = {
     .x = x,
     .y = y,
@@ -120,20 +120,30 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
+    // 0 landscape
+    // 1 90 ° right portrait
     case 1:
       swap(x, y);
       swap(w, h);
-      x = width() - x - w;
+      x = height() - x - w;
       break;
+    
     case 2:
-      //printf("w:%d -x:%d -w:%d\n",width(),x,w);
+      // 3 180° landscape
       x = width() - x - w;
       y = height() - y - h;
       break;
+
     case 3:
+      // 3 270 ° portrait -> Corrected
       swap(x, y);
       swap(w, h);
-      y = height() - y - h;
+      y = width() - y - h;
       break;
   }
+  /**
+   Enable debug for rotation calculations
+      printf("height():%d - y:%d - h:%d\n",width(),y,h);
+      printf("x:%d y:%d w:%d h:%d\n",x,y,w,h);
+  */
 }

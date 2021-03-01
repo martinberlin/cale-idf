@@ -138,22 +138,27 @@ void Ed047TC1t::displayRotation(uint8_t rotation) {
 
 void Ed047TC1t::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
-  switch (getRotation())
+    switch (getRotation())
   {
+    // 0 landscape
+    // 1 90 ° right portrait
     case 1:
       swap(x, y);
       swap(w, h);
-      x = width() - x - w;
+      x = height() - x - w;
       break;
+    
     case 2:
-      //printf("w:%d -x:%d -w:%d\n",width(),x,w);
+      // 3 180° landscape
       x = width() - x - w;
       y = height() - y - h;
       break;
+
     case 3:
+      // 3 270 ° portrait
       swap(x, y);
       swap(w, h);
-      y = height() - y - h;
+      y = width() - y - h;
       break;
   }
 }
