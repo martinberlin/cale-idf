@@ -22,7 +22,7 @@ Ed047TC1t display(ts);
 #define DEBUG_COUNT_TOUCH 1
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
 uint8_t display_rotation = 0;
 
 extern "C"
@@ -51,11 +51,11 @@ void drawUX(){
     if (display.getRotation()==1 || display.getRotation()==3)
     {
       //swap(blockWidth,blockHeight);
-      blockWidth = display.width()/4;
-      blockHeight = 100;
-    } else {
       blockHeight = display.height()/4;
       blockWidth = 100;
+    } else {
+      blockHeight = display.height()/4;
+      blockWidth = 90;
     }
     if (circleRadio==10) {
       selectTextColor  = EPD_WHITE;
@@ -122,17 +122,10 @@ void touchEvent(TPoint p, TEvent e)
   #if defined(DEBUG_COUNT_TOUCH)
   printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
   #endif
-  // Button coordinates need to be adapted depending on rotation
-  uint16_t button4_max = 198;
-  uint16_t button4_min = 132;
-  uint16_t button3 = 66;
-  if (display.getRotation()==1 || display.getRotation()==3)
-    {
-      uint8_t blocks = display.height()/4;
-      button4_max = blocks*3;
-      button4_min = blocks*2;
-      button3 = blocks;
-    } 
+  
+   uint16_t button4_max = blockHeight*3;
+   uint16_t button4_min = blockHeight*2;
+   uint16_t button3 = blockHeight;
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
     if (display.getRotation()==3) {
@@ -140,7 +133,7 @@ void touchEvent(TPoint p, TEvent e)
     } else {
       display_rotation++;
     }
- 
+
     // We don't use method setRotation but instead displayRotation that rotates both eink drawPixel & touch coordinates
     display.displayRotation(display_rotation);
     printf("Rotation pressed. display.setRotation(%d)\n", display.getRotation());
@@ -166,12 +159,13 @@ void touchEvent(TPoint p, TEvent e)
   } else {
     printf("Draw a %d px circle\n", circleRadio);
     // ON 1 & 3 rotation mode resets still did not discovered why
-    // And I guess is because Y, X, Radius are not pair for partial
+    // And I guess is because Y, Radius are not pair for partial
     uint16_t normX = (p.x %2 == 0) ?p.x:p.x++;
-    uint16_t normY = (p.y %2 == 0) ?p.y:p.y++;
+    // Only X seems to be the issue
+    //uint16_t normY = (p.y %2 == 0) ?p.y:p.y++;
     uint16_t normR = (circleRadio %2 ==0) ? circleRadio : circleRadio+1;
     display.fillCircle(p.x, p.y, normR, circleColor);
-    display.updateWindow(normX-normR, normY-normR, normR*2+2, normR*2+2);
+    display.updateWindow(normX-normR, p.y-normR, normR*2+2, normR*2+2);
   }
 }
 
@@ -180,6 +174,7 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   display.setFont(&Ubuntu_M16pt8b);
    display.clearScreen();
    // Optional font setting, empty picks small default
    //display.setFont(&Ubuntu_M8pt8b);
