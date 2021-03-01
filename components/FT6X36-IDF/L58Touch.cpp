@@ -202,21 +202,17 @@ TPoint L58Touch::scanPoint()
 		break;
 
 	case 1:
-	// There is something wrong. To debug: 
-		//ets_printf("bef. swap X:%d Y:%d\n", x, y);
 	    swap(x, y);
 		y = _touch_width - y;
+        x = _touch_height - x;
 		break;
 
-	case 2:
-		// Works OK
+	case 2: // Works OK
 		x = _touch_width - x;
 		break;
 
 	case 3:
-		// There is something wrong
 		swap(x, y);
-		x = _touch_height - x;
 		break;
   }
 

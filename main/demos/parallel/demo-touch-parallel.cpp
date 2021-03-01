@@ -52,10 +52,10 @@ void drawUX(){
     {
       //swap(blockWidth,blockHeight);
       blockWidth = display.width()/4;
-      blockHeight = 62;
+      blockHeight = 100;
     } else {
       blockHeight = display.height()/4;
-      blockWidth = 62;
+      blockWidth = 100;
     }
     if (circleRadio==10) {
       selectTextColor  = EPD_WHITE;
@@ -145,7 +145,9 @@ void touchEvent(TPoint p, TEvent e)
     display.displayRotation(display_rotation);
     printf("Rotation pressed. display.setRotation(%d)\n", display.getRotation());
     
+    display.fillScreen(EPD_WHITE);
     display.clearScreen();
+    
     drawUX();
     display.update();
 
@@ -163,9 +165,13 @@ void touchEvent(TPoint p, TEvent e)
 
   } else {
     printf("Draw a %d px circle\n", circleRadio);
-    // Print a small circle in selected color
-    display.fillCircle(p.x, p.y, circleRadio, circleColor);
-    display.updateWindow(p.x-circleRadio, p.y-circleRadio, circleRadio*2, circleRadio*2+1);
+    // ON 1 & 3 rotation mode resets still did not discovered why
+    // And I guess is because Y, X, Radius are not pair for partial
+    uint16_t normX = (p.x %2 == 0) ?p.x:p.x++;
+    uint16_t normY = (p.y %2 == 0) ?p.y:p.y++;
+    uint16_t normR = (circleRadio %2 ==0) ? circleRadio : circleRadio+1;
+    display.fillCircle(p.x, p.y, normR, circleColor);
+    display.updateWindow(normX-normR, normY-normR, normR*2+2, normR*2+2);
   }
 }
 
