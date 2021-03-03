@@ -111,7 +111,7 @@ uint8_t L58Touch::read8(uint8_t regName) {
 TPoint L58Touch::scanPoint()
 {
     _touchStartTime = esp_timer_get_time()/1000;
-	TPoint point{0,0};
+	TPoint point{0,0,0};
 	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};
     uint32_t sumL = 0, sumH = 0;
@@ -157,25 +157,26 @@ TPoint L58Touch::scanPoint()
                 offset = 4;
             }
             data[i].id =  (buffer[i * 5 + offset] >> 4) & 0x0F;
-            data[i].state = buffer[i * 5 + offset] & 0x0F;
-            if (data[i].state == 0x06) {
+            data[i].event = buffer[i * 5 + offset] & 0x0F;
+            // Todo: Pending to revise why this construction is here
+            /* if (data[i].state == 0x06) {
                 data[i].state = 0x07;
             } else {
                 data[i].state = 0x06;
-            }
+            } */
             data[i].y = (uint16_t)((buffer[i * 5 + 1 + offset] << 4) | ((buffer[i * 5 + 3 + offset] >> 4) & 0x0F));
             data[i].x = (uint16_t)((buffer[i * 5 + 2 + offset] << 4) | (buffer[i * 5 + 3 + offset] & 0x0F));
 
-            printf("X[%d]:%d Y:%d\n", i, data[i].x, data[i].y);
+            printf("X[%d]:%d Y:%d E:%d\n", i, data[i].x, data[i].y, data[i].event);
         }
 
     } else {
         pointIdx = 1;
         data[0].id = (buffer[0] >> 4) & 0x0F;
-        data[0].state = 0x06;
+        data[0].event = (buffer[0] & 0x0F) >>1;
         data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
         data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
-        printf("X:%d Y:%d\n", data[0].x, data[0].y);
+        printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
 	}
      
 	uint16_t x = data[0].x;
@@ -207,9 +208,8 @@ TPoint L58Touch::scanPoint()
 		break;
   }
 
-	point = {x, y};
-    return point;
-	
+  point = {x, y, data[0].event};
+  return point;	
 }
 
 void L58Touch::writeRegister8(uint8_t reg, uint8_t value)

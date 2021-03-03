@@ -41,6 +41,7 @@ struct TPoint
 {
 	uint16_t x;
 	uint16_t y;
+	uint8_t event;
 };
 
 class L58Touch
@@ -48,7 +49,7 @@ class L58Touch
 	static void IRAM_ATTR isr(void* arg);
 	typedef struct {
 		uint8_t id;
-        uint8_t state;
+        uint8_t event;
         uint16_t x;
         uint16_t y;
     } TouchData_t;
