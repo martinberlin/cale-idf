@@ -4,12 +4,12 @@
 
 * esp32 or esp32S2
 * Espressif IDF framework 4.3
-* An SPI epaper (see wiki for supported models)
+* An epaper display (see wiki for supported models)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
-On latest release, CalEPD has also support for FocalTech I2C touch panel, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
+On latest releases, CalEPD has also support for FocalTech and L48 I2C touch panels, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
-CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83 and 7.5 inches).
+CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83, 7.5 and 12.48 inches).
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
 
@@ -23,7 +23,7 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 
 All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. Forking is not bookmarking!
 
-We don't like having copies of this without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
+We don't like having copies of the whole repository without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
 
 ## Requesting for new models
 
@@ -42,20 +42,22 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 **Different cpp examples:**
 
 - **cale.cpp** Main example to use with monochrome or 3 color epapers from Goodisplay/Waveshare
-- **cale-grayscale.cpp** Example only to use with PlasticLogic epapers
+- **cale-grayscale.cpp** Example only to use with PlasticLogic epapers, serves as footprint to do it with other models
 - **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
 - **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
 
+Best settings on CALE.es website that we found to display color photos with cale-7-color is to use Dither mode: 3x3 and Bits per pixel 24. This is downgraded to 4bpp using dithering but that's really ok since 16 colors are more than the epaper supports. It's not a great photo quality but this epapers where designed to make labels and supermarket prices, not to display quality color pictures.
+
 ROADMAP
     
-    Rest of 2020 Enabling touch support to enable UX design in ESP32
+    2021-Mar till June Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
     2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
     
 ## News
 
-- Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
+- Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support and **Cale-idf** was the first component to support it with optimized SPI communication. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
 
 [News section has been moved to the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
