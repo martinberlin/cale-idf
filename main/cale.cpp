@@ -27,12 +27,10 @@
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-//#include <gdew0583z21.h>
-// 7 Color display (Only 2 colors implemented in this demo)
-#include "color/wave5i7Color.h"
+#include <gdew0583z21.h>
 EpdSpi io;
-Wave5i7Color display(io);
-
+//Gdeh0213b73 display(io);
+Gdew0583z21 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
 // Multi-SPI 4 channels EPD only
@@ -189,9 +187,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
             }
 
-            rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
-            if (bmp.depth < 8)
-                rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
+            rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
 
             if (bmpDebug)
                 printf("ROW Size %d\n", rowSize);
@@ -333,7 +329,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     else
                     {
-                        if (drawX + 1 > bmp.width)
+                        // if (drawX + 1 > bmp.width) -> Updated but not tested with 12.48 inch epaper
+                        if (drawX + 1 > rowSize *2)
                         {
                             drawX = 0;
                             rowByteCounter = 0;
@@ -342,6 +339,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     // The ultimate mission: Send the X / Y pixel to the GFX Buffer
                     display.drawPixel(drawX, drawY, color);
+                    if (drawY == 0) break;
 
                     totalDrawPixels++;
                     ++drawX;
