@@ -1,6 +1,7 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
     "models/wave12i48.cpp"
+    "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
