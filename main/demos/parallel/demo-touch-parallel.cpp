@@ -1,29 +1,28 @@
 /**
- * This is a demo to be used with Good Display 2.7 touch epaper 
- * http://www.e-paper-display.com/products_detail/productId=406.html 264*176 px monochome epaper
+ * This is a demo to be used with EPD47 parallel from Lilygo:
+ * https://github.com/martinberlin/cale-idf/wiki/Model-parallel-ED047TC1.h
  * 
- * The difference with the demo-touch.cpp demo is that:
+ * The touch awareness of rotation is not working OK for rotation 1 & 3
+ * Still did not discovered why, if you do just make a pull request!
  * 
- * In this demo Epd class gdew027w3T is used.
- * This class expects EpdSPI and FT6X36 to be injected. Meaning that then touch methods
+ * This class expects L58Touch to be injected. Meaning that then touch methods
  * can triggered directly from gdew027w3T class and also that would be automatic rotation aware
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "FT6X36.h"
-#include <gdew027w3T.h>
+#include "L58Touch.h"
 
-// INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
-FT6X36 ts(CONFIG_TOUCH_INT);
-EpdSpi io;
-Gdew027w3T display(io, ts);
+// INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
+L58Touch ts(CONFIG_TOUCH_INT);
+#include "parallel/ED047TC1touch.h"
+Ed047TC1t display(ts);
 
 // Only debugging:
-//#define DEBUG_COUNT_TOUCH 1
+#define DEBUG_COUNT_TOUCH 1
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
 uint8_t display_rotation = 0;
 
 extern "C"
@@ -52,11 +51,11 @@ void drawUX(){
     if (display.getRotation()==1 || display.getRotation()==3)
     {
       //swap(blockWidth,blockHeight);
-      blockWidth = display.width()/4;
-      blockHeight = 42;
+      blockHeight = display.height()/4;
+      blockWidth = 100;
     } else {
       blockHeight = display.height()/4;
-      blockWidth = 42;
+      blockWidth = 90;
     }
     if (circleRadio==10) {
       selectTextColor  = EPD_WHITE;
@@ -105,23 +104,15 @@ void touchEvent(TPoint p, TEvent e)
     ets_printf("e %x %d  ",e,t_counter); // Working
   #endif
 
-  if (e != TEvent::Tap && e != TEvent::DragStart && e != TEvent::DragMove && e != TEvent::DragEnd)
+  if (e != TEvent::Tap)
     return;
 
   std::string eventName = "";
+  // Only Tap supported for now
   switch (e)
   {
   case TEvent::Tap:
     eventName = "tap";
-    break;
-  case TEvent::DragStart:
-    eventName = "DragStart";
-    break;
-  case TEvent::DragMove:
-    eventName = "DragMove";
-    break;
-  case TEvent::DragEnd:
-    eventName = "DragEnd";
     break;
   default:
     eventName = "UNKNOWN";
@@ -131,48 +122,54 @@ void touchEvent(TPoint p, TEvent e)
   #if defined(DEBUG_COUNT_TOUCH)
   printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
   #endif
-  // Button coordinates need to be adapted depending on rotation
-  uint16_t button4_max = 198;
-  uint16_t button4_min = 132;
-  uint16_t button3 = 66;
-  if (display.getRotation()==1 || display.getRotation()==3)
-    {
-      uint8_t blocks = display.height()/4;
-      button4_max = blocks*3;
-      button4_min = blocks*2;
-      button3 = blocks;
-    } 
+  
+   uint16_t button4_max = blockHeight*3;
+   uint16_t button4_min = blockHeight*2;
+   uint16_t button3 = blockHeight;
 
   if (p.x<blockWidth && p.y>button4_max) { // Rotate 90 degrees
-    printf("Rotation pressed. display.getRotation() %d\n", display.getRotation());
     if (display.getRotation()==3) {
       display_rotation=0;
     } else {
       display_rotation++;
     }
-    display.fillScreen(EPD_WHITE);
+
     // We don't use method setRotation but instead displayRotation that rotates both eink drawPixel & touch coordinates
     display.displayRotation(display_rotation);
+    printf("Rotation pressed. display.setRotation(%d)\n", display.getRotation());
+    display.fillScreen(EPD_WHITE);
+    display.clearScreen();
     drawUX();
     display.update();
 
   } else if (p.x<blockWidth && p.y<button4_max && p.y>button4_min) { // Clear screen to white, black eink
     printf("CLS pressed\n");
     display.fillScreen(EPD_WHITE);
+    display.clearScreen();
     circleColor = EPD_BLACK;
     drawUX();
     display.update();
+    
   } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
-    printf("20px radio pressed\n");
+    printf("20px pressed. No tap simulation\n");
     circleRadio = 20;
+    ts.tapSimulationEnabled = false;
+
   } else if (p.x<blockWidth && p.y<button3 && p.y>1) {
+    printf("10px pressed. Tap simulation enabled\n");
     circleRadio = 10;
+    ts.tapSimulationEnabled = true;
 
   } else {
     printf("Draw a %d px circle\n", circleRadio);
-    // Print a small circle in selected color
-    display.fillCircle(p.x, p.y, circleRadio, circleColor);
-    display.updateWindow(p.x-circleRadio, p.y-circleRadio, circleRadio*2, circleRadio*2+1);
+    // ON 1 & 3 rotation mode resets still did not discovered why
+    // And I guess is because Y, Radius are not pair for partial
+    uint16_t normX = (p.x %2 == 0) ?p.x:p.x++;
+    // Only X seems to be the issue
+    //uint16_t normY = (p.y %2 == 0) ?p.y:p.y++;
+    uint16_t normR = (circleRadio %2 ==0) ? circleRadio : circleRadio+1;
+    display.fillCircle(p.x, p.y, normR, circleColor);
+    display.updateWindow(normX-normR, p.y-normR, normR*2+2, normR*2+2);
   }
 }
 
@@ -181,6 +178,8 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
    display.init(false);
+   display.setFont(&Ubuntu_M16pt8b);
+   display.clearScreen();
    // Optional font setting, empty picks small default
    //display.setFont(&Ubuntu_M8pt8b);
 

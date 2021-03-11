@@ -757,7 +757,7 @@ void IRAM_ATTR provide_out(OutputParams *params) {
 void IRAM_ATTR feed_display(OutputParams *params) {
   while (true) {
     xSemaphoreTake(params->start_smphr, portMAX_DELAY);
-    printf("Feed epaper\n");
+    //printf("Feed epaper\n");
 
     Rect_t area = params->area;
     const int *contrast_lut = contrast_cycles_4;

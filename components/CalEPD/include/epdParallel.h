@@ -1,6 +1,3 @@
-#ifndef epd_h
-#define epd_h
-
 #include <calepd_version.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +36,7 @@ class EpdParallel : public virtual Adafruit_GFX
     void newline();
     
   // Methods that should be accesible by inheriting this abstract class
-  protected: 
+  protected:
     // This should be inherited from this abstract class so we don't repeat in every model
     static inline uint16_t gx_uint16_min(uint16_t a, uint16_t b) {return (a < b ? a : b);};
     static inline uint16_t gx_uint16_max(uint16_t a, uint16_t b) {return (a > b ? a : b);};
@@ -60,4 +57,3 @@ class EpdParallel : public virtual Adafruit_GFX
     uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display
 };
-#endif

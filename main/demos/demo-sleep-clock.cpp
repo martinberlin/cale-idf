@@ -1,10 +1,11 @@
 /*
- * - - - - - - - - Deepsleep clock example - - - v2 will draw additional graphics
+ * - - - - - - - - Deepsleep clock example - - - v1 is the basic version
+ * Just a line with DAYNAME, DAY, MONTH and a second one with HH:MM (bigger font)
  * Please note that the intention of this clock is not to be precise. 
  * It uses the ability of ESP32 to deepsleep combined with the epaper persistance
  * to make a simple clock that consumes as minimum as possible.
  * Just a simple: Sleep every N minutes, increment EPROM variable, refresh epaper.
- * And once a day or every hour, a single HTTP request to sync the hour online. 
+ * And once a day or twice, a single HTTP request to sync the hour online. 
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  */
 #include <stdio.h>
@@ -40,10 +41,10 @@ bool debugVerbose = false;
 // Important configuration. The class should match your epaper display model:
 
 // -> Needs to ↓ suit to your model
-#include <heltec0151.h> 
+#include <gdeh0154d67.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
-Hel0151 display(io); // -> Needs to match your epaper
-
+//Gdeh0154d67 display(io); // -> Needs to match your epaper
+Gdeh0154d67 display(io);
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
@@ -52,12 +53,12 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 char nvs_day_month[14];
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 4;
+int sleepMinutes = 3;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = -1;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 11;         // Same here, 2nd request to Sync hour 
+uint8_t syncHour2 = 9;         // Same here, 2nd request to Sync hour 
 
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
@@ -68,15 +69,15 @@ int64_t microsCorrection = -300000; // 0.3 predicted boot time
        9:02 -> textColor
 */
 bool supportsPartialUpdate = false;      // If updateWindow does not work good for your display model turns this to false
-uint16_t backgroundColor = EPD_WHITE;
-uint16_t textColor = EPD_BLACK;
+uint16_t backgroundColor = EPD_BLACK;
+uint16_t textColor = EPD_WHITE;
 // Adafruit GFX Font selection - - - - - -
 #include <Fonts/ubuntu/Ubuntu_M16pt8b.h> // Day, Month
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>  // Last Sync message - Still not fully implemented
 // Main digital clock hour font:
-#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
+//#include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
 #include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
-#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm bigger in 48pt -> default selection
+//#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm bigger in 48pt -> default selection
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
 uint8_t fontSize = 36;
 
@@ -127,7 +128,7 @@ void updateClock() {
    // Day 01, Month  cursor location x,y
    switch(display.width()) {
        case 200:
-        display.setCursor(10,52);
+        display.setCursor(12,52);
        break;
 
        // Add more case's to adapt the cursor to your display size
@@ -150,15 +151,15 @@ void updateClock() {
    switch (fontSize)
    {
        /* Bigger font */
-   case 48:
+/*    case 48:
        display.setFont(&Ubuntu_M48pt8b);
-       break;
+       break; */
    case 36:
        display.setFont(&Ubuntu_M36pt7b);
        break;
-   case 24:
+/*    case 24:
        display.setFont(&Ubuntu_M24pt8b);
-       break;
+       break; */
    default:
        ESP_LOGE(TAG, "fontSize selection: %d is not defined. Please select 24 or 48 or define new fonts", fontSize);
        break;
@@ -166,7 +167,7 @@ void updateClock() {
    // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
    switch(display.width()) {
        case 200:
-       display.setCursor(2, 110);
+       display.setCursor(9, 130);
        break;
        
        default:

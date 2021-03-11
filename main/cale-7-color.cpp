@@ -29,9 +29,12 @@
 //#include <gdeh0213b73.h>
 //#include <gdew0583z21.h>
 // 7 Color display (Only 2 colors implemented in this demo)
+#include "color/wave4i7Color.h"
 #include "color/wave5i7Color.h"
 EpdSpi io;
-Wave5i7Color display(io);
+// Choose the right class for your display:
+//Wave5i7Color display(io);
+Wave4i7Color display(io);
 
 // Plastic Logic test: Check cale-grayscale.cpp
 

@@ -1,6 +1,7 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
     "models/wave12i48.cpp"
+    "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
@@ -34,6 +35,7 @@ set(srcs
 
     # Parallel epapers supported by Epdiy driver (Component)
     "models/parallel/ED047TC1.cpp"
+    "models/parallel/ED047TC1touch.cpp"
 
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
