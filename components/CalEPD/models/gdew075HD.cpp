@@ -4,30 +4,6 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-// Partial Update Delay, may have an influence on degradation
-#define GDEW075HD_PU_DELAY 100
-
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-
-// 0x07 (2nd) VGH=20V,VGL=-20V
-// 0x3f (1st) VDH= 15V
-// 0x3f (2nd) VDH=-15V
-DRAM_ATTR const epd_power_4 Gdew075HD::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
-
-DRAM_ATTR const epd_init_1 Gdew075HD::epd_panel_setting_full = {
-    0x00, {0x1f}, 1};
-
-DRAM_ATTR const epd_init_1 Gdew075HD::epd_panel_setting_partial = {
-    0x00, {0x3f}, 1};
-
-DRAM_ATTR const epd_init_4 Gdew075HD::epd_resolution = {
-    0x61, {GDEW075HD_WIDTH / 256, //source 800
-           GDEW075HD_WIDTH % 256,
-           GDEW075HD_HEIGHT / 256, //gate 480
-           GDEW075HD_HEIGHT % 256},
-    4};
-
 // Constructor
 Gdew075HD::Gdew075HD(EpdSpi &dio) : Adafruit_GFX(GDEW075HD_WIDTH, GDEW075HD_HEIGHT),
                                     Epd(GDEW075HD_WIDTH, GDEW075HD_HEIGHT), IO(dio)
