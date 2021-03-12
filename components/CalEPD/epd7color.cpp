@@ -97,7 +97,6 @@ void Epd7Color::newline() {
 
 /**
  * From GxEPD2 (Jean-Marc)
- * TODO: Should be migrated to Epd7Color base class so is not copied on other models
  * Converts from color constants to the right 4 bit pixel color in Acep epaper 7 color
  */
 uint8_t Epd7Color::_color7(uint16_t color)
@@ -115,6 +114,7 @@ uint8_t Epd7Color::_color7(uint16_t color)
         case EPD_RED:   cv7 = 0x04; break;
         case EPD_YELLOW: cv7 = 0x05; break;
         case EPD_ORANGE: cv7 = 0x06; break;
+        case EPD_PURPLE: cv7 = 0x07; break;
         default:
           {
             uint16_t red = color & 0xF800;
