@@ -121,8 +121,12 @@ uint8_t Epd7Color::_color7(uint16_t color)
             uint16_t green = (color & 0x07E0) << 5;
             uint16_t blue = (color & 0x001F) << 11;
             if ((red < 0x8000) && (green < 0x8000) && (blue < 0x8000)) cv7 = 0x00; // black
+            
+            else if ((red > 0x9000) && (green > 0x8800) && (blue > 0x9000) 
+                 && (red < 0xC000) && (green < 0xC000) && (blue < 0xC000) ) cv7 = 0x07; // purple
             else if ((red >= 0x8000) && (green >= 0x8000) && (blue >= 0x8000)) cv7 = 0x01; // white
-            else if ((red >= 0x8000) && (blue >= 0x8000)) cv7 = red > blue ? 0x04 : 0x03; // red, blue
+            
+            else if ((red >= 0x8000) && (blue >= 0x8000)) cv7 = red > blue ? 0x04 : 0x03;  // red, blue
             else if ((green >= 0x8000) && (blue >= 0x8000)) cv7 = green > blue ? 0x02 : 0x03; // green, blue
             else if ((red >= 0x8000) && (green >= 0x8000))
             {
