@@ -467,8 +467,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         if (bmpDebug) 
             printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
-        /* vTaskDelay(14000 / portTICK_PERIOD_MS);
-        deepsleep(); */
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        deepsleep();
         break;
 
     case HTTP_EVENT_DISCONNECTED:
