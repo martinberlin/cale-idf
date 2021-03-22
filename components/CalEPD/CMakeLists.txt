@@ -36,6 +36,7 @@ set(srcs
     # Parallel epapers supported by Epdiy driver (Component)
     "models/parallel/ED047TC1.cpp"
     "models/parallel/ED047TC1touch.cpp"
+    "models/parallel/ED060SC4.cpp"
 
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
