@@ -23,7 +23,8 @@ void Ed047TC1t::init(bool debug)
   debug_enabled = debug;
   if (debug_enabled) printf("Ed047TC1t::init(%d)\n", debug);
     
-  epd_init();
+  epd_init(EPD_LUT_1K);
+  hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
   epd_poweron();
   // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
   Touch.begin(width(), height());
@@ -32,8 +33,8 @@ void Ed047TC1t::init(bool debug)
 }
 
 void Ed047TC1t::fillScreen(uint16_t color) {
-  // Same as: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
-  epd_fill_rect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color, framebuffer);
+  // Same as old: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
+  epd_fill_rect(epd_full_screen(), color, framebuffer);
 }
 
 void Ed047TC1t::clearScreen()
@@ -41,17 +42,19 @@ void Ed047TC1t::clearScreen()
   epd_clear();
 }
 
-void Ed047TC1t::clearArea(Rect_t area) {
+void Ed047TC1t::clearArea(EpdRect area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1t::update(enum DrawMode mode)
+void Ed047TC1t::update(enum EpdDrawMode mode)
 {
-  epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode);
+  int temperature = 25;
+  enum EpdDrawError _err = epd_hl_update_screen(&hl, MODE_GC16, temperature);
 }
 
 
-void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= ED047TC1_WIDTH) {
@@ -63,7 +66,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     return;
   }
   
-  Rect_t area = {
+  EpdRect area = {
     .x = x,
     .y = y,
     .width = w,
@@ -87,7 +90,8 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  epd_draw_image(area, buffer, mode);
+  //epd_draw_image(area, buffer, mode);
+  epd_copy_to_framebuffer(area, buffer, epd_hl_get_framebuffer(&hl));
 }
 
 void Ed047TC1t::powerOn(void)

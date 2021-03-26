@@ -52,7 +52,7 @@ set(srcs
 idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
-                    REQUIRES "Epdiy-IDF"
+                    REQUIRES "epd_driver"
                     INCLUDE_DIRS "include"
 )
 

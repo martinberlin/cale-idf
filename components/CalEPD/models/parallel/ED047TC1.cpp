@@ -23,13 +23,14 @@ void Ed047TC1::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Ed047TC1::init(%d)\n", debug);
     
-    epd_init();
+    epd_init(EPD_OPTIONS_DEFAULT);
+    hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
     epd_poweron();
 }
 
 void Ed047TC1::fillScreen(uint16_t color) {
-  // Same as: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
-  epd_fill_rect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color, framebuffer);
+  // Same as old: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
+  epd_fill_rect(epd_full_screen(), color, framebuffer);
 }
 
 void Ed047TC1::clearScreen()
@@ -37,16 +38,18 @@ void Ed047TC1::clearScreen()
   epd_clear();
 }
 
-void Ed047TC1::clearArea(Rect_t area) {
+void Ed047TC1::clearArea(EpdRect area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1::update(enum DrawMode mode)
+void Ed047TC1::update(enum EpdDrawMode mode)
 {
-  epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode);
+  int temperature = 25;
+  enum EpdDrawError _err = epd_hl_update_screen(&hl, MODE_GC16, temperature);
 }
 
-void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
   /* if (x >= ED047TC1_WIDTH) {
@@ -57,7 +60,7 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
   } */
-  Rect_t area = {
+  EpdRect area = {
     .x = x,
     .y = y,
     .width = w,
@@ -80,7 +83,8 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  epd_draw_image(area, buffer, mode);
+  //epd_draw_image(area, buffer, mode);
+  epd_copy_to_framebuffer(area, buffer, epd_hl_get_framebuffer(&hl));
 }
 
 void Ed047TC1::powerOn(void)

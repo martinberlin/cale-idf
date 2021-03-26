@@ -23,13 +23,14 @@ void Ed060SC4::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Ed060SC4::init(%d)\n", debug);
     
-    epd_init();
+    epd_init(EPD_LUT_1K);
+    hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
     epd_poweron();
 }
 
 void Ed060SC4::fillScreen(uint16_t color) {
-  // Same as: fillRect(0, 0, ED060SC4_WIDTH, ED060SC4_HEIGHT, color);
-  epd_fill_rect(0, 0, ED060SC4_WIDTH, ED060SC4_HEIGHT, color, framebuffer);
+  // Same as old: fillRect(0, 0, ED060SC4_WIDTH, ED060SC4_HEIGHT, color);
+  epd_fill_rect(epd_full_screen(), color, framebuffer);
 }
 
 void Ed060SC4::clearScreen()
@@ -37,20 +38,22 @@ void Ed060SC4::clearScreen()
   epd_clear();
 }
 
-void Ed060SC4::clearArea(Rect_t area) {
+void Ed060SC4::clearArea(EpdRect area) {
   epd_clear_area(area);
 }
 
-void Ed060SC4::update(enum DrawMode mode)
+void Ed060SC4::update(enum EpdDrawMode mode)
 {
-  epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode);
+  int temperature = 25;
+  enum EpdDrawError _err = epd_hl_update_screen(&hl, MODE_GC16, temperature);
 }
 
-void Ed060SC4::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+void Ed060SC4::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
   if (using_rotation) _rotate(x, y, w, h);
 
-  Rect_t area = {
+  EpdRect area = {
     .x = x,
     .y = y,
     .width = w,
@@ -73,7 +76,8 @@ void Ed060SC4::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  epd_draw_image(area, buffer, mode);
+  //epd_draw_image(area, buffer, mode);
+  epd_copy_to_framebuffer(area, buffer, epd_hl_get_framebuffer(&hl));
 }
 
 void Ed060SC4::powerOn(void)
