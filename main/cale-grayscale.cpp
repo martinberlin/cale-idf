@@ -101,6 +101,11 @@ uint32_t read32(uint8_t output_buffer[512], uint8_t startPointer)
     ((uint8_t *)&result)[3] = output_buffer[startPointer + 3]; // MSB
     return result;
 }
+
+uint16_t in_red = 0;   // for depth 24
+uint16_t in_green = 0; // for depth 24
+uint16_t in_blue = 0;  // for depth 24
+
 /** COLOR Boundaries for gray 
  *  0x00:Black 0x55:DGray  0xAA:LGray  0xFF White  -> only 4 grayscales
  * 
@@ -143,6 +148,7 @@ uint16_t red, green, blue;
 bool whitish, color_slgray, color_lgray, color_gray, color_dgray, color_sdgray;
 uint16_t drawX = 0;
 uint16_t drawY = 0;
+uint8_t index24 = 0; // Index for 24 bit
 uint16_t bPointer = 34; // Byte pointer - Attention drawPixel has uint16_t
 uint16_t imageBytesRead = 0;
 uint32_t dataLenTotal = 0;
@@ -230,10 +236,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 isSupportedBitmap = false;
                 ESP_LOGE(TAG, "BMP NOT SUPPORTED: Compressed formats not handled.\nBMP NOT SUPPORTED: Only planes==1, format 0 or 3\n");
             }
-            if (bmp.depth > 8)
+            if (bmp.depth > 24 || bmp.depth == 16)
             {
                 isSupportedBitmap = false;
-                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
+                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, 8 and 24 bits depth are supported.\n", bmp.depth);
             }
 
             rowSize = (bmp.width * bmp.depth / 8 + 3) & ~3;
@@ -242,12 +248,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             if (bmpDebug)
                 printf("ROW Size %d\n", rowSize);
-
-            if (bmp.height < 0)
-            {
-                bmp.height = -bmp.height;
-                //flip = false;
-            }
             w = bmp.width;
             h = bmp.height;
             if ((w - 1) >= display.width())
@@ -446,6 +446,46 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     ++drawX;
                 }
             }
+            break;
+
+            case 24:
+                // index24  3 byte B,G,R counter starts on 1
+                ++index24;
+                // Convert the 24 bits into 16 bit 565 (Adafruit GFX format)
+                switch (index24)
+                {
+                case 1:
+                    in_blue  = (in_byte>> 3) & 0x1f;
+                    break;
+                case 2:
+                    in_green = ((in_byte >> 2) & 0x3f) << 5;
+                    break;
+                case 3:
+                    in_red   = ((in_byte >> 3) & 0x1f) << 11;
+                    break;
+                }
+                
+                // Every 3rd byte we advance one X
+                if (index24 == 3) {
+                    if (drawX+1 > bmp.width)
+                    {
+                        drawX = 0;
+                        --drawY;
+                    }
+                
+                   totalDrawPixels++;
+                   //color = (in_red | in_green | in_blue);
+                   if (false) {
+                       // DEBUG totalDrawPixels<300
+                       printf("R:%d G:%d B:%d\n", in_red>>8, in_green>>4, in_blue);
+                   }
+
+                   color =  0.33 * (in_red>>8) + (in_green>>4) + in_blue;
+                   display.drawPixel(drawX, drawY, color);
+                   ++drawX;
+                   index24 = 0;
+                }
+                
             break;
             }
 
