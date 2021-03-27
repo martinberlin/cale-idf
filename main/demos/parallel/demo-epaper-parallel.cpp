@@ -131,7 +131,6 @@ void app_main(void)
    display.update();
 
    delay(10000);
+   // Clean all screen to white at the end
    display.clearScreen();
-   display.fillScreen(EPD_WHITE);
-   display.update();
 }

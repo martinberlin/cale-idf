@@ -455,13 +455,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 switch (index24)
                 {
                 case 1:
-                    in_blue  = (in_byte>> 3) & 0x1f;
+                    in_blue  = in_byte;
                     break;
                 case 2:
-                    in_green = ((in_byte >> 2) & 0x3f) << 5;
+                    in_green = in_byte;
                     break;
                 case 3:
-                    in_red   = ((in_byte >> 3) & 0x1f) << 11;
+                    in_red   = in_byte;
                     break;
                 }
                 
@@ -473,17 +473,18 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                         --drawY;
                     }
                 
-                   totalDrawPixels++;
-                   //color = (in_red | in_green | in_blue);
-                   if (false) {
-                       // DEBUG totalDrawPixels<300
-                       printf("R:%d G:%d B:%d\n", in_red>>8, in_green>>4, in_blue);
-                   }
-
-                   color =  0.33 * (in_red>>8) + (in_green>>4) + in_blue;
-                   display.drawPixel(drawX, drawY, color);
-                   ++drawX;
-                   index24 = 0;
+                    totalDrawPixels++;
+                    // With and is also possible but the result is not nice for black/white photography
+                    //color = (in_red & in_green & in_blue);
+                    color = 0.33 * in_red + 0.34 * in_green + 0.33 * in_blue;
+                        // DEBUG: Turn to true
+                    if (false && totalDrawPixels<200) {
+                        printf("R:%d G:%d B:%d CALC:%d\n", in_red, in_green, in_blue, color);
+                    }
+                    
+                    display.drawPixel(drawX, drawY, color);
+                    ++drawX;
+                    index24 = 0;
                 }
                 
             break;
@@ -641,7 +642,7 @@ void wifi_init_sta(void)
     sprintf(reinterpret_cast<char *>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD);
     wifi_config.sta.pmf_cfg.capable = true;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
