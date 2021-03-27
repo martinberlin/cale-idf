@@ -53,7 +53,6 @@ void Ed047TC1t::update(enum EpdDrawMode mode)
 
 void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
-  if (using_rotation) _rotate(x, y, w, h);
   if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
@@ -62,6 +61,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
   }
+  if (using_rotation) _rotate(x, y, w, h);
   
   EpdRect area = {
     .x = x,
@@ -69,9 +69,10 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     .width = w,
     .height = h,
   };
-  
 
-  uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
+  epd_update_area(mode, area);
+  // Not needed. Saved for historical reasons
+  /* uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
   memset(buffer, 0xFF, w*h/2);
 
   uint32_t i = 0;
@@ -85,10 +86,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
       i++;
     }
     //printf("buffer y: %d line: %d\n",y1,i);
-  }
-
-  //epd_copy_to_framebuffer(area, buffer, framebuffer);
-  epd_update_area(mode, area);
+  } */
 }
 
 void Ed047TC1t::powerOn(void)

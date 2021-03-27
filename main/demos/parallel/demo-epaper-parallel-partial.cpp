@@ -103,8 +103,9 @@ void app_main(void)
    // Don't do this forever! It's a lot of phisical work for the epaper...
    while (count<totalFrames) { 
       // Delete last position
-      display.fillCircle(lastX,lastY,radius*2, EPD_BLACK);
-      // new modes: MODE_EPDIY_WHITE_TO_GL16 vs MODE_EPDIY_BLACK_TO_GL16 MODE_GL4
+      display.fillCircle(lastX,lastY,radius*2, EPD_WHITE);
+      // New modes: MODE_DU is the fastest and does the white to black /  black to white automatically
+      // Check all update modes under /components/epd_driver/include/epd_driver.h
       display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2, MODE_DU);
 
       x += dx;
@@ -135,9 +136,9 @@ void app_main(void)
          y = display.height() - radius;
       }
       
-      /* display.fillCircle(x,y,radius, EPD_BLACK);
-      display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_EPDIY_BLACK_TO_GL16);
-      */
+      display.fillCircle(x,y,radius, EPD_BLACK);
+      display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_DU);
+      
      lastX =x;
       lastY =y;
       ++count; 

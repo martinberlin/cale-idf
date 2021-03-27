@@ -51,15 +51,16 @@ void Ed047TC1::update(enum EpdDrawMode mode)
 
 void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
-  if (using_rotation) _rotate(x, y, w, h);
-  /* if (x >= ED047TC1_WIDTH) {
+  if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
   }
   if (y >= ED047TC1_HEIGHT) {
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
-  } */
+  }
+  if (using_rotation) _rotate(x, y, w, h);
+  
   EpdRect area = {
     .x = x,
     .y = y,
@@ -67,25 +68,6 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     .height = h,
   };
 
-  uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
-  memset(buffer, 0xFF, w*h/2);
-
-  uint32_t i = 0;
-  // Crop only this square from the big framebuffer
-  for (int16_t y1 = y; y1 < y+h; y1++)
-  {
-    for (int16_t x1 = x; x1 < x+w; x1=x1+2)
-    {
-      // 0xf0 fixed -> square with light gray. Issue is when trying to read the pixel
-      buffer[i] = framebuffer[y1 *ED047TC1_WIDTH / 2 + x1/2];
-      i++;
-    }
-    //printf("buffer y: %d line: %d\n",y1,i);
-  }
-
-  // Not working as before the ball example:
-  //epd_copy_to_framebuffer(area, buffer, framebuffer);
-  // Missing hook to update area: 
   epd_update_area(mode, area);
 }
 
