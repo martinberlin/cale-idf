@@ -87,7 +87,8 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  epd_copy_to_framebuffer(area, buffer, framebuffer);
+  //epd_copy_to_framebuffer(area, buffer, framebuffer);
+  epd_update_area(mode, area);
 }
 
 void Ed047TC1t::powerOn(void)

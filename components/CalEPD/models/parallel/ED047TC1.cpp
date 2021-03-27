@@ -83,8 +83,10 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  //epd_draw_image(area, buffer, mode);
-  epd_copy_to_framebuffer(area, buffer, framebuffer);
+  // Not working as before the ball example:
+  //epd_copy_to_framebuffer(area, buffer, framebuffer);
+  // Missing hook to update area: 
+  epd_update_area(mode, area);
 }
 
 void Ed047TC1::powerOn(void)

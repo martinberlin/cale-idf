@@ -354,3 +354,8 @@ void epd_update_screen(uint8_t *framebuffer, enum EpdDrawMode mode) {
   printf("epd_update_screen called\n\n");
   epd_hl_update_screen(&hl, mode, 25);
 }
+
+void epd_update_area(enum EpdDrawMode mode, EpdRect area) {
+  enum EpdDrawError err = epd_hl_update_area(&hl, mode, 25, area);
+  assert(err == EPD_DRAW_SUCCESS);
+}

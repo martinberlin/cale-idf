@@ -89,13 +89,23 @@ void app_main(void)
    uint16_t dx = 14;
    uint16_t dy = 14;
    uint16_t radius = 30;
-   uint16_t totalFrames = 500;
+   uint16_t totalFrames = 300;
+
+   if (false) {
+      printf("fillCircle\n");
+      display.fillCircle(x,y,radius, EPD_BLACK);
+      // Fast test to see if partial update works
+      display.updateWindow(0, 0, 300, 300, MODE_DU);
+      delay(2000);
+      return;
+   }
 
    // Don't do this forever! It's a lot of phisical work for the epaper...
    while (count<totalFrames) { 
       // Delete last position
-      display.fillCircle(lastX,lastY,radius*2, EPD_WHITE);
-      display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2,WHITE_ON_BLACK);
+      display.fillCircle(lastX,lastY,radius*2, EPD_BLACK);
+      // new modes: MODE_EPDIY_WHITE_TO_GL16 vs MODE_EPDIY_BLACK_TO_GL16 MODE_GL4
+      display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2, MODE_DU);
 
       x += dx;
       y += dy;
@@ -125,11 +135,12 @@ void app_main(void)
          y = display.height() - radius;
       }
       
-      display.fillCircle(x,y,radius, EPD_BLACK);
-      display.updateWindow(x-radius,y-radius,radius*2,radius*2);
-      lastX =x;
+      /* display.fillCircle(x,y,radius, EPD_BLACK);
+      display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_EPDIY_BLACK_TO_GL16);
+      */
+     lastX =x;
       lastY =y;
-      ++count;
+      ++count; 
       if (count%100==0) {
          printf("%d frames rendered. Still %d left\n", count, totalFrames-count);
       }

@@ -230,10 +230,14 @@ void epd_copy_to_framebuffer(EpdRect image_area, const uint8_t *image_data,
                              uint8_t *framebuffer);
 
 /**
- * Calls HL to update screen
+ * HL hook to update screen
  */
 void epd_update_screen(uint8_t *framebuffer, enum EpdDrawMode mode);
 
+/**
+ * HL hook to update area
+ */
+void epd_update_area(enum EpdDrawMode mode, EpdRect area);
 
 /**
  * Draw a pixel a given framebuffer.
