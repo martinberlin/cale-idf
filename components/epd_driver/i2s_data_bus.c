@@ -1,6 +1,10 @@
 #include "i2s_data_bus.h"
 #include "driver/periph_ctrl.h"
+#if ESP_IDF_VERSION < (4, 0, 0) || ARDUINO_ARCH_ESP32
+#include "rom/lldesc.h"
+#else
 #include "esp32/rom/lldesc.h"
+#endif
 #include "esp_heap_caps.h"
 #include "soc/i2s_reg.h"
 #include "soc/i2s_struct.h"
@@ -66,7 +70,8 @@ static void gpio_setup_out(int gpio, int sig, bool invert) {
 static void IRAM_ATTR i2s_int_hdl(void *arg) {
   i2s_dev_t *dev = &I2S1;
   if (dev->int_st.out_done) {
-    gpio_set_level(start_pulse_pin, 1);
+    //gpio_set_level(start_pulse_pin, 1);
+    //gpio_set_level(GPIO_NUM_26, 0);
     output_done = true;
   }
   // Clear the interrupt. Otherwise, the whole device would hang.
@@ -105,6 +110,7 @@ void IRAM_ATTR i2s_start_line_output() {
   dev->out_link.start = 1;
 
   // sth is pulled up through peripheral interrupt
+  // This is timing-critical!
   gpio_set_level(start_pulse_pin, 0);
   dev->conf.tx_start = 1;
 }
@@ -166,8 +172,8 @@ void i2s_bus_init(i2s_bus_config *cfg) {
   // Initialize Audio Clock (APLL) for 120 Mhz.
   rtc_clk_apll_enable(1, 0, 0, 8, 0);
 #else
-  // Initialize Audio Clock (APLL) for 60 Mhz.
-  rtc_clk_apll_enable(1, 0, 0, 5, 1);
+  // Initialize Audio Clock (APLL) for 100 Mhz.
+  rtc_clk_apll_enable(1, 0, 0, 8, 0);
 #endif
 
   // Set Audio Clock Dividers
@@ -250,7 +256,7 @@ void i2s_deinit() {
   free(i2s_state.buf_b);
   free((void *)i2s_state.dma_desc_a);
   free((void *)i2s_state.dma_desc_b);
-  
+
   rtc_clk_apll_enable(0, 0, 0, 8, 0);
   periph_module_disable(PERIPH_I2S1_MODULE);
 }

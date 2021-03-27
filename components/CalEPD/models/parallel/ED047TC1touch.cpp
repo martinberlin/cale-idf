@@ -12,9 +12,6 @@ Ed047TC1t::Ed047TC1t(L58Touch& ts):
 {
   printf("Ed047TC1t() w/touch %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
-
-  framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
-  memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
 }
 
 //Initialize the display
@@ -23,7 +20,9 @@ void Ed047TC1t::init(bool debug)
   debug_enabled = debug;
   if (debug_enabled) printf("Ed047TC1t::init(%d)\n", debug);
     
-  epd_init();
+  epd_init(EPD_OPTIONS_DEFAULT);
+  framebuffer = epd_init_hl(EPD_BUILTIN_WAVEFORM);
+  
   epd_poweron();
   // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
   Touch.begin(width(), height());
@@ -32,8 +31,8 @@ void Ed047TC1t::init(bool debug)
 }
 
 void Ed047TC1t::fillScreen(uint16_t color) {
-  // Same as: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
-  epd_fill_rect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color, framebuffer);
+  // Same as old: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
+  epd_fill_rect(epd_full_screen(), color, framebuffer);
 }
 
 void Ed047TC1t::clearScreen()
@@ -41,19 +40,19 @@ void Ed047TC1t::clearScreen()
   epd_clear();
 }
 
-void Ed047TC1t::clearArea(Rect_t area) {
+void Ed047TC1t::clearArea(EpdRect area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1t::update(enum DrawMode mode)
+void Ed047TC1t::update(enum EpdDrawMode mode)
 {
-  epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //Todo: First implemented on Ed047TC1.cpp
 }
 
 
-void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
-  if (using_rotation) _rotate(x, y, w, h);
   if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
@@ -62,16 +61,18 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
   }
+  if (using_rotation) _rotate(x, y, w, h);
   
-  Rect_t area = {
+  EpdRect area = {
     .x = x,
     .y = y,
     .width = w,
     .height = h,
   };
-  
 
-  uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
+  epd_update_area(mode, area);
+  // Not needed. Saved for historical reasons
+  /* uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
   memset(buffer, 0xFF, w*h/2);
 
   uint32_t i = 0;
@@ -85,9 +86,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
       i++;
     }
     //printf("buffer y: %d line: %d\n",y1,i);
-  }
-
-  epd_draw_image(area, buffer, mode);
+  } */
 }
 
 void Ed047TC1t::powerOn(void)

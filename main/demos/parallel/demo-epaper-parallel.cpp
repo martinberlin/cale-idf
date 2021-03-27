@@ -7,8 +7,10 @@
 // Display type: LILIGO 4.7 ED047TC1
 // Board: LILIGO T5-4.7 Epaper
 // In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
-#include "parallel/ED047TC1.h"
-Ed047TC1 display;
+//#include "parallel/ED047TC1.h"
+//Ed047TC1 display;
+#include "parallel/ED060SC4.h"
+Ed060SC4 display;
 
 // Include a font
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
@@ -129,7 +131,6 @@ void app_main(void)
    display.update();
 
    delay(10000);
+   // Clean all screen to white at the end
    display.clearScreen();
-   display.fillScreen(EPD_WHITE);
-   display.update();
 }

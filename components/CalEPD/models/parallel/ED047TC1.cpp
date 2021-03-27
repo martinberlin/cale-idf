@@ -12,9 +12,9 @@ Ed047TC1::Ed047TC1():
   printf("Ed047TC1() %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
 
-  framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
-  memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
-
+  // Not anymore allocated here. It returns from epd_init_hl
+  //framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
+  //memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
 }
 
 //Initialize the display
@@ -23,13 +23,15 @@ void Ed047TC1::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Ed047TC1::init(%d)\n", debug);
     
-    epd_init();
+    epd_init(EPD_OPTIONS_DEFAULT);
+    framebuffer = epd_init_hl(EPD_BUILTIN_WAVEFORM);
+    
     epd_poweron();
 }
 
 void Ed047TC1::fillScreen(uint16_t color) {
-  // Same as: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
-  epd_fill_rect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color, framebuffer);
+  // Same as old: fillRect(0, 0, ED047TC1_WIDTH, ED047TC1_HEIGHT, color);
+  epd_fill_rect(epd_full_screen(), color, framebuffer);
 }
 
 void Ed047TC1::clearScreen()
@@ -37,50 +39,36 @@ void Ed047TC1::clearScreen()
   epd_clear();
 }
 
-void Ed047TC1::clearArea(Rect_t area) {
+void Ed047TC1::clearArea(EpdRect area) {
   epd_clear_area(area);
 }
 
-void Ed047TC1::update(enum DrawMode mode)
+void Ed047TC1::update(enum EpdDrawMode mode)
 {
-  epd_draw_image(epd_full_screen(), framebuffer, mode);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode); // Old v1
+  epd_update_screen(framebuffer, mode);
 }
 
-void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum DrawMode mode, bool using_rotation)
+void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
-  if (using_rotation) _rotate(x, y, w, h);
-  /* if (x >= ED047TC1_WIDTH) {
+  if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
     return;
   }
   if (y >= ED047TC1_HEIGHT) {
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
-  } */
-  Rect_t area = {
+  }
+  if (using_rotation) _rotate(x, y, w, h);
+  
+  EpdRect area = {
     .x = x,
     .y = y,
     .width = w,
     .height = h,
   };
 
-  uint8_t *buffer = (uint8_t *)heap_caps_malloc(w*h/2,MALLOC_CAP_SPIRAM);
-  memset(buffer, 0xFF, w*h/2);
-
-  uint32_t i = 0;
-  // Crop only this square from the big framebuffer
-  for (int16_t y1 = y; y1 < y+h; y1++)
-  {
-    for (int16_t x1 = x; x1 < x+w; x1=x1+2)
-    {
-      // 0xf0 fixed -> square with light gray. Issue is when trying to read the pixel
-      buffer[i] = framebuffer[y1 *ED047TC1_WIDTH / 2 + x1/2];
-      i++;
-    }
-    //printf("buffer y: %d line: %d\n",y1,i);
-  }
-
-  epd_draw_image(area, buffer, mode);
+  epd_update_area(mode, area);
 }
 
 void Ed047TC1::powerOn(void)

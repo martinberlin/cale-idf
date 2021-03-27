@@ -1,6 +1,8 @@
+// Bouncing ball example with partial refresh
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
 // Only for parallel epaper displays driven by I2S DataBus (No SPI)
 // NOTE: This needs Epdiy component https://github.com/vroland/epdiy
 // Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
@@ -17,12 +19,19 @@ extern "C"
    void app_main();
 }
 
+/**
+ * Only experimental: 
+ *   true uses fast update  MODE_DU  only black and white
+ *   false uses slow update MODE_EPDIY_WHITE_TO_GL16 and makes random grays for the ball
+ */ 
+bool onlyBlackFastUpdate = true;
+
 void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 uint16_t randomGrayColor() {
   srand(esp_timer_get_time());
-  uint8_t random = rand()%5;
-  uint16_t color = 0x33;
+  uint8_t random = rand()%7;
+  uint16_t color = 0x11;
   switch (random)
   {
   case 0:
@@ -43,6 +52,9 @@ uint16_t randomGrayColor() {
   case 5:
      color = EPD_SLGRAY;
      break;
+  case 6:
+     color = EPD_WHITISH;
+     break;
   }
   return color;
 }
@@ -50,16 +62,6 @@ uint16_t randomGrayColor() {
 uint16_t randomNumber(uint16_t max) {
   srand(esp_timer_get_time());
   return rand()%max;
-}
-
-void printHey(){
-   /* display.setCursor(20,30);
-   display.setTextColor(EPD_LGRAY);
-   display.setFont(&Ubuntu_M24pt8b);
-   display.print("HEY");
-   display.fillCircle(50,45,15,EPD_LGRAY);
-   */
-   display.fillCircle(50,50,50, EPD_LGRAY);
 }
 
 void app_main(void)
@@ -89,13 +91,24 @@ void app_main(void)
    uint16_t dx = 14;
    uint16_t dy = 14;
    uint16_t radius = 30;
-   uint16_t totalFrames = 500;
+   uint16_t totalFrames = 300;
+
+   if (false) {
+      printf("fillCircle\n");
+      display.fillCircle(x,y,radius, EPD_BLACK);
+      // Fast test to see if partial update works
+      display.updateWindow(0, 0, 300, 300, MODE_DU);
+      delay(2000);
+      return;
+   }
 
    // Don't do this forever! It's a lot of phisical work for the epaper...
    while (count<totalFrames) { 
       // Delete last position
       display.fillCircle(lastX,lastY,radius*2, EPD_WHITE);
-      display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2,WHITE_ON_BLACK);
+      // New modes: MODE_DU is the fastest and does the white to black /  black to white automatically
+      // Check all update modes under /components/epd_driver/include/epd_driver.h
+      display.updateWindow(lastX-radius,lastY-radius,radius*2,radius*2, MODE_DU);
 
       x += dx;
       y += dy;
@@ -125,11 +138,17 @@ void app_main(void)
          y = display.height() - radius;
       }
       
-      display.fillCircle(x,y,radius, EPD_BLACK);
-      display.updateWindow(x-radius,y-radius,radius*2,radius*2);
-      lastX =x;
+      if (onlyBlackFastUpdate) {
+         display.fillCircle(x,y,radius, EPD_BLACK);
+         display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_DU);
+      } else {
+         display.fillCircle(x,y,radius, randomGrayColor());
+         display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_EPDIY_WHITE_TO_GL16);
+      }
+
+     lastX =x;
       lastY =y;
-      ++count;
+      ++count; 
       if (count%100==0) {
          printf("%d frames rendered. Still %d left\n", count, totalFrames-count);
       }

@@ -36,6 +36,7 @@ set(srcs
     # Parallel epapers supported by Epdiy driver (Component)
     "models/parallel/ED047TC1.cpp"
     "models/parallel/ED047TC1touch.cpp"
+    "models/parallel/ED060SC4.cpp"
 
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
@@ -48,10 +49,11 @@ set(srcs
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
-idf_component_register(SRCS ${srcs}
+idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
-                    REQUIRES "Epdiy-IDF"
+                    REQUIRES "epd_driver"
+
                     INCLUDE_DIRS "include"
 )
 

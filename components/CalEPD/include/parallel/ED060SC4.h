@@ -13,25 +13,17 @@
 #include <epdspi.h>
 #include "epd_driver.h"
 #include "epd_highlevel.h"
+#include "parallel/grayscales.h"
 
 #define HAS_16_LEVELS_GRAY 1
-#define ED047TC1_WIDTH 960
-#define ED047TC1_HEIGHT 540
+#define ED060SC4_WIDTH 800
+#define ED060SC4_HEIGHT 600
 
-// COLOR defines (Only 8 but actually this epapers have 16 levels)
-#define EPD_WHITE 255
-#define EPD_WHITISH 223
-#define EPD_SLGRAY 200
-#define EPD_LGRAY 150
-#define EPD_GRAY 100
-#define EPD_DGRAY 50
-#define EPD_SDGRAY 25
-#define EPD_BLACK 0
-
-class Ed047TC1 : public EpdParallel
+class Ed060SC4 : public EpdParallel
 {
   public:
-    Ed047TC1();
+    Ed060SC4();
+
     uint8_t *framebuffer;
     uint8_t colors_supported = 1;
 
@@ -47,9 +39,10 @@ class Ed047TC1 : public EpdParallel
     void update(enum EpdDrawMode mode = MODE_GC16);
 
     // Partial update of rectangle from buffer to screen, does not power off
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode = MODE_GL4, bool using_rotation = true);
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode = MODE_EPDIY_BLACK_TO_GL16, bool using_rotation = true);
 
   private:
+    EpdiyHighlevelState hl;
     bool _tempalert = false;
     bool _initial = true;
     bool _debug_buffer = false;

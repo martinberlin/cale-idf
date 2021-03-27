@@ -7,3 +7,4 @@
 #define EPD_BLUE      0x001F //   0,   0, 255
 #define EPD_GREEN     0x07E0 //   0, 255,   0
 #define EPD_ORANGE    0xFD20 // 255, 165,   0
+#define EPD_PURPLE    0x41E8 //  67,  61,  68 
