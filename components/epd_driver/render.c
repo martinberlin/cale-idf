@@ -231,8 +231,6 @@ void epd_clear_area_cycles(EpdRect area, int cycles, int cycle_time) {
   }
 }
 
-
-
 void epd_init(enum EpdInitOptions options) {
   epd_base_init(EPD_WIDTH);
   epd_temperature_init();

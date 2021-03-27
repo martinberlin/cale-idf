@@ -12,9 +12,6 @@ Ed047TC1t::Ed047TC1t(L58Touch& ts):
 {
   printf("Ed047TC1t() w/touch %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
-
-  framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
-  memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
 }
 
 //Initialize the display
@@ -23,8 +20,9 @@ void Ed047TC1t::init(bool debug)
   debug_enabled = debug;
   if (debug_enabled) printf("Ed047TC1t::init(%d)\n", debug);
     
-  epd_init(EPD_LUT_1K);
-  hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+  epd_init(EPD_OPTIONS_DEFAULT);
+  framebuffer = epd_init_hl(EPD_BUILTIN_WAVEFORM);
+  
   epd_poweron();
   // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
   Touch.begin(width(), height());
@@ -49,8 +47,7 @@ void Ed047TC1t::clearArea(EpdRect area) {
 void Ed047TC1t::update(enum EpdDrawMode mode)
 {
   //epd_draw_image(epd_full_screen(), framebuffer, mode);
-  int temperature = 25;
-  enum EpdDrawError _err = epd_hl_update_screen(&hl, MODE_GC16, temperature);
+  //Todo: First implemented on Ed047TC1.cpp
 }
 
 
@@ -90,8 +87,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     //printf("buffer y: %d line: %d\n",y1,i);
   }
 
-  //epd_draw_image(area, buffer, mode);
-  epd_copy_to_framebuffer(area, buffer, epd_hl_get_framebuffer(&hl));
+  epd_copy_to_framebuffer(area, buffer, framebuffer);
 }
 
 void Ed047TC1t::powerOn(void)

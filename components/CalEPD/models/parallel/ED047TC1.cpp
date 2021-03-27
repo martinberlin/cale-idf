@@ -12,9 +12,9 @@ Ed047TC1::Ed047TC1():
   printf("Ed047TC1() %d*%d\n",
   ED047TC1_WIDTH, ED047TC1_HEIGHT);  
 
-  framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
-  memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
-
+  // Not anymore allocated here. It returns from epd_init_hl
+  //framebuffer = (uint8_t *)heap_caps_malloc(ED047TC1_WIDTH * ED047TC1_HEIGHT / 2, MALLOC_CAP_SPIRAM);
+  //memset(framebuffer, 0xFF, ED047TC1_WIDTH * ED047TC1_HEIGHT / 2);
 }
 
 //Initialize the display
@@ -24,7 +24,8 @@ void Ed047TC1::init(bool debug)
     if (debug_enabled) printf("Ed047TC1::init(%d)\n", debug);
     
     epd_init(EPD_OPTIONS_DEFAULT);
-    hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+    framebuffer = epd_init_hl(EPD_BUILTIN_WAVEFORM);
+    
     epd_poweron();
 }
 
@@ -44,9 +45,8 @@ void Ed047TC1::clearArea(EpdRect area) {
 
 void Ed047TC1::update(enum EpdDrawMode mode)
 {
-  //epd_draw_image(epd_full_screen(), framebuffer, mode);
-  int temperature = 25;
-  enum EpdDrawError _err = epd_hl_update_screen(&hl, MODE_GC16, temperature);
+  //epd_draw_image(epd_full_screen(), framebuffer, mode); // Old v1
+  epd_update_screen(framebuffer, mode);
 }
 
 void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
@@ -84,7 +84,7 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
   }
 
   //epd_draw_image(area, buffer, mode);
-  epd_copy_to_framebuffer(area, buffer, epd_hl_get_framebuffer(&hl));
+  epd_copy_to_framebuffer(area, buffer, framebuffer);
 }
 
 void Ed047TC1::powerOn(void)

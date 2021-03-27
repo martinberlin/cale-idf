@@ -9,9 +9,11 @@ extern "C" {
 #pragma once
 #include "esp_attr.h"
 #include "epd_internals.h"
-
 #include <stdbool.h>
 #include <stdint.h>
+
+//#include "epd_highlevel.h"
+//EpdiyHighlevelState hl;
 
 /// An area on the display.
 typedef struct {
@@ -177,6 +179,9 @@ typedef struct {
 /** Initialize the ePaper display */
 void epd_init(enum EpdInitOptions options);
 
+/** Initialize EpdiyHighlevelState */
+uint8_t* epd_init_hl(const EpdWaveform* waveform);
+
 /** Deinit the ePaper display */
 void epd_deinit();
 
@@ -223,6 +228,12 @@ EpdRect epd_full_screen();
  */
 void epd_copy_to_framebuffer(EpdRect image_area, const uint8_t *image_data,
                              uint8_t *framebuffer);
+
+/**
+ * Calls HL to update screen
+ */
+void epd_update_screen(uint8_t *framebuffer, enum EpdDrawMode mode);
+
 
 /**
  * Draw a pixel a given framebuffer.

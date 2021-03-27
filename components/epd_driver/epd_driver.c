@@ -1,11 +1,12 @@
 #include "epd_driver.h"
 #include "epd_temperature.h"
-
+#include "epd_highlevel.h"
 #include "esp_assert.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_types.h"
 
+EpdiyHighlevelState hl;
 
 #ifndef _swap_int
 #define _swap_int(a, b)                                                        \
@@ -341,4 +342,15 @@ enum EpdDrawError epd_draw_image(EpdRect area, const uint8_t *data, const EpdWav
         .height = 0,
     };
     return epd_draw_base(area, data, no_crop, EPD_MODE_DEFAULT, temperature, NULL, waveform);
+}
+
+uint8_t* epd_init_hl(const EpdWaveform* waveform) {
+  hl = epd_hl_init(waveform);
+  return epd_hl_get_framebuffer(&hl);
+}
+
+
+void epd_update_screen(uint8_t *framebuffer, enum EpdDrawMode mode) {
+  printf("epd_update_screen called\n\n");
+  epd_hl_update_screen(&hl, mode, 25);
 }
