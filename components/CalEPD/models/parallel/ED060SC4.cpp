@@ -45,12 +45,12 @@ void Ed060SC4::update(enum EpdDrawMode mode)
 
 void Ed060SC4::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
 {
-  if (x >= ED047TC1_WIDTH) {
-    printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
+  if (x >= ED060SC4_WIDTH) {
+    printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED060SC4_WIDTH);
     return;
   }
-  if (y >= ED047TC1_HEIGHT) {
-    printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
+  if (y >= ED060SC4_HEIGHT) {
+    printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED060SC4_HEIGHT);
     return;
   }
   if (using_rotation) _rotate(x, y, w, h);

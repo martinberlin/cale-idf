@@ -1,6 +1,8 @@
+// Bouncing ball example with partial refresh
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
 // Only for parallel epaper displays driven by I2S DataBus (No SPI)
 // NOTE: This needs Epdiy component https://github.com/vroland/epdiy
 // Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
@@ -17,12 +19,19 @@ extern "C"
    void app_main();
 }
 
+/**
+ * Only experimental: 
+ *   true uses fast update  MODE_DU  only black and white
+ *   false uses slow update MODE_EPDIY_WHITE_TO_GL16 and makes random grays for the ball
+ */ 
+bool onlyBlackFastUpdate = true;
+
 void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 uint16_t randomGrayColor() {
   srand(esp_timer_get_time());
-  uint8_t random = rand()%5;
-  uint16_t color = 0x33;
+  uint8_t random = rand()%7;
+  uint16_t color = 0x11;
   switch (random)
   {
   case 0:
@@ -43,6 +52,9 @@ uint16_t randomGrayColor() {
   case 5:
      color = EPD_SLGRAY;
      break;
+  case 6:
+     color = EPD_WHITISH;
+     break;
   }
   return color;
 }
@@ -50,16 +62,6 @@ uint16_t randomGrayColor() {
 uint16_t randomNumber(uint16_t max) {
   srand(esp_timer_get_time());
   return rand()%max;
-}
-
-void printHey(){
-   /* display.setCursor(20,30);
-   display.setTextColor(EPD_LGRAY);
-   display.setFont(&Ubuntu_M24pt8b);
-   display.print("HEY");
-   display.fillCircle(50,45,15,EPD_LGRAY);
-   */
-   display.fillCircle(50,50,50, EPD_LGRAY);
 }
 
 void app_main(void)
@@ -136,9 +138,14 @@ void app_main(void)
          y = display.height() - radius;
       }
       
-      display.fillCircle(x,y,radius, EPD_BLACK);
-      display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_DU);
-      
+      if (onlyBlackFastUpdate) {
+         display.fillCircle(x,y,radius, EPD_BLACK);
+         display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_DU);
+      } else {
+         display.fillCircle(x,y,radius, randomGrayColor());
+         display.updateWindow(x-radius,y-radius,radius*2,radius*2, MODE_EPDIY_WHITE_TO_GL16);
+      }
+
      lastX =x;
       lastY =y;
       ++count; 
