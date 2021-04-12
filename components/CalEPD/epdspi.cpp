@@ -4,12 +4,17 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
-#define EPD_HOST    HSPI_HOST
-#define DMA_CHAN    2
+    #define EPD_HOST    HSPI_HOST
+    #define DMA_CHAN    2
 
 #elif defined CONFIG_IDF_TARGET_ESP32S2
-#define EPD_HOST    SPI2_HOST
-#define DMA_CHAN    EPD_HOST
+    #define EPD_HOST    SPI2_HOST
+    #define DMA_CHAN    EPD_HOST
+
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    // chip only support spi dma channel auto-alloc
+    #define EPD_HOST    SPI2_HOST
+    #define DMA_CHAN    0
 #endif
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){

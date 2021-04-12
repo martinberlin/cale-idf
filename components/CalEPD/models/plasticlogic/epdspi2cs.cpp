@@ -8,7 +8,7 @@
 #define EPD_HOST    HSPI_HOST
 #define DMA_CHAN    2
 
-#elif defined CONFIG_IDF_TARGET_ESP32S2
+#elif defined CONFIG_IDF_TARGET_ESP32S2 || defined CONFIG_IDF_TARGET_ESP32C3
 #define EPD_HOST    SPI2_HOST
 #define DMA_CHAN    EPD_HOST
 #endif
