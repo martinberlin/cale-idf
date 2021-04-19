@@ -151,14 +151,14 @@ void touchEvent(TPoint p, TEvent e)
     display.update();
     
   } else if (p.x<blockWidth && p.y<button4_min && p.y>button3) { // Set circle color to white
-    printf("20px pressed. No tap simulation\n");
+    printf("20px pressed. No tap detection\n");
     circleRadio = 20;
-    ts.tapSimulationEnabled = false;
+    ts.tapDetectionEnabled = false;
 
   } else if (p.x<blockWidth && p.y<button3 && p.y>1) {
-    printf("10px pressed. Tap simulation enabled\n");
+    printf("10px pressed. Tap detection enabled\n");
     circleRadio = 10;
-    ts.tapSimulationEnabled = true;
+    ts.tapDetectionEnabled = true;
 
   } else {
     printf("Draw a %d px circle\n", circleRadio);

@@ -88,17 +88,11 @@ void L58Touch::processTouch()
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
 	TPoint point = scanPoint();
     
-    // This should be measured in LiftUp event (Events not documented)
-    _touchEndTime = esp_timer_get_time()/1000;
-
-    // Very primitive way to simulate a Tap event without press & liftup
-    if (!tapSimulationEnabled) {
-	  fireEvent(point, TEvent::Tap);
-    } else {
-        // Essentially avoids fast repetition but is not real Tap
-        if (_touchEndTime - _touchStartTime <= 15) {
-            fireEvent(point, TEvent::Tap);
-        }
+    if (!tapDetectionEnabled) {
+        fireEvent(point, TEvent::Tap);
+    }
+    if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= 150) {
+        fireEvent(point, TEvent::Tap);
     }
 }
 
@@ -110,7 +104,6 @@ uint8_t L58Touch::read8(uint8_t regName) {
 
 TPoint L58Touch::scanPoint()
 {
-    _touchStartTime = esp_timer_get_time()/1000;
 	TPoint point{0,0,0};
 	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};
@@ -171,11 +164,18 @@ TPoint L58Touch::scanPoint()
         }
 
     } else {
+        // Only this one seems to be working (even pressing with 2 fingers)
         pointIdx = 1;
         data[0].id = (buffer[0] >> 4) & 0x0F;
         data[0].event = (buffer[0] & 0x0F) >>1;
         data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
         data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
+        if (data[0].event == 3) { /** Press */
+            _touchStartTime = esp_timer_get_time()/1000;
+        }
+        if (data[0].event == 0) { /** Lift up */
+            _touchEndTime = esp_timer_get_time()/1000;
+        }
         printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
 	}
      

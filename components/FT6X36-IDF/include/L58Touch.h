@@ -81,7 +81,7 @@ public:
     }
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	TouchData_t data[5];
-	bool tapSimulationEnabled = true;
+	bool tapDetectionEnabled = true;
 	
 private:
 	TPoint scanPoint();
