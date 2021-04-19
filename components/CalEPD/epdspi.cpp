@@ -14,14 +14,14 @@
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     // chip only support spi dma channel auto-alloc
     #define EPD_HOST    SPI2_HOST
-    #define DMA_CHAN    0
+    #define DMA_CHAN    SPI_DMA_CH_AUTO
 #endif
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
-    if (debug) {
-        printf("MOSI: %d CLK: %d\nSPI_CS: %d DC: %d RST: %d BUSY: %d\n\n", CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK,
-        CONFIG_EINK_SPI_CS,CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+    if (true) {
+        printf("MOSI: %d CLK: %d\nSPI_CS: %d DC: %d RST: %d BUSY: %d DMA_CH: %d\n\n", CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK,
+        CONFIG_EINK_SPI_CS,CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY, DMA_CHAN);
     }
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
@@ -91,7 +91,7 @@ void EpdSpi::cmd(const uint8_t cmd)
 {
     if (debug_enabled) {
         printf("C %x\n",cmd);
-    }
+    } 
 
     esp_err_t ret;
     spi_transaction_t t;
@@ -110,9 +110,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    if (debug_enabled) {
+    /* if (debug_enabled) {
       printf("D %x\n",data);
-    }
+    } */
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
