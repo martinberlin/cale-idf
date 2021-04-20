@@ -46,12 +46,11 @@ void Ed047TC1t::clearArea(EpdRect area) {
 
 void Ed047TC1t::update(enum EpdDrawMode mode)
 {
-  //epd_draw_image(epd_full_screen(), framebuffer, mode);
-  //Todo: First implemented on Ed047TC1.cpp
+  epd_update_screen(framebuffer, mode);
 }
 
 
-void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode, bool using_rotation)
+void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode)
 {
   if (x >= ED047TC1_WIDTH) {
     printf("Will not update. x position:%d  is major than display max width:%d\n", x, ED047TC1_WIDTH);
@@ -61,7 +60,7 @@ void Ed047TC1t::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enu
     printf("Will not update. y position:%d  is major than display max height:%d\n", y, ED047TC1_HEIGHT);
     return;
   }
-  if (using_rotation) _rotate(x, y, w, h);
+  _rotate(x, y, w, h);
   
   EpdRect area = {
     .x = x,

@@ -205,11 +205,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmpDebug)
                 printf("ROW Size %d\n", rowSize);
 
-            if (bmp.height < 0)
-            {
-                bmp.height = -bmp.height;
-                //flip = false;
-            }
             w = bmp.width;
             h = bmp.height;
             if ((w - 1) >= display.width())

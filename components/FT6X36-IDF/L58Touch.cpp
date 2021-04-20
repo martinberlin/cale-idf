@@ -20,6 +20,8 @@ L58Touch::L58Touch(int8_t intPin)
     conf.scl_io_num = (gpio_num_t)CONFIG_TOUCH_SDL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = CONFIG_I2C_MASTER_FREQUENCY;
+    // !< Optional, you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here.
+    conf.clk_flags = 0;
     i2c_param_config(I2C_NUM_0, &conf);
     esp_err_t i2c_driver = i2c_driver_install(I2C_NUM_0, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 	if (i2c_driver == ESP_OK) {
@@ -86,17 +88,11 @@ void L58Touch::processTouch()
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
 	TPoint point = scanPoint();
     
-    // This should be measured in LiftUp event (Events not documented)
-    _touchEndTime = esp_timer_get_time()/1000;
-
-    // Very primitive way to simulate a Tap event without press & liftup
-    if (!tapSimulationEnabled) {
-	  fireEvent(point, TEvent::Tap);
-    } else {
-        // Essentially avoids fast repetition but is not real Tap
-        if (_touchEndTime - _touchStartTime <= 15) {
-            fireEvent(point, TEvent::Tap);
-        }
+    if (!tapDetectionEnabled) {
+        fireEvent(point, TEvent::Tap);
+    }
+    if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= 150) {
+        fireEvent(point, TEvent::Tap);
     }
 }
 
@@ -108,8 +104,7 @@ uint8_t L58Touch::read8(uint8_t regName) {
 
 TPoint L58Touch::scanPoint()
 {
-    _touchStartTime = esp_timer_get_time()/1000;
-	TPoint point{0,0};
+	TPoint point{0,0,0};
 	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};
     uint32_t sumL = 0, sumH = 0;
@@ -155,25 +150,33 @@ TPoint L58Touch::scanPoint()
                 offset = 4;
             }
             data[i].id =  (buffer[i * 5 + offset] >> 4) & 0x0F;
-            data[i].state = buffer[i * 5 + offset] & 0x0F;
-            if (data[i].state == 0x06) {
+            data[i].event = buffer[i * 5 + offset] & 0x0F;
+            // Todo: Pending to revise why this construction is here
+            /* if (data[i].state == 0x06) {
                 data[i].state = 0x07;
             } else {
                 data[i].state = 0x06;
-            }
+            } */
             data[i].y = (uint16_t)((buffer[i * 5 + 1 + offset] << 4) | ((buffer[i * 5 + 3 + offset] >> 4) & 0x0F));
             data[i].x = (uint16_t)((buffer[i * 5 + 2 + offset] << 4) | (buffer[i * 5 + 3 + offset] & 0x0F));
 
-            printf("X[%d]:%d Y:%d\n", i, data[i].x, data[i].y);
+            printf("X[%d]:%d Y:%d E:%d\n", i, data[i].x, data[i].y, data[i].event);
         }
 
     } else {
+        // Only this one seems to be working (even pressing with 2 fingers)
         pointIdx = 1;
         data[0].id = (buffer[0] >> 4) & 0x0F;
-        data[0].state = 0x06;
+        data[0].event = (buffer[0] & 0x0F) >>1;
         data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
         data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
-        printf("X:%d Y:%d\n", data[0].x, data[0].y);
+        if (data[0].event == 3) { /** Press */
+            _touchStartTime = esp_timer_get_time()/1000;
+        }
+        if (data[0].event == 0) { /** Lift up */
+            _touchEndTime = esp_timer_get_time()/1000;
+        }
+        printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
 	}
      
 	uint16_t x = data[0].x;
@@ -205,9 +208,8 @@ TPoint L58Touch::scanPoint()
 		break;
   }
 
-	point = {x, y};
-    return point;
-	
+  point = {x, y, data[0].event};
+  return point;	
 }
 
 void L58Touch::writeRegister8(uint8_t reg, uint8_t value)

@@ -292,8 +292,6 @@ static enum EpdDrawError epd_write_line(
       return EPD_DRAW_NO_DRAWABLE_CHARACTERS;
   }
 
-  int baseline_height = *cursor_y - y1;
-
   int buf_width = EPD_WIDTH / 2;
   int buf_height = EPD_HEIGHT;
 
