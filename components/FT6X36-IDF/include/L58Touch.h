@@ -13,7 +13,7 @@
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "sdkconfig.h"
-
+#include "esp_idf_version.h"
 #ifndef touch_ttgo_h
 #define touch_ttgo_h
 // I2C Constants

@@ -20,8 +20,12 @@ L58Touch::L58Touch(int8_t intPin)
     conf.scl_io_num = (gpio_num_t)CONFIG_TOUCH_SDL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = CONFIG_I2C_MASTER_FREQUENCY;
-    // !< Optional, you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here.
-    conf.clk_flags = 0;
+    
+    #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 3, 0)
+        // !< Optional, you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here.
+        conf.clk_flags = 0;
+    #endif
+
     i2c_param_config(I2C_NUM_0, &conf);
     esp_err_t i2c_driver = i2c_driver_install(I2C_NUM_0, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 	if (i2c_driver == ESP_OK) {
