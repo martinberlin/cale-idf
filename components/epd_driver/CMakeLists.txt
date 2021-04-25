@@ -1,3 +1,7 @@
+idf_build_get_property(target IDF_TARGET)
+if(${target} STREQUAL "esp32c3")
+        return()
+endif()
 
 set(app_sources "epd_driver.c"
                 "render.c"
