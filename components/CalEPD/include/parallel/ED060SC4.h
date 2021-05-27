@@ -23,7 +23,7 @@ class Ed060SC4 : public EpdParallel
 {
   public:
     Ed060SC4();
-
+    EpdiyHighlevelState hl;
     uint8_t *framebuffer;
     uint8_t colors_supported = 1;
 
@@ -42,7 +42,6 @@ class Ed060SC4 : public EpdParallel
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode = MODE_EPDIY_BLACK_TO_GL16, bool using_rotation = true);
 
   private:
-    EpdiyHighlevelState hl;
     bool _tempalert = false;
     bool _initial = true;
     bool _debug_buffer = false;
