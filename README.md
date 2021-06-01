@@ -2,16 +2,19 @@
 
 ### Requirements
 
-* esp32 or esp32S2
-* Espressif IDF framework 4.3
+* esp32 or esp32S2 / C3 only experimental tests in branch **39-c3**
+* Espressif IDF framework >= 4.2 (4.3 ideally)
 * An epaper display (see wiki for supported models)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
-On latest releases, CalEPD has also support for FocalTech and L48 I2C touch panels, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
+On latest releases, CalEPD has also support for FocalTech and L58 I2C touch panels used in Lilygo parallel epaper [EPD047](https://github.com/martinberlin/cale-idf/tree/master/components/CalEPD/models/parallel), enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
 CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83, 7.5 and 12.48 inches).
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- If you are interested in LVGL / UX please check our project [lv_port_esp32-epaper](https://github.com/martinberlin/lv_port_esp32-epaper). In this experimental LVGL esp32 fork we are exploring the possibility to make UX in this diplays.
+
+Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
 
 ## Fork policy
 
@@ -21,7 +24,7 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 2. You will contribute adding a new epaper model that does not exist or add a new functionality to an existing one.
 3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
 
-All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. Forking is not bookmarking!
+All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. 
 
 We don't like having copies of the whole repository without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
 
@@ -50,6 +53,7 @@ Best settings on CALE.es website that we found to display color photos with cale
 
 ROADMAP
     
+    2021-Jun->Dec Parallel interaction research: UX on epaper displays
     2021-Mar till June Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
