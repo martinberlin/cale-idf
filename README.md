@@ -6,8 +6,8 @@
 * Espressif IDF framework 4.3
 * An SPI epaper (see wiki for supported models)
 
-ESP32C3 also works as a target. But you just need to remove
-/component/epd_driver since this uses both ESP32 cores and won't compile in C3.
+ESP32C3 also works as a target. For C3 the compilation of
+/component/epd_driver is excluded since this uses ESP32 two cores and won't compile in C3.
 Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working.
 
 Then just select one of the SPI examples, and do a: **idf.py set-target esp32c3**
