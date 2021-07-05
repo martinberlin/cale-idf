@@ -49,11 +49,13 @@ set(console_priv_includes "src/console")
 set(standard_types_srcs "src/standard_types/esp_rmaker_standard_params.c"
         "src/standard_types/esp_rmaker_standard_devices.c"
         "src/standard_types/esp_rmaker_standard_services.c")
+# COMMON
+set(common_srcs "src/common/app_wifi.cpp")
 
-idf_component_register(SRCS ${core_srcs} ${mqtt_srcs} ${ota_srcs} ${standard_types_srcs} ${console_srcs}
+idf_component_register(SRCS ${core_srcs} ${common_srcs} ${mqtt_srcs} ${ota_srcs} ${standard_types_srcs} ${console_srcs}
                        INCLUDE_DIRS "include"
                        PRIV_INCLUDE_DIRS ${core_priv_includes} ${ota_priv_includes} ${console_priv_includes}
-                       REQUIRES
+                       REQUIRES qrcode
                        PRIV_REQUIRES ${priv_req})
 
 target_add_binary_data(${COMPONENT_TARGET} "server_certs/mqtt_server.crt" TEXT)

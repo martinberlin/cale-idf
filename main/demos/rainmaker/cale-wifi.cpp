@@ -15,7 +15,7 @@
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
-// Rainmaker WiFi provisioning
+// Rainmaker
 #include <esp_rmaker_core.h>
 #include <esp_rmaker_standard_params.h>
 #include <esp_rmaker_standard_devices.h>
@@ -23,6 +23,7 @@
 #include <esp_rmaker_schedule.h>
 #include <app_wifi.h>
 
+#define DEVICE_PARAM_1 "Test-Param"
 /**
  * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
  * Needs 3 things: 
@@ -37,16 +38,9 @@
 //#include <gdeh0213b73.h>
 #include <gdew0583z21.h>
 EpdSpi io;
-//Gdeh0213b73 display(io);
 Gdew0583z21 display(io);
-// Plastic Logic test: Check cale-grayscale.cpp
 
-// Multi-SPI 4 channels EPD only
-// Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
-// Otherwise you will run out of DRAM very shortly!
-/* #include "wave12i48.h" // Only to use with Edp4Spi IO
-Epd4Spi io;
-Wave12I48 display(io); */
+esp_rmaker_device_t *epaper_device;
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
@@ -78,6 +72,32 @@ struct BmpHeader
     uint16_t depth;
     uint32_t format;
 } bmp;
+
+extern const char ota_server_cert[] asm("_binary_server_crt_start");
+
+/* Callback to handle commands received from the RainMaker cloud */
+static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
+            const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
+{
+    if (ctx) {
+        ESP_LOGI(TAG, "Received write request via : %s", esp_rmaker_device_cb_src_to_str(ctx->src));
+    }
+    const char *device_name = esp_rmaker_device_get_name(device);
+    const char *param_name = esp_rmaker_param_get_name(param);
+    if (strcmp(param_name, ESP_RMAKER_DEF_POWER_NAME) == 0) {
+        ESP_LOGI(TAG, "Received value = %s for %s - %s",
+                val.val.b? "true" : "false", device_name, param_name);
+        //app_light_set_power(val.val.b);
+    } else if (strcmp(param_name, DEVICE_PARAM_1) == 0) {
+        ESP_LOGI(TAG, "Received value = %d for %s-%s",
+                val.val.i, device_name, param_name);
+    } else {
+        /* Silently ignoring invalid params */
+        return ESP_OK;
+    }
+    esp_rmaker_param_update_and_report(param, val);
+    return ESP_OK;
+}
 
 uint16_t read16(uint8_t output_buffer[512], uint8_t startPointer)
 {
@@ -434,131 +454,71 @@ static void http_post(void)
     //ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
 }
 
-/* FreeRTOS event group to signal when we are connected*/
-static EventGroupHandle_t s_wifi_event_group;
-
-/* The event group allows multiple bits for each event, but we only care about two events:
- * - we are connected to the AP with an IP
- * - we failed to connect after the maximum amount of retries */
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-static int s_retry_num = 0;
-
-static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data)
-{
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-    {
-        esp_wifi_connect();
-    }
-    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
-    {
-        if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY)
-        {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "Retry to connect to the AP");
-        }
-        else
-        {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-            ESP_LOGI(TAG, "Connect to the AP failed %d times. Going to deepsleep %d minutes", CONFIG_ESP_MAXIMUM_RETRY, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
-            deepsleep();
-        }
-    }
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        sprintf(espIpAddress,  IPSTR, IP2STR(&event->ip_info.ip));
-        ESP_LOGI(TAG, "got ip: %s\n", espIpAddress);
-        s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-void wifi_init_sta(void)
-{
-    s_wifi_event_group = xEventGroupCreate();
-
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                        ESP_EVENT_ANY_ID,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                                                        IP_EVENT_STA_GOT_IP,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_got_ip));
-
-    wifi_config_t wifi_config;
-    memset(&wifi_config, 0, sizeof(wifi_config));
-    sprintf(reinterpret_cast<char *>(wifi_config.sta.ssid), CONFIG_ESP_WIFI_SSID);
-    sprintf(reinterpret_cast<char *>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD);
-    wifi_config.sta.pmf_cfg.capable = true;
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           portMAX_DELAY);
-
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually happened. */
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-
-    /* The event will not be processed after unregister */
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
-    vEventGroupDelete(s_wifi_event_group);
-}
-
 void app_main(void)
 {
     printf("CalEPD version: %s\n", CALEPD_VERSION);
-    
-    //Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    esp_err_t err;
     // WiFi log level
     esp_log_level_set("wifi", ESP_LOG_ERROR);
+    err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( err );
 
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
+    printf("nvs_flash_init()\n");
+    /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_init()
+     */
+    app_wifi_init();
+    
+    /* Initialize the ESP RainMaker Agent.
+     * Note that this should be called after app_wifi_init() but before app_wifi_start()
+     * */
+    esp_rmaker_config_t rainmaker_cfg = {
+        .enable_time_sync = false,
+    };
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", "Fan");
+    if (!node) {
+        ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        abort();
+    }
+
+    /* Create a device and add the relevant parameters to it */
+    epaper_device = esp_rmaker_lightbulb_device_create("CALE-Epaper", NULL, true);
+    esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
+    // Customize angle slider
+    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, 0);
+    // My SG90 servo only moves 147 instead of 180 degrees
+    esp_rmaker_param_add_bounds(angle, esp_rmaker_int(0), esp_rmaker_int(147), esp_rmaker_int(1));
+    esp_rmaker_device_add_param(epaper_device, angle);
+    esp_rmaker_node_add_device(node, epaper_device);
+
+    /* Enable OTA */
+    esp_rmaker_ota_config_t ota_config = {
+        .server_cert = ota_server_cert,
+    };
+    esp_rmaker_ota_enable(&ota_config, OTA_USING_PARAMS);
+
+    /* Enable timezone service which will be require for setting appropriate timezone
+     * from the phone apps for scheduling to work correctly.
+     * For more information on the various ways of setting timezone, please check
+     * https://rainmaker.espressif.com/docs/time-service.html.
+     */
+    esp_rmaker_timezone_service_enable();
+
+    /* Enable scheduling. */
+    esp_rmaker_schedule_enable();
+
+    /* Start the ESP RainMaker Agent */
+    esp_rmaker_start();
+    err = app_wifi_start(POP_TYPE_RANDOM);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Could not start Wifi. Aborting!!!");
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        abort();
+    }
     
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init();
