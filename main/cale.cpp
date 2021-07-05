@@ -192,11 +192,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmpDebug)
                 printf("ROW Size %d\n", rowSize);
 
-            if (bmp.height < 0)
-            {
-                bmp.height = -bmp.height;
-                //flip = false;
-            }
             w = bmp.width;
             h = bmp.height;
             if ((w - 1) >= display.width())
@@ -551,6 +546,8 @@ void app_main(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+    // WiFi log level
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();

@@ -34,6 +34,8 @@ set(srcs
     "models/plasticlogic/plasticlogic031.cpp"
 
     # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
+    # Uncomment for parallel epapers:
+    #"epdParallel.cpp"
     #"models/parallel/ED047TC1.cpp"
     #"models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
@@ -45,15 +47,14 @@ set(srcs
     "epd7color.cpp"
     "epdspi.cpp"
     "epd4spi.cpp"
-    # Only for parallel epapers:
-    #"epdParallel.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
-                    # Only for parallel epapers:
+                    
+                    # Uncomment for parallel epapers:
                     #REQUIRES "epd_driver"
                     INCLUDE_DIRS "include"
 )

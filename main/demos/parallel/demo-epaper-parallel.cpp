@@ -7,10 +7,10 @@
 // Display type: LILIGO 4.7 ED047TC1
 // Board: LILIGO T5-4.7 Epaper
 // In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
-//#include "parallel/ED047TC1.h"
-//Ed047TC1 display;
-#include "parallel/ED060SC4.h"
-Ed060SC4 display;
+#include "parallel/ED047TC1.h"
+Ed047TC1 display;
+//#include "parallel/ED060SC4.h"
+//Ed060SC4 display;
 
 // Include a font
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
@@ -31,6 +31,7 @@ void nextSlide() {
    delay(msDelayBetweenSlides);
    display.clearScreen();
    display.fillScreen(EPD_WHITE);
+   display.update();
 }
 
 uint16_t randomGrayColor() {
@@ -77,6 +78,7 @@ void app_main(void)
      display.clearScreen();   
      delay(1000);
    }
+   printf("Display width: %d  height: %d\n", display.width(), display.height());
 
    // Draw some Random 14px height lines
    uint8_t lineHeight = display.height()/30; // 18 for 540
@@ -85,6 +87,7 @@ void app_main(void)
       display.fillRect(0, repeat, display.width(), lineHeight, randomGrayColor());
    }
    display.update();
+   
    nextSlide();
 
    // Draw some gray circles

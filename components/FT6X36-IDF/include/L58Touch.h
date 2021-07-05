@@ -13,7 +13,7 @@
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "sdkconfig.h"
-
+#include "esp_idf_version.h"
 #ifndef touch_ttgo_h
 #define touch_ttgo_h
 // I2C Constants
@@ -41,6 +41,7 @@ struct TPoint
 {
 	uint16_t x;
 	uint16_t y;
+	uint8_t event;
 };
 
 class L58Touch
@@ -48,7 +49,7 @@ class L58Touch
 	static void IRAM_ATTR isr(void* arg);
 	typedef struct {
 		uint8_t id;
-        uint8_t state;
+        uint8_t event;
         uint16_t x;
         uint16_t y;
     } TouchData_t;
@@ -78,9 +79,13 @@ public:
       a = b;
       b = t;
     }
+
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	TouchData_t data[5];
-	bool tapSimulationEnabled = true;
+	// Tap detection is enabled by default
+	bool tapDetectionEnabled = true;
+	// Only if the time difference between press and release is minor than this milliseconds a Tap even is triggered
+	uint16_t tapDetectionMillisDiff = 100;
 	
 private:
 	TPoint scanPoint();
