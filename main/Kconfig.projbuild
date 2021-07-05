@@ -46,3 +46,37 @@ menu "CALE Configuration"
             Set the Maximum retry to avoid station reconnecting to the AP unlimited times.
 
 endmenu
+menu "ESP RainMaker App Wi-Fi Provisioning"
+
+    config APP_WIFI_PROV_SHOW_QR
+        bool "Show provisioning QR code"
+        default y
+        help
+            Show the QR code for provisioning.
+
+    choice APP_WIFI_PROV_TRANSPORT
+        bool "Provisioning Transport method"
+        default APP_WIFI_PROV_TRANSPORT_BLE
+        help
+            Wi-Fi provisioning component offers both, SoftAP and BLE transports. Choose any one.
+
+        config APP_WIFI_PROV_TRANSPORT_SOFTAP
+            bool "Soft AP"
+        config APP_WIFI_PROV_TRANSPORT_BLE
+            bool "BLE"
+            select BT_ENABLED
+            depends on IDF_TARGET_ESP32 || IDF_TARGET_ESP32C3
+    endchoice
+
+    config APP_WIFI_PROV_TRANSPORT
+        int
+        default 1 if APP_WIFI_PROV_TRANSPORT_SOFTAP
+        default 2 if APP_WIFI_PROV_TRANSPORT_BLE
+
+    config APP_WIFI_SHOW_DEMO_INTRO_TEXT
+        bool "Show intro text for demos"
+        default n
+        help
+            Show some intro text for demos in order to help users understand more about ESP RainMaker.
+
+endmenu
