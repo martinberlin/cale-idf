@@ -166,7 +166,6 @@ static void wifi_init_sta()
 /* Free random_bytes after use only if function returns ESP_OK */
 static esp_err_t read_random_bytes_from_nvs(uint8_t **random_bytes, size_t *len)
 {
-    printf("read_random_bytes_from_nvs()\n");
     nvs_handle handle;
     esp_err_t err;
     *len = 0;

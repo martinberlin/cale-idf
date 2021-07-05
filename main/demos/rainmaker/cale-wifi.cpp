@@ -21,9 +21,14 @@
 #include <esp_rmaker_standard_devices.h>
 #include <esp_rmaker_ota.h>
 #include <esp_rmaker_schedule.h>
+#include <esp_rmaker_utils.h>
 #include <app_wifi.h>
 
+#include <esp_rmaker_factory.h>
+#include <esp_rmaker_common_events.h>
+
 #define DEVICE_PARAM_1 "Test-Param"
+bool readyToRequestImage = false;
 /**
  * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
  * Needs 3 things: 
@@ -33,12 +38,14 @@
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-//#include <gdew042t2.h>
+#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include <gdew0583z21.h>
+//#include <gdew0583z21.h>
 EpdSpi io;
-Gdew0583z21 display(io);
+//Gdew0583z21 display(io); // Not enough RAM
+//Gdew027w3 display(io);   // Works
+Gdew042t2 display(io);
 
 esp_rmaker_device_t *epaper_device;
 
@@ -403,6 +410,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 static void http_post(void)
 {
+     //  On  init(true) activates debug (And makes SPI communication slower too)
+    display.init();
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
+    // Show available Dynamic Random Access Memory available after display.init() - Both report same number
+    printf("Free heap: %d (After epaper instantiation)\n", xPortGetFreeHeapSize());
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
@@ -415,11 +427,11 @@ static void http_post(void)
        timeout_ms set to 9 seconds since for large displays a dynamic BMP can take some seconds to be generated
      */
     
-    // POST Send the IP for logging purpouses
-    char post_data[22];
+    // TODO POST Send the IP for logging purpouses
+    /* char post_data[22];
     uint8_t postsize = sizeof(post_data);
     strlcpy(post_data, "ip=", postsize);
-    strlcat(post_data, espIpAddress, postsize);
+    strlcat(post_data, espIpAddress, postsize); */
 
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
@@ -434,10 +446,10 @@ static void http_post(void)
     strlcpy(bearerToken, "Bearer: ", sizeof(bearerToken));
     strlcat(bearerToken, CONFIG_CALE_BEARER_TOKEN, sizeof(bearerToken));
     
-    printf("POST data: %s\n%s\n", post_data, bearerToken);
+    //printf("POST data: %s\n%s\n", post_data, bearerToken);
 
     esp_http_client_set_header(client, "Authorization", bearerToken);
-    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    //esp_http_client_set_post_field(client, post_data, strlen(post_data));
     
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK)
@@ -454,9 +466,59 @@ static void http_post(void)
     //ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
 }
 
+/* Event handler for catching RainMaker events */
+static void event_handler_rmk(void* arg, esp_event_base_t event_base,
+                          int32_t event_id, void* event_data)
+{
+    printf("EVENT ID:%d\n", event_id);
+    if (event_base == RMAKER_EVENT) {
+        switch (event_id) {
+            case RMAKER_EVENT_INIT_DONE:
+                ESP_LOGI(TAG, "RainMaker Initialised.");
+                break;
+            case RMAKER_EVENT_CLAIM_STARTED:
+                ESP_LOGI(TAG, "RainMaker Claim Started.");
+                break;
+            case RMAKER_EVENT_CLAIM_SUCCESSFUL:
+                ESP_LOGI(TAG, "RainMaker Claim Successful.");
+                break;
+            case RMAKER_EVENT_CLAIM_FAILED:
+                ESP_LOGI(TAG, "RainMaker Claim Failed.");
+                break;
+            default:
+                ESP_LOGW(TAG, "Unhandled RainMaker Event: %d", event_id);
+        }
+    } else if (event_base == RMAKER_COMMON_EVENT) {
+        switch (event_id) {
+            case RMAKER_EVENT_REBOOT:
+                ESP_LOGI(TAG, "Rebooting in %d seconds.", *((uint8_t *)event_data));
+                break;
+            case RMAKER_EVENT_WIFI_RESET:
+                ESP_LOGI(TAG, "Wi-Fi credentials reset.");
+                break;
+            case RMAKER_EVENT_FACTORY_RESET:
+                ESP_LOGI(TAG, "Node reset to factory defaults.");
+                break;
+            case RMAKER_MQTT_EVENT_CONNECTED:
+                ESP_LOGI(TAG, "MQTT Connected.");
+                break;
+            case RMAKER_MQTT_EVENT_DISCONNECTED:
+                ESP_LOGI(TAG, "MQTT Disconnected.");
+                break;
+            case RMAKER_MQTT_EVENT_PUBLISHED:
+                ESP_LOGI(TAG, "MQTT Published. Msg id: %d.", *((int *)event_data));
+                readyToRequestImage = true;
+                break;
+            default:
+                ESP_LOGW(TAG, "Unhandled RainMaker Common Event: %d", event_id);
+        }
+    } else {
+        ESP_LOGW(TAG, "Invalid event received!");
+    }
+}
+
 void app_main(void)
 {
-    printf("CalEPD version: %s\n", CALEPD_VERSION);
     esp_err_t err;
     // WiFi log level
     esp_log_level_set("wifi", ESP_LOG_ERROR);
@@ -467,10 +529,13 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    printf("nvs_flash_init()\n");
     /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_init()
      */
     app_wifi_init();
+
+    /* Register an event handler to catch RainMaker events */
+    //ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_EVENT, ESP_EVENT_ANY_ID, &event_handler_rmk, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_COMMON_EVENT, ESP_EVENT_ANY_ID, &event_handler_rmk, NULL));
     
     /* Initialize the ESP RainMaker Agent.
      * Note that this should be called after app_wifi_init() but before app_wifi_start()
@@ -487,6 +552,7 @@ void app_main(void)
 
     /* Create a device and add the relevant parameters to it */
     epaper_device = esp_rmaker_lightbulb_device_create("CALE-Epaper", NULL, true);
+    
     esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
     // Customize angle slider
     esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, 0);
@@ -513,21 +579,23 @@ void app_main(void)
 
     /* Start the ESP RainMaker Agent */
     esp_rmaker_start();
+    
+    /* Uncomment to reset WiFi credentials when there is no Boot button in the ESP32 */
+    //esp_rmaker_wifi_reset(1,10);return;
+
     err = app_wifi_start(POP_TYPE_RANDOM);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Could not start Wifi. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
-    
-    //  On  init(true) activates debug (And makes SPI communication slower too)
-    display.init();
-    display.setRotation(CONFIG_DISPLAY_ROTATION);
-    // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
-    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    http_post();
-
-    // Just test if Epd works: Compile the demo-epaper.cpp example modifying main/CMakeLists
+    while(true) {
+        if (readyToRequestImage){
+            // Display.init() and Download the image from www
+            http_post();
+            readyToRequestImage = false;
+        }
+        vTaskDelay(100/portTICK_PERIOD_MS);
+    }
 }
