@@ -39,7 +39,7 @@ class PlasticLogic014 : public PlasticLogic
     //uint8_t _buffer[PLOGIC014_BUFFER_SIZE];
     // Buffer sent to EPD prefixed with 0x10:
     //uint8_t bufferEpd[PLOGIC014_BUFFER_SIZE+1];
-
+    bool _vec_bonds_check = true;
     bool _initial = true;
     bool _debug_buffer = false;
     uint16_t _nextline = PLOGIC014_WIDTH/4;
