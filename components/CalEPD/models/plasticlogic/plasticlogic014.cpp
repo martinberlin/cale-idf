@@ -48,9 +48,8 @@ void PlasticLogic014::init(bool debug)
  * This has the function of assigning the original Vector size
  */ 
 void PlasticLogic014::clearScreen(){
-  // #43 Adafruit.fillscreen is out of bonds here, adding a new X line
   uint16_t x = 0;
-  for (x = 0; x < PLOGIC014_BUFFER_SIZE+1; x++)
+  for (x = 0; x < PLOGIC014_BUFFER_SIZE; x++)
   {
     _buffer.push_back(0xff); //WHITE
   }
@@ -68,9 +67,7 @@ void PlasticLogic014::update(uint8_t updateMode)
 
   IO.data(pixelAccessPos, sizeof(pixelAccessPos));
 
-  buffer_it = _buffer.begin();
-  *(buffer_it) = 0x10; // First element
-  
+  _buffer.insert(_buffer.begin(), 0x10);
   IO.dataVector(_buffer);
   
   _waitBusy("Buffer sent", EPD_TMG_SRT);
