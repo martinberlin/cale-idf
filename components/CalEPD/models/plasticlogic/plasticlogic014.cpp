@@ -44,7 +44,11 @@ void PlasticLogic014::init(bool debug)
     setEpdRotation(1);
 }
 
+/**
+ * This has the function of assigning the original Vector size
+ */ 
 void PlasticLogic014::clearScreen(){
+  // #43 Adafruit.fillscreen is out of bonds here, adding a new X line
   uint16_t x = 0;
   for (x = 0; x < PLOGIC014_BUFFER_SIZE+1; x++)
   {
@@ -132,6 +136,6 @@ void PlasticLogic014::drawPixel(int16_t x, int16_t y, uint16_t color) {
     	case 2: pixel = (pixels & 0xF3) | ((uint8_t)color << 2); break;	
     	case 3: pixel = (pixels & 0xFC) | (uint8_t)color; break;		
 	}
-  buffer_it = _buffer.begin()+pos+1;
+  buffer_it = _buffer.begin()+pos;
   *(buffer_it) = pixel;
 }

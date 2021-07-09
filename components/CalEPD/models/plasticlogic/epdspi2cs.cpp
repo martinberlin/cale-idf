@@ -211,10 +211,6 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
 void EpdSpi2Cs::dataVector(vector<uint8_t> _buffer)
 {
     if (_buffer.size()==0) return;
-    /* uint8_t *data = 0;
-    for (int i = 0; i < _buffer.size(); i++)  {
-        data[i] = _buffer.at(i);
-    } */
 
     if (debug_enabled) {
         printf("D\n");

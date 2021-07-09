@@ -51,11 +51,12 @@ void app_main(void)
 
 
    display.setRotation(2); // 0 - 12.48 w/USB pointing down
-   display.fillScreen(EPD_LGRAY);
+   // #43 Issue with Fillscreen
+   /* display.fillScreen(EPD_LGRAY);
    display.update();
    vTaskDelay(700); // short delay to demonstrate red color working
-   display.fillScreen(EPD_WHITE);
-
+   
+   display.fillScreen(EPD_WHITE); */
    display.fillCircle(30,30, 10, EPD_LGRAY);
 
    display.setCursor(1,10);
@@ -63,11 +64,9 @@ void app_main(void)
    
    display.setFont(&Ubuntu_M8pt8b);
 
-   display.println("German characters test");
+   display.println("HOLA NEL");
    display.println("° äöü ÄÖÜ ß");
-   display.println("Löwen, Bären, Vögel und Käfer sind Tiere. Völlerei lässt grüßen! Heute ist 38° zu warm.");
-   
-
+   display.println("How are you doing boy?");
    //demo_chars();
 
    display.update();
