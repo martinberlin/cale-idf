@@ -44,7 +44,7 @@ void PlasticLogic021::init(bool debug)
 }
 
 void PlasticLogic021::clearScreen(){
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+  for (uint16_t x = 0; x < PLOGIC021_BUFFER_SIZE; x++)
   {
     _buffer.push_back(0xff); //WHITE
   }
