@@ -3,29 +3,9 @@
 #include "freertos/task.h"
 
 // Should match with your epaper module, size
-#include <gdew042t2.h>
-#include <gdew0583t7.h>
-#include <gdew075T7.h>
-#include <gdew075T8.h>
-#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
-// Single SPI EPD
-//EpdSpi io;
-//Gdew075T8 display(io);
-//Gdew075T7 display(io);
-//Gdew042t2 display(io);
-//Gdew0583T7 display(io);
-//Gdew027w3 display(io);
-//Gdeh0213b73 display(io);
-
-// Multi-SPI 4 channels EPD only - 12.48 Epaper display
-// Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
-// Otherwise you will run out of DRAM very shortly!
-//#include "wave12i48.h" // Only to use with Edp4Spi IO
-#include "wave12i48BR.h" // Only to use with Edp4Spi IO, Black Red model
-Epd4Spi io;
-Wave12I48RB display(io);
-
+#include <plasticlogic014.h>
+EpdSpi2Cs io;
+PlasticLogic014 display(io);
 
 
 // FONT used for title / message body - Only after display library
@@ -34,9 +14,7 @@ Wave12I48RB display(io);
 
 //#include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
-#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
-//#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
-//#include <Fonts/ubuntu/Ubuntu_M20pt8b.h>
+
 
 extern "C"
 {
@@ -59,8 +37,8 @@ void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Show available Dynamic Random Access Memory available after display.init()
-   printf("Fonts-demo. Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
-   xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
+   printf("Fonts-demo. Free heap: %d (After epaper instantiation)\n", 
+   xPortGetFreeHeapSize());
 
    // Bootstrap epaper class
    display.init(false);
@@ -73,47 +51,24 @@ void app_main(void)
 
 
    display.setRotation(2); // 0 - 12.48 w/USB pointing down
-   display.fillScreen(EPD_RED);
+   display.fillScreen(EPD_LGRAY);
    display.update();
    vTaskDelay(700); // short delay to demonstrate red color working
    display.fillScreen(EPD_WHITE);
 
-   display.fillCircle(300,300, 100, EPD_BLACK);
+   display.fillCircle(30,30, 10, EPD_LGRAY);
 
-   display.setCursor(10,40);
+   display.setCursor(1,10);
    display.setTextColor(EPD_BLACK);
    
-   display.setFont(&Ubuntu_M12pt8b);
+   display.setFont(&Ubuntu_M8pt8b);
 
    display.println("German characters test");
    display.println("° äöü ÄÖÜ ß");
    display.println("Löwen, Bären, Vögel und Käfer sind Tiere. Völlerei lässt grüßen! Heute ist 38° zu warm.");
-   display.println("");
-   display.println("Spanish / French characters test");
-   display.println("æçèé êëìí ï ñ");
-   display.println("La cigüeña estaba sola en la caña. Estás allí?");
-   display.newline(); // new way to add a newline
    
-   // German sentence
-   display.setFont(&Ubuntu_M8pt8b);
-   display.print("Ubuntu 8pt");
-   display.setTextColor(EPD_RED); // test red characters
-   demo_chars();
 
-
-   display.println("");
-   display.print("\nUbuntu 12pt");
-   display.setFont(&Ubuntu_M12pt8b);
-   display.setTextColor(EPD_RED);
-   display.setTextColor(EPD_WHITE); // test white on the black circle
-   demo_chars();
-
-   // Let's draw one 100px radius circle Black and another on the right 120px radius Red
-   display.fillCircle(300,650, 165, EPD_RED); // test bottom left quadrant
-
-   display.fillCircle(600,300, 120, EPD_RED);
-
-   display.fillCircle(900,700, 150, EPD_BLACK);  // test bottom right quadrant
+   //demo_chars();
 
    display.update();
 }
