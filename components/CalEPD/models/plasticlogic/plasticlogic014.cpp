@@ -126,7 +126,7 @@ void PlasticLogic014::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
   // check that is not going to write out of Vector bonds
   // #43 TODO: Check why is trying to update out of bonds anyways
-  if (pos >= _buffer.size()) {
+  if (pos > _buffer.size()) {
     if (_vec_bonds_check) {
       printf("x:%d y:%d Vpos:%d >out bonds\n",x,y, pos);
       _vec_bonds_check = false;
