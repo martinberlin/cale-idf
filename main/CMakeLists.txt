@@ -3,6 +3,7 @@ idf_component_register(
     
     #SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
+    SRCS "demos/rainmaker/cale-wifi.cpp"
     
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
