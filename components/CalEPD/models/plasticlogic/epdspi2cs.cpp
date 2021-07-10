@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/task.h"
 #include "esp_log.h"
+using namespace std;
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     #define EPD_HOST    HSPI_HOST
@@ -199,6 +200,31 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
     memset(&t, 0, sizeof(t));
     t.length=len*8;
     t.tx_buffer=data;
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
+}
+
+/**
+ * Send multiple data in one transaction using vectors
+ */
+void EpdSpi2Cs::dataVector(vector<uint8_t> _buffer)
+{
+    if (_buffer.size()==0) return;
+
+    if (debug_enabled) {
+        printf("D\n");
+        for (int i = 0; i < _buffer.size(); i++)  {
+            printf("%x ", _buffer.operator[](i));
+        }
+        printf("\n");
+    }
+    esp_err_t ret;
+    spi_transaction_t t;
+                
+    memset(&t, 0, sizeof(t));
+    t.length = _buffer.size()*8;
+    t.tx_buffer = _buffer.data();
     ret=spi_device_polling_transmit(spi, &t);
 
     assert(ret==ESP_OK);

@@ -3,8 +3,8 @@ idf_component_register(
     
     #SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
-
     SRCS "demos/rainmaker/cale-wifi.cpp"
+    
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
     # Grayscale is also good to test parallel epaper with 16 gray levels
@@ -21,7 +21,9 @@ idf_component_register(
     # Generic demos for any displays
     #SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
-    # SRCS "demos/demo-fonts.cpp"
+    SRCS "demos/demo-fonts.cpp"
+
+    #SRCS "demos/vector-test.cpp"
 
     # Demo to print 7 colors in Waveshare Acep epapers
     #SRCS "demos/demo-7-colors.cpp"
