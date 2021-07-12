@@ -120,7 +120,6 @@ void EpdSpi::data(uint8_t data)
     assert(ret==ESP_OK);
 }
 
-
 void EpdSpi::dataBuffer(uint8_t data)
 {
     spi_transaction_t t;
@@ -162,4 +161,29 @@ void EpdSpi::reset(uint8_t millis=20) {
     vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
     vTaskDelay(millis / portTICK_RATE_MS);
+}
+
+/**
+ * Send multiple data in one transaction using vectors
+ */
+void EpdSpi::dataVector(vector<uint8_t> _buffer)
+{
+    if (_buffer.size()==0) return;
+
+    if (debug_enabled) {
+        printf("D\n");
+        for (int i = 0; i < _buffer.size(); i++)  {
+            printf("%x ", _buffer.operator[](i));
+        }
+        printf("\n");
+    }
+    esp_err_t ret;
+    spi_transaction_t t;
+                
+    memset(&t, 0, sizeof(t));
+    t.length = _buffer.size()*8;
+    t.tx_buffer = _buffer.data();
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
 }

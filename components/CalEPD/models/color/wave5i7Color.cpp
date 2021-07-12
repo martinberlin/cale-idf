@@ -32,9 +32,9 @@ void Wave5i7Color::fillScreen(uint16_t color)
 {
   uint8_t pv = _color7(color);
   uint8_t pv2 = pv | pv << 4;
-  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  for (uint32_t x = 0; x < WAVE5I7COLOR_BUFFER_SIZE; x++)
   {
-    _buffer[x] = pv2;
+    _buffer.push_back(pv2);
   }
 
   if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
@@ -114,7 +114,7 @@ void Wave5i7Color::update()
     {
       for (uint16_t x = 1; x <= xLineBytes; x++)
       {
-        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
+        uint8_t data = i < _buffer.size() ? _buffer.at(i) : 0x33;
         x1buf[x - 1] = data;
         if (x == xLineBytes)
         { // Flush the X line buffer to SPI
@@ -130,7 +130,7 @@ void Wave5i7Color::update()
 
   } else {
     for (uint32_t i = 0; i < sizeof(_buffer); i++) {
-      IO.data(_buffer[i]);
+      IO.data(_buffer.at(i));
     }
   }
   
@@ -219,9 +219,18 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
       y = WAVE5I7COLOR_HEIGHT - y - 1;
       break;
   }
-  uint32_t i = x / 2 + uint32_t(y) * (WAVE5I7COLOR_WIDTH / 2);
+  uint32_t pos = x / 2 + uint32_t(y) * (WAVE5I7COLOR_WIDTH / 2);
   uint8_t pv = _color7(color);
       
-  if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
-    else _buffer[i] = (_buffer[i] & 0x0F) | (pv << 4);
+      // #43 TODO: Check why is trying to update out of bonds anyways
+  if (pos >= _buffer.size()) {
+    if (_vec_bonds_check) {
+      printf("x:%d y:%d Vpos:%d >out bonds\n",x,y, pos);
+      _vec_bonds_check = false;
+    }
+    return;
+  }
+  buffer_it = _buffer.begin()+pos;
+  if (x & 1) *(buffer_it) = (_buffer.at(pos) & 0xF0) | pv;
+    else *(buffer_it) = (_buffer.at(pos) & 0x0F) | (pv << 4);
 }
