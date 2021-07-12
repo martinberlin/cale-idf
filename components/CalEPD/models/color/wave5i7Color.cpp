@@ -25,6 +25,12 @@ void Wave5i7Color::init(bool debug)
 
     //Reset the display
     IO.reset(20);
+    //Initialize _buffer
+    for (uint32_t x = 0; x < WAVE5I7COLOR_BUFFER_SIZE; x++)
+    {
+      _buffer.push_back(0xff);
+    }
+
     fillScreen(EPD_WHITE);
 }
 
@@ -32,12 +38,15 @@ void Wave5i7Color::fillScreen(uint16_t color)
 {
   uint8_t pv = _color7(color);
   uint8_t pv2 = pv | pv << 4;
+  printf("BUFFER_SIZE %d\n",WAVE5I7COLOR_BUFFER_SIZE);
   for (uint32_t x = 0; x < WAVE5I7COLOR_BUFFER_SIZE; x++)
   {
-    _buffer.push_back(pv2);
+    buffer_it = _buffer.begin()+x;
+    *(buffer_it) = pv2;
+    //printf("%d ",x);
   }
 
-  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%x) _buffer len:%d\n", color, _buffer.size());
 }
 
 void Wave5i7Color::_wakeUp(){
@@ -129,7 +138,7 @@ void Wave5i7Color::update()
     }
 
   } else {
-    for (uint32_t i = 0; i < sizeof(_buffer); i++) {
+    for (uint32_t i = 0; i < _buffer.size(); i++) {
       IO.data(_buffer.at(i));
     }
   }
