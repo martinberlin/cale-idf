@@ -19,13 +19,10 @@ using namespace std;
 // Controller: Unknown
 #define WAVE5I7COLOR_WIDTH 600
 #define WAVE5I7COLOR_HEIGHT 448
-// Strangely the Vector>65530 gives an error:
+// Without PSRAM in a Lolin32 the Vector>65530 gives an error:
 // abort() was called at PC 0x400d6b67 on core 0
 // 0x400d6b67: __cxa_end_catch at /home/martin/esp/esp-idf/components/cxx/cxx_exception_stubs.cpp:13
-
-//#define WAVE5I7COLOR_BUFFER_SIZE (uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2)
-// Just a test to see it working (Half screen buffer)
-#define WAVE5I7COLOR_BUFFER_SIZE 65530
+#define WAVE5I7COLOR_BUFFER_SIZE (uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2)
 
 class Wave5i7Color : public Epd7Color
 {
