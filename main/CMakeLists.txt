@@ -3,7 +3,8 @@ idf_component_register(
     
     #SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
-    SRCS "demos/rainmaker/cale-wifi.cpp"
+    #SRCS "demos/rainmaker/cale-wifi.cpp"
+    SRCS "demos/rainmaker/cale-7-color-wifi.cpp"
     
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
@@ -21,7 +22,7 @@ idf_component_register(
     # Generic demos for any displays
     #SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
-    SRCS "demos/demo-fonts.cpp"
+    #SRCS "demos/demo-fonts.cpp"
 
     #SRCS "demos/vector-test.cpp"
 
