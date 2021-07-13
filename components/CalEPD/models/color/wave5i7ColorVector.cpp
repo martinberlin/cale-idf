@@ -1,6 +1,6 @@
 // Epaper: 5.65inch ACeP 7-Color  https://www.waveshare.com/product/displays/e-paper/5.65inch-e-paper-module-f.htm
 // This epaper like most color models does not support partialUpdate
-#include "color/wave5i7Color.h"
+#include "color/wave5i7ColorVector.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
