@@ -32,12 +32,12 @@ void Wave5i7Color::fillScreen(uint16_t color)
 {
   uint8_t pv = _color7(color);
   uint8_t pv2 = pv | pv << 4;
-  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  for (uint32_t x = 0; x < WAVE5I7COLOR_BUFFER_SIZE; x++)
   {
     _buffer[x] = pv2;
   }
 
-  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%x)  buffer size:%d\n", color, WAVE5I7COLOR_BUFFER_SIZE);
 }
 
 void Wave5i7Color::_wakeUp(){
@@ -114,7 +114,7 @@ void Wave5i7Color::update()
     {
       for (uint16_t x = 1; x <= xLineBytes; x++)
       {
-        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
+        uint8_t data = i < WAVE5I7COLOR_BUFFER_SIZE ? _buffer[i] : 0x33;
         x1buf[x - 1] = data;
         if (x == xLineBytes)
         { // Flush the X line buffer to SPI
@@ -129,7 +129,7 @@ void Wave5i7Color::update()
     }
 
   } else {
-    for (uint32_t i = 0; i < sizeof(_buffer); i++) {
+    for (uint32_t i = 0; i < WAVE5I7COLOR_BUFFER_SIZE; i++) {
       IO.data(_buffer[i]);
     }
   }
