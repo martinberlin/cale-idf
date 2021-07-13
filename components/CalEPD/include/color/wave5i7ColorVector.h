@@ -13,10 +13,15 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <color/wave7colors.h>
+#include <vector>
+using namespace std;
 
 // Controller: Unknown
 #define WAVE5I7COLOR_WIDTH 600
 #define WAVE5I7COLOR_HEIGHT 448
+// Without PSRAM in a Lolin32 the Vector>65530 gives an error:
+// abort() was called at PC 0x400d6b67 on core 0
+// 0x400d6b67: __cxa_end_catch at /home/martin/esp/esp-idf/components/cxx/cxx_exception_stubs.cpp:13
 #define WAVE5I7COLOR_BUFFER_SIZE (uint32_t(WAVE5I7COLOR_WIDTH) * uint32_t(WAVE5I7COLOR_HEIGHT) / 2)
 
 class Wave5i7Color : public Epd7Color
@@ -36,8 +41,9 @@ class Wave5i7Color : public Epd7Color
   private:
     EpdSpi& IO;
 
-    // Now stored in PSRAM
-    uint8_t* _buffer = (uint8_t*)heap_caps_malloc(WAVE5I7COLOR_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
+    vector<uint8_t> _buffer;
+    vector<uint8_t>::iterator buffer_it;
+    bool _vec_bonds_check = true;
 
     bool _initial = true;
     void _wakeUp();
