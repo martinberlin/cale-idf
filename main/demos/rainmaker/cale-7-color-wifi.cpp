@@ -10,11 +10,11 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "nvs.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "esp_sleep.h"
 // - - - - HTTP Client includes:
-#include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
@@ -30,7 +30,7 @@
 #include <esp_rmaker_factory.h>
 #include <esp_rmaker_common_events.h>
 
-#define DEVICE_PARAM_1 "Test-Param"
+#define DEVICE_PARAM_1 "Minutes till next refresh"
 bool readyToRequestImage = false;
 /**
  * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
@@ -70,6 +70,8 @@ extern "C"
 }
 
 static const char *TAG = "CALE";
+// Values that will be stored in NVS - defaults here
+uint16_t nvs_minutes_till_refresh = 10;
 
 uint16_t countDataEventCalls = 0;
 uint32_t countDataBytes = 0;
@@ -86,8 +88,16 @@ struct BmpHeader
     uint32_t format;
 } bmp;
 
-
 extern const char ota_server_cert[] asm("_binary_server_crt_start");
+nvs_handle_t nvs_h;
+
+void deepsleep(){
+    nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);
+    nvs_close(nvs_h);
+    printf("Going to deepsleep %d minutes\n\n", nvs_minutes_till_refresh);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    esp_deep_sleep(1000000LL * 60 * nvs_minutes_till_refresh);
+}
 
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
@@ -101,10 +111,25 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     if (strcmp(param_name, ESP_RMAKER_DEF_POWER_NAME) == 0) {
         ESP_LOGI(TAG, "Received value = %s for %s - %s",
                 val.val.b? "true" : "false", device_name, param_name);
-        //app_light_set_power(val.val.b);
+        if (val.val.b == false) {
+            deepsleep();
+        }
+
     } else if (strcmp(param_name, DEVICE_PARAM_1) == 0) {
-        ESP_LOGI(TAG, "Received value = %d for %s-%s",
+        ESP_LOGI(TAG, "%d for %s-%s",
                 val.val.i, device_name, param_name);
+
+        nvs_handle_t my_handle;
+        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+        if (err != ESP_OK) {
+            printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        } 
+        nvs_set_u16(my_handle, "mtr", (uint16_t) val.val.i);
+
+        err = nvs_commit(my_handle);
+        printf((err != ESP_OK) ? "NVS Failed to store %d\n" : "NVS Stored %d\n", val.val.i);
+        nvs_close(my_handle);    
+
     } else {
         /* Silently ignoring invalid params */
         return ESP_OK;
@@ -169,10 +194,6 @@ uint16_t rgb_palette_buffer[max_palette_pixels]; // palette buffer for depth <= 
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
-
-void deepsleep(){
-    esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
-}
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -415,12 +436,12 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
     case HTTP_EVENT_ON_FINISH:
         countDataEventCalls=0;
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\n", (esp_timer_get_time()-startTime)/1000);
         display.update();
         if (bmpDebug) 
             printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
-        // Go to deepsleep after rendering
-        vTaskDelay(14000 / portTICK_PERIOD_MS);
+        // Go to deepsleep after rendering, but wait one minute, so there is a chance to use RainMaker app
+        vTaskDelay(60000 / portTICK_PERIOD_MS);
         deepsleep();
         break;
 
@@ -548,10 +569,27 @@ void app_main(void)
     err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
+        printf("Erasing NVS\n");
         err = nvs_flash_init();
     }
-    ESP_ERROR_CHECK( err );
+    ESP_ERROR_CHECK(err);
 
+    err = nvs_open("storage", NVS_READWRITE, &nvs_h);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+    }
+    err = nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);
+    switch (err) {
+            case ESP_OK:
+                printf("NVS Read OK. Minutes till next refresh: %d\n\n", nvs_minutes_till_refresh);
+                break;
+            case ESP_ERR_NVS_NOT_FOUND:
+                printf("NVS minutes value is not initialized yet!\n");
+                break;
+            default :
+                printf("Error (%s) reading!\n", esp_err_to_name(err));
+        }
+    
     /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_init()
      */
     app_wifi_init();
@@ -578,9 +616,9 @@ void app_main(void)
     
     esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
     // Customize angle slider
-    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, 0);
+    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
     // My SG90 servo only moves 147 instead of 180 degrees
-    esp_rmaker_param_add_bounds(angle, esp_rmaker_int(0), esp_rmaker_int(147), esp_rmaker_int(1));
+    esp_rmaker_param_add_bounds(angle, esp_rmaker_int(10), esp_rmaker_int(360), esp_rmaker_int(1));
     esp_rmaker_device_add_param(epaper_device, angle);
     esp_rmaker_node_add_device(node, epaper_device);
 
