@@ -2,9 +2,10 @@
 
 ### Requirements
 
-* esp32 or esp32S2 (C3 also works check notes below)
+* esp32 or esp32S2 with PSRAM (C3 also works check notes below)
 * Espressif IDF framework 4.3
 * An SPI epaper (see wiki for supported models)
+* Please read [RainMaker WiFi provisioning in the Wiki to get more details about this branch](https://github.com/martinberlin/cale-idf/wiki/RainMaker-WiFi-provisioning)
 
 ESP32C3 also works as a target. For C3 the compilation of
 /component/epd_driver is excluded since this uses ESP32 two cores and won't compile in C3.
