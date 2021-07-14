@@ -20,6 +20,7 @@
 #include "esp_http_client.h"
 // Rainmaker
 #include <esp_rmaker_core.h>
+#include <esp_rmaker_standard_types.h>
 #include <esp_rmaker_standard_params.h>
 #include <esp_rmaker_standard_devices.h>
 #include <esp_rmaker_ota.h>
@@ -612,11 +613,11 @@ void app_main(void)
     }
 
     /* Create a device and add the relevant parameters to it */
-    epaper_device = esp_rmaker_lightbulb_device_create("CALE-Epaper", NULL, true);
+    epaper_device = esp_rmaker_device_create("CALE-Epaper", ESP_RMAKER_DEVICE_SWITCH, NULL);
     
     esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
     // Customize angle slider
-    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, nvs_minutes_till_refresh);
     // My SG90 servo only moves 147 instead of 180 degrees
     esp_rmaker_param_add_bounds(angle, esp_rmaker_int(10), esp_rmaker_int(360), esp_rmaker_int(1));
     esp_rmaker_device_add_param(epaper_device, angle);
