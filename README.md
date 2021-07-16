@@ -2,7 +2,7 @@
 
 ### Requirements
 
-* esp32 or esp32S2 / C3 only experimental tests in branch **39-c3**
+* esp32 or esp32S2 / C3 in branch [refactor/oop](https://github.com/martinberlin/cale-idf/tree/refactor/oop)
 * Espressif IDF framework >= 4.2 (4.3 ideally)
 * An epaper display (see wiki for supported models)
 
@@ -12,7 +12,7 @@ Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for lates
 CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83, 7.5 and 12.48 inches).
 
 - Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
-- If you are interested in LVGL / UX please check our project [lv_port_esp32-epaper](https://github.com/martinberlin/lv_port_esp32-epaper). In this experimental LVGL esp32 fork we are exploring the possibility to make UX in this diplays.
+- If you are interested in LVGL / UX please check our project [lv_port_esp32-epaper](https://github.com/martinberlin/lv_port_esp32-epaper). In this experimental LVGL esp32 fork we are exploring the possibility to make UX in fast paralell displays.
 
 Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
 
@@ -53,7 +53,7 @@ Best settings on CALE.es website that we found to display color photos with cale
 
 ROADMAP
     
-    2021-Jun->Dec Parallel interaction research: UX on epaper displays
+    2021-Jun->Aug Parallel interaction research: UX on epaper displays
     2021-Mar till June Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
@@ -69,6 +69,7 @@ ROADMAP
 
 - [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
 - [Adafruit GFX for ESP-IDF](https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF) My own fork of Adafruit display library
+- [EPDiy](https://github.com/martinberlin/epdiy-rotation) it's our own fork of the parallel epaper component EPDiy with only the directory structure to use it as an IDF component
 
 They are at the moment included without git submodules so we can develop fast without updating them all the time. But they are also available to be used as your project ESP-IDF components.
 
