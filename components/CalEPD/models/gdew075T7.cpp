@@ -270,7 +270,8 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
         // white is 0x00 in buffer
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         // white is 0xFF on device
-        IO.data(~data);
+        IO.data(data);
+        
         if (idx % 8 == 0)
         {
           rtc_wdt_feed();
