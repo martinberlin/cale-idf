@@ -32,6 +32,7 @@
 #include <esp_rmaker_common_events.h>
 
 #define DEVICE_PARAM_1 "Minutes till next refresh"
+#define DEVICE_PARAM_WIFI_RESET "Turn slider to 100 to reset WiFi"
 bool readyToRequestImage = false;
 /**
  * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
@@ -130,6 +131,14 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
         err = nvs_commit(my_handle);
         printf((err != ESP_OK) ? "NVS Failed to store %d\n" : "NVS Stored %d\n", val.val.i);
         nvs_close(my_handle);    
+
+    } else if (strcmp(param_name, DEVICE_PARAM_WIFI_RESET) == 0) {
+        ESP_LOGI(TAG, "%d for %s-%s",
+                val.val.i, device_name, param_name);
+        if (val.val.i == 100) {
+            printf("Reseting WiFi credentials. Please reprovision your device\n\n");
+            esp_rmaker_wifi_reset(1,10);
+        }
 
     } else {
         /* Silently ignoring invalid params */
@@ -616,11 +625,15 @@ void app_main(void)
     epaper_device = esp_rmaker_device_create("CALE-Epaper", ESP_RMAKER_DEVICE_SWITCH, NULL);
     
     esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
-    // Customize angle slider
-    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, nvs_minutes_till_refresh);
-    // My SG90 servo only moves 147 instead of 180 degrees
-    esp_rmaker_param_add_bounds(angle, esp_rmaker_int(10), esp_rmaker_int(360), esp_rmaker_int(1));
-    esp_rmaker_device_add_param(epaper_device, angle);
+    // Customized minutes till next refresh slider
+    esp_rmaker_param_t *min_till_refresh = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, nvs_minutes_till_refresh);
+    esp_rmaker_param_add_bounds(min_till_refresh, esp_rmaker_int(10), esp_rmaker_int(360), esp_rmaker_int(1));
+    esp_rmaker_device_add_param(epaper_device, min_till_refresh);
+
+    esp_rmaker_param_t *reset_wifi = esp_rmaker_brightness_param_create(DEVICE_PARAM_WIFI_RESET, 0);
+    esp_rmaker_param_add_bounds(reset_wifi, esp_rmaker_int(0), esp_rmaker_int(100), esp_rmaker_int(10));
+    esp_rmaker_device_add_param(epaper_device, reset_wifi);
+
     esp_rmaker_node_add_device(node, epaper_device);
 
     /* Enable OTA */

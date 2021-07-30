@@ -3,11 +3,11 @@
 #include "freertos/task.h"
 // Should match with your epaper module, size
 //#include <gdep015OC1.h>  // 1.54 old version
-#include <gdeh0154d67.h>
+//#include <gdeh0154d67.h>
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
-//#include <gdew075T7.h>
+#include <gdew075T7.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
@@ -23,7 +23,7 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdeh0154d67 display(io);
+Gdew075T7 display(io);
 //Gdep015OC1 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
