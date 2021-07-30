@@ -1,4 +1,7 @@
 // 7.5 800*480 b/w Controller: GD7965 (In Waveshare called 7.5 V2)
+// Please note: This buffer requires PSRAM
+// idf.py menuconfig
+// → Component config → ESP32-specific
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,17 +22,16 @@
 #define GDEW075T7_HEIGHT 480
 
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
-// We are not adding page support so here this is our Buffer size
-#define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 8)
+#define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 2)
 // 8 pix of this color in a buffer byte:
 #define GDEW075T7_8PIX_BLACK 0x00
 #define GDEW075T7_8PIX_WHITE 0xFF
 
-class Gdew075T7 : public Epd
+class Gdew075T7Grays : public Epd
 {
   public:
    
-    Gdew075T7(EpdSpi& IO);
+    Gdew075T7Grays(EpdSpi& IO);
     uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
@@ -41,17 +43,15 @@ class Gdew075T7 : public Epd
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void fillRawBufferPos(uint16_t index, uint8_t value);
-    void fillRawBufferImage(uint8_t image[], uint16_t size);
+    void fillRawBufferImage(uint8_t image[], uint32_t size);
     void update();
 
   private:
     EpdSpi& IO;
-
-    uint8_t _buffer[GDEW075T7_BUFFER_SIZE];
-    bool _using_partial_mode = false;
-    bool _initial = true;
+    uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEW075T7_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
     
-    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+
+    bool _initial = true;
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);

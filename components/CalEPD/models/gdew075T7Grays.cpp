@@ -9,7 +9,7 @@
 
 
 // Grays Waveform
-DRAM_ATTR const epd_init_42 Gdew075T7::lut_vcom = {
+DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_vcom = {
     0x20, {
       0x00	,0x0A	,0x00	,0x00	,0x00	,0x01,
 0x60	,0x14	,0x14	,0x00	,0x00	,0x01,
@@ -19,7 +19,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7::lut_vcom = {
 0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
 0x00	,0x00	,0x00	,0x00	,0x00	,0x00}, 42};
 
-DRAM_ATTR const epd_init_42 Gdew075T7::lut_ww = {
+DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_ww = {
     0x21, {
            0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
@@ -30,7 +30,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7::lut_ww = {
 0x00	,0x00	,0x00	,0x00	,0x00	,0x00},
     42};
 
-DRAM_ATTR const epd_init_42 Gdew075T7::lut_bw = {
+DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bw = {
     0x22, {
            0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
@@ -41,7 +41,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7::lut_bw = {
 0x00	,0x00	,0x00	,0x00	,0x00	,0x00},
     42};
 
-DRAM_ATTR const epd_init_42 Gdew075T7::lut_wb = {
+DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_wb = {
     0x23, {
           0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
@@ -53,7 +53,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7::lut_wb = {
           },
     42};
 
-DRAM_ATTR const epd_init_42 Gdew075T7::lut_bb = {
+DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bb = {
     0x24, {//R24H	b
            0x80	,0x0A	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
@@ -67,16 +67,16 @@ DRAM_ATTR const epd_init_42 Gdew075T7::lut_bb = {
 // 0x07 (2nd) VGH=20V,VGL=-20V
 // 0x3f (1st) VDH= 15V
 // 0x3f (2nd) VDH=-15V
-DRAM_ATTR const epd_power_4 Gdew075T7::epd_wakeup_power = {
+DRAM_ATTR const epd_power_4 Gdew075T7Grays::epd_wakeup_power = {
     0x01, {0x07, 0x17, 0x3f, 0x3f}, 4};
 
-DRAM_ATTR const epd_init_1 Gdew075T7::epd_panel_setting_full = {
+DRAM_ATTR const epd_init_1 Gdew075T7Grays::epd_panel_setting_full = {
     0x00, {0x1f}, 1};
 
-DRAM_ATTR const epd_init_1 Gdew075T7::epd_panel_setting_partial = {
+DRAM_ATTR const epd_init_1 Gdew075T7Grays::epd_panel_setting_partial = {
     0x00, {0x3f}, 1};
 
-DRAM_ATTR const epd_init_4 Gdew075T7::epd_resolution = {
+DRAM_ATTR const epd_init_4 Gdew075T7Grays::epd_resolution = {
     0x61, {GDEW075T7_WIDTH / 256, //source 800
            GDEW075T7_WIDTH % 256,
            GDEW075T7_HEIGHT / 256, //gate 480
@@ -84,15 +84,18 @@ DRAM_ATTR const epd_init_4 Gdew075T7::epd_resolution = {
     4};
 
 // Constructor
-Gdew075T7::Gdew075T7(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIGHT),
+Gdew075T7Grays::Gdew075T7Grays(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIGHT),
                                     Epd(GDEW075T7_WIDTH, GDEW075T7_HEIGHT), IO(dio)
 {
-  printf("Gdew075T7() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
+  printf("Gdew075T7Grays() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
          GDEW075T7_WIDTH, GDEW075T7_HEIGHT, GDEW075T7_BUFFER_SIZE);
   printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+  multi_heap_info_t info;
+  heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+  printf("Total PSRAM allocated: %d Free: %d\n", info.total_allocated_bytes, info.total_free_bytes);
 }
 
-void Gdew075T7::initFullUpdate()
+void Gdew075T7Grays::initFullUpdate()
 {
   IO.cmd(epd_panel_setting_full.cmd);      // panel setting
   IO.data(epd_panel_setting_full.data[0]); // full update LUT from OTP
@@ -113,17 +116,17 @@ void Gdew075T7::initFullUpdate()
 
 
 //Initialize the display
-void Gdew075T7::init(bool debug)
+void Gdew075T7Grays::init(bool debug)
 {
   debug_enabled = debug;
   if (debug_enabled)
-    printf("Gdew075T7::init(debug:%d)\n", debug);
+    printf("Gdew075T7Grays::init(debug:%d)\n", debug);
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
   fillScreen(EPD_WHITE);
 }
 
-void Gdew075T7::fillScreen(uint16_t color)
+void Gdew075T7Grays::fillScreen(uint16_t color)
 {
   uint8_t data = (color == EPD_BLACK) ? GDEW075T7_8PIX_BLACK : GDEW075T7_8PIX_WHITE;
   for (uint16_t x = 0; x < sizeof(_buffer); x++)
@@ -132,7 +135,7 @@ void Gdew075T7::fillScreen(uint16_t color)
   }
 }
 
-void Gdew075T7::_wakeUp()
+void Gdew075T7Grays::_wakeUp()
 {
   IO.reset(10);
   //IMPORTANT: Some EPD controllers like to receive data byte per byte
@@ -169,7 +172,7 @@ void Gdew075T7::_wakeUp()
   initFullUpdate();
 }
 
-void Gdew075T7::update()
+void Gdew075T7Grays::update()
 {
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
@@ -209,12 +212,12 @@ void Gdew075T7::update()
   _sleep();
 }
 
-void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Gdew075T7Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("updateWindow: There is no partial update using the Gdew075T7Grays class\n");
+  printf("updateWindow: There is no partial update using the Gdew075T7GraysGrays class\n");
 }
 
-void Gdew075T7::_waitBusy(const char *message)
+void Gdew075T7Grays::_waitBusy(const char *message)
 {
   if (debug_enabled)
   {
@@ -236,7 +239,7 @@ void Gdew075T7::_waitBusy(const char *message)
   }
 }
 
-void Gdew075T7::_sleep()
+void Gdew075T7Grays::_sleep()
 {
   IO.cmd(0x02);
   _waitBusy("power_off");
@@ -244,7 +247,7 @@ void Gdew075T7::_sleep()
   IO.data(0xA5);
 }
 
-void Gdew075T7::_rotate(uint16_t &x, uint16_t &y, uint16_t &w, uint16_t &h)
+void Gdew075T7Grays::_rotate(uint16_t &x, uint16_t &y, uint16_t &w, uint16_t &h)
 {
   switch (getRotation())
   {
@@ -265,7 +268,7 @@ void Gdew075T7::_rotate(uint16_t &x, uint16_t &y, uint16_t &w, uint16_t &h)
   }
 }
 
-void Gdew075T7::drawPixel(int16_t x, int16_t y, uint16_t color)
+void Gdew075T7Grays::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height()))
     return;
@@ -296,11 +299,11 @@ void Gdew075T7::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
 }
 
-void Gdew075T7::fillRawBufferPos(uint16_t index, uint8_t value) {
+void Gdew075T7Grays::fillRawBufferPos(uint16_t index, uint8_t value) {
   _buffer[index] = value;
 }
 
-void Gdew075T7::fillRawBufferImage(uint8_t image[], uint16_t size) {
+void Gdew075T7Grays::fillRawBufferImage(uint8_t image[], uint32_t size) {
   for (int i=0; i<size; ++i) {
       _buffer[i] = image[i];
    }
