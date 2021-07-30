@@ -37,7 +37,6 @@ class Gdew075T7 : public Epd
     // EPD tests 
     void init(bool debug = false);
     void initFullUpdate();
-    void initPartialUpdate();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
@@ -60,16 +59,16 @@ class Gdew075T7 : public Epd
     
     // Command & data structs
     // LUT tables for this display are filled with zeroes at the end with writeLuts()
-    static const epd_init_42 lut_20_LUTC_partial;
-    static const epd_init_42 lut_21_LUTWW_partial;
-    static const epd_init_42 lut_22_LUTKW_partial;
-    static const epd_init_42 lut_23_LUTWK_partial;
-    static const epd_init_42 lut_24_LUTKK_partial;
-    static const epd_init_42 lut_25_LUTBD_partial;
+    static const epd_init_42 lut_vcom;
+    static const epd_init_42 lut_ww;
+    static const epd_init_42 lut_bw;
+    static const epd_init_42 lut_wb;
+    static const epd_init_42 lut_bb;
     
     static const epd_power_4 epd_wakeup_power;
     static const epd_init_1 epd_panel_setting_full;
     static const epd_init_1 epd_panel_setting_partial;
     static const epd_init_1 epd_pll;
     static const epd_init_4 epd_resolution;
+
 };
