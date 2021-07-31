@@ -38,10 +38,12 @@ class Gdew075T7Grays : public Epd
     
     // EPD tests 
     void init(bool debug = false);
-    void initFullUpdate();
+    
+    void test4bit();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
+    void sendLuts();
     void fillRawBufferPos(uint16_t index, uint8_t value);
     void fillRawBufferImage(uint8_t image[], uint32_t size);
     void update();
@@ -67,7 +69,6 @@ class Gdew075T7Grays : public Epd
     
     static const epd_power_4 epd_wakeup_power;
     static const epd_init_1 epd_panel_setting_full;
-    static const epd_init_1 epd_panel_setting_partial;
     static const epd_init_1 epd_pll;
     static const epd_init_4 epd_resolution;
 

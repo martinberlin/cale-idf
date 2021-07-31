@@ -68,19 +68,13 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bb = {
 // 0x3f (1st) VDH= 15V
 // 0x3f (2nd) VDH=-15V
 DRAM_ATTR const epd_power_4 Gdew075T7Grays::epd_wakeup_power = {
-    0x01, {0x07, 0x17, 0x3f, 0x3f}, 4};
-
-DRAM_ATTR const epd_init_1 Gdew075T7Grays::epd_panel_setting_full = {
-    0x00, {0x1f}, 1};
-
-DRAM_ATTR const epd_init_1 Gdew075T7Grays::epd_panel_setting_partial = {
-    0x00, {0x3f}, 1};
+    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
 
 DRAM_ATTR const epd_init_4 Gdew075T7Grays::epd_resolution = {
-    0x61, {GDEW075T7_WIDTH / 256, //source 800
-           GDEW075T7_WIDTH % 256,
-           GDEW075T7_HEIGHT / 256, //gate 480
-           GDEW075T7_HEIGHT % 256},
+    0x61, {0x03, //source 800
+           0x20,
+           0x01, //gate 480
+           0xE0},
     4};
 
 // Constructor
@@ -95,25 +89,6 @@ Gdew075T7Grays::Gdew075T7Grays(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW
   printf("Total PSRAM allocated: %d Free: %d\n", info.total_allocated_bytes, info.total_free_bytes);
 }
 
-void Gdew075T7Grays::initFullUpdate()
-{
-  IO.cmd(epd_panel_setting_full.cmd);      // panel setting
-  IO.data(epd_panel_setting_full.data[0]); // full update LUT from OTP
-// LUT for grays
-  IO.cmd(0x20);
-  IO.data(lut_vcom.data, 42);
-  IO.cmd(0x21);
-  IO.data(lut_ww.data, 42);
-  IO.cmd(0x22);
-  IO.data(lut_bw.data, 42);
-  IO.cmd(0x23);
-  IO.data(lut_wb.data, 42);
-  IO.cmd(0x24);
-  IO.data(lut_bb.data, 42);
-  IO.cmd(0x25);
-  IO.data(lut_ww.data, 42);
-}
-
 
 //Initialize the display
 void Gdew075T7Grays::init(bool debug)
@@ -123,15 +98,25 @@ void Gdew075T7Grays::init(bool debug)
     printf("Gdew075T7Grays::init(debug:%d)\n", debug);
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
-  fillScreen(EPD_WHITE);
+  //fillScreen(EPD_WHITE);
 }
 
+/********Color display description
+      white  gray1  gray2  black
+0x10|  01     01     00     00
+0x13|  01     00     01     00
+****************/
 void Gdew075T7Grays::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_BLACK) ? GDEW075T7_8PIX_BLACK : GDEW075T7_8PIX_WHITE;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
+ 
+  for (uint32_t x = 0; x < GDEW075T7_BUFFER_SIZE; x++)
   {
-    _buffer[x] = data;
+    _buffer[x] = color;
+    if (x % 8 == 0)
+        {
+          rtc_wdt_feed();
+          vTaskDelay(pdMS_TO_TICKS(2));
+        }
   }
 }
 
@@ -151,63 +136,127 @@ void Gdew075T7Grays::_wakeUp()
   IO.cmd(0x04);
   _waitBusy("_wakeUp power on");
 
+  IO.cmd(0x00);	//PANNEL SETTING
+  IO.data(0xBF);
+
+  IO.cmd(0x30);  // PLL
+  IO.data(0x06);
+
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
   for (int i = 0; i < epd_resolution.databytes; ++i)
   {
     IO.data(epd_resolution.data[i]);
   }
-  IO.cmd(0x15);  // Dual SPI
-  IO.data(0x00); // MM_EN, DUSPI_EN
+  IO.cmd(0x15);  // SPI Setting
+  IO.data(0x00);
 
   IO.cmd(0x60);  // TCON SETTING
   IO.data(0x22);
 
-  IO.cmd(0x80);  //vcom_DC setting
+  IO.cmd(0x82);  //vcom_DC setting
   IO.data(0x12);
 
   IO.cmd(0x50);  //VCOM AND DATA INTERVAL SETTING
   IO.data(0x10); //10:KW(0--1)  21:KW(1--0)
   IO.data(0x07);
-  initFullUpdate();
 }
 
 void Gdew075T7Grays::update()
 {
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
-  _wakeUp();
 
+   _wakeUp();
+  
+  printf("Sending a %d bytes buffer via SPI\n", GDEW075T7_BUFFER_SIZE);
+  uint32_t i,j, bufindex;
+  uint8_t temp1,temp2,temp3;
+  
+  /* IO.cmd(0x10); //old data
+  for(i=0;i<48000;i++)	               //48000*4  800*480
+		{ 
+			temp3=0;
+      for(j=0;j<4;j++)	
+			{
+				temp1 = _buffer[i*4+j];
+				temp2 = temp1&0xF0 ;
+				if(temp2 == 0xF0)
+					temp3 |= 0x01;//white
+				else if(temp2 == 0x00)
+					temp3 |= 0x00;  //black
+				else if((temp2>0xA0)&&(temp2<0xF0)) 
+					temp3 |= 0x01;  //gray1
+				else 
+					temp3 |= 0x00; //gray2
+				temp3 <<= 1;	
+				temp1 <<= 4;
+				temp2 = temp1&0xF0 ;
+				if(temp2 == 0xF0)  //white
+					temp3 |= 0x01;
+				else if(temp2 == 0x00) //black
+					temp3 |= 0x00;
+				else if((temp2>0xA0)&&(temp2<0xF0))
+					temp3 |= 0x01; //gray1
+				else    
+						temp3 |= 0x00;	//gray2	
+        if(j!=3)					
+			  temp3 <<= 1;	
+		 }	
+       	IO.data(temp3);			
+		} */
+  
   IO.cmd(0x13);
-  printf("Sending a %d bytes buffer via SPI\n", sizeof(_buffer));
+  for(i=0;i<48000;i++)	               //48000*4   800*480
+		{ 
+			temp3=0;
+      for(j=0;j<4;j++)	
+			{
+        bufindex = i*4+j;
+				temp1 = _buffer[bufindex];
+				temp2 = temp1&0xF0 ;
 
-  // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-  uint16_t i = 0;
-  uint8_t xLineBytes = GDEW075T7_WIDTH / 8;
-  uint8_t x1buf[xLineBytes];
-  for (uint16_t y = 1; y <= GDEW075T7_HEIGHT; y++)
-  {
-    for (uint16_t x = 1; x <= xLineBytes; x++)
-    {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
-      x1buf[x - 1] = data;
-      if (x == xLineBytes)
-      { // Flush the X line buffer to SPI
-        IO.data(x1buf, sizeof(x1buf));
-      }
-      ++i;
-    }
-  }
+				if(temp2 == 0xF0) {
+					temp3 |= 0x01;//white
+          printf("W ");
+          }
+				else if(temp2 == 0x00)
+					temp3 |= 0x00;  //black
+				else if((temp2>0xA0)&&(temp2<0xF0)) 
+					temp3 |= 0x00;  //gray1
+				else {
+					temp3 |= 0x01; //gray2
+          //printf("G2 ");
+          }
+				temp3 <<= 1;	
+				temp1 <<= 4;
+				temp2 = temp1&0xF0 ;
+				if(temp2 == 0xF0)  //white
+					temp3 |= 0x01;
+				else if(temp2 == 0x00) //black
+					temp3 |= 0x00;
+				else if((temp2>0xA0)&&(temp2<0xF0)) 
+					temp3 |= 0x00;//gray1
+				else    
+						temp3 |= 0x01;	//gray2
+        if(j!=3)				
+			  temp3 <<= 1;				
+			
+		 }
+       	IO.data(temp3);
+        //printf("%x ", temp3);
+		}
+    uint64_t endTime = esp_timer_get_time();
 
-  uint64_t endTime = esp_timer_get_time();
+  sendLuts();
+
   IO.cmd(0x12);
   _waitBusy("update");
   uint64_t updateTime = esp_timer_get_time();
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
          (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
   
-  // Additional 2 seconds wait before sleeping since in low temperatures full update takes longer
-  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
 
   _sleep();
 }
@@ -307,4 +356,74 @@ void Gdew075T7Grays::fillRawBufferImage(uint8_t image[], uint32_t size) {
   for (int i=0; i<size; ++i) {
       _buffer[i] = image[i];
    }
+}
+
+void Gdew075T7Grays::sendLuts() {
+// LUT for grays
+  IO.cmd(0x20);
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_vcom.data[i]);
+  }
+  IO.cmd(0x21); //red not use
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_ww.data[i]);
+  }
+  IO.cmd(0x22); //bw r
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_bw.data[i]);
+  }
+  IO.cmd(0x23); //wb w
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_wb.data[i]);
+  }
+  IO.cmd(0x24); //bb b
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_bb.data[i]);
+  }
+  IO.cmd(0x25); //vcom
+  for (int i = 0; i < 42; ++i) {
+  IO.data(lut_ww.data[i]);
+  printf("%x ",lut_ww.data[i]);
+  }
+  printf("\n");
+}
+
+void Gdew075T7Grays::test4bit() {
+  		unsigned int i,r,t,y;
+		
+		IO.cmd(0x10);	  	
+		for(y=0;y<12000;y++)	     
+		{
+			IO.data(0xff);  //white
+		}  
+		for(t=0;t<12000;t++)	     
+		{
+			IO.data(0xff);  //gray1
+		}  
+		for(r=0;r<12000;r++)	     
+		{
+			IO.data(0x00);  //gray2
+		}  
+		for(i=0;i<12000;i++)	     
+		{
+			IO.data(0x00);  //black
+		}  
+
+		IO.cmd(0x13);
+		for(i=0;i<12000;i++)	     
+		{
+			IO.data(0xff);  //white
+		}  
+		for(r=0;r<12000;r++)	     
+		{
+			IO.data(0x00); //gray1
+		}  
+		for(t=0;t<12000;t++)	     
+		{
+			IO.data(0xff);  //gray2
+		}  
+		for(y=0;y<12000;y++)	     
+		{
+			IO.data(0x00); //black
+		}  
 }
