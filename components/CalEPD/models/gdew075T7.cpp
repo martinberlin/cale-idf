@@ -123,6 +123,7 @@ void Gdew075T7::init(bool debug)
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
   fillScreen(EPD_WHITE);
+  _wakeUp();
 }
 
 void Gdew075T7::fillScreen(uint16_t color)
