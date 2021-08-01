@@ -98,6 +98,7 @@ void Gdew075T7Grays::init(bool debug)
     printf("Gdew075T7Grays::init(debug:%d)\n", debug);
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
+  fillScreen(EPD_WHITE);
   _wakeUp();
 }
 
