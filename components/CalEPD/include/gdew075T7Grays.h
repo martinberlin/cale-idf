@@ -44,14 +44,13 @@ class Gdew075T7Grays : public Epd
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void sendLuts();
-    void fillRawBufferPos(uint16_t index, uint8_t value);
-    void fillRawBufferImage(uint8_t image[], uint32_t size);
+    void fillRawBufferPos(uint32_t index, uint8_t value);
+    void fillRawBufferImage(uint8_t *image, uint32_t size);
     void update();
 
   private:
     EpdSpi& IO;
     uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEW075T7_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
-    
 
     bool _initial = true;
     void _wakeUp();

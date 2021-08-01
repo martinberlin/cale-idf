@@ -6,12 +6,12 @@
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T7_PU_DELAY 100
-
+#define T1 0x0B
 
 // Grays Waveform
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_vcom = {
     0x20, {
-      0x00	,0x0A	,0x00	,0x00	,0x00	,0x01,
+      0x00	,T1	,0x00	,0x00	,0x00	,0x01,
 0x60	,0x14	,0x14	,0x00	,0x00	,0x01,
 0x00	,0x14	,0x00	,0x00	,0x00	,0x01,
 0x00	,0x13	,0x0A	,0x01	,0x00	,0x01,
@@ -21,7 +21,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_vcom = {
 
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_ww = {
     0x21, {
-           0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
+           0x40	,T1	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
 0x10	,0x14	,0x0A	,0x00	,0x00	,0x01,
 0xA0	,0x13	,0x01	,0x00	,0x00	,0x01,
@@ -32,7 +32,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_ww = {
 
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bw = {
     0x22, {
-           0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
+           0x40	,T1	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
 0x00	,0x14	,0x0A	,0x00	,0x00	,0x01,
 0x99	,0x0C	,0x01	,0x03	,0x04	,0x01,
@@ -43,7 +43,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bw = {
 
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_wb = {
     0x23, {
-          0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
+          0x40	,T1	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
 0x00	,0x14	,0x0A	,0x00	,0x00	,0x01,
 0x99	,0x0B	,0x04	,0x04	,0x01	,0x01,
@@ -55,7 +55,7 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_wb = {
 
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bb = {
     0x24, {//R24H	b
-           0x80	,0x0A	,0x00	,0x00	,0x00	,0x01,
+           0x80	,T1	,0x00	,0x00	,0x00	,0x01,
 0x90	,0x14	,0x14	,0x00	,0x00	,0x01,
 0x20	,0x14	,0x0A	,0x00	,0x00	,0x01,
 0x50	,0x13	,0x01	,0x00	,0x00	,0x01,
@@ -68,13 +68,13 @@ DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_bb = {
 // 0x3f (1st) VDH= 15V
 // 0x3f (2nd) VDH=-15V
 DRAM_ATTR const epd_power_4 Gdew075T7Grays::epd_wakeup_power = {
-    0x01, {0x07, 0x07, 0x3f, 0x3f}, 4};
+    0x01, {0x07, 0x17, 0x3f, 0x3f}, 4};
 
 DRAM_ATTR const epd_init_4 Gdew075T7Grays::epd_resolution = {
-    0x61, {0x03, //source 800
-           0x20,
-           0x01, //gate 480
-           0xE0},
+    0x61, {GDEW075T7_WIDTH / 256, //source 800
+           GDEW075T7_WIDTH % 256,
+           GDEW075T7_HEIGHT / 256, //gate 480
+           GDEW075T7_HEIGHT % 256},
     4};
 
 // Constructor
@@ -98,7 +98,7 @@ void Gdew075T7Grays::init(bool debug)
     printf("Gdew075T7Grays::init(debug:%d)\n", debug);
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
-  //fillScreen(EPD_WHITE);
+  _wakeUp();
 }
 
 /********Color display description
@@ -173,7 +173,8 @@ void Gdew075T7Grays::update()
   uint32_t i,j, bufindex;
   uint8_t temp1,temp2,temp3;
   
-  /* IO.cmd(0x10); //old data
+  IO.cmd(0x10); //1st buffer: 2 grays
+
   for(i=0;i<48000;i++)	               //48000*4  800*480
 		{ 
 			temp3=0;
@@ -204,9 +205,9 @@ void Gdew075T7Grays::update()
 			  temp3 <<= 1;	
 		 }	
        	IO.data(temp3);			
-		} */
+		}
   
-  IO.cmd(0x13);
+  IO.cmd(0x13); //2nd buffer: 2 other grays
   for(i=0;i<48000;i++)	               //48000*4   800*480
 		{ 
 			temp3=0;
@@ -214,11 +215,12 @@ void Gdew075T7Grays::update()
 			{
         bufindex = i*4+j;
 				temp1 = _buffer[bufindex];
+        //printf("%x ",temp1);
 				temp2 = temp1&0xF0 ;
 
 				if(temp2 == 0xF0) {
 					temp3 |= 0x01;//white
-          printf("W ");
+          //printf("W ");
           }
 				else if(temp2 == 0x00)
 					temp3 |= 0x00;  //black
@@ -336,25 +338,25 @@ void Gdew075T7Grays::drawPixel(int16_t x, int16_t y, uint16_t color)
     y = GDEW075T7_HEIGHT - y - 1;
     break;
   }
-  uint16_t i = x / 8 + y * GDEW075T7_WIDTH / 8;
 
-  if (color)
-  {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-  }
-  else
-  {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  uint8_t *buf_ptr = &_buffer[y * GDEW075T7_WIDTH / 2 + x / 2];
+  if (x % 2) {
+    *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
+  } else {
+    *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
   }
 }
 
-void Gdew075T7Grays::fillRawBufferPos(uint16_t index, uint8_t value) {
+void Gdew075T7Grays::fillRawBufferPos(uint32_t index, uint8_t value) {
   _buffer[index] = value;
 }
 
-void Gdew075T7Grays::fillRawBufferImage(uint8_t image[], uint32_t size) {
+void Gdew075T7Grays::fillRawBufferImage(uint8_t *image, uint32_t size) {
   for (int i=0; i<size; ++i) {
       _buffer[i] = image[i];
+      if (image[i]!=0) {
+        printf("%x ", image[i]);
+      }
    }
 }
 
@@ -383,7 +385,7 @@ void Gdew075T7Grays::sendLuts() {
   IO.cmd(0x25); //vcom
   for (int i = 0; i < 42; ++i) {
   IO.data(lut_ww.data[i]);
-  printf("%x ",lut_ww.data[i]);
+  //printf("%x ",lut_ww.data[i]);
   }
   printf("\n");
 }
