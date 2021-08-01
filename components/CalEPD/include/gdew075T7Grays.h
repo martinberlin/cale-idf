@@ -20,12 +20,11 @@
 
 #define GDEW075T7_WIDTH 800
 #define GDEW075T7_HEIGHT 480
+#define EPD_LGRAY 220
+#define EPD_DGRAY 40
 
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
 #define GDEW075T7_BUFFER_SIZE (uint32_t(GDEW075T7_WIDTH) * uint32_t(GDEW075T7_HEIGHT) / 2)
-// 8 pix of this color in a buffer byte:
-#define GDEW075T7_8PIX_BLACK 0x00
-#define GDEW075T7_8PIX_WHITE 0xFF
 
 class Gdew075T7Grays : public Epd
 {

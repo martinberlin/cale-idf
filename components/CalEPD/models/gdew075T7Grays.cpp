@@ -6,7 +6,7 @@
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T7_PU_DELAY 100
-#define T1 0x0B
+#define T1 0x0A
 
 // Grays Waveform
 DRAM_ATTR const epd_init_42 Gdew075T7Grays::lut_vcom = {
@@ -204,7 +204,7 @@ void Gdew075T7Grays::update()
         if(j!=3)					
 			  temp3 <<= 1;	
 		 }	
-       	IO.data(temp3);			
+       	IO.data(~temp3);			
 		}
   
   IO.cmd(0x13); //2nd buffer: 2 other grays
@@ -245,7 +245,7 @@ void Gdew075T7Grays::update()
 			  temp3 <<= 1;				
 			
 		 }
-       	IO.data(temp3);
+       	IO.data(~temp3);
         //printf("%x ", temp3);
 		}
     uint64_t endTime = esp_timer_get_time();
