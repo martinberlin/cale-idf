@@ -67,12 +67,15 @@ void app_main(void)
    display.init(false);
    
    display.fillCircle(100, 100, 50, EPD_BLACK);
-
    display.fillCircle(200, 100, 50, EPD_DGRAY);
-
    display.fillCircle(300, 100, 50, EPD_LGRAY);
+   display.fillCircle(400, 100, 50, EPD_WHITE);
 
-   display.fillCircle(600, 100, 50, EPD_WHITE);
+   display.fillRect(20, 150, 500, 100, EPD_BLACK);
+   display.fillCircle(100, 200, 50, EPD_BLACK);
+   display.fillCircle(200, 200, 50, EPD_DGRAY);
+   display.fillCircle(300, 200, 50, EPD_LGRAY);
+   display.fillCircle(400, 200, 50, EPD_WHITE);
    
    display.update();
 }
