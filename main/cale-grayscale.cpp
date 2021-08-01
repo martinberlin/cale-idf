@@ -688,6 +688,8 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
+    // WiFi log level
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
     
