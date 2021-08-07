@@ -101,9 +101,9 @@ void app_main(void)
    delay(50);
    // Second repeats bug found with white points over black background
    demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,200);
-   delay(50);
+   delay(150);
    demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,300);
-   delay(300);
+   delay(100);
    demoPartialUpdate(EPD_WHITE, EPD_BLACK, 50,400);
    
    //return;
@@ -125,6 +125,10 @@ void app_main(void)
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
    display.println("demo-epaper.cpp full update is done!");
+   display.update();
+   // Leave the epaper White ready for storage
+   delay(2000);
+   display.fillScreen(EPD_WHITE);
    display.update();
    return;
 }
