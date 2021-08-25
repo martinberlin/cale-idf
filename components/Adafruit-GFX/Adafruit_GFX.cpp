@@ -1238,7 +1238,7 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
 /**************************************************************************/
 size_t Adafruit_GFX::write(uint8_t c) {
   if (!gfxFont) { // 'Classic' built-in font
-    printf("write(%d) Custom font\n",c);
+    //printf("write(%d) Custom font\n",c);
     if (c == '\n') {              // Newline?
       cursor_x = 0;               // Reset x to zero,
       cursor_y += textsize_y * 8; // advance y one line

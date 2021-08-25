@@ -26,7 +26,6 @@
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 #include <app_wifi.h>
-
 #include <esp_rmaker_factory.h>
 #include <esp_rmaker_common_events.h>
 
@@ -41,14 +40,16 @@ bool readyToRequestImage = false;
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-#include <gdew042t2.h>
+#include <gdeh042Z96.h>
+// Font always after display
+#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 //#include <gdew0583z21.h>
 EpdSpi io;
 //Gdew0583z21 display(io); // Not enough RAM
 //Gdew027w3 display(io);   // Works
-Gdew042t2 display(io);
+Gdeh042Z96 display(io);
 
 esp_rmaker_device_t *epaper_device;
 
@@ -413,9 +414,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 static void http_post(void)
 {
-     //  On  init(true) activates debug (And makes SPI communication slower too)
-    display.init();
-    display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\n", xPortGetFreeHeapSize());
     /**
@@ -474,6 +472,8 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)
 {
     printf("EVENT ID:%d\n", event_id);
+    display.setCursor(10,10);
+    display.setTextColor(EPD_BLACK);
     if (event_base == RMAKER_EVENT) {
         switch (event_id) {
             case RMAKER_EVENT_INIT_DONE:
@@ -498,6 +498,10 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_EVENT_WIFI_RESET:
                 ESP_LOGI(TAG, "Wi-Fi credentials reset.");
+                display.println("Wi-Fi credentials are cleared");
+                display.setCursor(10,30);
+                display.println("Will start in provisioning mode");
+                display.update();
                 break;
             case RMAKER_EVENT_FACTORY_RESET:
                 ESP_LOGI(TAG, "Node reset to factory defaults.");
@@ -522,6 +526,11 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
 
 void app_main(void)
 {
+    //  On  init(true) activates debug (And makes SPI communication slower too)
+    display.init();
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
+    display.setFont(&Ubuntu_M12pt8b);
+
     esp_err_t err;
     // WiFi log level
     esp_log_level_set("wifi", ESP_LOG_ERROR);
@@ -546,7 +555,7 @@ void app_main(void)
     esp_rmaker_config_t rainmaker_cfg = {
         .enable_time_sync = false,
     };
-    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", "Fan");
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", "Switch");
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
