@@ -16,6 +16,18 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 
 Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
 
+    
+## News
+
+- We worked in making an example and merge request, for the EPDiy parallel epaper component, in order to add a [JPG download plus render with HTTPS support example](https://github.com/vroland/epdiy/tree/master/examples/www-image). If there is interest in having this for the Black/White and 3 color epaper models (B/R or B/Yellow) I will adapt a version in the examples. Just contact me on the email that is on my Github profile.
+- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/42-wifi-provisioning](https://github.com/martinberlin/cale-idf/tree/feature/42-wifi-provisioning) **Note:** It needs an external submodule component so don't forget to run:
+
+    git submodule update --init --recursive
+
+- I've been working a lot in another less interesting things as Web development, so I didn't find enough time to update this repository, but there are new interesting things coming. Keep tuned!
+
+[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
+
 ## Fork policy
 
 **Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this three categories:
@@ -53,17 +65,12 @@ Best settings on CALE.es website that we found to display color photos with cale
 
 ROADMAP
     
+    2021->Aug->Oct Imaging libraries: Adding JPG support and optimizing processes
     2021-Jun->Aug Parallel interaction research: UX on epaper displays
     2021-Mar till June Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
     2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
-    
-## News
-
-- Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support and **Cale-idf** was the first component to support it with optimized SPI communication. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
-
-[News section has been moved to the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 **CALE-IDF uses this components:**
 
