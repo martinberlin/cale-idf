@@ -41,7 +41,8 @@ extern "C"
 }
 
 // WiFi configuration. Please run idf.py menuconfig to configure this
-
+// For 16 Grays only parallel epapers leave on true
+#define JPG_RENDER_16_GRAYS false
 // Image URL and jpg settings. Make sure to update WIDTH/HEIGHT if using loremflickr
 // Note: Only HTTP protocol supported (Check README to use SSL secure URLs) loremflickr
 #define STR_HELPER(x) #x
@@ -200,7 +201,16 @@ void jpegRender(int xpos, int ypos, int width, int height) {
 
   for (uint32_t by=0; by<height;by++) {
     for (uint32_t bx=0; bx<width;bx++) {
-        display.drawPixel(bx + padding_x, by + padding_y, decoded_image[by * width + bx]);
+      #if JPG_RENDER_16_GRAYS
+        uint8_t color = decoded_image[by * width + bx];
+      #else 
+        // Note this number could be changed: Is when we consider White starts
+        // 0 -> Black 125 -> Gray (middle) 255 -> White
+        uint8_t color = (decoded_image[by * width + bx]>200) ? EPD_WHITE : EPD_BLACK;
+      #endif
+      
+        //printf("x:%d y:%d c:%d ", bx + padding_x, by + padding_y, color);
+        display.drawPixel(bx + padding_x, by + padding_y, color);
     }
   }
   // calculate how long it took to draw the image

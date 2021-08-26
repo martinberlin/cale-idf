@@ -48,9 +48,9 @@ class Gdew075T7 : public Epd
   private:
     EpdSpi& IO;
 
-    //uint8_t _buffer[GDEW075T7_BUFFER_SIZE];
+    uint8_t _buffer[GDEW075T7_BUFFER_SIZE];
     // Place _buffer in external RAM
-    uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEW075T7_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
+    //uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEW075T7_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
 
     bool _using_partial_mode = false;
     bool _initial = true;
