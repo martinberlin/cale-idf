@@ -31,9 +31,9 @@
 #include <string.h>
 #include <math.h> // round + pow
 // EPD class
-#include <gdeh042Z96.h>
+#include <gdew075T7.h>
 EpdSpi io;
-Gdeh042Z96 display(io);
+Gdew075T7 display(io);
 
 extern "C"
 {
@@ -47,10 +47,11 @@ extern "C"
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 // Update here with the width and height of your Epaper
-#define EPD_WIDTH  400
-#define EPD_HEIGHT 300
-#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
-
+#define EPD_WIDTH  800
+#define EPD_HEIGHT 480
+//#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
+// CALE url test (should match width/height of your EPD)
+#define IMG_URL "http://img.cale.es/jpg/fasani/5ea1dec401890"
 // Please check the README to understand how to use an SSL Certificate
 // Note: This makes a sntp time sync query for cert validation  (It's slower)
 #define VALIDATE_SSL_CERTIFICATE false
@@ -64,7 +65,7 @@ extern "C"
 double gamma_value = 0.9;
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
-#define HTTP_RECEIVE_BUFFER_SIZE 1536
+#define HTTP_RECEIVE_BUFFER_SIZE 1024
 
 // Load the EMBED_TXTFILES. Then doing (char*) server_cert_pem_start you get the SSL certificate
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#embedding-binary-data
@@ -319,7 +320,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         ++countDataEventCalls;
         #if DEBUG_VERBOSE
           if (countDataEventCalls%10==0) {
-            ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len); 
+            ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
           }
         #endif
         dataLenTotal += evt->data_len;
@@ -330,13 +331,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         img_buf_pos += evt->data_len;
 
         // Optional hexa dump
-        //ESP_LOG_BUFFER_HEX(TAG, output_buffer, evt->data_len);
+        //ESP_LOG_BUFFER_HEX(TAG, source_buf, 100);
         break;
 
     case HTTP_EVENT_ON_FINISH:
         // Do not draw if it's a redirect (302)
         if (esp_http_client_get_status_code(evt->client) == 200) {
-          printf("%d bytes read from %s\n\n", img_buf_pos, IMG_URL);
+          printf("%d bytes read from %s\nIMG_BUF size: %d\n", img_buf_pos, IMG_URL, img_buf_pos);
           drawBufJpeg(source_buf, 0, 0);
           time_download = (esp_timer_get_time()-startTime)/1000;
           ESP_LOGI("www-dw", "%d ms - download", time_download);
@@ -344,7 +345,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
           display.update();
 
           ESP_LOGI("total", "%d ms - total time spent\n", time_download+time_decomp+time_render);
-          
+        } else {
+          printf("HTTP on finish got status code: %d\n", esp_http_client_get_status_code(evt->client));
         }
         break;
 
@@ -365,13 +367,14 @@ static void http_post(void)
      */
     esp_http_client_config_t config = {
         .url = IMG_URL,
+        .disable_auto_redirect = false,
         .event_handler = _http_event_handler,
         .buffer_size = HTTP_RECEIVE_BUFFER_SIZE,
         #if VALIDATE_SSL_CERTIFICATE == true
         .cert_pem = (char *)server_cert_pem_start
-        #endif  
+        #endif
         };
-        config.disable_auto_redirect = false;
+
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     #if DEBUG_VERBOSE
@@ -464,18 +467,7 @@ void wifi_init_sta(void)
                                                         &event_handler,
                                                         NULL,
                                                         &instance_got_ip));
-    // This does not work like this in C++
-    /* wifi_config_t wifi_config = {
-    .sta = {
-        .ssid = CONFIG_ESP_WIFI_SSID,
-        .password = CONFIG_ESP_WIFI_PASSWORD,
-        .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        .pmf_cfg = {
-            .capable = true,
-            .required = false
-        },
-    },
-    }; */
+    // C++ wifi config
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config));
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
@@ -517,9 +509,6 @@ void wifi_init_sta(void)
 }
 
 void app_main() {
-  display.init();
-  display.setRotation(CONFIG_DISPLAY_ROTATION);
-
   ep_width = display.width();
   ep_height = display.height();
 
@@ -532,12 +521,15 @@ void app_main() {
   }
   memset(decoded_image, 255, ep_width * ep_height);
 
-  // Should be big enough to allocate the JPEG file size
+  // Should be big enough to allocate the JPEG file size, width * height should suffice
   source_buf = (uint8_t *)heap_caps_malloc(ep_width * ep_height, MALLOC_CAP_SPIRAM);
   if (source_buf == NULL) {
       ESP_LOGE("main", "Initial alloc source_buf failed!");
   }
   printf("Free heap after buffers allocation: %d\n", xPortGetFreeHeapSize());
+
+  display.init();
+  display.setRotation(CONFIG_DISPLAY_ROTATION);
 
   double gammaCorrection = 1.0 / gamma_value;
   for (int gray_value =0; gray_value<256;gray_value++)
@@ -556,6 +548,7 @@ void app_main() {
   esp_log_level_set("wifi", ESP_LOG_ERROR);
   
   // Initialization: WiFi + clean screen while downloading image
+  printf("Free heap before wifi_init_sta: %d\n", xPortGetFreeHeapSize());
   wifi_init_sta();
   #if VALIDATE_SSL_CERTIFICATE == true
     obtain_time();
