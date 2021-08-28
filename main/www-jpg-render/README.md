@@ -37,7 +37,7 @@ Detailed statistics:
 1461 ms - download
 2312 ms - total time
 ```
-[!88Kb Cat in Lilygo EPD47](https://pbs.twimg.com/media/E934uz8WEAIyVLP?format=jpg&name=4096x4096)
+![88Kb Cat in Lilygo EPD47](https://pbs.twimg.com/media/E934uz8WEAIyVLP?format=jpg&name=small)
 
 In order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it, if you want to do image manipulation like JPG dither.
 All that takes a big amount of RAM (Unless you use a small image)
@@ -101,7 +101,6 @@ Please be aware that in order to validate SSL certificates the ESP32 needs to be
 
 Setting VALIDATE_SSL_CERTIFICATE to false also works skipping the .cert_pem in the esp_http_client_config_t struct. 
 
+### Pull requests accepted
 
-Happy to collaborate once again with this amazing project,
-
-Martin Fasani, Berlin 20 Aug. 2021
+If you find a way to optimize this or make a better version go ahead and make a pull request describing what is your goal and we will code-review it and merge it.
