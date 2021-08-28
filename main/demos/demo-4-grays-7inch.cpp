@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-//#include "image_array/image4gray.h"
 #include <stdlib.h>     /* srand, rand */
 #include <gdew075T7Grays.h>
 

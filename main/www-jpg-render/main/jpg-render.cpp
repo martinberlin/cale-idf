@@ -1,4 +1,5 @@
 // Note: Run menuconfig to set the WiFi Credentials -> CALE Configuration
+// Requirements: Needs to have an EPD Class defined. Needs PSRAM.
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -30,10 +31,24 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h> // round + pow
-// EPD class
+
+// - - - - Display configuration - - - - - - - - -
+
+// For all models run menuconfig: Component Config -> ESP32 Specifics -> Enable PSRAM
+// EPD class. SPI example:
 #include <gdew075T7.h>
 EpdSpi io;
 Gdew075T7 display(io);
+// EPDiy epd_driver parallel class. Requires:
+// idf.py menuconfig-> Component Config -> E-Paper driver and select:
+// Display type: LILIGO 4.7 ED047TC1
+// Board: LILIGO T5-4.7 Epaper
+
+// Make sure that components/CalEPD requires epd_driver in CMakeLists.txt  
+//#include "parallel/ED047TC1.h"
+//Ed047TC1 display;
+
+// - - - - end of Display configuration  - - - - -
 
 extern "C"
 {
@@ -43,16 +58,19 @@ extern "C"
 // WiFi configuration. Please run idf.py menuconfig to configure this
 // For 16 Grays only parallel epapers leave on true
 #define JPG_RENDER_16_GRAYS false
-// Image URL and jpg settings. Make sure to update WIDTH/HEIGHT if using loremflickr
+// Note this number can be changed: Is when we consider White starts
+// 0 -> Black 125 -> Gray (middle) 255 -> White
+#define JPG_WHITE_THRESHOLD 220
+// Image URL and jpg settings. Make sure to update EPD_WIDTH/HEIGHT if using loremflickr
 // Note: Only HTTP protocol supported (Check README to use SSL secure URLs) loremflickr
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-// Update here with the width and height of your Epaper
-#define EPD_WIDTH  800
-#define EPD_HEIGHT 480
+#define EPD_WIDTH  960
+#define EPD_HEIGHT 540
 //#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
 // CALE url test (should match width/height of your EPD)
-#define IMG_URL "http://img.cale.es/jpg/fasani/5ea1dec401890"
+#define IMG_URL "http://img.cale.es/jpg/fasani/5ea1dec401890" // 800*480 test
+
 // Please check the README to understand how to use an SSL Certificate
 // Note: This makes a sntp time sync query for cert validation  (It's slower)
 #define VALIDATE_SSL_CERTIFICATE false
@@ -66,7 +84,7 @@ extern "C"
 double gamma_value = 0.9;
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
-#define HTTP_RECEIVE_BUFFER_SIZE 1024
+#define HTTP_RECEIVE_BUFFER_SIZE 1938
 
 // Load the EMBED_TXTFILES. Then doing (char*) server_cert_pem_start you get the SSL certificate
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#embedding-binary-data
@@ -204,11 +222,10 @@ void jpegRender(int xpos, int ypos, int width, int height) {
       #if JPG_RENDER_16_GRAYS
         uint8_t color = decoded_image[by * width + bx];
       #else 
-        // Note this number could be changed: Is when we consider White starts
-        // 0 -> Black 125 -> Gray (middle) 255 -> White
-        uint8_t color = (decoded_image[by * width + bx]>200) ? EPD_WHITE : EPD_BLACK;
+        
+        uint8_t color = (decoded_image[by * width + bx]>JPG_WHITE_THRESHOLD) ? EPD_WHITE : EPD_BLACK;
       #endif
-      
+
         //printf("x:%d y:%d c:%d ", bx + padding_x, by + padding_y, color);
         display.drawPixel(bx + padding_x, by + padding_y, color);
     }
