@@ -46,7 +46,15 @@ Gdeh042Z96 display(io);
 
 Progressive JPG images are not supported.
 
-Note that as default an random image taken from loremflickr.com is used. You can use any URL that points to a valid Image, take care to use the right JPG format, or you can also use the image-service [cale.es](https://cale.es) to create your own gallery. Otherwise expect a lot of cats.
+    idf.py menuconfig
+    idf.py flash monitor
+
+If you are using a parallel epaper do forget to select in:
+
+    Component config -> E-Paper Driver -> Select Board & Display you are using
+
+Note that you can use a random image taken from loremflickr.com. Or you can use any URL that points to a valid Image, take care to use the right JPG format, or you can also use the image-service [cale.es](https://cale.es) to create your own gallery. Otherwise expect a lot of cats.
+A good thing for those rendering JPG in monochrome displays is that CALE offers dithering, so you can select a 2x2 or 3x3 dithering, simulating grays.
 
 If your epaper resolution is not listed, just send me an email, you can find it on my [profile page on Github](https://github.com/martinberlin).
 

@@ -8,7 +8,7 @@ Download and render images examples
     demos/cale-sensor.cpp  same as cale.cpp but with the addition that a sensor can trigger new image download and render
     main/www-jpg-render    standalone project. Needs to be build in that folder
 
-- Our newest download and render: **www-jpg-render**
+Additionally another second to decompress and render the image using EPDiy display.drawPixel(x, y, color)
 
 Is capable to download a compressed image and render it in your epaper. It looks the best with 16 grayscale capable parallel epapers but there is also a monochrome version.
 

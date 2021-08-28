@@ -55,8 +55,8 @@ extern "C"
     void app_main();
 }
 
-// WiFi configuration. Please run idf.py menuconfig to configure this
-// For 16 Grays only parallel epapers leave on true
+
+// For 16 Grays rendering leave on true (only parallel epapers)
 #define JPG_RENDER_16_GRAYS false
 // Note this number can be changed: Is when we consider White starts
 // 0 -> Black 125 -> Gray (middle) 255 -> White
@@ -68,17 +68,17 @@ extern "C"
 #define EPD_WIDTH  960
 #define EPD_HEIGHT 540
 //#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
+
 // CALE url test (should match width/height of your EPD)
 #define IMG_URL "http://img.cale.es/jpg/fasani/5ea1dec401890" // 800*480 test
 
 // Please check the README to understand how to use an SSL Certificate
 // Note: This makes a sntp time sync query for cert validation  (It's slower)
 #define VALIDATE_SSL_CERTIFICATE false
-// Alternative non-https URL:
-//#define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
 
 // Jpeg: Adds dithering to image rendering (Makes grayscale smoother on transitions)
 #define JPG_DITHERING true
+
 // Affects the gamma to calculate gray (lower is darker/higher contrast)
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
 double gamma_value = 0.9;
@@ -90,7 +90,6 @@ double gamma_value = 0.9;
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#embedding-binary-data
 extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
-
 
 #define DEBUG_VERBOSE true
 
