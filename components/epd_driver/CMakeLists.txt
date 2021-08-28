@@ -1,3 +1,11 @@
+idf_build_get_property(target IDF_TARGET)
+# This component Requires a ESP32 target. Do not build if using this:
+if(${target} STREQUAL "esp32c3")
+        return()
+endif()
+if(${target} STREQUAL "esp32s2")
+        return()
+endif()
 
 set(app_sources "epd_driver.c"
                 "render.c"

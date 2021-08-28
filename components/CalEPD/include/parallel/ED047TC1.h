@@ -13,25 +13,17 @@
 #include <epdspi.h>
 #include "epd_driver.h"
 #include "epd_highlevel.h"
+#include "parallel/grayscales.h"
 
 #define HAS_16_LEVELS_GRAY 1
 #define ED047TC1_WIDTH 960
 #define ED047TC1_HEIGHT 540
 
-// COLOR defines (Only 8 but actually this epapers have 16 levels)
-#define EPD_WHITE 255
-#define EPD_WHITISH 223
-#define EPD_SLGRAY 200
-#define EPD_LGRAY 150
-#define EPD_GRAY 100
-#define EPD_DGRAY 50
-#define EPD_SDGRAY 25
-#define EPD_BLACK 0
-
 class Ed047TC1 : public EpdParallel
 {
   public:
     Ed047TC1();
+    EpdiyHighlevelState hl;
     uint8_t *framebuffer;
     uint8_t colors_supported = 1;
 

@@ -79,9 +79,13 @@ public:
       a = b;
       b = t;
     }
+
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
 	TouchData_t data[5];
+	// Tap detection is enabled by default
 	bool tapDetectionEnabled = true;
+	// Only if the time difference between press and release is minor than this milliseconds a Tap even is triggered
+	uint16_t tapDetectionMillisDiff = 100;
 	
 private:
 	TPoint scanPoint();

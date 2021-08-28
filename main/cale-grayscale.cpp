@@ -22,14 +22,14 @@
 //#include <gdew075T8.h>
 //#include <gdew0583t7.h>
 //#include <gdew0583z21.h>
-//#include <gdew075T7.h>
+#include <gdew075T7Grays.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
-//EpdSpi io;
+EpdSpi io;
 //Gdew0583z21 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
-//Gdew075T8 display(io);
+Gdew075T7Grays display(io);
 //Gdew042t2 display(io);
 //#include <plasticlogic021.h>
 //EpdSpi2Cs io;
@@ -48,8 +48,8 @@ Wave12I48 display(io); */
 // Display type: LILIGO 4.7 ED047TC1
 // Board: LILIGO T5-4.7 Epaper
 // In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
-#include "parallel/ED047TC1.h"
-Ed047TC1 display;
+//#include "parallel/ED047TC1.h"
+//Ed047TC1 display;
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
 bool bmpDebug = false;
 
@@ -688,12 +688,14 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
+    // WiFi log level
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
     
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init();
-    display.clearScreen();
+    //display.clearScreen();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 

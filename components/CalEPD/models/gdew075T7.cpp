@@ -8,35 +8,32 @@
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
  Manufacturer sample: https://github.com/waveshare/e-Paper/blob/master/Arduino/epd7in5_V2/epd7in5_V2.cpp
 */
-#define T1 30 // charge balance pre-phase
-#define T2 5  // optional extension
-#define T3 30 // color change phase (b/w)
-#define T4 5  // optional extension for one color
+#define T1 0x19 // charge balance pre-phase
+#define T2 0x01  // optional extension
+#define T3 0x00 // color change phase (b/w)
+#define T4 0x00  // optional extension for one color
 
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T7_PU_DELAY 100
 
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-
+// Partial display Waveform
 DRAM_ATTR const epd_init_42 Gdew075T7::lut_20_LUTC_partial = {
     0x20, {0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 42};
 
 DRAM_ATTR const epd_init_42 Gdew075T7::lut_21_LUTWW_partial = {
-    0x21, {// 10 w
+    0x21, {
            0x00, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     42};
 
 DRAM_ATTR const epd_init_42 Gdew075T7::lut_22_LUTKW_partial = {
-    0x22, {// 10 w
-           //0x48, T1, T2, T3, T4, 1, // 01 00 10 00
-           0x5A, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    0x22, {
+           0x80, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     42};
 
 DRAM_ATTR const epd_init_42 Gdew075T7::lut_23_LUTWK_partial = {
     0x23, {
-              // 01 b
-              0x84, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-              //0xA5, T1, T2, T3, T4, 1, // 10 10 01 01 more black
+          0x40, T1, T2, T3, T4, 1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+          //0xA5 more black
           },
     42};
 
@@ -126,6 +123,7 @@ void Gdew075T7::init(bool debug)
   //Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, false);
   fillScreen(EPD_WHITE);
+  _wakeUp();
 }
 
 void Gdew075T7::fillScreen(uint16_t color)
@@ -270,7 +268,8 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
         // white is 0x00 in buffer
         uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
         // white is 0xFF on device
-        IO.data(~data);
+        IO.data(data);
+
         if (idx % 8 == 0)
         {
           rtc_wdt_feed();
@@ -283,67 +282,6 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
     IO.cmd(0x92); // partial out
   }
 
-  vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
-}
-
-void Gdew075T7::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
-{
-  if (using_rotation)
-  {
-    switch (getRotation())
-    {
-      case 1:
-        swap(xs, ys);
-        swap(xd, yd);
-        swap(w, h);
-        xs = GDEW075T7_WIDTH - xs - w - 1;
-        xd = GDEW075T7_WIDTH - xd - w - 1;
-        break;
-      case 2:
-        xs = GDEW075T7_WIDTH - xs - w - 1;
-        ys = GDEW075T7_HEIGHT - ys - h - 1;
-        xd = GDEW075T7_WIDTH - xd - w - 1;
-        yd = GDEW075T7_HEIGHT - yd - h - 1;
-        break;
-      case 3:
-        swap(xs, ys);
-        swap(xd, yd);
-        swap(w, h);
-        ys = GDEW075T7_HEIGHT - ys  - h - 1;
-        yd = GDEW075T7_HEIGHT - yd  - h - 1;
-        break;
-    }
-  }
-  if (xs >= GDEW075T7_WIDTH) return;
-  if (ys >= GDEW075T7_HEIGHT) return;
-  if (xd >= GDEW075T7_WIDTH) return;
-  if (yd >= GDEW075T7_HEIGHT) return;
-  uint16_t xde = gx_uint16_min(GDEW075T7_WIDTH, xd + w) - 1;
-  uint16_t yde = gx_uint16_min(GDEW075T7_HEIGHT, yd + h) - 1;
-  if (!_using_partial_mode) _wakeUp();
-  _using_partial_mode = true;
-  initPartialUpdate();
-  
-  { // leave both controller buffers equal
-    IO.cmd(0x91); // partial in
-    // soft limits, must send as many bytes as set by _SetRamArea
-    uint16_t yse = ys + yde - yd;
-    uint16_t xss_d8 = xs / 8;
-    uint16_t xse_d8 = xss_d8 + _setPartialRamArea(xd, yd, xde, yde);
-    IO.cmd(0x13);
-    for (int16_t y1 = ys; y1 <= yse; y1++)
-    {
-      for (int16_t x1 = xss_d8; x1 < xse_d8; x1++)
-      {
-        uint16_t idx = y1 * (GDEW075T7_WIDTH / 8) + x1;
-        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
-        IO.dataBuffer(~data); // white is 0xFF on device
-      }
-    }
-    IO.cmd(0x12);      //display refresh
-    _waitBusy("updateToWindow");
-    IO.cmd(0x92); // partial out
-  }
   vTaskDelay(GDEW075T7_PU_DELAY / portTICK_PERIOD_MS);
 }
 

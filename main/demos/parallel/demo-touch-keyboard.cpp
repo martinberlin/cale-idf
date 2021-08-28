@@ -12,6 +12,7 @@
 // INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
 L58Touch ts(CONFIG_TOUCH_INT);
 #include "parallel/ED047TC1touch.h"
+
 Ed047TC1t display(ts);
 
 // Optional font for the writing box:
@@ -20,6 +21,8 @@ bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8p
 #define DEBUG_TOUCH_COUNT 0
 #define DEBUG_TOUCH_KEY 0
 
+// Define partial update mode
+EpdDrawMode partialMode = MODE_DU;
 uint8_t display_rotation = 0; // 1 or 3: Landscape mode
 
 extern "C"
@@ -183,7 +186,7 @@ void touchEvent(TPoint p, TEvent e)
         // Check if the cursor arrived to the end of the X visible space
         if (display.getCursorX()>display.width()-cursor_x_offset) writeCarriageReturn();
         display.print(key_line1[idx]);
-        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset);
+        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset, partialMode);
       }
     }
     
@@ -198,7 +201,7 @@ void touchEvent(TPoint p, TEvent e)
         #endif
         if (display.getCursorX()>display.width()-cursor_x_offset) writeCarriageReturn();
         display.print(key_line2[idx]);
-        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset);
+        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset, partialMode);
       }
     }
 
@@ -212,7 +215,7 @@ void touchEvent(TPoint p, TEvent e)
         #endif
         if (display.getCursorX()>display.width()-cursor_x_offset) writeCarriageReturn();
         display.print(key_line3[idx]);
-        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset);
+        display.updateWindow(display.getCursorX()-cursor_x_offset, display.getCursorY()-cursor_y_offset, cursor_x_offset, cursor_y_offset, partialMode);
       }
     }
     if (p.x>key_space_x && p.x<key_space_x+key_space_width) {
@@ -243,7 +246,10 @@ void touchEvent(TPoint p, TEvent e)
 void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
-   // Test Epd class
+   // Only if the time difference between press and release is minor than this milliseconds a Tap even is triggered
+   ts.tapDetectionMillisDiff = 100;
+
+   // Initialize epaper class
    display.init(false);
    display.clearScreen();
    display.fillScreen(epaperBackground);

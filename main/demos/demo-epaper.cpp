@@ -3,11 +3,11 @@
 #include "freertos/task.h"
 // Should match with your epaper module, size
 //#include <gdep015OC1.h>  // 1.54 old version
-#include <gdeh0154d67.h>
+//#include <gdeh0154d67.h>
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
-//#include <gdew075T7.h>
+#include <gdew075T7.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
@@ -23,7 +23,7 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdeh0154d67 display(io);
+Gdew075T7 display(io);
 //Gdep015OC1 display(io);
 //Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
 
@@ -40,8 +40,6 @@ void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
 {
-   display.setTextColor(fgcolor);
-
    uint16_t box_w = display.width() - box_x - 10;
    uint16_t box_h = 60;
    printf("Partial update box x:%d y:%d width:%d height:%d\n", box_x, box_y, box_w, box_h);
@@ -49,10 +47,12 @@ void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint1
    display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
    display.setCursor(box_x, cursor_y + 20);
    display.setFont(&Ubuntu_M18pt8b);
-   display.println("PARTIAL");
+   display.setTextColor(fgcolor);
+   display.println("PARTIAL UPDATE");
    //display.update(); // Full update works good
    // Partial does not (Black is not full black)
-   display.updateWindow(box_x, box_y, box_w, box_h, true);
+   //display.updateToWindow(box_x, box_y, 0,0,box_w, box_h,true);
+   display.updateWindow(box_x, box_y, box_w, box_h,true);
 }
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
@@ -91,15 +91,23 @@ void app_main(void)
       printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
+
+   // First does not work
+   display.fillScreen(EPD_WHITE);
+   display.update();
    
-   // draw two different partial updates
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE,10,10);
-   
-   delay(500);
    // Second repeats bug found with white points over black background
-   demoPartialUpdate(EPD_WHITE, EPD_BLACK,10,100);
-   return;
-  
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,100);
+   delay(50);
+   // Second repeats bug found with white points over black background
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,200);
+   delay(150);
+   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,300);
+   delay(100);
+   demoPartialUpdate(EPD_WHITE, EPD_BLACK, 50,400);
+   
+   //return;
+   display.fillScreen(EPD_WHITE);
    uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
@@ -111,12 +119,16 @@ void app_main(void)
    display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
-   display.setCursor(display.width()/2-130,display.height()-104);
+   display.setCursor(display.width()/2-130,display.height()-90);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("Gdeh042Z96 class for    Goodisplay 400x300");
+   display.println("demo-epaper.cpp full update is done!");
+   display.update();
+   // Leave the epaper White ready for storage
+   delay(2000);
+   display.fillScreen(EPD_WHITE);
    display.update();
    return;
 }

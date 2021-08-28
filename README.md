@@ -6,6 +6,13 @@
 * Espressif IDF framework >= 4.2 (4.3 ideally)
 * An epaper display (see wiki for supported models)
 
+ESP32C3 also works as a target. For C3 the compilation of
+/component/epd_driver is excluded since this uses ESP32 two cores and won't compile in C3.
+Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working.
+
+Then just select one of the SPI examples, and do a: **idf.py set-target esp32c3**
+
+
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 On latest releases, CalEPD has also support for FocalTech and L58 I2C touch panels used in Lilygo parallel epaper [EPD047](https://github.com/martinberlin/cale-idf/tree/master/components/CalEPD/models/parallel), enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.

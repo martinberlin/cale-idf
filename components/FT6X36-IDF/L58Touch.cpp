@@ -95,7 +95,7 @@ void L58Touch::processTouch()
     if (!tapDetectionEnabled) {
         fireEvent(point, TEvent::Tap);
     }
-    if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= 150) {
+    if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= tapDetectionMillisDiff) {
         fireEvent(point, TEvent::Tap);
     }
 }

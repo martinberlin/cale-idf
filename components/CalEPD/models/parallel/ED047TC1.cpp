@@ -24,8 +24,8 @@ void Ed047TC1::init(bool debug)
     if (debug_enabled) printf("Ed047TC1::init(%d)\n", debug);
     
     epd_init(EPD_OPTIONS_DEFAULT);
-    framebuffer = epd_init_hl(EPD_BUILTIN_WAVEFORM);
-    
+    hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+    framebuffer = epd_hl_get_framebuffer(&hl);    
     epd_poweron();
 }
 
@@ -45,8 +45,7 @@ void Ed047TC1::clearArea(EpdRect area) {
 
 void Ed047TC1::update(enum EpdDrawMode mode)
 {
-  //epd_draw_image(epd_full_screen(), framebuffer, mode); // Old v1
-  epd_update_screen(framebuffer, mode);
+  epd_hl_update_screen(&hl, mode, 25);
 }
 
 void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode)
@@ -68,7 +67,7 @@ void Ed047TC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum
     .height = h,
   };
   
-  epd_update_area(mode, area);
+  epd_hl_update_area(&hl, mode, 25, area);
 }
 
 void Ed047TC1::powerOn(void)

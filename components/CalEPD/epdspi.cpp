@@ -4,20 +4,22 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
-#define EPD_HOST    HSPI_HOST
-#define DMA_CHAN    2
+    #define EPD_HOST    HSPI_HOST
+    #define DMA_CHAN    2
 
 #elif defined CONFIG_IDF_TARGET_ESP32S2
-#define EPD_HOST    SPI2_HOST
-#define DMA_CHAN    EPD_HOST
+    #define EPD_HOST    SPI2_HOST
+    #define DMA_CHAN    EPD_HOST
+
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    // chip only support spi dma channel auto-alloc
+    #define EPD_HOST    SPI2_HOST
+    #define DMA_CHAN    SPI_DMA_CH_AUTO
 #endif
 
 void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     debug_enabled = debug;
-    if (debug) {
-        printf("MOSI: %d CLK: %d\nSPI_CS: %d DC: %d RST: %d BUSY: %d\n\n", CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK,
-        CONFIG_EINK_SPI_CS,CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
-    }
+
     //Initialize GPIOs direction & initial states
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
     gpio_set_direction((gpio_num_t)CONFIG_EINK_DC, GPIO_MODE_OUTPUT);
@@ -67,9 +69,9 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
     
     if (debug_enabled) {
-      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
+      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d DMA_CH: %d\n",
       frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
-      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY, DMA_CHAN);
         } else {
            printf("EpdSPI started at frequency: %d000\n", frequency*multiplier);
         }
@@ -86,7 +88,7 @@ void EpdSpi::cmd(const uint8_t cmd)
 {
     if (debug_enabled) {
         printf("C %x\n",cmd);
-    }
+    } 
 
     esp_err_t ret;
     spi_transaction_t t;
@@ -105,9 +107,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    if (debug_enabled) {
+    /* if (debug_enabled) {
       printf("D %x\n",data);
-    }
+    } */
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
@@ -138,7 +140,7 @@ void EpdSpi::dataBuffer(uint8_t data)
 void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
-    if (debug_enabled) {
+    if (debug_enabled && false) {
         printf("D\n");
         for (int i = 0; i < len; i++)  {
             printf("%x ",data[i]);
