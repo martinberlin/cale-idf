@@ -21,7 +21,7 @@ I (11402) www-dw: 1728 ms - download
 I (12621) total: 2782 ms - total time spent
 ```
 
-But in order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it.
+In order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it.
 All that takes a big amount of RAM (Unless you use a small image)
 
 **Note:** Statistics where taken with the 4.7" Lilygo display 960x540 pixels and may be significantly higher using bigger displays.
@@ -49,14 +49,14 @@ Progressive JPG images are not supported.
     idf.py menuconfig
     idf.py flash monitor
 
-If you are using a parallel epaper do forget to select in:
+If you are using a parallel epaper do not forget to select the Board type and model in menuconfig:
 
     Component config -> E-Paper Driver -> Select Board & Display you are using
 
-Note that you can use a random image taken from loremflickr.com. Or you can use any URL that points to a valid Image, take care to use the right JPG format, or you can also use the image-service [cale.es](https://cale.es) to create your own gallery. Otherwise expect a lot of cats.
+Note that you can use a random image taken from loremflickr.com. Or you can use any URL that points to a valid image or you can also use the image-service [cale.es](https://cale.es) to create your own gallery.
 A good thing for those rendering JPG in monochrome displays is that CALE offers dithering, so you can select a 2x2 or 3x3 dithering, simulating grays.
 
-If your epaper resolution is not listed, just send me an email, you can find it on my [profile page on Github](https://github.com/martinberlin).
+If your epaper resolution is not listed in Cale, just send me an email, you can find it on my [profile page on Github](https://github.com/martinberlin).
 
 Using HTTPS
 ===========
@@ -83,7 +83,4 @@ Please be aware that in order to validate SSL certificates the ESP32 needs to be
 
 Setting VALIDATE_SSL_CERTIFICATE to false also works skipping the .cert_pem in the esp_http_client_config_t struct. 
 
-
-Happy to collaborate once again with this amazing project,
-
-Martin Fasani, Berlin 20 Aug. 2021
+Good luck implementing this in your project!
