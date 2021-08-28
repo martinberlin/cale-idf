@@ -213,8 +213,15 @@ void jpegRender(int xpos, int ypos, int width, int height) {
 
   // Write to display
   uint64_t drawTime = esp_timer_get_time();
-  uint32_t padding_x = (ep_width - width) / 2;
-  uint32_t padding_y = (ep_height - height) / 2;
+  uint32_t padding_x = 0;
+  uint32_t padding_y = 0;
+  if (display.getRotation() == 0 || display.getRotation() == 2) {
+    padding_x = (ep_width - width) / 2;
+    padding_y = (ep_height - height) / 2;
+  } else {
+    padding_x = (ep_height - width) / 2;
+    padding_y = (ep_width - height) / 2;
+  }
 
   for (uint32_t by=0; by<height;by++) {
     for (uint32_t bx=0; bx<width;bx++) {
@@ -283,7 +290,7 @@ tjd_output(JDEC *jd,     /* Decompressor object of current session */
       continue;
     }
     int yy = rect->top + i / w;
-    if (yy < 0 || yy >= image_width) {
+    if (yy < 0 || yy >= jd->height) {
       continue;
     }
     
