@@ -8,20 +8,21 @@ But of course analyzing how it's done you can play around with the colors and se
   **jpg-render.cpp**
   Takes aprox. 1.5 to 2 seconds to download a 200Kb jpeg.
 
-Additionally another second to decompress and render the image using EPDiy epd_draw_pixel()
+Additionally another second to decompress and render the image using EPDiy display.drawPixel(x, y, color)
 
 Detailed statistics:
 
 ```
 48772 bytes read from https://loremflickr.com/960/540
 
-I (10676) decode: 757 ms . image decompression
-I (11401) render: 297 ms - jpeg draw
-I (11402) www-dw: 1728 ms - download
-I (12621) total: 2782 ms - total time spent
+ decode: 757 ms . image decompression
+ render: 297 ms - jpeg draw
+ www-dw: 1728 ms - download
+  total: 2782 ms - time spent
 ```
 
-But in order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it.
+Needs PSRAM.
+In order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it.
 All that takes a big amount of RAM (Unless you use a small image)
 
 **Note:** Statistics where taken with the 4.7" Lilygo display 960x540 pixels and may be significantly higher using bigger displays.
@@ -44,7 +45,7 @@ Gdeh042Z96 display(io);
 #define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
 ```
 
-Progressive JPG images are not supported.
+JPEG standard: Baseline only. Progressive and Lossless JPEG format are not supported.
 
 Note that as default an random image taken from loremflickr.com is used. You can use any URL that points to a valid Image, take care to use the right JPG format, or you can also use the image-service [cale.es](https://cale.es) to create your own gallery. Otherwise expect a lot of cats.
 
