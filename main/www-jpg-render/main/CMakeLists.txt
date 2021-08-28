@@ -1,4 +1,7 @@
-set(app_sources "jpg-render.cpp")
+#Uncomment only one app_source
+#set(app_sources "jpg-render.cpp")
+# Faster, uses less RAM, but looses dithering functionality:
+set(app_sources "jpg-render-v2.cpp")
 
 idf_component_register(SRCS ${app_sources} 
         REQUIRES CalEPD 

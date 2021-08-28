@@ -36,7 +36,7 @@ void Ed047TC1::fillScreen(uint16_t color) {
 
 void Ed047TC1::clearScreen()
 {
-  epd_clear();
+  epd_fullclear(&hl, 25);
 }
 
 void Ed047TC1::clearArea(EpdRect area) {
