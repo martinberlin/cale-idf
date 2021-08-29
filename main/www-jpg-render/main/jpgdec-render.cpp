@@ -34,13 +34,13 @@
 bool dither = true;
 
 JPEGDEC jpeg;
-
+uint8_t ditherSpace[30360];
 // Arduino constrain: It is a #define'd macro.
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 // Affects the gamma to calculate gray (lower is darker/higher contrast)
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 1.4;
+double gamma_value = 1.9;
 // Internal array for gamma grayscale
 uint8_t gamme_curve[256];
 // - - - - Display configuration - - - - - - - - -
@@ -183,24 +183,35 @@ int JPEGDraw(JPEGDRAW *pDraw)
       // Something like this should be used if the epaper has only 4 grayscales
       // Taken from @bitbank2 example:
       // https://github.com/bitbank2/JPEGDEC/blob/master/examples/epd_demo/epd_demo.ino
-      /* switch (constrain(pDraw->pPixels[i + j * w] >> 4, 0, 3))
-      {
-        case 0:
-          color = 0;
-          break;
-        case 1:
-          color = 50;
-          break;
-        case 2:
-          color = 200;
-          break;
-        case 3:
-          color = 255;
-          break;
-      } */
+      
       color = pDraw->pPixels[i + j * w];
       //display.drawPixel(x+i, y+j, color);                // Looks very grayish so far
       display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
+    }
+  }
+
+  time_render += (esp_timer_get_time() - render_start) / 1000;
+  return 1;
+}
+
+int JPEGDraw2(JPEGDRAW *pDraw)
+{
+  uint32_t render_start = esp_timer_get_time();
+
+  int x = pDraw->x;
+  int y = pDraw->y;
+  
+  for (int16_t i = 0; i < pDraw->iWidth; i += 4) {
+    for (int16_t j = 0; j < pDraw->iHeight; j++) {
+      uint16_t col = pDraw->pPixels[ (i + (j * pDraw->iWidth) ) >> 2 ];
+      uint16_t col1 = col & 0xf;
+      uint16_t col2 = (col >> 4) & 0xf;
+      uint16_t col3 = (col >> 8) & 0xf;
+      uint16_t col4 = (col >> 12) & 0xf;
+      display.drawPixel(x + i, y + j,  col1);
+      display.drawPixel(x + i + 1, y + j,  col2);
+      display.drawPixel(x + i + 2, y + j,  col3);
+      display.drawPixel(x + i + 3, y + j,  col4);
     }
   }
 
@@ -216,14 +227,21 @@ void deepsleep(){
 //   This function opens source_buf Jpeg image file and primes the decoder
 //====================================================================================
 int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
-  // open JPEG stored in source_buf
-  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
-   
-    uint32_t decode_start = esp_timer_get_time();
+  uint32_t decode_start = esp_timer_get_time();
 
-    if (jpeg.decode(0, 0, 0))
+  printf("Opening image source_buf size:%d\n", img_buf_pos);
+  // open JPEG stored in source_buf  JPEGDraw2
+
+  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
+    // Enabling this says always decode error 2 even if I made the JPEG_FILE_BUF_SIZE big enough
+    // 960 * 16 =
+    jpeg.setPixelType(FOUR_BIT_DITHERED);
+    
+
+    //jpeg.decode(0, 0, 0)
+    if (jpeg.decodeDither(ditherSpace, 0))
       {
-        time_decomp = (esp_timer_get_time() - decode_start)/1000;
+        time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
         ESP_LOGI("decode", "%d ms - %dx%d image", time_decomp, jpeg.getWidth(), jpeg.getHeight());
       } else {
         ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
