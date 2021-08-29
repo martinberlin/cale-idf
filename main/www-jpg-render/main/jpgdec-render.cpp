@@ -10,6 +10,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "esp_task_wdt.h"
 #include "esp_sleep.h"
 // WiFi related
 #include "esp_wifi.h"
@@ -23,19 +24,19 @@
 #include "esp_http_client.h"
 #include "esp_sntp.h"
 
-#include "JPEGDEC.h"
-
-// JPG decoder
-#if ESP_IDF_VERSION_MAJOR >= 4 // IDF 4+
-  #include "esp32/rom/tjpgd.h"
-#else // ESP32 Before IDF 4.0
-  #include "rom/tjpgd.h"
-#endif
-
-#include "esp_task_wdt.h"
+// C
 #include <stdio.h>
 #include <string.h>
 #include <math.h> // round + pow
+// JPG decoder from @bitbank2
+#include "JPEGDEC.h"
+// adds a basic Floyd-Steinberg dither to each block of pixels rendered.
+bool dither = false;
+
+JPEGDEC jpeg;
+
+// Arduino constrain: It is a #define'd macro.
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 // - - - - Display configuration - - - - - - - - -
 // EPDiy epd_driver parallel class. Requires:
@@ -58,8 +59,6 @@ extern "C"
 // Note: Only HTTP protocol supported (Check README to use SSL secure URLs) loremflickr
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define EPD_WIDTH  540
-#define EPD_HEIGHT 960
 #define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
 
 // CALE url test (should match width/height of your EPD)
@@ -80,42 +79,24 @@ double gamma_value = 0.8;
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#embedding-binary-data
 extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
 
-#define DEBUG_VERBOSE false
+#define DEBUG_VERBOSE true
 
-// JPEG decoder
-JDEC jd; 
-JRESULT rc;
 // Buffers
 uint8_t *fb;            // EPD 2bpp buffer
 uint8_t *source_buf;    // JPG download buffer
-uint8_t *decoded_image; // RAW decoded image
-static uint8_t tjpgd_work[3096]; // tjpgd buffer. min size: 3096 bytes
 
 uint32_t buffer_pos = 0;
 uint32_t time_download = 0;
 uint32_t time_decomp = 0;
 uint32_t time_render = 0;
-static const char * jd_errors[] = {
-    "Succeeded",
-    "Interrupted by output function",
-    "Device error or wrong termination of input stream",
-    "Insufficient memory pool for the image",
-    "Insufficient stream input buffer",
-    "Parameter error",
-    "Data format error",
-    "Right format but not supported",
-    "Not supported JPEG standard"
-};
-
 uint16_t ep_width = 0;
 uint16_t ep_height = 0;
 uint8_t gamme_curve[256];
 
-static const char *TAG = "EPDiy";
+static const char *TAG = "Jpgdec";
 uint16_t countDataEventCalls = 0;
 uint32_t countDataBytes = 0;
 uint32_t img_buf_pos = 0;
-uint32_t dataLenTotal = 0;
 uint64_t startTime = 0;
 
 #if VALIDATE_SSL_CERTIFICATE == true
@@ -157,106 +138,77 @@ uint64_t startTime = 0;
 //====================================================================================
 // This sketch contains support functions to render the Jpeg images
 //
-// Created by Bodmer 15th Jan 2017
+// Created by Bitbank
 // Refactored by @martinberlin for EPDiy as a Jpeg download and render example
 //====================================================================================
 
-// Return the minimum of two values a and b
-#define minimum(a,b)     (((a) < (b)) ? (a) : (b))
-
-uint8_t find_closest_palette_color(uint8_t oldpixel)
+// Draw callback from JPEGDEC
+int JPEGDraw(JPEGDRAW *pDraw)
 {
-  return oldpixel & 0xF0;
+  int x = pDraw->x;
+  int y = pDraw->y;
+  int w = pDraw->iWidth;
+  int h = pDraw->iHeight;
+  printf("D x:%d y:%d w:%d h:%d .",x,y,w,h);
+
+  if (dither)
+  {
+    for(int16_t j = 0; j < h; j++)
+    {
+      for(int16_t i = 0; i < w; i++)
+      {
+        int8_t oldPixel = constrain(pDraw->pPixels[i + j * w], 0, 0x3F);
+        int8_t newPixel = oldPixel & 0x38; // or 0x30 to dither to 2-bit directly. much improved tonal range, but more horizontal banding between blocks.
+        pDraw->pPixels[i + j * w] = newPixel;
+        int quantError = oldPixel - newPixel;      
+        if(i + 1 < w) pDraw->pPixels[i + 1 + j * w] += quantError * 7 / 16;
+        if((i - 1 >= 0) && (j + 1 < h)) pDraw->pPixels[i - 1 + (j + 1) * w] += quantError * 3 / 16;
+        if(j + 1 < h) pDraw->pPixels[i + (j + 1) * w] += quantError * 5 / 16;
+        if((i + 1 < w) && (j + 1 < h)) pDraw->pPixels[i + 1 + (j + 1) * w] += quantError * 1 / 16;
+      }
+    }
+  } // if dither
+  
+  uint8_t color = 0;
+  for(int16_t xx = 0; xx < w; xx++)
+  {
+    for(int16_t yy = 0; yy < h; yy++)
+    {
+      color = pDraw->pPixels[xx + yy * w];
+      display.drawPixel(xx, yy, color);
+      //printf("x %d y %d c %d . ", xx, yy, color);
+    }
+  }
+  return 1;
 }
 
 void deepsleep(){
     esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
 }
 
-static uint32_t feed_buffer(JDEC *jd,      
-               uint8_t *buff, // Pointer to the read buffer (NULL:skip) 
-               uint32_t nd 
-) {
-    uint32_t count = 0;
-
-    while (count < nd) {
-      if (buff != NULL) {
-            *buff++ = source_buf[buffer_pos];
-        }
-        count ++;
-        buffer_pos++;
-    }
-
-  return count;
-}
-
-/* User defined call-back function to output decoded RGB bitmap in decoded_image buffer 
-   In this v2 example the pixels are set directly on tjd_output without using a decoded buffer
-*/
-static uint32_t
-tjd_output(JDEC *jd,     /* Decompressor object of current session */
-           void *bitmap, /* Bitmap data to be output */
-           JRECT *rect   /* Rectangular region to output */
-) {
-  esp_task_wdt_reset();
-
-  uint32_t w = rect->right - rect->left + 1;
-  uint32_t h = rect->bottom - rect->top + 1;
-  uint32_t image_width = jd->width;
-  uint8_t *bitmap_ptr = (uint8_t*)bitmap;
-  
-  for (uint32_t i = 0; i < w * h; i++) {
-
-    uint8_t r = *(bitmap_ptr++);
-    uint8_t g = *(bitmap_ptr++);
-    uint8_t b = *(bitmap_ptr++);
-
-    // Calculate weighted grayscale
-    //uint32_t val = ((r * 30 + g * 59 + b * 11) / 100); // original formula
-    uint32_t val = (r*38 + g*75 + b*15) >> 7; // @vroland recommended formula
-
-    int xx = rect->left + i % w;
-    if (xx < 0 || xx >= image_width) {
-      continue;
-    }
-    int yy = rect->top + i / w;
-    if (yy < 0 || yy >= jd->height) {
-      continue;
-    }
-    // Write the pixel directly
-    display.drawPixel(xx, yy, gamme_curve[val]);
-  }
-
-  return 1;
-}
-
 //====================================================================================
 //   This function opens source_buf Jpeg image file and primes the decoder
 //====================================================================================
-int drawBufJpeg(uint8_t *source_buf, int xpos, int ypos) {
-  rc = jd_prepare(&jd, feed_buffer, tjpgd_work, sizeof(tjpgd_work), &source_buf);
-  if (rc != JDR_OK) {    
-    ESP_LOGE(TAG, "JPG jd_prepare error: %s", jd_errors[rc]);
-    return ESP_FAIL;
+int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
+  
+
+  // open JPEG stored in source_buf
+  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
+    jpeg.setPixelType(EIGHT_BIT_GRAYSCALE);
+    uint32_t decode_start = esp_timer_get_time();
+
+    if (jpeg.decode(jpeg.getWidth(), jpeg.getHeight(), 0))
+      {
+        time_decomp = (esp_timer_get_time() - decode_start)/1000;
+        printf("%dx%d image - decode time=%d ms\n", jpeg.getWidth(), jpeg.getHeight(), time_decomp);
+      } else {
+        ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
+      }
+  } else {
+    ESP_LOGE("jpeg.openRAM", "Failed with error: %d", jpeg.getLastError());
   }
-
-  uint32_t decode_start = esp_timer_get_time();
-
-  // Last parameter scales        v 1 will reduce the image
-  rc = jd_decomp(&jd, tjd_output, 0);
-  if (rc != JDR_OK) {
-    ESP_LOGE(TAG, "JPG jd_decomp error: %s", jd_errors[rc]);
-    return ESP_FAIL;
-  }
-
-  time_decomp = (esp_timer_get_time() - decode_start)/1000;
-
-  ESP_LOGI("JPG", "width: %d height: %d\n", jd.width, jd.height);
-  ESP_LOGI("decode", "%d ms . image decompression", time_decomp);
-
-  // Render the image onto the screen at given coordinates
-  //jpegRender(xpos, ypos, jd.width, jd.height);
-
+  jpeg.close();
+  
   return 1;
 }
 
@@ -286,7 +238,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len);
           }
         #endif
-        dataLenTotal += evt->data_len;
+        
 
         if (countDataEventCalls == 1) startTime = esp_timer_get_time();
         // Append received data into source_buf
@@ -301,8 +253,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         // Do not draw if it's a redirect (302)
         if (esp_http_client_get_status_code(evt->client) == 200) {
           printf("%d bytes read from %s\nIMG_BUF size: %d\n", img_buf_pos, IMG_URL, img_buf_pos);
-          drawBufJpeg(source_buf, 0, 0);
           time_download = (esp_timer_get_time()-startTime)/1000;
+
+          decodeJpeg(source_buf, 0, 0);
+          
           ESP_LOGI("www-dw", "%d ms - download", time_download);
           // Refresh display
           display.update();
@@ -483,7 +437,7 @@ void app_main() {
   printf("Free heap after buffers allocation: %d\n", xPortGetFreeHeapSize());
 
   display.init();
-  display.setRotation(CONFIG_DISPLAY_ROTATION);
+  //display.setRotation(CONFIG_DISPLAY_ROTATION);
 
   double gammaCorrection = 1.0 / gamma_value;
   for (int gray_value =0; gray_value<256;gray_value++)
