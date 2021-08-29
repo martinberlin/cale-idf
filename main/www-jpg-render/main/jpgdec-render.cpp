@@ -199,10 +199,10 @@ int JPEGDraw(JPEGDRAW *pDraw)
           break;
       } */
       color = pDraw->pPixels[i + j * w];
-      display.drawPixel(x+i, y+j, color);                // Looks very grayish so far
-      //display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
-    } // for j
-  } // for i
+      //display.drawPixel(x+i, y+j, color);                // Looks very grayish so far
+      display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
+    }
+  }
 
   time_render += (esp_timer_get_time() - render_start) / 1000;
   return 1;
