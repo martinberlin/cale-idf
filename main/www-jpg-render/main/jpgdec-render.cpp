@@ -31,13 +31,18 @@
 // JPG decoder from @bitbank2
 #include "JPEGDEC.h"
 // adds a basic Floyd-Steinberg dither to each block of pixels rendered.
-bool dither = false;
+bool dither = true;
 
 JPEGDEC jpeg;
 
 // Arduino constrain: It is a #define'd macro.
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
+// Affects the gamma to calculate gray (lower is darker/higher contrast)
+// Nice test values: 0.9 1.2 1.4 higher and is too bright
+double gamma_value = 1.4;
+// Internal array for gamma grayscale
+uint8_t gamme_curve[256];
 // - - - - Display configuration - - - - - - - - -
 // EPDiy epd_driver parallel class. Requires:
 // idf.py menuconfig-> Component Config -> E-Paper driver and select:
@@ -59,18 +64,14 @@ extern "C"
 // Note: Only HTTP protocol supported (Check README to use SSL secure URLs) loremflickr
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
+//#define IMG_URL ("https://loremflickr.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
 
 // CALE url test (should match width/height of your EPD)
-//#define IMG_URL "http://img.cale.es/jpg/fasani/5ea1dec401890" // 800*480 test
+#define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
 
 // Please check the README to understand how to use an SSL Certificate
 // Note: This makes a sntp time sync query for cert validation  (It's slower)
 #define VALIDATE_SSL_CERTIFICATE false
-
-// Affects the gamma to calculate gray (lower is darker/higher contrast)
-// Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 0.8;
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE 1938
@@ -91,7 +92,6 @@ uint32_t time_decomp = 0;
 uint32_t time_render = 0;
 uint16_t ep_width = 0;
 uint16_t ep_height = 0;
-uint8_t gamme_curve[256];
 
 static const char *TAG = "Jpgdec";
 uint16_t countDataEventCalls = 0;
@@ -145,11 +145,17 @@ uint64_t startTime = 0;
 // Draw callback from JPEGDEC
 int JPEGDraw(JPEGDRAW *pDraw)
 {
+  uint32_t render_start = esp_timer_get_time();
+
   int x = pDraw->x;
   int y = pDraw->y;
   int w = pDraw->iWidth;
   int h = pDraw->iHeight;
-  printf("D x:%d y:%d w:%d h:%d .",x,y,w,h);
+
+  for(int i = 0; i < w * h; i++)
+  {
+    pDraw->pPixels[i] = (pDraw->pPixels[i] & 0x7e0) >> 5; // extract just the six green channel bits.
+  }
 
   if (dither)
   {
@@ -168,17 +174,37 @@ int JPEGDraw(JPEGDRAW *pDraw)
       }
     }
   } // if dither
-  
+
   uint8_t color = 0;
-  for(int16_t xx = 0; xx < w; xx++)
+  for(int16_t i = 0; i < w; i++)
   {
-    for(int16_t yy = 0; yy < h; yy++)
+    for(int16_t j = 0; j < h; j++)
     {
-      color = pDraw->pPixels[xx + yy * w];
-      display.drawPixel(xx, yy, color);
-      //printf("x %d y %d c %d . ", xx, yy, color);
-    }
-  }
+      // Something like this should be used if the epaper has only 4 grayscales
+      // Taken from @bitbank2 example:
+      // https://github.com/bitbank2/JPEGDEC/blob/master/examples/epd_demo/epd_demo.ino
+      /* switch (constrain(pDraw->pPixels[i + j * w] >> 4, 0, 3))
+      {
+        case 0:
+          color = 0;
+          break;
+        case 1:
+          color = 50;
+          break;
+        case 2:
+          color = 200;
+          break;
+        case 3:
+          color = 255;
+          break;
+      } */
+      color = pDraw->pPixels[i + j * w];
+      display.drawPixel(x+i, y+j, color);                // Looks very grayish so far
+      //display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
+    } // for j
+  } // for i
+
+  time_render += (esp_timer_get_time() - render_start) / 1000;
   return 1;
 }
 
@@ -190,20 +216,19 @@ void deepsleep(){
 //   This function opens source_buf Jpeg image file and primes the decoder
 //====================================================================================
 int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
-  
-
   // open JPEG stored in source_buf
   if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
-    jpeg.setPixelType(EIGHT_BIT_GRAYSCALE);
+   
     uint32_t decode_start = esp_timer_get_time();
 
-    if (jpeg.decode(jpeg.getWidth(), jpeg.getHeight(), 0))
+    if (jpeg.decode(0, 0, 0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000;
-        printf("%dx%d image - decode time=%d ms\n", jpeg.getWidth(), jpeg.getHeight(), time_decomp);
+        ESP_LOGI("decode", "%d ms - %dx%d image", time_decomp, jpeg.getWidth(), jpeg.getHeight());
       } else {
         ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
       }
+
   } else {
     ESP_LOGE("jpeg.openRAM", "Failed with error: %d", jpeg.getLastError());
   }
@@ -252,12 +277,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_ON_FINISH:
         // Do not draw if it's a redirect (302)
         if (esp_http_client_get_status_code(evt->client) == 200) {
-          printf("%d bytes read from %s\nIMG_BUF size: %d\n", img_buf_pos, IMG_URL, img_buf_pos);
+          printf("%d bytes read from %s\n", img_buf_pos, IMG_URL);
           time_download = (esp_timer_get_time()-startTime)/1000;
 
           decodeJpeg(source_buf, 0, 0);
           
           ESP_LOGI("www-dw", "%d ms - download", time_download);
+          ESP_LOGI("render", "%d ms - render", time_render);
           // Refresh display
           display.update();
 
@@ -436,12 +462,12 @@ void app_main() {
   }
   printf("Free heap after buffers allocation: %d\n", xPortGetFreeHeapSize());
 
-  display.init();
-  //display.setRotation(CONFIG_DISPLAY_ROTATION);
-
   double gammaCorrection = 1.0 / gamma_value;
   for (int gray_value =0; gray_value<256;gray_value++)
     gamme_curve[gray_value]= round (255*pow(gray_value/255.0, gammaCorrection));
+
+  display.init();
+  //display.setRotation(CONFIG_DISPLAY_ROTATION);
 
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
