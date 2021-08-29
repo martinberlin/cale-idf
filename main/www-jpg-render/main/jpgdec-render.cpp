@@ -1,5 +1,8 @@
 // Note: Run menuconfig to set the WiFi Credentials -> CALE Configuration
 // Requirements: Needs to have an EPD Class defined. Needs PSRAM.
+// This example does not use a decoded buffer hence leaves more external RAM free
+// and it uses a different JPEG decoder: https://github.com/bitbank2/JPEGDEC
+// as an ESP-IDF "component"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -20,6 +23,8 @@
 #include "esp_http_client.h"
 #include "esp_sntp.h"
 
+#include "JPEGDEC.h"
+
 // JPG decoder
 #if ESP_IDF_VERSION_MAJOR >= 4 // IDF 4+
   #include "esp32/rom/tjpgd.h"
@@ -33,19 +38,13 @@
 #include <math.h> // round + pow
 
 // - - - - Display configuration - - - - - - - - -
-
-// For all models run menuconfig: Component Config -> ESP32 Specifics -> Enable PSRAM
-// EPD class. SPI example:
-/* #include <gdew075T7.h>
-EpdSpi io;
-Gdew075T7 display(io); */
 // EPDiy epd_driver parallel class. Requires:
 // idf.py menuconfig-> Component Config -> E-Paper driver and select:
 // Display type: LILIGO 4.7 ED047TC1
 // Board: LILIGO T5-4.7 Epaper
 
 // Make sure that components/CalEPD requires epd_driver in CMakeLists.txt  
-#include "parallel/ED047TC1.h"
+#include "parallel/ED047TC1.h" // Lilygo EPD47 parallel
 Ed047TC1 display;
 
 // - - - - end of Display configuration  - - - - -
@@ -55,12 +54,6 @@ extern "C"
     void app_main();
 }
 
-
-// For 16 Grays rendering leave on true (only parallel epapers)
-#define JPG_RENDER_16_GRAYS true
-// Note this number can be changed: Is when we consider White starts
-// 0 -> Black 125 -> Gray (middle) 255 -> White
-#define JPG_WHITE_THRESHOLD 220
 // Image URL and jpg settings. Make sure to update EPD_WIDTH/HEIGHT if using loremflickr
 // Note: Only HTTP protocol supported (Check README to use SSL secure URLs) loremflickr
 #define STR_HELPER(x) #x
@@ -76,12 +69,9 @@ extern "C"
 // Note: This makes a sntp time sync query for cert validation  (It's slower)
 #define VALIDATE_SSL_CERTIFICATE false
 
-// Jpeg: Adds dithering to image rendering (Makes grayscale smoother on transitions)
-#define JPG_DITHERING true
-
 // Affects the gamma to calculate gray (lower is darker/higher contrast)
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 0.9;
+double gamma_value = 0.8;
 
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE 1938
@@ -89,9 +79,8 @@ double gamma_value = 0.9;
 // Load the EMBED_TXTFILES. Then doing (char*) server_cert_pem_start you get the SSL certificate
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html#embedding-binary-data
 extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
-extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
 
-#define DEBUG_VERBOSE true
+#define DEBUG_VERBOSE false
 
 // JPEG decoder
 JDEC jd; 
@@ -100,7 +89,7 @@ JRESULT rc;
 uint8_t *fb;            // EPD 2bpp buffer
 uint8_t *source_buf;    // JPG download buffer
 uint8_t *decoded_image; // RAW decoded image
-static uint8_t tjpgd_work[4096]; // tjpgd 4Kb buffer
+static uint8_t tjpgd_work[3096]; // tjpgd buffer. min size: 3096 bytes
 
 uint32_t buffer_pos = 0;
 uint32_t time_download = 0;
@@ -180,67 +169,6 @@ uint8_t find_closest_palette_color(uint8_t oldpixel)
   return oldpixel & 0xF0;
 }
 
-//====================================================================================
-//   Decode and paint onto the Epaper screen
-//====================================================================================
-void jpegRender(int xpos, int ypos, int width, int height) {
- #if JPG_DITHERING
- unsigned long pixel=0;
- for (uint16_t by=0; by<ep_height;by++)
-  {
-    for (uint16_t bx=0; bx<ep_width;bx++)
-    {
-        int oldpixel = decoded_image[pixel];
-        int newpixel = find_closest_palette_color(oldpixel);
-        int quant_error = oldpixel - newpixel;
-        decoded_image[pixel]=newpixel;
-        if (bx<(ep_width-1))
-          decoded_image[pixel+1] = minimum(255,decoded_image[pixel+1] + quant_error * 7 / 16);
-
-        if (by<(ep_height-1))
-        {
-          if (bx>0)
-            decoded_image[pixel+ep_width-1] =  minimum(255,decoded_image[pixel+ep_width-1] + quant_error * 3 / 16);
-
-          decoded_image[pixel+ep_width] =  minimum(255,decoded_image[pixel+ep_width] + quant_error * 5 / 16);
-          if (bx<(ep_width-1))
-            decoded_image[pixel+ep_width+1] = minimum(255,decoded_image[pixel+ep_width+1] + quant_error * 1 / 16);
-        }
-        pixel++;
-    }
-  }
-  #endif
-
-  // Write to display
-  uint64_t drawTime = esp_timer_get_time();
-  uint32_t padding_x = 0;
-  uint32_t padding_y = 0;
-  if (display.getRotation() == 0 || display.getRotation() == 2) {
-    padding_x = (ep_width - width) / 2;
-    padding_y = (ep_height - height) / 2;
-  } else {
-    padding_x = (ep_height - width) / 2;
-    padding_y = (ep_width - height) / 2;
-  }
-
-  for (uint32_t by=0; by<height;by++) {
-    for (uint32_t bx=0; bx<width;bx++) {
-      #if JPG_RENDER_16_GRAYS
-        uint8_t color = decoded_image[by * width + bx];
-      #else 
-        
-        uint8_t color = (decoded_image[by * width + bx]>JPG_WHITE_THRESHOLD) ? EPD_WHITE : EPD_BLACK;
-      #endif
-
-        //printf("x:%d y:%d c:%d ", bx + padding_x, by + padding_y, color);
-        display.drawPixel(bx + padding_x, by + padding_y, color);
-    }
-  }
-  // calculate how long it took to draw the image
-  time_render = (esp_timer_get_time() - drawTime)/1000;
-  ESP_LOGI("render", "%d ms - jpeg draw", time_render);
-}
-
 void deepsleep(){
     esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
 }
@@ -262,7 +190,9 @@ static uint32_t feed_buffer(JDEC *jd,
   return count;
 }
 
-/* User defined call-back function to output decoded RGB bitmap in decoded_image buffer */
+/* User defined call-back function to output decoded RGB bitmap in decoded_image buffer 
+   In this v2 example the pixels are set directly on tjd_output without using a decoded buffer
+*/
 static uint32_t
 tjd_output(JDEC *jd,     /* Decompressor object of current session */
            void *bitmap, /* Bitmap data to be output */
@@ -293,8 +223,8 @@ tjd_output(JDEC *jd,     /* Decompressor object of current session */
     if (yy < 0 || yy >= jd->height) {
       continue;
     }
-    
-    decoded_image[yy * image_width + xx] = gamme_curve[val];
+    // Write the pixel directly
+    display.drawPixel(xx, yy, gamme_curve[val]);
   }
 
   return 1;
@@ -325,7 +255,7 @@ int drawBufJpeg(uint8_t *source_buf, int xpos, int ypos) {
   ESP_LOGI("decode", "%d ms . image decompression", time_decomp);
 
   // Render the image onto the screen at given coordinates
-  jpegRender(xpos, ypos, jd.width, jd.height);
+  //jpegRender(xpos, ypos, jd.width, jd.height);
 
   return 1;
 }
@@ -545,15 +475,6 @@ void app_main() {
   ep_width = display.width();
   ep_height = display.height();
 
-  //printf("Free heap before buffers allocation: %d\n", xPortGetFreeHeapSize());
-  // MALLOC_CAP_SPIRAM as last param if you have external RAM.
-  // Using external RAM for big buffers is a must or it will stop here:
-  decoded_image = (uint8_t *)heap_caps_malloc(ep_width * ep_height, MALLOC_CAP_SPIRAM);
-  if (decoded_image == NULL) {
-      ESP_LOGE("main", "Initial alloc back_buf failed. Allocating %d * %d", ep_width, ep_height);
-  }
-  memset(decoded_image, 255, ep_width * ep_height);
-
   // Should be big enough to allocate the JPEG file size, width * height should suffice
   source_buf = (uint8_t *)heap_caps_malloc(ep_width * ep_height, MALLOC_CAP_SPIRAM);
   if (source_buf == NULL) {
@@ -579,6 +500,7 @@ void app_main() {
 
   // WiFi log level set only to Error otherwise outputs too much
   esp_log_level_set("wifi", ESP_LOG_ERROR);
+  display.clearScreen();
   
   // Initialization: WiFi + clean screen while downloading image
   printf("Free heap before wifi_init_sta: %d\n", xPortGetFreeHeapSize());
