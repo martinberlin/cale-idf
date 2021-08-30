@@ -30,11 +30,11 @@
 #include <math.h> // round + pow
 // JPG decoder from @bitbank2
 #include "JPEGDEC.h"
-// adds a basic Floyd-Steinberg dither to each block of pixels rendered.
-bool dither = true;
 
 JPEGDEC jpeg;
-uint8_t ditherSpace[30360];
+// Dither space allocation
+//uint8_t dither_space[960*18];
+uint8_t * dither_space;
 // Arduino constrain: It is a #define'd macro.
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
@@ -157,24 +157,6 @@ int JPEGDraw(JPEGDRAW *pDraw)
     pDraw->pPixels[i] = (pDraw->pPixels[i] & 0x7e0) >> 5; // extract just the six green channel bits.
   }
 
-  if (dither)
-  {
-    for(int16_t j = 0; j < h; j++)
-    {
-      for(int16_t i = 0; i < w; i++)
-      {
-        int8_t oldPixel = constrain(pDraw->pPixels[i + j * w], 0, 0x3F);
-        int8_t newPixel = oldPixel & 0x38; // or 0x30 to dither to 2-bit directly. much improved tonal range, but more horizontal banding between blocks.
-        pDraw->pPixels[i + j * w] = newPixel;
-        int quantError = oldPixel - newPixel;      
-        if(i + 1 < w) pDraw->pPixels[i + 1 + j * w] += quantError * 7 / 16;
-        if((i - 1 >= 0) && (j + 1 < h)) pDraw->pPixels[i - 1 + (j + 1) * w] += quantError * 3 / 16;
-        if(j + 1 < h) pDraw->pPixels[i + (j + 1) * w] += quantError * 5 / 16;
-        if((i + 1 < w) && (j + 1 < h)) pDraw->pPixels[i + 1 + (j + 1) * w] += quantError * 1 / 16;
-      }
-    }
-  } // if dither
-
   uint8_t color = 0;
   for(int16_t i = 0; i < w; i++)
   {
@@ -189,8 +171,11 @@ int JPEGDraw(JPEGDRAW *pDraw)
       display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
     }
   }
-
+  // This is fun if you want to see how the .jpg MCU's are printed one by one
+  //display.updateWindow(x,y,w,h);
+  
   time_render += (esp_timer_get_time() - render_start) / 1000;
+  
   return 1;
 }
 
@@ -233,13 +218,10 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
   // open JPEG stored in source_buf  JPEGDraw2
 
   if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
-    // Enabling this says always decode error 2 even if I made the JPEG_FILE_BUF_SIZE big enough
-    // 960 * 16 =
+    // Enabling this says always decode error 2 even if I made the dither_space big enough (EPD_WIDTH*20)
     jpeg.setPixelType(FOUR_BIT_DITHERED);
     
-
-    //jpeg.decode(0, 0, 0)
-    if (jpeg.decodeDither(ditherSpace, 0))
+    if (jpeg.decodeDither(dither_space, 0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
         ESP_LOGI("decode", "%d ms - %dx%d image", time_decomp, jpeg.getWidth(), jpeg.getHeight());
@@ -473,6 +455,10 @@ void app_main() {
   ep_width = display.width();
   ep_height = display.height();
 
+  dither_space = (uint8_t *)heap_caps_malloc(ep_width *16, MALLOC_CAP_DEFAULT);
+  if (dither_space == NULL) {
+      ESP_LOGE("main", "Initial alloc ditherSpace failed!");
+  }
   // Should be big enough to allocate the JPEG file size, width * height should suffice
   source_buf = (uint8_t *)heap_caps_malloc(ep_width * ep_height, MALLOC_CAP_SPIRAM);
   if (source_buf == NULL) {
@@ -485,7 +471,7 @@ void app_main() {
     gamme_curve[gray_value]= round (255*pow(gray_value/255.0, gammaCorrection));
 
   display.init();
-  //display.setRotation(CONFIG_DISPLAY_ROTATION);
+  display.setRotation(CONFIG_DISPLAY_ROTATION);
 
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
