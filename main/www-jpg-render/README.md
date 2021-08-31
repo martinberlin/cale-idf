@@ -2,11 +2,11 @@ Download and render image example
 =================================
 
 After discussing the idea of collaborating adding an WiFi download and render example in the epdiy.slack.com we decided to also add a JPG decoding example suggested by @vroland.
-This example is now ported also to Cale-idf so you can use it on your displays. There is still a catch and it's that is designed to work using PSRAM and also 16 grayscale capable epapers. 
+This example is now ported also to Cale-idf so you can use it on your displays. There is a catch and it's that is designed to work using PSRAM and also 16 grayscale capable epapers. 
 But of course analyzing how it's done you can play around with the colors and send the right buffer to any display. Comes in 3 versions:
 
  - **jpg-render.cpp**
-    Takes aprox. 1.5 to 2 seconds to download a 200Kb jpeg. Uses a decoded image buffer and has optional JPG dithering (Better to the eye in grayscale transitions)
+    Takes aprox. 1.5 to 2 seconds to download a 200Kb jpeg. Uses a decoded image buffer and has optional JPG dithering (Better to the eye in grayscale transitions) supports monochrome epaper version.
     Has auto-centering for smaller images.
   
  - **jpg-render-v2.cpp** Takes less time since does not uses a decoded_buffer. Uses less RAM and is faster but it looses dithering functionality and auto-centering.
@@ -14,9 +14,9 @@ But of course analyzing how it's done you can play around with the colors and se
  - **jpgdec-render.cpp** Is the faster since uses [@bitbank/JPEGDECODER](https://github.com/bitbank2/JPEGDEC/). Comes already with 4BIT dithering included so it outperforms jpg-render.cpp
 
 In our opinion V2 is a good trade-off to use less RAM and still have a very good JPG rendering quality.
-The benefit of using TJPG is that it's already on ESP32 ROM. But if you need more decoding speed and dithering in the comonent, JPEGDEC is an excellent choice.
+The benefit of using TJPG is that it's already on ESP32 ROM. But if you need more decoding speed and dithering in the component, JPEGDEC is an excellent choice.
 
-To select one of the two versions just uncomment only one app_sources in the CMakeLists.txt 
+To select one of the two versions just uncomment only one app_sources in the **CMakeLists.txt**
 
 ```
 #set(app_sources "jpg-render.cpp")
