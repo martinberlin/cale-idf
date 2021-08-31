@@ -474,7 +474,7 @@ static const uint16_t usRangeTableB[] = {0x0000,0x0000,0x0000,0x0000,0x0000,0x00
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-#if defined( __LINUX__ ) || defined( __MCUXPRESSO )
+#if defined (__MACH__) || defined( __LINUX__ ) || defined( __MCUXPRESSO )
 //
 // API for C
 //
@@ -630,7 +630,7 @@ static int32_t seekMem(JPEGFILE *pFile, int32_t iPosition)
     return iPosition;
 } /* seekMem() */
 
-#if defined( __LINUX__ ) || defined( __MCUXPRESSO )
+#if defined (__MACH__) || defined( __LINUX__ ) || defined( __MCUXPRESSO )
 
 static void closeFile(void *handle)
 {
@@ -1666,7 +1666,7 @@ static int JPEGDecodeMCU(JPEGIMAGE *pJPEG, int iMCU, int *iDCPredictor)
             if (ulBitOff > (REGISTER_WIDTH - 17)) // need to get more data
             {
                 pBuf += (ulBitOff >> 3);
-                ulBitOff &= 7;
+                ulBitOff &= 7; // -> Here it resets
                 ulBits = MOTOLONG(pBuf);
             }
             pZig += (usHuff >> 4);  // get the skip amount (RRRR)
@@ -3109,7 +3109,7 @@ uint8_t *pSrc, *pDest, *errors, *pErrors=NULL, *d, *pPixels; // destination 8bpp
 uint8_t pixelmask=0, shift=0;
     
     ucPixelType = pJPEG->ucPixelType;
-    errors = (uint8_t *)&pJPEG->usPixels[MAX_BUFFERED_PIXELS/2]; // plenty of space here
+    errors = (uint8_t *)pJPEG->usPixels; // plenty of space here
     errors[0] = errors[1] = errors[2] = 0;
     pDest = pSrc = pJPEG->pDitherBuffer; // write the new pixels over the original
     switch (ucPixelType)
@@ -3168,8 +3168,6 @@ uint8_t pixelmask=0, shift=0;
             pErrors++;
         } // for x
     } // for y
-    // copy the output to the pixel buffer for the user to access
-    memcpy(pJPEG->usPixels, pJPEG->pDitherBuffer, iDestPitch * iHeight);
 } /* JPEGDither() */
 
 //
@@ -3309,10 +3307,13 @@ static int DecodeJPEG(JPEGIMAGE *pJPEG)
             jd.iBpp = 1;
             break;
     }
-    jd.pPixels = pJPEG->usPixels;
+    if (pJPEG->ucPixelType > EIGHT_BIT_GRAYSCALE)
+        jd.pPixels = (uint16_t *)pJPEG->pDitherBuffer;
+    else
+        jd.pPixels = pJPEG->usPixels;
     jd.iHeight = mcuCY;
     jd.y = pJPEG->iYOffset;
-    for (y = 0; y < cy && bContinue; y++, jd.y += mcuCY)
+    for (y = 0; y < cy && bContinue && iErr == 0; y++, jd.y += mcuCY)
     {
         jd.x = pJPEG->iXOffset;
         xoff = 0; // start of new LCD output group

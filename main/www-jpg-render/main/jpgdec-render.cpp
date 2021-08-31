@@ -33,7 +33,7 @@
 
 JPEGDEC jpeg;
 // Dither space allocation
-//uint8_t dither_space[960*18];
+//uint8_t dither_space[960*16];
 uint8_t * dither_space;
 // Arduino constrain: It is a #define'd macro.
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
@@ -142,7 +142,7 @@ uint64_t startTime = 0;
 // Refactored by @martinberlin for EPDiy as a Jpeg download and render example
 //====================================================================================
 
-// Draw callback from JPEGDEC
+// Draw callback from JPEGDEC with setPixelType(RGB565_LITTLE_ENDIAN) default
 int JPEGDraw(JPEGDRAW *pDraw)
 {
   uint32_t render_start = esp_timer_get_time();
@@ -179,6 +179,9 @@ int JPEGDraw(JPEGDRAW *pDraw)
   return 1;
 }
 
+/*
+ * Used with jpeg.setPixelType(FOUR_BIT_DITHERED)
+ */
 int JPEGDraw2(JPEGDRAW *pDraw)
 {
   uint32_t render_start = esp_timer_get_time();
@@ -188,11 +191,14 @@ int JPEGDraw2(JPEGDRAW *pDraw)
   
   for (int16_t i = 0; i < pDraw->iWidth; i += 4) {
     for (int16_t j = 0; j < pDraw->iHeight; j++) {
+
       uint16_t col = pDraw->pPixels[ (i + (j * pDraw->iWidth) ) >> 2 ];
-      uint16_t col1 = col & 0xf;
-      uint16_t col2 = (col >> 4) & 0xf;
-      uint16_t col3 = (col >> 8) & 0xf;
-      uint16_t col4 = (col >> 12) & 0xf;
+      // Print 4 pixels at once. 
+      // FIX: Note this is still needs to be fixed since there is an Y line that is not printed
+      uint16_t col1 = col; //& 0xf
+      uint16_t col2 = (col >> 4);
+      uint16_t col3 = (col >> 8);
+      uint16_t col4 = (col >> 12);
       display.drawPixel(x + i, y + j,  col1);
       display.drawPixel(x + i + 1, y + j,  col2);
       display.drawPixel(x + i + 2, y + j,  col3);
@@ -217,8 +223,8 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
   printf("Opening image source_buf size:%d\n", img_buf_pos);
   // open JPEG stored in source_buf  JPEGDraw2
 
-  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw)) {
-    // Enabling this says always decode error 2 even if I made the dither_space big enough (EPD_WIDTH*20)
+  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw2)) {
+    
     jpeg.setPixelType(FOUR_BIT_DITHERED);
     
     if (jpeg.decodeDither(dither_space, 0))
@@ -306,7 +312,6 @@ static void http_post(void)
     /**
      * NOTE: All the configuration parameters for http_client must be specified
      * either in URL or as host and path parameters.
-     * FIX: Uncommenting cert_pem restarts even if providing the right certificate
      */
     esp_http_client_config_t config = {
         .url = IMG_URL,
@@ -455,10 +460,11 @@ void app_main() {
   ep_width = display.width();
   ep_height = display.height();
 
-  dither_space = (uint8_t *)heap_caps_malloc(ep_width *16, MALLOC_CAP_DEFAULT);
+  dither_space = (uint8_t *)heap_caps_malloc(ep_width *16, MALLOC_CAP_SPIRAM);
   if (dither_space == NULL) {
       ESP_LOGE("main", "Initial alloc ditherSpace failed!");
   }
+
   // Should be big enough to allocate the JPEG file size, width * height should suffice
   source_buf = (uint8_t *)heap_caps_malloc(ep_width * ep_height, MALLOC_CAP_SPIRAM);
   if (source_buf == NULL) {

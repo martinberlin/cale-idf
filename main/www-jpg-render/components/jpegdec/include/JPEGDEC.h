@@ -30,18 +30,18 @@
 // 
 // Designed to decode baseline JPEG images (8 or 24-bpp)
 // using less than 22K of RAM
-//
+
 
 /* Defines and variables */
 #define FILE_HIGHWATER 1536
-#define JPEG_FILE_BUF_SIZE 15360
+#define JPEG_FILE_BUF_SIZE 2048
 #define HUFF_TABLEN  273
 #define HUFF11SIZE (1<<11)
 #define DC_TABLE_SIZE 1024
 #define DCTSIZE 64
 #define MAX_MCU_COUNT 6
 #define MAX_COMPS_IN_SCAN 4
-#define MAX_BUFFERED_PIXELS 3048
+#define MAX_BUFFERED_PIXELS 2048
 
 // Decoder options
 #define JPEG_AUTO_ROTATE 1
