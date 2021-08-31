@@ -23,7 +23,6 @@
 #include "esp_netif.h"
 #include "esp_http_client.h"
 #include "esp_sntp.h"
-
 // C
 #include <stdio.h>
 #include <string.h>
@@ -31,16 +30,19 @@
 // JPG decoder from @bitbank2
 #include "JPEGDEC.h"
 
+
 JPEGDEC jpeg;
+// If JPEG_CPY_FRAMEBUFFER is true the JPG is decoded directly in EPD framebufeer
+// On true it looses rotation. Experimental, does not work alright yet. Hint:
+// Check if an uint16_t buffer can be copied in a uint8_t buffer directly
+#define JPEG_CPY_FRAMEBUFFER false
+
 // Dither space allocation
-//uint8_t dither_space[960*16];
 uint8_t * dither_space;
-// Arduino constrain: It is a #define'd macro.
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 // Affects the gamma to calculate gray (lower is darker/higher contrast)
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 1.9;
+double gamma_value = 0.9;
 // Internal array for gamma grayscale
 uint8_t gamme_curve[256];
 // - - - - Display configuration - - - - - - - - -
@@ -52,7 +54,6 @@ uint8_t gamme_curve[256];
 // Make sure that components/CalEPD requires epd_driver in CMakeLists.txt  
 #include "parallel/ED047TC1.h" // Lilygo EPD47 parallel
 Ed047TC1 display;
-
 // - - - - end of Display configuration  - - - - -
 
 extern "C"
@@ -99,6 +100,7 @@ uint32_t countDataBytes = 0;
 uint32_t img_buf_pos = 0;
 uint64_t startTime = 0;
 
+
 #if VALIDATE_SSL_CERTIFICATE == true
   /* Time aware for ESP32: Important to check SSL certs validity */
   void time_sync_notification_cb(struct timeval *tv)
@@ -142,70 +144,44 @@ uint64_t startTime = 0;
 // Refactored by @martinberlin for EPDiy as a Jpeg download and render example
 //====================================================================================
 
-// Draw callback from JPEGDEC with setPixelType(RGB565_LITTLE_ENDIAN) default
-int JPEGDraw(JPEGDRAW *pDraw)
-{
-  uint32_t render_start = esp_timer_get_time();
-
-  int x = pDraw->x;
-  int y = pDraw->y;
-  int w = pDraw->iWidth;
-  int h = pDraw->iHeight;
-
-  for(int i = 0; i < w * h; i++)
-  {
-    pDraw->pPixels[i] = (pDraw->pPixels[i] & 0x7e0) >> 5; // extract just the six green channel bits.
-  }
-
-  uint8_t color = 0;
-  for(int16_t i = 0; i < w; i++)
-  {
-    for(int16_t j = 0; j < h; j++)
-    {
-      // Something like this should be used if the epaper has only 4 grayscales
-      // Taken from @bitbank2 example:
-      // https://github.com/bitbank2/JPEGDEC/blob/master/examples/epd_demo/epd_demo.ino
-      
-      color = pDraw->pPixels[i + j * w];
-      //display.drawPixel(x+i, y+j, color);                // Looks very grayish so far
-      display.drawPixel(x+i, y+j, gamme_curve[color]); // Looks better increases white gamma
-    }
-  }
-  // This is fun if you want to see how the .jpg MCU's are printed one by one
-  //display.updateWindow(x,y,w,h);
-  
-  time_render += (esp_timer_get_time() - render_start) / 1000;
-  
-  return 1;
-}
-
 /*
  * Used with jpeg.setPixelType(FOUR_BIT_DITHERED)
  */
-int JPEGDraw2(JPEGDRAW *pDraw)
+uint16_t mcu_count = 0;
+int JPEGDraw4Bits(JPEGDRAW *pDraw)
 {
   uint32_t render_start = esp_timer_get_time();
 
-  int x = pDraw->x;
-  int y = pDraw->y;
-  
-  for (int16_t i = 0; i < pDraw->iWidth; i += 4) {
-    for (int16_t j = 0; j < pDraw->iHeight; j++) {
-
-      uint16_t col = pDraw->pPixels[ (i + (j * pDraw->iWidth) ) >> 2 ];
-      // Print 4 pixels at once. 
-      // FIX: Note this is still needs to be fixed since there is an Y line that is not printed
-      uint16_t col1 = col; //& 0xf
-      uint16_t col2 = (col >> 4);
-      uint16_t col3 = (col >> 8);
-      uint16_t col4 = (col >> 12);
-      display.drawPixel(x + i, y + j,  col1);
-      display.drawPixel(x + i + 1, y + j,  col2);
-      display.drawPixel(x + i + 2, y + j,  col3);
-      display.drawPixel(x + i + 3, y + j,  col4);
-    }
+  #if JPEG_CPY_FRAMEBUFFER
+  // Does not support rotation
+  for (uint16_t yy = 0; yy < pDraw->iHeight; yy++) {
+    // Copy directly in EPD fb
+    display.cpyFramebuffer(pDraw->x, pDraw->y+yy, &pDraw->pPixels[yy * pDraw->iWidth], pDraw->iWidth);
   }
 
+  #else 
+    // Rotation aware
+    for (int16_t xx = 0; xx < pDraw->iWidth; xx+=4) {
+      for (int16_t yy = 0; yy < pDraw->iHeight; yy++) {
+        uint16_t col = pDraw->pPixels[ (xx + (yy * pDraw->iWidth)) >>2 ];
+      
+        uint8_t col1 = col & 0xf;
+        uint8_t col2 = (col >> 4) & 0xf;
+        uint8_t col3 = (col >> 8) & 0xf;
+        uint8_t col4 = (col >> 12) & 0xf;
+        display.drawPixel(pDraw->x + xx, pDraw->y + yy, gamme_curve[col1 *16]);
+        display.drawPixel(pDraw->x + xx + 1, pDraw->y + yy, gamme_curve[col2 *16]);
+        display.drawPixel(pDraw->x + xx + 2, pDraw->y + yy, gamme_curve[col3 *16]);
+        display.drawPixel(pDraw->x + xx + 3, pDraw->y + yy, gamme_curve[col4 *16]);
+
+        /* if (yy==0 && mcu_count==0) {
+          printf("1.%d %d %d %d ",col1,col2,col3,col4);
+        } */
+      }
+    }
+  #endif
+
+  mcu_count++;
   time_render += (esp_timer_get_time() - render_start) / 1000;
   return 1;
 }
@@ -221,16 +197,15 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
   uint32_t decode_start = esp_timer_get_time();
 
   printf("Opening image source_buf size:%d\n", img_buf_pos);
-  // open JPEG stored in source_buf  JPEGDraw2
 
-  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw2)) {
-    
+  if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw4Bits)) {
+
     jpeg.setPixelType(FOUR_BIT_DITHERED);
     
     if (jpeg.decodeDither(dither_space, 0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
-        ESP_LOGI("decode", "%d ms - %dx%d image", time_decomp, jpeg.getWidth(), jpeg.getHeight());
+        ESP_LOGI("decode", "%d ms - %dx%d image MCUs:%d", time_decomp, jpeg.getWidth(), jpeg.getHeight(), mcu_count);
       } else {
         ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
       }
@@ -477,7 +452,10 @@ void app_main() {
     gamme_curve[gray_value]= round (255*pow(gray_value/255.0, gammaCorrection));
 
   display.init();
-  display.setRotation(CONFIG_DISPLAY_ROTATION);
+  
+  #if JPEG_CPY_FRAMEBUFFER == false
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
+  #endif
 
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
