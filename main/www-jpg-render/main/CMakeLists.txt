@@ -2,10 +2,10 @@
 #set(app_sources "jpg-render.cpp")
 
 # Faster, uses less RAM, but looses dithering functionality:
-#set(app_sources "jpg-render-v2.cpp")
+set(app_sources "jpg-render-v2.cpp")
 
 # Using @bitbank2/JPEGDEC
-set(app_sources "jpgdec-render.cpp")
+#set(app_sources "jpgdec-render.cpp")
 
 idf_component_register(SRCS ${app_sources} 
         REQUIRES CalEPD jpegdec

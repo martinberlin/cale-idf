@@ -42,7 +42,7 @@ uint8_t * dither_space;
 
 // Affects the gamma to calculate gray (lower is darker/higher contrast)
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 0.9;
+double gamma_value = 0.7;
 // Internal array for gamma grayscale
 uint8_t gamme_curve[256];
 // - - - - Display configuration - - - - - - - - -
@@ -195,8 +195,6 @@ void deepsleep(){
 //====================================================================================
 int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
   uint32_t decode_start = esp_timer_get_time();
-
-  printf("Opening image source_buf size:%d\n", img_buf_pos);
 
   if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw4Bits)) {
 
@@ -434,7 +432,7 @@ void wifi_init_sta(void)
 void app_main() {
   ep_width = display.width();
   ep_height = display.height();
-
+  printf("JPGDEC version @bitbank2\n");
   dither_space = (uint8_t *)heap_caps_malloc(ep_width *16, MALLOC_CAP_SPIRAM);
   if (dither_space == NULL) {
       ESP_LOGE("main", "Initial alloc ditherSpace failed!");
