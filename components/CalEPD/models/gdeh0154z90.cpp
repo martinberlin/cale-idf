@@ -14,28 +14,6 @@ Gdeh0154z90::Gdeh0154z90(EpdSpi &dio) : Adafruit_GFX(GDEH0154Z90_WIDTH, GDEH0154
     ESP_LOGI(TAG, "Gdeh0154z90() %d*%d\n", GDEH0154Z90_WIDTH, GDEH0154Z90_HEIGHT);
 }
 
-void Gdeh0154z90::initFullUpdate()
-{
-    _wakeUp();
-    _partial_mode = false;
-    _PowerOn();
-    if (debug_enabled)
-    {
-        ESP_LOGI(TAG, "initFullUpdate()\n");
-    }
-}
-
-void Gdeh0154z90::initPartialUpdate()
-{
-    _partial_mode = true;
-    _wakeUp();
-    _PowerOn();
-    if (debug_enabled)
-    {
-        ESP_LOGI(TAG, "initPartialUpdate()\n");
-    }
-}
-
 //Initialize the display
 void Gdeh0154z90::init(bool debug)
 {
@@ -62,6 +40,28 @@ void Gdeh0154z90::fillScreen(uint16_t color)
     if (debug_enabled)
     {
         ESP_LOGI(TAG, "fillScreen(%d) _buffer len:%d\n", data, sizeof(_buffer));
+    }
+}
+
+void Gdeh0154z90::initFullUpdate()
+{
+    _wakeUp();
+    _partial_mode = false;
+    _PowerOn();
+    if (debug_enabled)
+    {
+        ESP_LOGI(TAG, "initFullUpdate()\n");
+    }
+}
+
+void Gdeh0154z90::initPartialUpdate()
+{
+    _partial_mode = true;
+    _wakeUp();
+    _PowerOn();
+    if (debug_enabled)
+    {
+        ESP_LOGI(TAG, "initPartialUpdate()\n");
     }
 }
 

@@ -12,6 +12,7 @@ set(srcs
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/gdeh0154d67.cpp"
+    "models/gdeh0154z90.cpp"
     "models/heltec0151.cpp"
     
     # 3 colors Goodisplay
