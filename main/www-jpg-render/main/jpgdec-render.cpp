@@ -32,7 +32,7 @@
 
 
 JPEGDEC jpeg;
-// If JPEG_CPY_FRAMEBUFFER is true the JPG is decoded directly in EPD framebufeer
+// EXPERIMENTAL: If JPEG_CPY_FRAMEBUFFER is true the JPG is decoded directly in EPD framebuffer
 // On true it looses rotation. Experimental, does not work alright yet. Hint:
 // Check if an uint16_t buffer can be copied in a uint8_t buffer directly
 #define JPEG_CPY_FRAMEBUFFER false
@@ -153,10 +153,10 @@ int JPEGDraw4Bits(JPEGDRAW *pDraw)
   uint32_t render_start = esp_timer_get_time();
 
   #if JPEG_CPY_FRAMEBUFFER
-  // Does not support rotation
+  // Highly experimental: Does not support rotation and gamma correction (Can be washed out compared to JPEG_CPY_FRAMEBUFFER false)
   for (uint16_t yy = 0; yy < pDraw->iHeight; yy++) {
-    // Copy directly in EPD fb
-    display.cpyFramebuffer(pDraw->x, pDraw->y+yy, &pDraw->pPixels[yy * pDraw->iWidth], pDraw->iWidth);
+    // Copy directly horizontal MCU pixels in EPD fb
+    display.cpyFramebuffer(pDraw->x, pDraw->y+yy, &pDraw->pPixels[(yy * pDraw->iWidth)>>2], pDraw->iWidth);
   }
 
   #else 

@@ -40,7 +40,7 @@ class Ed047TC1 : public EpdParallel
 
     // Partial update of rectangle from buffer to screen, does not power off. Default can be also MODE_EPDIY_WHITE_TO_GL16
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode = MODE_GC16);
-
+    void cpyFramebuffer(uint16_t x, uint16_t y, const void * src, size_t n);
   private:
     bool _tempalert = false;
     bool _initial = true;
