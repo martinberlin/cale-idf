@@ -79,19 +79,27 @@ void Gdeh0154z90::drawPixel(int16_t x, int16_t y, uint16_t color)
     }
     uint16_t i = x / 8 + y * GDEH0154Z90_WIDTH / 8;
 
-    // This formulas are from gxEPD that apparently got the color right:
-    // _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8))); // white pixel
-    // _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));     // white pixel
+    _black_buffer[i] = (_black_buffer[i] & (GDEH0154Z90_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
+    _red_buffer[i] = (_red_buffer[i] & (GDEH0154Z90_8PIX_RED_WHITE ^ (1 << (7 - x % 8)))); // white
+
+    // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
+    switch (color)
+    {
+    case EPD_BLACK:
+        color = EPD_WHITE;
+        break;
+    case EPD_WHITE:
+        color = EPD_BLACK;
+        break;
+    }
 
     if (color == EPD_BLACK)
     {
-        //_black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-        _black_buffer[i] = GDEH0154Z90_8PIX_BLACK;
+        _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
     }
     else if (color == EPD_RED)
     {
-        // _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-        _red_buffer[i] = GDEH0154Z90_8PIX_RED;
+        _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
     }
 }
 
