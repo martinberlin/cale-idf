@@ -33,10 +33,7 @@ void Gdeh0154z90::fillScreen(uint16_t color)
     uint8_t black = GDEH0154Z90_8PIX_WHITE;
     uint8_t red = GDEH0154Z90_8PIX_RED_WHITE;
 
-    if (color == EPD_WHITE)
-    {
-    }
-    else if (color == EPD_BLACK)
+    if (color == EPD_BLACK)
     {
         black = GDEH0154Z90_8PIX_BLACK;
     }
