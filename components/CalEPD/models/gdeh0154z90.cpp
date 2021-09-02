@@ -41,14 +41,6 @@ void Gdeh0154z90::fillScreen(uint16_t color)
     {
         red = GDEH0154Z90_8PIX_RED;
     }
-    else if ((color & 0xF100) > (0xF100 / 2))
-    {
-        red = 0xFF;
-    }
-    else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
-    {
-        black = 0xFF;
-    }
 
     for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
     {
@@ -88,8 +80,19 @@ void Gdeh0154z90::drawPixel(int16_t x, int16_t y, uint16_t color)
     uint16_t i = x / 8 + y * GDEH0154Z90_WIDTH / 8;
 
     // This formulas are from gxEPD that apparently got the color right:
-    _black_buffer[i] = (_black_buffer[i] & (GDEH0154Z90_8PIX_WHITE ^ (1 << (7 - x % 8))));
-    _red_buffer[i] = (_red_buffer[i] & (GDEH0154Z90_8PIX_RED ^ (1 << (7 - x % 8))));
+    // _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8))); // white pixel
+    // _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));     // white pixel
+
+    if (color == EPD_BLACK)
+    {
+        //_black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _black_buffer[i] = GDEH0154Z90_8PIX_BLACK;
+    }
+    else if (color == EPD_RED)
+    {
+        // _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _red_buffer[i] = GDEH0154Z90_8PIX_RED;
+    }
 }
 
 void Gdeh0154z90::update()
@@ -146,16 +149,6 @@ void Gdeh0154z90::update()
              (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
 
     _sleep();
-}
-
-void Gdeh0154z90::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
-{
-    ESP_LOGE(TAG, "updateToWindow() is not supported by this display!");
-}
-
-void Gdeh0154z90::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
-{
-    ESP_LOGE(TAG, "updateToWindow() is not supported by this display!");
 }
 
 void Gdeh0154z90::_wakeUp()
