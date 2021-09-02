@@ -20,11 +20,11 @@ void Gdeh0154z90::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled)
     {
-        ESP_LOGI(TAG, "Gdeh0154z90::init(%d)\n", debug);
+        ESP_LOGI(TAG, "Gdeh0154z90::init(%d)", debug);
     }
     IO.init(4, debug); // 4MHz frequency
 
-    ESP_LOGI(TAG, "Free heap:%d\n", xPortGetFreeHeapSize());
+    ESP_LOGI(TAG, "Free heap:%d", xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 
@@ -43,7 +43,9 @@ void Gdeh0154z90::fillScreen(uint16_t color)
     else if (color == EPD_RED)
     {
         red = GDEH0154Z90_8PIX_RED;
-    } else if ((color & 0xF100) > (0xF100 / 2)) {
+    }
+    else if ((color & 0xF100) > (0xF100 / 2))
+    {
         red = 0xFF;
     }
     else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
@@ -59,8 +61,104 @@ void Gdeh0154z90::fillScreen(uint16_t color)
 
     if (debug_enabled)
     {
-        ESP_LOGI(TAG, "fillScreen(%d) _buffer len:%d\n", color, sizeof(_black_buffer));
+        ESP_LOGI(TAG, "fillScreen(%d) _buffer len:%d", color, sizeof(_black_buffer));
     }
+}
+
+void Gdeh0154z90::drawPixel(int16_t x, int16_t y, uint16_t color)
+{
+    if ((x < 0) || (x >= width()) || (y < 0) || (y >= height()))
+    {
+        return;
+    }
+
+    // check rotation, move pixel around if necessary
+    switch (getRotation())
+    {
+    case 1:
+        swap(x, y);
+        x = GDEH0154Z90_WIDTH - x - 1;
+        break;
+    case 2:
+        x = GDEH0154Z90_WIDTH - x - 1;
+        y = GDEH0154Z90_HEIGHT - y - 1;
+        break;
+    case 3:
+        swap(x, y);
+        y = GDEH0154Z90_HEIGHT - y - 1;
+        break;
+    }
+    uint16_t i = x / 8 + y * GDEH0154Z90_WIDTH / 8;
+
+    // This formulas are from gxEPD that apparently got the color right:
+    _black_buffer[i] = (_black_buffer[i] & (GDEH0154Z90_8PIX_WHITE ^ (1 << (7 - x % 8))));
+    _red_buffer[i] = (_red_buffer[i] & (GDEH0154Z90_8PIX_RED ^ (1 << (7 - x % 8))));
+}
+
+void Gdeh0154z90::update()
+{
+    uint64_t startTime = esp_timer_get_time();
+    _wakeUp();
+
+    IO.cmd(0x24); // Write RAM for black(0)/white (1)
+    uint16_t i = 0;
+    uint8_t xLineBytes = GDEH0154Z90_WIDTH / 8;
+    uint8_t x1buf[xLineBytes];
+
+    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
+    {
+        for (uint16_t x = 1; x <= xLineBytes; x++)
+        {
+            uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEH0154Z90_8PIX_WHITE;
+            x1buf[x - 1] = data;
+            if (x == xLineBytes)
+            { // Flush the X line buffer to SPI
+                IO.data(x1buf, sizeof(x1buf));
+            }
+            ++i;
+        }
+    }
+
+    IO.cmd(0x26); // Write RAM for red(1)/white (0)
+    i = 0;
+
+    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
+    {
+        for (uint16_t x = 1; x <= xLineBytes; x++)
+        {
+            uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH0154Z90_8PIX_RED_WHITE;
+            x1buf[x - 1] = data;
+            if (x == xLineBytes)
+            {
+                IO.data(x1buf, sizeof(x1buf));
+            }
+            ++i;
+        }
+    }
+
+    uint64_t endTime = esp_timer_get_time();
+
+    IO.cmd(0x22); //Display Update Control
+    IO.data(0xf7);
+    IO.cmd(0x20); //Activate Display Update Sequence
+    _waitBusy("_Update_Full");
+
+    uint64_t updateTime = esp_timer_get_time();
+
+    ESP_LOGI(TAG, "\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
+             (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
+
+    _sleep();
+}
+
+void Gdeh0154z90::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+{
+    ESP_LOGE(TAG, "updateToWindow() is not supported by this display!");
+}
+
+void Gdeh0154z90::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
+{
+    ESP_LOGE(TAG, "updateToWindow() is not supported by this display!");
 }
 
 void Gdeh0154z90::_wakeUp()
@@ -95,60 +193,12 @@ void Gdeh0154z90::_wakeUp()
     IO.data(0x80);
 }
 
-void Gdeh0154z90::update()
+void Gdeh0154z90::_sleep()
 {
-    uint64_t startTime = esp_timer_get_time();
-    _wakeUp();
-    
-    IO.cmd(0x24); // Write RAM for black(0)/white (1)
-    uint16_t i = 0;
-    uint8_t xLineBytes = GDEH0154Z90_WIDTH / 8;
-    uint8_t x1buf[xLineBytes];
-
-    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
-    {
-        for (uint16_t x = 1; x <= xLineBytes; x++)
-        {
-            uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEH0154Z90_8PIX_WHITE;
-            x1buf[x - 1] = data;
-            if (x == xLineBytes)
-            { // Flush the X line buffer to SPI
-                IO.data(x1buf, sizeof(x1buf));
-            }
-            ++i;
-        }
-    }
-
-    IO.cmd(0x26); // Write RAM for red(1)/white (0)
-    i = 0;
-
-    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
-    {
-        for(uint16_t x = 1; x <= xLineBytes; x++) 
-        {
-            uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH0154Z90_8PIX_RED_WHITE;
-            x1buf[x - 1] = data;
-            if (x == xLineBytes)
-            {
-                IO.data(x1buf, sizeof(x1buf));
-            }
-            ++i;
-        }
-    }
-
-    uint64_t endTime = esp_timer_get_time();
-
-    IO.cmd(0x22); //Display Update Control
-    IO.data(0xf7);
-    IO.cmd(0x20); //Activate Display Update Sequence
-    _waitBusy("_Update_Full");
-
-    uint64_t updateTime = esp_timer_get_time();
-
-    ESP_LOGI(TAG, "\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu update \n%llu total time in millis\n",
-             (endTime - startTime) / 1000, (updateTime - endTime) / 1000, (updateTime - startTime) / 1000);
-
-    _sleep();
+    IO.cmd(0x22); // power off display
+    IO.data(0xc3);
+    IO.cmd(0x20);
+    _waitBusy("power_off");
 }
 
 void Gdeh0154z90::_waitBusy(const char *message)
@@ -176,14 +226,6 @@ void Gdeh0154z90::_waitBusy(const char *message)
     }
 }
 
-void Gdeh0154z90::_sleep()
-{
-    IO.cmd(0x22); // power off display
-    IO.data(0xc3);
-    IO.cmd(0x20);
-    _waitBusy("power_off");
-}
-
 void Gdeh0154z90::_rotate(int16_t &x, int16_t &y, int16_t &w, int16_t &h)
 {
     switch (getRotation())
@@ -202,59 +244,5 @@ void Gdeh0154z90::_rotate(int16_t &x, int16_t &y, int16_t &w, int16_t &h)
         swap(w, h);
         y = GDEH0154Z90_HEIGHT - y - h - 1;
         break;
-    }
-}
-
-void Gdeh0154z90::drawPixel(int16_t x, int16_t y, uint16_t color)
-{
-    if ((x < 0) || (x >= width()) || (y < 0) || (y >= height()))
-    {
-        return;
-    }
-
-    // check rotation, move pixel around if necessary
-    switch (getRotation())
-    {
-    case 1:
-        swap(x, y);
-        x = GDEH0154Z90_WIDTH - x - 1;
-        break;
-    case 2:
-        x = GDEH0154Z90_WIDTH - x - 1;
-        y = GDEH0154Z90_HEIGHT - y - 1;
-        break;
-    case 3:
-        swap(x, y);
-        y = GDEH0154Z90_HEIGHT - y - 1;
-        break;
-    }
-    uint16_t i = x / 8 + y * GDEH0154Z90_WIDTH / 8;
-
-    // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
-    switch (color)
-    {
-    case EPD_BLACK:
-        color = EPD_WHITE;
-        break;
-    case EPD_WHITE:
-        color = EPD_BLACK;
-        break;
-    }
-
-    // This formulas are from gxEPD that apparently got the color right:
-    _black_buffer[i] = (_black_buffer[i] & (GDEH0154Z90_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
-    _red_buffer[i] = (_red_buffer[i] & (GDEH0154Z90_8PIX_RED ^ (1 << (7 - x % 8))));       // white
-
-    if (color == EPD_WHITE)
-    {
-        return;
-    }
-    else if (color == EPD_BLACK)
-    {
-        _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-    }
-    else if (color == EPD_RED)
-    {
-        _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
     }
 }

@@ -26,18 +26,21 @@
 
 class Gdeh0154z90 : public Epd
 {
-  public:
+public:
+    Gdeh0154z90(EpdSpi &IO);
+    uint8_t colors_supported = 2;
+    uint8_t partial_update_supported = 0;
 
-    Gdeh0154z90(EpdSpi& IO);
-    uint8_t colors_supported = 3;
-    
     void init(bool debug);
     void fillScreen(uint16_t color);
-    void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
-    void update();
+    void drawPixel(int16_t x, int16_t y, uint16_t color); // Override GFX own drawPixel method
 
-  private:
-    EpdSpi& IO;
+    void update();
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
+    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
+
+private:
+    EpdSpi &IO;
 
     uint8_t _black_buffer[GDEH0154Z90_BUFFER_SIZE];
     uint8_t _red_buffer[GDEH0154Z90_BUFFER_SIZE];
@@ -46,6 +49,7 @@ class Gdeh0154z90 : public Epd
 
     void _wakeUp();
     void _sleep();
-    void _waitBusy(const char* message);
-    void _rotate(int16_t& x, int16_t& y, int16_t& w, int16_t& h);
+    void _waitBusy(const char *message);
+
+    void _rotate(int16_t &x, int16_t &y, int16_t &w, int16_t &h);
 };
