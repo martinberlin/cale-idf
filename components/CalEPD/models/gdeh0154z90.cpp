@@ -78,25 +78,29 @@ void Gdeh0154z90::drawPixel(int16_t x, int16_t y, uint16_t color)
         break;
     }
     uint16_t i = x / 8 + y * GDEH0154Z90_WIDTH / 8;
-    // Turns a default that single pixel WHITE for both channels
+
     _black_buffer[i] = (_black_buffer[i] & (GDEH0154Z90_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
     _red_buffer[i] = (_red_buffer[i] & (GDEH0154Z90_8PIX_RED_WHITE ^ (1 << (7 - x % 8)))); // white
 
     // In this display controller RAM colors are inverted: WHITE RAM(BW) = 1  / BLACK = 0
-    // If the white/black is inverted just use the bitwise NOT like in red
-    if (color == EPD_WHITE) return;
-    else if (color == EPD_BLACK) _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-    else if (color == EPD_RED)   _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-    // This is extra and could be removed if everything works:
-    else
+    switch (color)
     {
-        if ((color & 0xF100) > (0xF100 / 2)) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-        else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2)
-        {
-        _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-        }
+    case EPD_BLACK:
+        color = EPD_WHITE;
+        break;
+    case EPD_WHITE:
+        color = EPD_BLACK;
+        break;
     }
-  
+
+    if (color == EPD_BLACK)
+    {
+        _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
+    }
+    else if (color == EPD_RED)
+    {
+        _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
+    }
 }
 
 void Gdeh0154z90::update()
@@ -124,14 +128,20 @@ void Gdeh0154z90::update()
     }
 
     IO.cmd(0x26); // Write RAM for red(1)/white (0)
-    // Try first something simple as this (Do the same for white if you need to invert)
-    // Only after it works send complete lines per SPI (And there you cannot invert bitwise like this)
-  
-    for (uint16_t p = 0; p <= sizeof(_red_buffer); ++p)
+    i = 0;
+
+    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
     {
-       IO.data(_red_buffer[p]);
-       // Try also this if is inverted
-       // IO.data(~ _red_buffer[p]);
+        for (uint16_t x = 1; x <= xLineBytes; x++)
+        {
+            uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH0154Z90_8PIX_RED_WHITE;
+            x1buf[x - 1] = data;
+            if (x == xLineBytes)
+            {
+                IO.data(x1buf, sizeof(x1buf));
+            }
+            ++i;
+        }
     }
 
     uint64_t endTime = esp_timer_get_time();
@@ -153,10 +163,9 @@ void Gdeh0154z90::_wakeUp()
 {
     IO.reset(10);
     _waitBusy("epd_wakeup reset");
-    
-    // Don't think you need this if there is a RST pin
-    //IO.cmd(0x12); // SWRESET
-    //_waitBusy("epd_wakeup swreset");
+
+    IO.cmd(0x12); // SWRESET
+    _waitBusy("epd_wakeup swreset");
 
     IO.cmd(0x01); // Driver output control
     IO.data(0xC7);
@@ -184,9 +193,9 @@ void Gdeh0154z90::_wakeUp()
 
 void Gdeh0154z90::_sleep()
 {
-    IO.cmd(0x10); // power off display
-    IO.data(0x01);
-
+    IO.cmd(0x22); // power off display
+    IO.data(0xc3);
+    IO.cmd(0x20);
     _waitBusy("power_off");
 }
 
