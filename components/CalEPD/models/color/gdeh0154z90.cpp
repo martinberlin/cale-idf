@@ -1,4 +1,4 @@
-#include "gdeh0154z90.h"
+#include "color/gdeh0154z90.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
