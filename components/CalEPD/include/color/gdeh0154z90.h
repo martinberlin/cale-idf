@@ -36,8 +36,6 @@ public:
     void drawPixel(int16_t x, int16_t y, uint16_t color); // Override GFX own drawPixel method
 
     void update();
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
 
 private:
     EpdSpi &IO;
