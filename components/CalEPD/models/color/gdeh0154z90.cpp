@@ -193,10 +193,8 @@ void Gdeh0154z90::_wakeUp()
 
 void Gdeh0154z90::_sleep()
 {
-    IO.cmd(0x22); // power off display
-    IO.data(0xc3);
-    IO.cmd(0x20);
-    _waitBusy("power_off");
+    IO.cmd(0x10); // enter deep sleep
+    IO.data(0x01);
 }
 
 void Gdeh0154z90::_waitBusy(const char *message)
