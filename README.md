@@ -31,8 +31,6 @@ Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/
 
     git submodule update --init --recursive
 
-- I've been working a lot in another less interesting things as Web development, so I didn't find enough time to update this repository, but there are new interesting things coming. Keep tuned!
-
 [For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 ## Fork policy
@@ -45,21 +43,22 @@ Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/
 
 All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. 
 
-We don't like having copies of the whole repository without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
+We don't like having copies of the whole repository without any reason. 
 
 ## Requesting for new models
 
 If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
+Also following existing classes you can do it yourself. Just check on the pull requests to see how other developers did to add their epapers!
 
 ## CALE Firmware
 
 **CALE does only 3 things at the moment and is very easy to set up:**
 
-1. It connects to cale.es and downloads a Screen bitmap.
+1. It connects to [cale.es](http://cale.es) and downloads a Screen bitmap.
 2. In "Streaming mode" it pushes the pixels to Adafruit GFX buffer and at the end renders it in your Epaper.
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
-And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
+It wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper. Optionally you can do the same, but with a JPG, using our [www-jpg-render example](https://github.com/martinberlin/cale-idf/tree/master/main/www-jpg-render). Please note that in many cases you will require an ESP32-Wrover or similar with PSRAM.
 
 **Different cpp examples:**
 
@@ -68,10 +67,11 @@ And of course wakes up after this deepsleep and goes back to point 1 making it a
 - **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
 - **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
 
-Best settings on CALE.es website that we found to display color photos with cale-7-color is to use Dither mode: 3x3 and Bits per pixel 24. This is downgraded to 4bpp using dithering but that's really ok since 16 colors are more than the epaper supports. It's not a great photo quality but this epapers where designed to make labels and supermarket prices, not to display quality color pictures.
+Best settings on CALE.es website that we found to display color photos with cale-7-color is to use **Dither mode: 3x3** and **Bits per pixel: 24**. This is downgraded to 4bpp using dithering but that's really ok since 16 colors are more than the epaper supports. It's not a great photo quality but this epapers where designed to make labels and supermarket prices, not to display quality color pictures.
 
 ROADMAP
     
+    2021->Oct->Dec Testing other projects and small pause (Lot's of other work that are not electronics related...)
     2021->Aug->Oct Imaging libraries: Adding JPG support and optimizing processes
     2021-Jun->Aug Parallel interaction research: UX on epaper displays
     2021-Mar till June Enabling touch support to enable UX design in ESP32
