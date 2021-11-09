@@ -123,6 +123,8 @@ int color = EPD_WHITE;
 uint64_t startTime = 0;
 
 void deepsleep(){
+    printf("Going to deepsleep %d minutes\n\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
 }
 

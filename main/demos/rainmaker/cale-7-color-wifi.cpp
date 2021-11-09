@@ -27,7 +27,6 @@
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 #include <app_wifi.h>
-
 #include <esp_rmaker_factory.h>
 #include <esp_rmaker_common_events.h>
 
@@ -73,6 +72,7 @@ extern "C"
 
 static const char *TAG = "CALE";
 // Values that will be stored in NVS - defaults here
+nvs_handle_t nvs_h;
 uint16_t nvs_minutes_till_refresh = 10;
 
 uint16_t countDataEventCalls = 0;
@@ -91,7 +91,7 @@ struct BmpHeader
 } bmp;
 
 extern const char ota_server_cert[] asm("_binary_server_crt_start");
-nvs_handle_t nvs_h;
+
 
 void deepsleep(){
     nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);

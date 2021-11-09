@@ -10,16 +10,17 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "nvs.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "esp_sleep.h"
 // - - - - HTTP Client includes:
-#include "esp_netif.h"
 #include "esp_err.h"
 #include "esp_tls.h"
 #include "esp_http_client.h"
 // Rainmaker
 #include <esp_rmaker_core.h>
+#include <esp_rmaker_standard_types.h>
 #include <esp_rmaker_standard_params.h>
 #include <esp_rmaker_standard_devices.h>
 #include <esp_rmaker_ota.h>
@@ -29,7 +30,8 @@
 #include <esp_rmaker_factory.h>
 #include <esp_rmaker_common_events.h>
 
-#define DEVICE_PARAM_1 "Test-Param"
+#define DEVICE_PARAM_1 "Minutes till next refresh"
+#define DEVICE_PARAM_WIFI_RESET "Turn slider to 100 to reset WiFi"
 bool readyToRequestImage = false;
 /**
  * Should match your display model. Check repository WiKi: https://github.com/martinberlin/cale-idf/wiki
@@ -40,25 +42,21 @@ bool readyToRequestImage = false;
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-#include <gdeh042Z96.h>
+#include <gdew0583z21.h>
 // Font always after display
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
-//#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
-//#include <gdew0583z21.h>
+
 EpdSpi io;
-//Gdew0583z21 display(io); // Not enough RAM
-//Gdew027w3 display(io);   // Works
-Gdeh042Z96 display(io);
+Gdew0583z21 display(io);
 
 esp_rmaker_device_t *epaper_device;
 
 // BMP debug Mode: Turn false for production since it will make things slower and dump Serial debug
-bool bmpDebug = false;
+const bool bmpDebug = false;
 
-// IP is sent per post for logging purpouses. Authentication: Bearer token in the headers
-char espIpAddress[16];
+// Authentication: Bearer token in the headers
 char bearerToken[74] = "";
+
 // As default is 512 without setting buffer_size property in esp_http_client_config_t
 #define HTTP_RECEIVE_BUFFER_SIZE 1024
 
@@ -68,6 +66,9 @@ extern "C"
 }
 
 static const char *TAG = "CALE";
+// Values that will be stored in NVS - defaults here
+nvs_handle_t nvs_h;
+uint16_t nvs_minutes_till_refresh = 60;
 
 uint16_t countDataEventCalls = 0;
 uint32_t countDataBytes = 0;
@@ -86,6 +87,15 @@ struct BmpHeader
 
 extern const char ota_server_cert[] asm("_binary_server_crt_start");
 
+
+void deepsleep(){
+    nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);
+    nvs_close(nvs_h);
+    printf("Going to deepsleep %d minutes\n\n", nvs_minutes_till_refresh);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    esp_deep_sleep(1000000LL * 60 * nvs_minutes_till_refresh);
+}
+
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -98,10 +108,33 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     if (strcmp(param_name, ESP_RMAKER_DEF_POWER_NAME) == 0) {
         ESP_LOGI(TAG, "Received value = %s for %s - %s",
                 val.val.b? "true" : "false", device_name, param_name);
-        //app_light_set_power(val.val.b);
+        if (val.val.b == false) {
+            deepsleep();
+        }
+
     } else if (strcmp(param_name, DEVICE_PARAM_1) == 0) {
-        ESP_LOGI(TAG, "Received value = %d for %s-%s",
+        ESP_LOGI(TAG, "%d for %s-%s",
                 val.val.i, device_name, param_name);
+
+        nvs_handle_t my_handle;
+        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+        if (err != ESP_OK) {
+            printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        } 
+        nvs_set_u16(my_handle, "mtr", (uint16_t) val.val.i);
+
+        err = nvs_commit(my_handle);
+        printf((err != ESP_OK) ? "NVS Failed to store %d\n" : "NVS Stored %d\n", val.val.i);
+        nvs_close(my_handle);    
+
+    } else if (strcmp(param_name, DEVICE_PARAM_WIFI_RESET) == 0) {
+        ESP_LOGI(TAG, "%d for %s-%s",
+                val.val.i, device_name, param_name);
+        if (val.val.i == 100) {
+            printf("Reseting WiFi credentials. Please reprovision your device\n\n");
+            esp_rmaker_wifi_reset(1,10);
+        }
+
     } else {
         /* Silently ignoring invalid params */
         return ESP_OK;
@@ -109,6 +142,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     esp_rmaker_param_update_and_report(param, val);
     return ESP_OK;
 }
+
 
 uint16_t read16(uint8_t output_buffer[512], uint8_t startPointer)
 {
@@ -160,10 +194,6 @@ uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for dept
 uint16_t totalDrawPixels = 0;
 int color = EPD_WHITE;
 uint64_t startTime = 0;
-
-void deepsleep(){
-    esp_deep_sleep(1000000LL * 60 * CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
-}
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -500,7 +530,7 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                 ESP_LOGI(TAG, "Wi-Fi credentials reset.");
                 display.println("Wi-Fi credentials are cleared");
                 display.setCursor(10,30);
-                display.println("Will start in provisioning mode");
+                display.println("Will start in WiFi provisioning mode");
                 display.update();
                 break;
             case RMAKER_EVENT_FACTORY_RESET:
@@ -562,15 +592,19 @@ void app_main(void)
         abort();
     }
 
-    /* Create a device and add the relevant parameters to it */
-    epaper_device = esp_rmaker_lightbulb_device_create("CALE-Epaper", NULL, true);
+     /* Create a device and add the relevant parameters to it */
+    epaper_device = esp_rmaker_device_create("CALE-Epaper", ESP_RMAKER_DEVICE_SWITCH, NULL);
     
     esp_rmaker_device_add_cb(epaper_device, write_cb, NULL);
-    // Customize angle slider
-    esp_rmaker_param_t *angle = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, 0);
-    // My SG90 servo only moves 147 instead of 180 degrees
-    esp_rmaker_param_add_bounds(angle, esp_rmaker_int(0), esp_rmaker_int(147), esp_rmaker_int(1));
-    esp_rmaker_device_add_param(epaper_device, angle);
+    // Customized minutes till next refresh slider
+    esp_rmaker_param_t *min_till_refresh = esp_rmaker_brightness_param_create(DEVICE_PARAM_1, nvs_minutes_till_refresh);
+    esp_rmaker_param_add_bounds(min_till_refresh, esp_rmaker_int(10), esp_rmaker_int(360), esp_rmaker_int(1));
+    esp_rmaker_device_add_param(epaper_device, min_till_refresh);
+
+    esp_rmaker_param_t *reset_wifi = esp_rmaker_brightness_param_create(DEVICE_PARAM_WIFI_RESET, 0);
+    esp_rmaker_param_add_bounds(reset_wifi, esp_rmaker_int(0), esp_rmaker_int(100), esp_rmaker_int(10));
+    esp_rmaker_device_add_param(epaper_device, reset_wifi);
+
     esp_rmaker_node_add_device(node, epaper_device);
 
     /* Enable OTA */
