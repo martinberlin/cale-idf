@@ -36,7 +36,7 @@ void Ed047TC1::fillScreen(uint16_t color) {
 
 void Ed047TC1::clearScreen()
 {
-  epd_clear();
+  epd_fullclear(&hl, 25);
 }
 
 void Ed047TC1::clearArea(EpdRect area) {
@@ -133,4 +133,8 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
       printf("height():%d - y:%d - h:%d\n",width(),y,h);
       printf("x:%d y:%d w:%d h:%d\n",x,y,w,h);
   */
+}
+
+void Ed047TC1::cpyFramebuffer(uint16_t x, uint16_t y, const void * src, size_t n) {
+  memcpy(&framebuffer[y * EPD_WIDTH / 2 + x / 2], src, n);
 }

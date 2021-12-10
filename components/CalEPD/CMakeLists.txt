@@ -28,22 +28,22 @@ set(srcs
     "models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
-    "models/plasticlogic/epdspi2cs.cpp"
-    "models/plasticlogic/plasticlogic.cpp"
-    "models/plasticlogic/plasticlogic011.cpp"
-    "models/plasticlogic/plasticlogic014.cpp"
-    "models/plasticlogic/plasticlogic021.cpp"
-    "models/plasticlogic/plasticlogic031.cpp"
+    #"models/plasticlogic/epdspi2cs.cpp"
+    #"models/plasticlogic/plasticlogic.cpp"
+    #"models/plasticlogic/plasticlogic011.cpp"
+    #"models/plasticlogic/plasticlogic014.cpp"
+    #"models/plasticlogic/plasticlogic021.cpp"
+    #"models/plasticlogic/plasticlogic031.cpp"
 
     # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
     # Uncomment for parallel epapers:
-    #"epdParallel.cpp"
-    #"models/parallel/ED047TC1.cpp"
+    "epdParallel.cpp"
+    "models/parallel/ED047TC1.cpp"
     #"models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
 
     # Pending for more testing:
-    "models/gdeh0213b73.cpp"
+    #"models/gdeh0213b73.cpp"
     # Common base classes
     "epd.cpp"
     "epd7color.cpp"
@@ -57,6 +57,6 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "FT6X36-IDF"
                     
                     # Uncomment for parallel epapers:
-                    #REQUIRES "epd_driver"
+                    REQUIRES "epd_driver"
                     INCLUDE_DIRS "include"
 )
