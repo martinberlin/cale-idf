@@ -11,7 +11,7 @@ idf_component_register(
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
     #SRCS "demos/demo-epaper.cpp"
-    SRCS "demos/demo-4-grays-7inch"
+    #SRCS "demos/demo-4-grays-7inch"
     
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"
@@ -28,10 +28,15 @@ idf_component_register(
 
     # Demo only for plasticlogic.com epapers:
     # SRCS "demos/demo-epaper-plasticlogic.cpp"
+    SRCS "demos/gif/plasticlogic-animation.cpp"
 
     # Only parallel epapers (Driven by I2Sbus)
     #SRCS "demos/parallel/demo-epaper-parallel.cpp"
     #SRCS "demos/parallel/demo-epaper-parallel-partial.cpp"
     #SRCS "demos/parallel/demo-touch-parallel.cpp"
     #SRCS "demos/parallel/demo-touch-keyboard.cpp"
-    INCLUDE_DIRS ".")
+    INCLUDE_DIRS "." 
+                 "demos/gif/img")
+
+    # This is just to avoid that BitBank2 components like AnimatedGIF include Arduino.h
+idf_build_set_property(COMPILE_OPTIONS "-D __LINUX__" APPEND) 
