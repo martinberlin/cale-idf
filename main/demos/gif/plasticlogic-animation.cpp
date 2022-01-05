@@ -52,6 +52,12 @@ uint32_t millis() {
    return esp_timer_get_time()/1000;
 }
 
+uint8_t in_blue = 0;
+uint8_t in_red = 0;
+uint8_t in_green = 0;
+uint8_t color;
+long lTime;
+
 // Draw a line of image directly on the LCD
 void GIFDraw(GIFDRAW *pDraw)
 {
@@ -103,17 +109,41 @@ void GIFDraw(GIFDRAW *pDraw)
              iCount++;
           }
         } // while looking for opaque pixels
+        
         if (iCount) // any opaque pixels?
         {
+          
            // This part needs to be adapted for 2bpp framebuffer (PlasticLogic)
-          /* tft.startWrite();
-          tft.setAddrWindow(pPriv->xoff + pDraw->iX + x, y, iCount, 1);
-          tft.pushColors(usTemp, iCount, true);
-          tft.writePixels(usTemp, iCount, false, false);
-          tft.endWrite(); */
+          for (uint16_t c=0; c < iWidth; ++c) {
+            // It's 888 so we read 3 bytes to get the color:
+            for (uint8_t bc=0; bc < 3; ++bc) {
+              uint8_t in_byte = usTemp[(3*c)+bc];
+              switch (bc)
+                {
+                case 0:
+                    in_blue  = (in_byte>> 3) & 0x1f;
+                    break;
+                case 1:
+                    in_green = ((in_byte >> 2) & 0x3f) << 5;
+                    break;
+                case 2:
+                    in_red   = ((in_byte >> 3) & 0x1f) << 11;
+                    break;
+                }
+                // 255/90 = 2.83
+              color = (in_red | in_green | in_blue) /90;
+            }
+            
+            //printf("%d ", color); // W the fuckio!
+            display.drawPixel(pPriv->xoff + pDraw->iX + x + c, y, color);
+          }
+
+          //tft.setAddrWindow(pPriv->xoff + pDraw->iX + x, y, iCount, 1);
           x += iCount;
           iCount = 0;
         }
+
+        
         // no, look for a run of transparent pixels
         c = ucTransparent;
         while (c == ucTransparent && s < pEnd)
@@ -130,13 +160,17 @@ void GIFDraw(GIFDRAW *pDraw)
           iCount = 0;
         }
       }
+      
     }
     else
     {
       s = pDraw->pPixels;
       // Translate the 8-bit pixels through the RGB565 palette (already byte reversed)
-      for (x=0; x<iWidth; x++)
+      for (x=0; x<iWidth; x++) {
         usTemp[x] = usPalette[*s++];
+        printf("N%d ", usTemp[x]);
+        }
+
       /* tft.startWrite();
       tft.setAddrWindow(pPriv->xoff + pDraw->iX, y, iWidth, 1);
       tft.writePixels(usTemp, iWidth, false, false);
@@ -153,7 +187,6 @@ void ShowDigits(int iValue, int iOldValue)
 int i, rc, iBusy;
 PRIVATE priv;
 int jn, jo, t0, t1;
-long lTime;
 
   priv.yoff = 72; // center digits vertically  
   iBusy = 0;
@@ -168,21 +201,25 @@ long lTime;
     jn /= 10;
     jo /= 10; // next digit
   }
+ 
+  i = 1; // Remove if FOR is enabled
   while (iBusy) {
     // Draw each frame of each changing digit together so that they animate together
     lTime = millis() + 40; // play the frames at a rate of 25fps (40ms per frame)
-    for (i=0; i<4; i++) {
-       if (iBusy & (1 << i)) {
+    //for (i=0; i<4; i++) {
+     //  if (iBusy & (1 << i)) {
          // Advance this animation one frame
          priv.xoff = 80 * i; // each digit is 80 pixels wide
          rc = gif[i].playFrame(false, NULL, (void *)&priv); // draw it and return immediately
          if (!rc) { // animation has ended
             iBusy &= ~(1<<i); // clear the bit indicating this digit is busy
             gif[i].close();
-         }
-       }
+    /*      }
+       } */
     } // for each digit
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    display.update(EPD_UPD_PART);
+    display.fillScreen(EPD_WHITE);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
   } // while digits still changing
 }
 
@@ -211,6 +248,7 @@ void app_main(void)
 
   uint16_t i = 0;
   uint16_t iOld = 9999; // force every digit to be drawn the first time
+
   ShowDigits(i, iOld);
 
 
