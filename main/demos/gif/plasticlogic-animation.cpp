@@ -25,7 +25,6 @@ EpdSpi2Cs io;
 //PlasticLogic011 display(io);
 //PlasticLogic014 display(io);
 PlasticLogic021 display(io);
-bool playShortDemo = true;
 
 AnimatedGIF gif; 
 
@@ -56,7 +55,7 @@ void GIFDraw(GIFDRAW *pDraw)
        iWidth = display.width() - pDraw->iX;
     usPalette = pDraw->pPalette;
 
-    y =  pDraw->y; // current line
+    y =  pDraw->iY + pDraw->y; // current line
     if (y >= display.height() || pDraw->iX >= display.width() || iWidth < 1)
        return; 
     s = pDraw->pPixels;
@@ -72,57 +71,34 @@ void GIFDraw(GIFDRAW *pDraw)
     }
 
     // Apply the new pixels to the main image
-    if (pDraw->ucHasTransparency) // if transparency used
-    {
+    if (pDraw->ucHasTransparency) { // if transparency used
       uint8_t *pEnd, c, ucTransparent = pDraw->ucTransparent;
       int x, iCount;
       pEnd = s + iWidth;
       x = 0;
       iCount = 0; // count non-transparent pixels
-      while(x < iWidth)
-      {
+      while(x < iWidth) {
         c = ucTransparent-1;
         d = usTemp;
-        while (c != ucTransparent && s < pEnd)
-        {
+        while (c != ucTransparent && s < pEnd) {
           c = *s++;
-          if (c == ucTransparent) // done, stop
-          {
+          if (c == ucTransparent) { // done, stop
             s--; // back up to treat it like transparent
           }
-          else // opaque
-          {
+          else { // opaque
              *d++ = usPalette[c];
              iCount++;
           }
         } // while looking for opaque pixels
         
-        if (iCount) // any opaque pixels?
-        {
-          
-           // This part needs to be adapted for 2bpp framebuffer (PlasticLogic)
-          for (uint16_t c=0; c < iWidth; ++c) {
-            // It's 888 so we read 3 bytes to get the color:
-            for (uint8_t bc=0; bc < 3; ++bc) {
-              uint8_t in_byte = usTemp[(3*c)+bc];
-              switch (bc)
-                {
-                case 0:
-                    in_blue  = (in_byte>> 3) & 0x1f;
-                    break;
-                case 1:
-                    in_green = ((in_byte >> 2) & 0x3f) << 5;
-                    break;
-                case 2:
-                    in_red   = ((in_byte >> 3) & 0x1f) << 11;
-                    break;
-                }
-                // 255/90 = 2.83
-              color = (in_red | in_green | in_blue) /90;
-            }
-            
-            //printf("%d ", color); // W the fuckio!
-            display.drawPixel(x, y, color);
+        if (iCount) { // any opaque pixels?
+          for (int i=0; i < iCount; i++) {
+              uint16_t usColor, usPixel = usTemp[x+i];
+              usColor = (usPixel >> 11); // 5 bits of red
+              usColor += ((usPixel & 0x7e0) >> 5); // 6 bits of green
+              usColor += (usPixel & 0x1f); // 5 bits of blue
+              // We now have 7 bits of gray, turn it into 2 bits of gray
+              display.drawPixel(pDraw->iX + x + i, y, (usColor>>5));
           }
           x += iCount;
           iCount = 0;
@@ -130,24 +106,29 @@ void GIFDraw(GIFDRAW *pDraw)
 
         // no, look for a run of transparent pixels
         c = ucTransparent;
-        while (c == ucTransparent && s < pEnd)
-        {
+        while (c == ucTransparent && s < pEnd) {
           c = *s++;
           if (c == ucTransparent)
              iCount++;
           else
              s--; 
         }
-        if (iCount)
-        {
+        if (iCount) {
           x += iCount; // skip these
           iCount = 0;
         }
       }
-      
+    } else { // no transparency
+        for (int x=0; x < pDraw->iWidth; x++) {
+            uint16_t usColor, usPixel = usTemp[x];
+            usColor = (usPixel >> 11); // 5 bits of red
+            usColor += ((usPixel & 0x7e0) >> 5); // 6 bits of green
+            usColor += (usPixel & 0x1f); // 5 bits of blue
+            // We now have 7 bits of gray, turn it into 2 bits of gray
+            display.drawPixel(pDraw->iX + x, y, (usColor>>5));
+        }
     }
-    
-}
+} /* GIFDraw() */
 
 void app_main(void)
 {
