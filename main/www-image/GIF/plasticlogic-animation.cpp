@@ -1,7 +1,8 @@
 /**
  * plasticlogic.com Demo of 4 gray level epaper with partial refresh for ESP32 and ESP32S2
- * Proprietry process to manufacture truly flexible, organic thin-film transistors (OTFT),
- * with industrialization developed in the world’s first commercial, high volume, plastic electronics factory.
+ * Proprietry process to manufacture truly flexible, organic thin-film transistors (OTFT)
+ * NOTE: This GIF only works partially. Never really come to fix it and only previewable GIFs are:
+ * homer  &  homer_tiny
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -23,7 +24,7 @@ uint32_t gif_array_size = sizeof(homer_tiny);
 #include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
-PlasticLogic011 display(io);
+PlasticLogic021 display(io);
 //PlasticLogic014 display(io);
 //PlasticLogic021 display(io);
 

@@ -27,8 +27,9 @@ idf_component_register(
     #SRCS "demos/demo-7-colors.cpp"
 
     # Demo only for plasticlogic.com epapers:
-    # SRCS "demos/demo-epaper-plasticlogic.cpp"
-    SRCS "demos/gif/plasticlogic-animation.cpp"
+    #SRCS "demos/demo-epaper-plasticlogic.cpp"
+    SRCS "www-image/GIF/plasticlogic-animation.cpp"
+    # Plasticlogic video demo: Please build it in www-image/video
 
     # Only parallel epapers (Driven by I2Sbus)
     #SRCS "demos/parallel/demo-epaper-parallel.cpp"
@@ -36,7 +37,7 @@ idf_component_register(
     #SRCS "demos/parallel/demo-touch-parallel.cpp"
     #SRCS "demos/parallel/demo-touch-keyboard.cpp"
     INCLUDE_DIRS "." 
-                 "demos/gif/img")
+                 "www-image/GIF/img")
 
     # This is just to avoid that BitBank2 components like AnimatedGIF include Arduino.h
 idf_build_set_property(COMPILE_OPTIONS "-D __LINUX__" APPEND) 
