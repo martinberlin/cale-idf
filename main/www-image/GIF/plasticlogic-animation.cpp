@@ -9,11 +9,12 @@
 #include "esp_timer.h"
 #include <AnimatedGIF.h>
 // Digit animated GIFs
-#include <homer.h>
-#include <anime.h>
+#include <homer_tiny.h>
+#include <anime_sm.h>
+#include <badgers.h>
 // Replace here the variable name in the GIF.h above
-uint8_t * gif_array = (uint8_t *) anime;
-uint32_t gif_array_size = sizeof(anime);
+uint8_t * gif_array = (uint8_t *) homer_tiny;
+uint32_t gif_array_size = sizeof(homer_tiny);
 
 // Should match with your epaper module and size
 // One or many classes can be included at the same time
@@ -22,9 +23,9 @@ uint32_t gif_array_size = sizeof(anime);
 #include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
-//PlasticLogic011 display(io);
+PlasticLogic011 display(io);
 //PlasticLogic014 display(io);
-PlasticLogic021 display(io);
+//PlasticLogic021 display(io);
 
 AnimatedGIF gif; 
 
@@ -37,11 +38,28 @@ uint32_t millis() {
    return esp_timer_get_time()/1000;
 }
 
-uint8_t in_blue = 0;
-uint8_t in_red = 0;
-uint8_t in_green = 0;
 uint8_t color;
 long lTime;
+
+uint8_t invertColor(uint8_t color) {
+  uint8_t inverted = 3; // 3 is white
+  switch (color)
+  {
+  case 3:
+    inverted = 0;
+    break;
+  case 2:
+    inverted = 3;
+    break;
+  case 1:
+    inverted = 2;
+    break;
+  default:
+    inverted = 2;
+    break;
+  }
+  return inverted;
+}
 
 // Draw a line of image directly on the LCD
 void GIFDraw(GIFDRAW *pDraw)
@@ -97,8 +115,9 @@ void GIFDraw(GIFDRAW *pDraw)
               usColor = (usPixel >> 11); // 5 bits of red
               usColor += ((usPixel & 0x7e0) >> 5); // 6 bits of green
               usColor += (usPixel & 0x1f); // 5 bits of blue
-              // We now have 7 bits of gray, turn it into 2 bits of gray
-              display.drawPixel(pDraw->iX + x + i, y, (usColor>>5));
+              // We now have 7 bits of gray, turn it into 2 bits of gray              
+              //printf("%d ",color);
+              display.drawPixel( x + i, y, (usColor>>5));
           }
           x += iCount;
           iCount = 0;
@@ -125,7 +144,7 @@ void GIFDraw(GIFDRAW *pDraw)
             usColor += ((usPixel & 0x7e0) >> 5); // 6 bits of green
             usColor += (usPixel & 0x1f); // 5 bits of blue
             // We now have 7 bits of gray, turn it into 2 bits of gray
-            display.drawPixel(pDraw->iX + x, y, (usColor>>5));
+            display.drawPixel( x, y, (usColor>>5));
         }
     }
 } /* GIFDraw() */
@@ -151,8 +170,10 @@ void app_main(void)
   if (rc) {
     while (rc) {
       rc = gif.playFrame(true, NULL); // play a frame and pause for the correct amount of time
-      display.update(EPD_UPD_PART);
-      vTaskDelay(20 / portTICK_PERIOD_MS);
+
+      //display.print("wertzuioopasdfghjklm");
+      display.update(EPD_UPD_PART);   //EPD_UPD_PART
+      vTaskDelay(10 / portTICK_PERIOD_MS);
       display.fillScreen(EPD_WHITE);
     }
     gif.close();
