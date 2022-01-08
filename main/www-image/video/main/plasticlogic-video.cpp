@@ -5,8 +5,10 @@
  * To read about SPIFFs
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html
  * 
- * Video encoded like this:
- * ffmpeg -t 2 -i bunny.mp4 -vf "fps=15,scale=-1:124:flags=lanczos,crop=220:in_h:(in_w-220)/2:0,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v rawvideo -pix_fmt rgb565be output.rgb
+ * Video must be encoded in RGB4 pixel format like this:
+ * ffmpeg -t 2 -i input.mp4 -vf "fps=15,scale=-1:124:flags=lanczos,crop=220:in_h:(in_w-220)/2:0,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v rawvideo -pix_fmt rgb4 output.rgb
+ * OR shorter:
+ * ffmpeg -t 2 -i input.mp4 -vf "fps=10,crop=220" -c:v rawvideo -pix_fmt rgb4 output.rgb
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -18,7 +20,7 @@
 
 static const char *TAG = "video";
 
-const char* video_file = "/spiffs/bunny-RGB4-220x124.rgb";
+const char* video_file = "/spiffs/output.rgb";
 uint16_t video_width = 220;
 uint16_t video_height = 124;
 // 4BPP : 2 pixels per byte 
