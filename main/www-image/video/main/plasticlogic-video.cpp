@@ -76,7 +76,7 @@ void app_main(void)
   display.init();         // Add init(true) for debug
   display.clearScreen();
 
-  ESP_LOGI(TAG, "Reading video. Free HEAP %d", xPortGetFreeHeapSize());
+  ESP_LOGI(TAG, "Reading video. FRAMESIZE: %d\nFree HEAP %d", FRAME_SIZE, xPortGetFreeHeapSize());
 
   // Open for reading hello.txt
   FILE* fp = fopen(video_file, "r");
@@ -91,9 +91,8 @@ void app_main(void)
 
   while (fread(videobuffer, FRAME_SIZE, 1, fp)) {
       frame_nr++;
-      printf("frame %d\n", frame_nr);
 
-      for (uint16_t bp=0; bp<=FRAME_SIZE; ++bp) {
+      for (uint32_t bp = 0; bp < FRAME_SIZE; ++bp) {
         if (x_pix_read > video_width-1) {
           x_pix_read = 0;
           y_line++;
@@ -101,17 +100,20 @@ void app_main(void)
         }
         uint8_t low_bits =  videobuffer[bp] & 0x0F;
         uint8_t high_bits = videobuffer[bp] >> 4;
+        
         //printf("x %d\n", x_pix_read);
-         
+        
         display.drawPixel(x_pix_read, y_line, low_bits>>2);
         display.drawPixel(x_pix_read+1, y_line, high_bits>>2);
         x_pix_read+=2;
       }
-      display.update();   //EPD_UPD_PART
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-      //if (frame_nr==15) break;
-  };
 
+      y_line = 0;
+      //printf("F%d chk %lld\n", frame_nr, checksum);
+      display.update(EPD_UPD_PART);   //EPD_UPD_PART
+      //vTaskDelay(20 / portTICK_PERIOD_MS);
+      //if (frame_nr == 15) break;
+  };
 
   ESP_LOGI(TAG, "Reached last video frame");
   fclose(fp); 
