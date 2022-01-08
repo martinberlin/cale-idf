@@ -1,5 +1,5 @@
 /**
- * plasticlogic.com Demo of slow RAW RGB 4 bit encoded video read from SPIFFs
+ * EPDiy parallel demo for RAW RGB 4 bit encoded video read from SPIFFs
  * Inspired by this blogpost: https://appelsiini.net/2020/esp32-mjpeg-video-player/
  * 
  * To read about SPIFFs
@@ -7,8 +7,8 @@
  * 
  * Video must be encoded in RGB4 pixel format like this:
  * ffmpeg -t 2 -i input.mp4 -vf "fps=15,scale=-1:124:flags=lanczos,crop=220:in_h:(in_w-220)/2:0,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v rawvideo -pix_fmt rgb4 output.rgb
- * OR shorter:
- * ffmpeg -t 2 -i input.mp4 -vf "fps=10,crop=220" -c:v rawvideo -pix_fmt rgb4 output.rgb
+ * OR shorter w/ start    end time:
+ * ffmpeg -ss 00:00:00 -t 00:00:04 -t 2 -i input.mp4 -vf "fps=6,crop=440" -c:v rawvideo -pix_fmt rgb4 output.rgb
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -19,8 +19,8 @@
 #include "esp_spiffs.h"
 
 static const char *TAG = "video";
-
-const char* video_file = "/spiffs/output.rgb";
+// Alternative video: 
+const char* video_file = "/spiffs/bunny-RGB4-220x124.rgb";
 uint16_t video_width = 220;
 uint16_t video_height = 124;
 // 4BPP : 2 pixels per byte 
@@ -28,9 +28,23 @@ const size_t FRAME_SIZE = video_width/2 * video_height;
 
 #include <plasticlogic021.h>
 #include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
-// Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
-EpdSpi2Cs io;
-PlasticLogic021 display(io);
+// Only for parallel epaper displays driven by I2S DataBus (No SPI)
+// NOTE: This needs Epdiy component https://github.com/vroland/epdiy
+// Run idf.py menuconfig-> Component Config -> E-Paper driver and select:
+// Display type: LILIGO 4.7 ED047TC1
+// Board: LILIGO T5-4.7 Epaper
+// In the same section Component Config -> ESP32 Specifics -> Enable PSRAM
+#include "parallel/ED047TC1.h"
+Ed047TC1 display;
+// VIDEO MODES
+// Withouth rotation but faster doing a memcpy of entire ROWs
+//#define FRAMEBUFFER_MEMCPY
+
+// X4 size will make a pixel in 4 pixel (At the cost of loosing quality)
+// This mode works only without the FRAMEBUFFER_MEMCPY defined!
+#define PIXEL_X4
+// Define partial update mode
+EpdDrawMode partialMode = MODE_DU; // MODE_GC16 with 16 grays but slower
 
 extern "C"
 {
@@ -95,24 +109,44 @@ void app_main(void)
       frame_nr++;
 
       for (uint32_t bp = 0; bp < FRAME_SIZE; ++bp) {
+        #ifdef PIXEL_X4
+        if (x_pix_read > video_width*2-1) {
+          x_pix_read = 0;
+          y_line+=2;
+          if (y_line > video_height*2) break;
+        }
+        #else
         if (x_pix_read > video_width-1) {
           x_pix_read = 0;
           y_line++;
           if (y_line > video_height) break;
         }
+        #endif
         uint8_t low_bits =  videobuffer[bp] & 0x0F;
         uint8_t high_bits = videobuffer[bp] >> 4;
         
         //printf("x %d\n", x_pix_read);
-        
-        display.drawPixel(x_pix_read, y_line, low_bits>>2);
-        display.drawPixel(x_pix_read+1, y_line, high_bits>>2);
+        #ifdef PIXEL_X4
+        display.drawPixel(x_pix_read, y_line, low_bits *16);
+        display.drawPixel(x_pix_read+1, y_line, high_bits *16);
+        display.drawPixel(x_pix_read, y_line+1, low_bits *16);
+        display.drawPixel(x_pix_read+1, y_line+1, high_bits *16);
+
+        display.drawPixel(x_pix_read+2, y_line, high_bits *16);
+        display.drawPixel(x_pix_read+3, y_line, low_bits *16);
+        display.drawPixel(x_pix_read+2, y_line+1, high_bits *16);
+        display.drawPixel(x_pix_read+3, y_line+1, low_bits *16);
+        x_pix_read+=4;
+        #else 
+        display.drawPixel(x_pix_read, y_line, low_bits *16);
+        display.drawPixel(x_pix_read+1, y_line, high_bits *16);
         x_pix_read+=2;
+        #endif        
       }
 
       y_line = 0;
       //printf("F%d chk %lld\n", frame_nr, checksum);
-      display.update(EPD_UPD_PART);   //EPD_UPD_PART
+      display.update(partialMode);
       //vTaskDelay(20 / portTICK_PERIOD_MS);
       //if (frame_nr == 15) break;
   };

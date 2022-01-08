@@ -1,8 +1,12 @@
 # Uncomment only one app_source
-set(app_sources "plasticlogic-video.cpp")
+set(app_sources 
+   #"plasticlogic-video.cpp"
+   "epdiy-video.cpp"
+   )
 
 idf_component_register(SRCS ${app_sources} 
         REQUIRES CalEPD
+        epd_driver
         spiffs
 )
 
