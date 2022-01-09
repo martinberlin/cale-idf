@@ -8,39 +8,40 @@ set(srcs
     "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
-    "models/gdew027w3T.cpp"
+    #"models/gdew027w3T.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/gdeh0154d67.cpp"
     "models/heltec0151.cpp"
     
     # 3 colors Goodisplay
-    "models/color/gdeh0154z90.cpp"
-    "models/color/gdew0583z21.cpp"
-    "models/color/gdew075z09.cpp"
-    "models/color/gdew075c64.cpp"
-    "models/color/gdeh042Z96.cpp"
-    "models/color/gdeh042Z21.cpp"
-    "models/color/wave12i48BR.cpp"
+    #"models/color/gdeh0154z90.cpp"
+    #"models/color/gdew0583z21.cpp"
+    #"models/color/gdew075z09.cpp"
+    #"models/color/gdew075c64.cpp"
+    #"models/color/gdeh042Z96.cpp"
+    #"models/color/gdeh042Z21.cpp"
+    #"models/color/wave12i48BR.cpp"
 
     # 7 colors Waveshare
-    "models/color/wave4i7Color.cpp"
-    "models/color/wave5i7Color.cpp"
+    #"models/color/wave4i7Color.cpp"
+    #"models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
-    "models/plasticlogic/epdspi2cs.cpp"
-    "models/plasticlogic/plasticlogic.cpp"
-    "models/plasticlogic/plasticlogic011.cpp"
-    "models/plasticlogic/plasticlogic014.cpp"
-    "models/plasticlogic/plasticlogic021.cpp"
-    "models/plasticlogic/plasticlogic031.cpp"
+    #"models/plasticlogic/epdspi2cs.cpp"
+    #"models/plasticlogic/plasticlogic.cpp"
+    #"models/plasticlogic/plasticlogic011.cpp"
+    #"models/plasticlogic/plasticlogic014.cpp"
+    #"models/plasticlogic/plasticlogic021.cpp"
+    #"models/plasticlogic/plasticlogic031.cpp"
 
     # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
     # Uncomment for parallel epapers:
-    #"epdParallel.cpp"
-    #"models/parallel/ED047TC1.cpp"
+    "epdParallel.cpp"
+    "models/parallel/ED047TC1.cpp"
     #"models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
+    #"models/parallel/ED060XCN.cpp" # pending to be added
 
     # Pending for more testing:
     #"models/gdeh0213b73.cpp"
@@ -48,15 +49,14 @@ set(srcs
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    "epd4spi.cpp"
+    #"epd4spi.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
-                    REQUIRES "FT6X36-IDF"
-                    
+                    # REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    # REQUIRES "epd_driver"
+                    REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
