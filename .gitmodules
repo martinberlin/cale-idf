@@ -1,0 +1,3 @@
+[submodule "components/epdiy"]
+	path = components/epdiy
+	url = https://github.com/martinberlin/epdiy-rotation.git
