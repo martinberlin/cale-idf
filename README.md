@@ -17,17 +17,9 @@ Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://c
 
 ### 2022 update
 
-This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Please not that parallel driver epdiy is not anymore a requirement and after last update is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
+This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time.
 
-
-    git submodule update --init --recursive
-
-If you are not using EPDiy to drive your epapers, this step is not needed. If you are, please go to:
-CalEPD/CMakeLists.txt
-
-And enable this ### 2022 update
-
-This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Please not that parallel driver epdiy is not anymore a requirement and after last update is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
+Please note that parallel driver epdiy is not anymore a requirement and after last update is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
 
 
     git submodule update --init --recursive
