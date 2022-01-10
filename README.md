@@ -4,22 +4,19 @@
 
 * esp32 or esp32S2 / C3 in branch [refactor/oop](https://github.com/martinberlin/cale-idf/tree/refactor/oop)
 * Espressif IDF framework >= 4.2 (4.3 ideally)
-* An epaper display (see wiki for supported models)
+* An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 
-ESP32C3 also works as a target. For C3 the compilation of
-/component/epd_driver is excluded since this uses ESP32 two cores and won't compile in C3.
-Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working.
-
-Then just select one of the SPI examples, and do a: **idf.py set-target esp32c3**
+ESP32C3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
+ **idf.py set-target esp32c3**
 
 
-Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
+Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
 ### 2022 update
 
 This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time.
 
-Please note that parallel driver epdiy is not anymore a requirement and after last update is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
+Please note that parallel driver epdiy is not anymore a requirement and after last update **epdiy V6** is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
 
 
     git submodule update --init --recursive
@@ -34,7 +31,7 @@ And enable epdiy in the REQUIRE section and the related classes:
     "models/parallel/ED047TC1.cpp"
     "models/parallel/ED047TC1touch.cpp"
     "models/parallel/ED060SC4.cpp"
-    # Add more if you need to copying one of the existing
+    # Add more if you need to copying one of the existing, since not all eink sizes are supported
 
 ### Additional features
 
@@ -47,16 +44,6 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 
 Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
 
-    
-## News
-
-- We worked in making an example and merge request, for the EPDiy parallel epaper component, in order to add a [JPG download plus render with HTTPS support example](https://github.com/vroland/epdiy/tree/master/examples/www-image). If there is interest in having this for the Black/White and 3 color epaper models (B/R or B/Yellow) I will adapt a version in the examples. Just contact me on the email that is on my Github profile.
-- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/42-wifi-provisioning](https://github.com/martinberlin/cale-idf/tree/feature/42-wifi-provisioning) **Note:** It needs an external submodule component so don't forget to run:
-
-    git submodule update --init --recursive
-
-[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
-
 ## Fork policy
 
 **Please do not Fork this repository to bookmark it**. For that use the ★ Star button. Acceptable forks fall in this three categories:
@@ -68,6 +55,15 @@ Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/
 All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. 
 
 We don't like having copies of the whole repository without any reason. 
+    
+## News
+
+- We worked in making an example and merge request, for the EPDiy parallel epaper component, in order to add a [JPG download plus render with HTTPS support example](https://github.com/vroland/epdiy/tree/master/examples/www-image). If there is interest in having this for the Black/White and 3 color epaper models (B/R or B/Yellow) I will adapt a version in the examples. Just contact me on the email that is on my Github profile.
+- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/42-wifi-provisioning](https://github.com/martinberlin/cale-idf/tree/feature/42-wifi-provisioning) **Note:** It needs an external submodule component so don't forget to run:
+
+    git submodule update --init --recursive
+
+[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 ## Requesting for new models
 
@@ -95,6 +91,7 @@ Best settings on CALE.es website that we found to display color photos with cale
 
 ROADMAP
     
+    2022->till April performance optimization and research in parallel eink drivers
     2021->Oct->Dec Testing other projects and small pause (Lot's of other work that are not electronics related...)
     2021->Aug->Oct Imaging libraries: Adding JPG support and optimizing processes
     2021-Jun->Aug Parallel interaction research: UX on epaper displays
