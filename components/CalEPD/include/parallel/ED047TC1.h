@@ -37,6 +37,7 @@ class Ed047TC1 : public EpdParallel
     
     void fillScreen(uint16_t color);
     void update(enum EpdDrawMode mode = MODE_GC16);
+    void setAllWhite();
 
     // Partial update of rectangle from buffer to screen, does not power off. Default can be also MODE_EPDIY_WHITE_TO_GL16
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, enum EpdDrawMode mode = MODE_GC16);
