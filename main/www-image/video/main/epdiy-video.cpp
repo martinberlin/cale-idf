@@ -43,20 +43,33 @@ Ed047TC1 display;
 // VIDEO MODES
 // Withouth rotation but faster doing a memcpy of entire ROWs
 #define FRAMEBUFFER_MEMCPY
+
+// Only applied without FRAMEBUFFER_MEMCPY
 // Dark calculation (0 - 255 for EPDiy but really only 16 levels)
-// Only applied withouth FRAMEBUFFER_MEMCPY
 uint8_t black_16_multi = 8; // 16 is multiplied by this. A lower number than 16 is darker
 
 // Highly experimental: X4 size will make a pixel in 4 pixel (At the cost of loosing quality)
 // This mode works only without the FRAMEBUFFER_MEMCPY defined!
 //#define PIXEL_X4
-// Define partial update mode
-EpdDrawMode partialMode = MODE_GC16; // MODE_GC16 / MODE_GL16 with 16 grays but slower. MODE_DU faster only B/W
+// Define partial update mode: MODE_A2 would be the best for animation but is not available in default waveform
+EpdDrawMode partialMode = MODE_GL16;
+
+/* Depending on the epaper and the waveforms available:
+     MODE_DU   the fastest with 200ms per frame but "goes from any color to black for white only"
+     MODE_GL16 works great but is too slow (about 2 secs per frame)
+*/
 
 extern "C"
 {
    void app_main();
 }
+
+EpdRect videoarea = {
+    .x = 0,
+    .y = 0,
+    .width = video_width,
+    .height = video_height
+  };
 
 void app_main(void)
 {
@@ -115,11 +128,19 @@ void app_main(void)
 
   uint16_t frame_nr = 0;
   uint16_t y_line = 0;
+  #ifndef FRAMEBUFFER_MEMCPY
   uint16_t x_pix_read = 0;
+  #endif
   uint16_t millis_render_st = 0;
   uint16_t millis_render_end = 0;
 
   while (fread(videobuffer, FRAME_SIZE, 1, fp)) {
+    // You can avoid doing this if using an animation Waveform, but I do not have it for this Epaper
+    if (frame_nr !=0 && partialMode == MODE_DU) {
+      // Clean up last frame
+      display.setAllWhite();
+      display.updateWindow(0, 0, video_width, video_height, MODE_EPDIY_WHITE_TO_GL16);
+    }
     frame_nr++;
     millis_render_st = esp_timer_get_time() / 1000;
     #ifndef FRAMEBUFFER_MEMCPY
@@ -141,6 +162,7 @@ void app_main(void)
         uint8_t high_bits = videobuffer[bp] >> 4;
       
         #ifdef PIXEL_X4
+        if (frame_nr%2 ==0){
         display.drawPixel(x_pix_read, y_line, low_bits *black_16_multi-1);
         display.drawPixel(x_pix_read+1, y_line, high_bits *black_16_multi-1);
         display.drawPixel(x_pix_read, y_line+1, low_bits *black_16_multi-1);
@@ -150,12 +172,23 @@ void app_main(void)
         display.drawPixel(x_pix_read+3, y_line, low_bits *black_16_multi-1);
         display.drawPixel(x_pix_read+2, y_line+1, high_bits *black_16_multi-1);
         display.drawPixel(x_pix_read+3, y_line+1, low_bits *black_16_multi-1);
+        } else {
+        display.drawPixel(x_pix_read, y_line, high_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read+1, y_line, low_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read, y_line+1, high_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read+1, y_line+1, low_bits *black_16_multi-1);
+
+        display.drawPixel(x_pix_read+2, y_line, low_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read+3, y_line, high_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read+2, y_line+1, low_bits *black_16_multi-1);
+        display.drawPixel(x_pix_read+3, y_line+1, high_bits *black_16_multi-1);
+        }
         x_pix_read+=4;
         #else 
         display.drawPixel(x_pix_read, y_line, low_bits *black_16_multi-1);
         display.drawPixel(x_pix_read+1, y_line, high_bits *black_16_multi-1);
         x_pix_read+=2;
-        #endif      
+        #endif   
       }
       
     #else
@@ -169,9 +202,20 @@ void app_main(void)
     #endif
 
     y_line = 0;
-      
-    display.updateWindow(0, 0, video_width, video_height, partialMode); 
+    #ifdef PIXEL_X4
+    display.updateWindow(0, 0, video_width*2, video_height*2, partialMode);
     
+    #else
+    display.updateWindow(0, 0, video_width, video_height, partialMode);
+    vTaskDelay(300 / portTICK_PERIOD_MS);
+    // Again, this could be avoided if using a "clean" update mode like mobile phones have
+    if (frame_nr%6 == 0 && partialMode == MODE_DU) {
+      display.clearArea(videoarea);
+    }
+    #endif
+
+    
+
     millis_render_end = esp_timer_get_time() / 1000;
     printf("F%d R%d\n", frame_nr, millis_render_end-millis_render_st);
   };
