@@ -138,3 +138,7 @@ void Ed047TC1::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 void Ed047TC1::cpyFramebuffer(uint16_t x, uint16_t y, const void * src, size_t n) {
   memcpy(&framebuffer[y * EPD_WIDTH / 2 + x / 2], src, n);
 }
+
+void Ed047TC1::setAllWhite() {
+  epd_hl_set_all_white(&hl);
+}
