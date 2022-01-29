@@ -29,11 +29,12 @@ set(srcs
     "models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
-    #"models/plasticlogic/epdspi2cs.cpp"
-    #"models/plasticlogic/plasticlogic.cpp"
-    #"models/plasticlogic/plasticlogic011.cpp"
-    #"models/plasticlogic/plasticlogic014.cpp"
-    #"models/plasticlogic/plasticlogic021.cpp"
+    "models/plasticlogic/epdspi2cs.cpp"
+    "models/plasticlogic/plasticlogic.cpp"
+    "models/plasticlogic/plasticlogic011.cpp"
+    "models/plasticlogic/plasticlogic014.cpp"
+    "models/plasticlogic/plasticlogic021.cpp"
+    # Not-tested (never had one)
     #"models/plasticlogic/plasticlogic031.cpp"
 
     # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
@@ -61,3 +62,7 @@ idf_component_register(SRCS ${srcs}
                     # REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
+# Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it
+#      giving errors. If that happens, just open the component CMakeLists and add:
+#      return()
+#      As the first line. This will tell CMake to not compile it.

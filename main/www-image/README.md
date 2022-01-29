@@ -17,8 +17,6 @@ Also there are several ESP32S2 that come with PSRAM. epdiy based boards need any
 
 ### Additional examples: 
 
-- **GIF example** using Larry Bank [AnimatedGIF](https://github.com/bitbank2/AnimatedGIF/) component.
-  Disclaimer: The Homer GIF works but I could never make it work completely when they are big black or gray areas. If someone knows what's the way to do it right please do a pull request.
 - **RGB4 video demo** I discovered reading about FFMPEG to convert videos to grayscale that there is a format that encodes a video in RAW rgb4 format. This is a mini-project that you need to build in the **/main/www-image/video** folder, because we are adding the spiffs_image in the CMakeFiles and it will be silly to do it for the whole project.
 
 The RGB4 pixel format is awesome since you can directly copy to memory the video rows to the parallel epaper framebuffer (uses the same 4 bit-per-pixel format). The [results are less than satisfactory](https://twitter.com/martinfasani/status/1479886636917866508) since the MODE_A2 waveform for animation was not available in the display I tested. But anyways, adding a small delay you can make an awesome streaming offline gallery, encoding photos as slides that are read from an SD card or SPIFFs (Note that the example only implements SPIFFs so far)
