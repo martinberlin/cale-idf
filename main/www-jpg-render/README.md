@@ -115,4 +115,7 @@ If you find a way to optimize this or make a better version go ahead and make a 
 For all the support, ideas and conversation, I would like to thank:
 
 - @vroland and Team, creators of the amazing [ESP32 EPDiy parallel epaper controller](https://github.com/vroland/epdiy/)
-- Larry the creator of [@bitbank/JPEGDECODER](https://github.com/bitbank2/JPEGDEC/) among many other interesting libraries
+- Larry creator of [@bitbank/JPEGDECODER](https://github.com/bitbank2/JPEGDEC/) among many other interesting libraries
+
+Good luck implementing this in your project!
+
