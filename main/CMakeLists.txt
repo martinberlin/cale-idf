@@ -36,8 +36,7 @@ idf_component_register(
     #SRCS "demos/parallel/demo-epaper-parallel-partial.cpp"
     #SRCS "demos/parallel/demo-touch-parallel.cpp"
     #SRCS "demos/parallel/demo-touch-keyboard.cpp"
-    INCLUDE_DIRS "." 
-                 "www-image/GIF/img")
+    INCLUDE_DIRS ".")
 
     # This is just to avoid that BitBank2 components like AnimatedGIF include Arduino.h
 idf_build_set_property(COMPILE_OPTIONS "-D __LINUX__" APPEND) 
