@@ -1,6 +1,8 @@
 /**
  * This is a demo to be used with EPD47 parallel from Lilygo:
  * https://github.com/martinberlin/cale-idf/wiki/Model-parallel-ED047TC1.h
+ * Note: This is the most simple possible example and does not print anything in the display
+ *       it is just a demo made to show the touch coordinates via Serial output
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"

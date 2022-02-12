@@ -75,6 +75,12 @@ void L58Touch::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 	if (CONFIG_FT6X36_DEBUG) printf("Touch handler function registered\n");
 }
 
+void L58Touch::registerMultiTouchHandler(void (*fn)(TPoint point1, TPoint point2, TEvent e))
+{
+	_multiTouchHandler = fn;
+	if (CONFIG_FT6X36_DEBUG) printf("Multi-touch handler function registered\n");
+}
+
 void L58Touch::loop()
 {
 	processTouch();
@@ -90,14 +96,26 @@ void L58Touch::processTouch()
 {
 	/* Task move to Block state to wait for interrupt event */
 	if (xSemaphoreTake(TouchSemaphore, portMAX_DELAY) == false) return;
-	TPoint point = scanPoint();
     
-    if (!tapDetectionEnabled) {
-        fireEvent(point, TEvent::Tap);
-    }
-    if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= tapDetectionMillisDiff) {
-        fireEvent(point, TEvent::Tap);
-    }
+    #if defined(CONFIG_L58_MULTITOUCH) && CONFIG_L58_MULTITOUCH == 1
+        std::pair<TPoint, TPoint> points; 
+        points = scanMultiPoint();
+        TPoint point0 = points.first;
+        TPoint point1 = points.second;
+        if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= tapDetectionMillisDiff) {
+            fireMultiTouch(point0, point1, TEvent::Tap);
+        } else {
+            fireMultiTouch(point0, point1, TEvent::None);
+        }
+    #else
+	    TPoint point0 = scanPoint();
+        if (!tapDetectionEnabled) {
+            fireEvent(point0, TEvent::Tap);
+        }
+        if (tapDetectionEnabled && _touchEndTime - _touchStartTime <= tapDetectionMillisDiff) {
+            fireEvent(point0, TEvent::Tap);
+        }
+    #endif
 }
 
 uint8_t L58Touch::read8(uint8_t regName) {
@@ -135,38 +153,24 @@ TPoint L58Touch::scanPoint()
     }
     clearFlags();
 
-    if (pointIdx) {
-        for (int i = 0; i < pointIdx; ++i) {
-            data[i].id =  (buffer[i * 5] >> 4) & 0x0F;
-            data[i].event = buffer[i * 5] & 0x0F;
-            data[i].y = (uint16_t)((buffer[i * 5 + 1] << 4) | ((buffer[i * 5 + 3] >> 4) & 0x0F));
-            data[i].x = (uint16_t)((buffer[i * 5 + 2] << 4) | (buffer[i * 5 + 3] & 0x0F));
-
-            printf("X[%d]:%d Y:%d E:%d\n", i, data[i].x, data[i].y, data[i].event);
-        }
-
-    } else {
-        // Only this one seems to be working (even pressing with 2 fingers)
-        pointIdx = 1;
-        data[0].id = (buffer[0] >> 4) & 0x0F;
-        data[0].event = (buffer[0] & 0x0F) >>1;
-        data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
-        data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
-        if (data[0].event == 3) { /** Press */
-            _touchStartTime = esp_timer_get_time()/1000;
-        }
-        if (data[0].event == 0) { /** Lift up */
-            _touchEndTime = esp_timer_get_time()/1000;
-        }
-        printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
-	}
+    // Only one touch mode
+    pointIdx = 1;
+    data[0].id = (buffer[0] >> 4) & 0x0F;
+    data[0].event = (buffer[0] & 0x0F) >>1;
+    data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
+    data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
+    if (data[0].event == 3) { /** Press */
+        _touchStartTime = esp_timer_get_time()/1000;
+    }
+    if (data[0].event == 0) { /** Lift up */
+        _touchEndTime = esp_timer_get_time()/1000;
+    }
+    printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
+	
      
 	uint16_t x = data[0].x;
 	uint16_t y = data[0].y;
 
-    // Had some hope that state was event, but always come:
-    // id:1 st:6
-    // printf("id:%d st:%d\n", data[0].id, data[0].state);
 	// Make touch rotation aware
 	switch (_rotation)
   {
@@ -192,6 +196,124 @@ TPoint L58Touch::scanPoint()
 
   point = {x, y, data[0].event};
   return point;	
+}
+
+/**
+ * @brief Returns up to two points using https://en.cppreference.com/w/cpp/utility/pair/make_pair
+ * 
+ * @return std::pair<TPoint, TPoint> 
+ */
+std::pair<TPoint, TPoint> L58Touch::scanMultiPoint()
+{
+	TPoint point0{0,0,0};
+    TPoint point1{0,0,0};
+	uint8_t pointIdx = 0;
+    uint8_t buffer[40] = {0};
+
+    buffer[0] = 0xD0;
+    buffer[1] = 0x00;
+    readBytes(buffer, 7);
+
+    if (buffer[0] == 0xAB) {
+        clearFlags();
+        return std::make_pair(point0, point1);
+    }
+
+    pointIdx = buffer[5] & 0xF;
+
+    if (pointIdx == 1) {
+        buffer[5] = 0xD0;
+        buffer[6] = 0x07;
+        readBytes( &buffer[5], 2);
+
+    } else if (pointIdx > 1) {
+        buffer[5] = 0xD0;
+        buffer[6] = 0x07;
+        readBytes( &buffer[5], 5 * (pointIdx - 1) + 3);
+    }
+    clearFlags();
+
+    if (pointIdx) {
+
+        for (int i = 0; i < 2; ++i) {
+            data[i].id =  (buffer[i * 5] >> 4) & 0x0F;
+            data[i].event = buffer[i * 5] & 0x0F;
+            data[i].y = (uint16_t)((buffer[i * 5 + 1] << 4) | ((buffer[i * 5 + 3] >> 4) & 0x0F));
+            data[i].x = (uint16_t)((buffer[i * 5 + 2] << 4) | (buffer[i * 5 + 3] & 0x0F));
+            printf("X[%d]:%d Y:%d E:%d\n", i, data[i].x, data[i].y, data[i].event);
+            uint16_t x = data[i].x;
+	        uint16_t y = data[i].y;
+            // Make touch rotation aware
+            switch (_rotation){
+            // 0- no rotation: Works OK inverting Y axis
+            case 0:
+                y = _touch_height - y;
+                break;
+
+            case 1:
+                swap(x, y);
+                y = _touch_width - y;
+                x = _touch_height - x;
+                break;
+
+            case 2: // Works OK
+                x = _touch_width - x;
+                break;
+
+            case 3:
+                swap(x, y);
+                break;
+            }
+
+            if (i == 0) {
+                point0 = {x, y, data[0].event};
+            } else {
+                point1 = {x, y, data[0].event};
+            }
+        }
+
+    } else {
+        // Only one touch mode
+        pointIdx = 1;
+        data[0].id = (buffer[0] >> 4) & 0x0F;
+        data[0].event = (buffer[0] & 0x0F) >>1;
+        data[0].y = (uint16_t)((buffer[0 * 5 + 1] << 4) | ((buffer[0 * 5 + 3] >> 4) & 0x0F));
+        data[0].x = (uint16_t)((buffer[0 * 5 + 2] << 4) | (buffer[0 * 5 + 3] & 0x0F));
+        if (data[0].event == 3) { /** Press */
+            _touchStartTime = esp_timer_get_time()/1000;
+        }
+        if (data[0].event == 0) { /** Lift up */
+            _touchEndTime = esp_timer_get_time()/1000;
+        }
+        printf("X:%d Y:%d E:%d\n", data[0].x, data[0].y, data[0].event);
+        uint16_t x = data[0].x;
+	    uint16_t y = data[0].y;
+
+        // Make touch rotation aware
+        switch (_rotation){
+        // 0- no rotation: Works OK inverting Y axis
+        case 0:
+            y = _touch_height - y;
+            break;
+
+        case 1:
+            swap(x, y);
+            y = _touch_width - y;
+            x = _touch_height - x;
+            break;
+
+        case 2: // Works OK
+            x = _touch_width - x;
+            break;
+
+        case 3:
+            swap(x, y);
+            break;
+        }
+        point0 = {x, y, data[0].event};
+	}
+     
+  return std::make_pair(point0, point1);
 }
 
 void L58Touch::writeRegister8(uint8_t reg, uint8_t value)
@@ -274,6 +396,12 @@ void L58Touch::fireEvent(TPoint point, TEvent e)
 {
 	if (_touchHandler)
 		_touchHandler(point, e);
+}
+
+void L58Touch::fireMultiTouch(TPoint point1, TPoint point2, TEvent e)
+{
+	if (_multiTouchHandler)
+		_multiTouchHandler(point1, point2, e);
 }
 
 void L58Touch::setRotation(uint8_t rotation) {
