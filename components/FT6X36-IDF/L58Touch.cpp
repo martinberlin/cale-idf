@@ -111,7 +111,6 @@ TPoint L58Touch::scanPoint()
 	TPoint point{0,0,0};
 	uint8_t pointIdx = 0;
     uint8_t buffer[40] = {0};
-    uint32_t sumL = 0, sumH = 0;
 
     buffer[0] = 0xD0;
     buffer[1] = 0x00;
@@ -128,41 +127,20 @@ TPoint L58Touch::scanPoint()
         buffer[5] = 0xD0;
         buffer[6] = 0x07;
         readBytes( &buffer[5], 2);
-        sumL = buffer[5] << 8 | buffer [6];
 
     } else if (pointIdx > 1) {
         buffer[5] = 0xD0;
         buffer[6] = 0x07;
         readBytes( &buffer[5], 5 * (pointIdx - 1) + 3);
-        sumL = buffer[5 * pointIdx + 1] << 8 | buffer[5 * pointIdx + 2];
     }
     clearFlags();
 
-    for (int i = 0 ; i < 5 * pointIdx; ++i) {
-        sumH += buffer[i];
-    }
-
-    if (sumH != sumL) {
-        pointIdx = 0;
-    }
     if (pointIdx) {
-        uint8_t offset;
         for (int i = 0; i < pointIdx; ++i) {
-            if (i == 0) {
-                offset = 0;
-            } else {
-                offset = 4;
-            }
-            data[i].id =  (buffer[i * 5 + offset] >> 4) & 0x0F;
-            data[i].event = buffer[i * 5 + offset] & 0x0F;
-            // Todo: Pending to revise why this construction is here
-            /* if (data[i].state == 0x06) {
-                data[i].state = 0x07;
-            } else {
-                data[i].state = 0x06;
-            } */
-            data[i].y = (uint16_t)((buffer[i * 5 + 1 + offset] << 4) | ((buffer[i * 5 + 3 + offset] >> 4) & 0x0F));
-            data[i].x = (uint16_t)((buffer[i * 5 + 2 + offset] << 4) | (buffer[i * 5 + 3 + offset] & 0x0F));
+            data[i].id =  (buffer[i * 5] >> 4) & 0x0F;
+            data[i].event = buffer[i * 5] & 0x0F;
+            data[i].y = (uint16_t)((buffer[i * 5 + 1] << 4) | ((buffer[i * 5 + 3] >> 4) & 0x0F));
+            data[i].x = (uint16_t)((buffer[i * 5 + 2] << 4) | (buffer[i * 5 + 3] & 0x0F));
 
             printf("X[%d]:%d Y:%d E:%d\n", i, data[i].x, data[i].y, data[i].event);
         }

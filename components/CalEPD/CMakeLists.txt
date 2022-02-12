@@ -37,11 +37,11 @@ set(srcs
     # Not-tested (never had one)
     #"models/plasticlogic/plasticlogic031.cpp"
 
-    # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
+    # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epdiy")
     # Uncomment for parallel epapers:
-    #"epdParallel.cpp"
-    #"models/parallel/ED047TC1.cpp"
-    #"models/parallel/ED047TC1touch.cpp"
+    "epdParallel.cpp"
+    "models/parallel/ED047TC1.cpp"
+    "models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
     #"models/parallel/ED060XCN.cpp" # pending to be added
 
@@ -57,9 +57,9 @@ set(srcs
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
-                    # REQUIRES "FT6X36-IDF"
+                    REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    # REQUIRES "epdiy"
+                    REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it
