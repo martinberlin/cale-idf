@@ -70,6 +70,9 @@ void app_main(void)
    display.init(false);
    display.clearScreen();
    display.setTextColor(EPD_BLACK);
+   #ifndef CONFIG_L58_MULTITOUCH
+      printf("IMPORTANT: L58_MULTITOUCH need to be enabled in menuconfig for this demo to run properly\nTOUCH_FT6X36 > enable Multitouch");
+   #endif
    // Register callback function to receive events
    display.registerMultiTouchHandler(touchEvent);
   
