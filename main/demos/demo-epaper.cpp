@@ -7,7 +7,7 @@
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
-#include <gdew075T7.h>
+#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
@@ -23,13 +23,13 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
-Gdew075T7 display(io);
+//Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-//Gdeh0213b73 display(io); // Does not work correctly yet - moved to /fix
+Gdew0213i5f display(io);
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
-#include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
 
 extern "C"
 {
@@ -38,29 +38,12 @@ extern "C"
 void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 
-void demoPartialUpdate(uint16_t bkcolor, uint16_t fgcolor, uint16_t box_x, uint16_t box_y)
-{
-   uint16_t box_w = display.width() - box_x - 10;
-   uint16_t box_h = 60;
-   printf("Partial update box x:%d y:%d width:%d height:%d\n", box_x, box_y, box_w, box_h);
-   uint16_t cursor_y = box_y + 20;
-   display.fillRect(box_x, box_y, box_w, box_h, bkcolor);
-   display.setCursor(box_x, cursor_y + 20);
-   display.setFont(&Ubuntu_M18pt8b);
-   display.setTextColor(fgcolor);
-   display.println("PARTIAL UPDATE");
-   //display.update(); // Full update works good
-   // Partial does not (Black is not full black)
-   //display.updateToWindow(box_x, box_y, 0,0,box_w, box_h,true);
-   display.updateWindow(box_x, box_y, box_w, box_h,true);
-}
-
 void demo(uint16_t bkcolor, uint16_t fgcolor)
 {
    display.fillScreen(bkcolor);
    display.setTextColor(fgcolor);
    display.setCursor(10, 40);
-   display.setFont(&Ubuntu_M18pt8b);
+   display.setFont(&Ubuntu_M12pt8b);
    display.println("CalEPD display test\n");
    // Print all character from an Adafruit Font
    if (true)
@@ -76,8 +59,8 @@ void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
-   display.init(false);
-
+   display.init(true);
+   display.update();
    //display.setRotation(2);
    //display.update();return;
    //delay(1000);
@@ -91,20 +74,6 @@ void app_main(void)
       printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
-
-   // First does not work
-   display.fillScreen(EPD_WHITE);
-   display.update();
-   
-   // Second repeats bug found with white points over black background
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,100);
-   delay(50);
-   // Second repeats bug found with white points over black background
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,200);
-   delay(150);
-   demoPartialUpdate(EPD_BLACK, EPD_WHITE, 50,300);
-   delay(100);
-   demoPartialUpdate(EPD_WHITE, EPD_BLACK, 50,400);
    
    //return;
    display.fillScreen(EPD_WHITE);
@@ -121,7 +90,7 @@ void app_main(void)
 
    display.setCursor(display.width()/2-130,display.height()-90);
    display.setTextColor(EPD_WHITE);
-   display.setFont(&Ubuntu_M18pt8b);
+   display.setFont(&Ubuntu_M12pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
    display.println("demo-epaper.cpp full update is done!");
@@ -130,5 +99,6 @@ void app_main(void)
    delay(2000);
    display.fillScreen(EPD_WHITE);
    display.update();
-   return;
+
+   printf("display: We are done here");
 }

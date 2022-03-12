@@ -27,8 +27,8 @@ idf_component_register(
     #SRCS "demos/demo-7-colors.cpp"
 
     # Demo only for plasticlogic.com epapers:
-    #SRCS "demos/demo-epaper-plasticlogic.cpp"
-    
+    #SRCS "demos/plasticlogic/demo-epaper-plasticlogic.cpp"
+    SRCS "demos/plasticlogic/demo-sleep-clock-temp.cpp"
     # Plasticlogic video demo: Please build it in www-image/video
 
     # Only parallel epapers (Driven by I2Sbus)
@@ -38,7 +38,7 @@ idf_component_register(
     #SRCS "demos/parallel/demo-touch-keyboard.cpp"
     #SRCS "demos/epd47-touch/touch-simple.cpp"
     # Note: Enable in menuconfig > Touch FT6X36 Configuration > L58_MULTITOUCH to 1 
-    SRCS "demos/epd47-touch/multitouch-circles.cpp"
+    #SRCS "demos/epd47-touch/multitouch-circles.cpp"
     INCLUDE_DIRS ".")
 
     # This is just to avoid that BitBank2 components include Arduino.h
