@@ -38,10 +38,10 @@ bool debugVerbose = false;
 #define DOTSTAR_CLK 12
 
 // Important configuration. The class should match your epaper display model:
-#include <plasticlogic011.h>
+#include <plasticlogic021.h>
 // Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
 EpdSpi2Cs io;
-PlasticLogic011 display(io);
+PlasticLogic021 display(io);
 
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
@@ -51,7 +51,7 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 char nvs_day_month[10];  // 15 if you want to store ", MON" (month)
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 1;
+int sleepMinutes = 3;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
@@ -75,8 +75,9 @@ uint16_t textColor = EPD_BLACK;
 // Main digital clock hour font:
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
 #include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
+#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
-uint8_t fontSize = 24;
+uint8_t fontSize = 48;
 
 // HTTP_EVENT_ON_DATA callback needs to know what information is going to parse - UPDATE: Now parses always hour + date
 // - - - - - - - - On 1: time  2: day, month
@@ -123,11 +124,15 @@ void updateClock() {
    display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
 
     
-   // Day 01, Month  cursor location x,y
+   // Temperature
    switch(display.width()) {
        case 148: // Plogic 1.1"
         display.setCursor(14,22);
        break;
+       case 240:
+         display.setCursor(14,30);
+       break;
+
        // Add more case's to adapt the cursor to your display size
        default: 
         display.setCursor(40,30);
@@ -137,28 +142,37 @@ void updateClock() {
    display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
    display.setTextColor(textColor);
    
-   if (debugVerbose) {
-    printf("updateClock() called\n");
-    printf("display.print() Day, month: %s\n\n", nvs_day_month);
-    }
+    // Day 01, Month  cursor location x,y
     switch(display.width()) {
        case 148: // Plogic 1.1"
         display.setCursor(92,22);
+        display.setFont(&Ubuntu_M8pt8b);
+       break;
+       case 240:
+        display.setCursor(92,32);
+        display.setFont(&Ubuntu_M16pt8b);
        break;
        // Add more case's to adapt the cursor to your display size
        default: 
         display.setCursor(80,30);
        break;
    }
-    display.setFont(&Ubuntu_M8pt8b);
+    
     display.print(nvs_day_month);
 
+   if (debugVerbose) {
+    printf("updateClock() called\n");
+    printf("display.print() Day, month: %s\n\n", nvs_day_month);
+    }
    /**
     * set font depending on selected fontSize
     */
    switch (fontSize)
    {
-       /* Bigger font */
+       /* Bigger fonts */
+   case 48:
+       display.setFont(&Ubuntu_M48pt8b);
+       break;
    case 36:
        display.setFont(&Ubuntu_M36pt7b);
        break;
@@ -173,6 +187,10 @@ void updateClock() {
    switch(display.width()) {
        case 148: // Plogic 1.1"
         display.setCursor(5, 63);
+       break;
+
+       case 240: // Plogic 2.1"
+        display.setCursor(5, 110);
        break;
    }
    
