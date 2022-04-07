@@ -2,25 +2,30 @@
 
 ### Requirements
 
-* esp32 or esp32S2 / C3 in branch [refactor/oop](https://github.com/martinberlin/cale-idf/tree/refactor/oop)
-* Espressif IDF framework >= 4.2 (4.3 ideally)
+* esp32 or esp32S2 / C3 in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
+* Espressif IDF framework >= 4.2 (4.3 -> 4.4 ideally to support latest S3)
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 
-ESP32C3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
+ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
  **idf.py set-target esp32c3**
 
+ **idf.py --preview set-target esp32s3**  (Only v4.4 since tried this only with beta3)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
 ### 2022 update
 
-This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time.
+This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Also in my top list is to make this work with latest Espressif workhorse, the ESP32S3, since it seems that with two LX7 cores is the fastest one so far.
 
 Please note that parallel driver epdiy is not anymore a requirement and after last update **epdiy V6** is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
 
-
     git submodule update --init --recursive
 
+Also please notice that if you need to exclude any of the components, like for example epdiy or any other, the fastest and most straigh-forward way is to open the CMakeLists of that component and add as the first line:
+
+return()
+
+That will make this component not to get in the build process.
 If you are not using EPDiy to drive your epapers, this step is not needed. If you are, please go to:
 CalEPD/CMakeLists.txt
 
@@ -35,11 +40,11 @@ And enable epdiy in the REQUIRE section and the related classes:
 
 ### Additional features
 
-On latest releases, CalEPD has also support for FocalTech and L58 I2C touch panels used in Lilygo parallel epaper [EPD047](https://github.com/martinberlin/cale-idf/tree/master/components/CalEPD/models/parallel), enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
+CalEPD has also support for FocalTech and L58 I2C touch panels used in Lilygo parallel epaper [EPD047](https://github.com/martinberlin/cale-idf/tree/master/components/CalEPD/models/parallel), enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
 CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83, 7.5 and 12.48 inches).
 
-- Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- Use **develop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
 - If you are interested in LVGL / UX please check our project [lv_port_esp32-epaper](https://github.com/martinberlin/lv_port_esp32-epaper). In this experimental LVGL esp32 fork we are exploring the possibility to make UX in fast paralell displays.
 
 Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
