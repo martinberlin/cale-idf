@@ -12,7 +12,7 @@
     #define DMA_CHAN    EPD_HOST
 #elif defined CONFIG_IDF_TARGET_ESP32S3
     #define EPD_HOST    SPI2_HOST
-    #define DMA_CHAN    EPD_HOST
+    #define DMA_CHAN    SPI_DMA_DISABLED
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     // chip only support spi dma channel auto-alloc
     #define EPD_HOST    SPI2_HOST
