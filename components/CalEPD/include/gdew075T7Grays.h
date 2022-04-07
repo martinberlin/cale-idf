@@ -15,7 +15,10 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include "soc/rtc_wdt.h"
+// Note in S3 rtc_wdt has errors: https://github.com/espressif/esp-idf/issues/8038
+#if defined CONFIG_IDF_TARGET_ESP32
+  #include "soc/rtc_wdt.h"
+#endif
 #include <gdew_colors.h>
 
 #define GDEW075T7_WIDTH 800
