@@ -22,7 +22,8 @@ set(srcs
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
-    "models/color/wave12i48BR.cpp"
+    #"models/color/wave12i48.cpp"
+    #"models/color/wave12i48BR.cpp"
 
     # 7 colors Waveshare
     "models/color/wave4i7Color.cpp"
@@ -39,19 +40,19 @@ set(srcs
 
     # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epdiy")
     # Uncomment for parallel epapers:
-    "epdParallel.cpp"
-    "models/parallel/ED047TC1.cpp"
-    "models/parallel/ED047TC1touch.cpp"
+    #"epdParallel.cpp"
+    #"models/parallel/ED047TC1.cpp"
+    #"models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
     #"models/parallel/ED060XCN.cpp" # pending to be added
 
     # Pending for more testing:
-    #"models/gdeh0213b73.cpp"
+    "models/gdeh0213b73.cpp"
     # Common base classes
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    "epd4spi.cpp"
+    #"epd4spi.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
