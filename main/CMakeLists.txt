@@ -1,7 +1,7 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    #SRCS "cale.cpp"
+    SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
@@ -28,7 +28,7 @@ idf_component_register(
 
     # Demo only for plasticlogic.com epapers:
     #SRCS "demos/demo-epaper-plasticlogic.cpp"
-    SRCS "www-image/GIF/plasticlogic-animation.cpp"
+
     # Plasticlogic video demo: Please build it in www-image/video
 
     # Only parallel epapers (Driven by I2Sbus)
