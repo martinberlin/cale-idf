@@ -52,7 +52,8 @@ class Wave12I48 : public Epd
   private:
     Epd4Spi& IO;
 
-    uint8_t _buffer[WAVE12I48_BUFFER_SIZE];
+    //uint8_t _buffer[WAVE12I48_BUFFER_SIZE];
+    uint8_t* _buffer = (uint8_t*)heap_caps_malloc(WAVE12I48_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
 
     bool _initial = true;
     
