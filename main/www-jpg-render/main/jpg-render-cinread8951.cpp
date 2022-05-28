@@ -45,11 +45,6 @@ JPEGDEC jpeg;
 // Dither space allocation
 uint8_t * dither_space;
 
-// Affects the gamma to calculate gray (lower is darker/higher contrast)
-// Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 0.7;
-// Internal array for gamma grayscale
-uint8_t gamme_curve[256];
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 
@@ -195,25 +190,7 @@ uint16_t mcu_count = 0;
 int JPEGDraw4Bits(JPEGDRAW *pDraw)
 {
   uint32_t render_start = esp_timer_get_time();
-
-    // Rotation aware
-    /* for (int16_t xx = 0; xx < pDraw->iWidth; xx+=4) {
-      for (int16_t yy = 0; yy < pDraw->iHeight; yy++) {
-        uint16_t col = pDraw->pPixels[ (xx + (yy * pDraw->iWidth)) >>2 ];
-      
-        uint8_t col1 = col & 0xf;
-        uint8_t col2 = (col >> 4) & 0xf;
-        uint8_t col3 = (col >> 8) & 0xf;
-        uint8_t col4 = (col >> 12) & 0xf;
-        display.drawPixel(pDraw->x + xx, pDraw->y + yy, col1 );
-        display.drawPixel(pDraw->x + xx + 1, pDraw->y + yy, col2);
-        display.drawPixel(pDraw->x + xx + 2, pDraw->y + yy, col3);
-        display.drawPixel(pDraw->x + xx + 3, pDraw->y + yy, col4);
-      }
-    }  */
-  
-
-   display.pushImage(pDraw->x , pDraw->y, pDraw->iWidth, pDraw->iHeight, (lgfx::grayscale_t*)pDraw->pPixels);
+  display.pushImage(pDraw->x , pDraw->y, pDraw->iWidth, pDraw->iHeight, (lgfx::rgb565_t*)pDraw->pPixels);
 
   mcu_count++;
   time_render += (esp_timer_get_time() - render_start) / 1000;
@@ -232,7 +209,7 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
 
   if (jpeg.openRAM(source_buf, img_buf_pos, JPEGDraw4Bits)) {
 
-    jpeg.setPixelType(FOUR_BIT_DITHERED);
+    jpeg.setPixelType(RGB565_LITTLE_ENDIAN); //FOUR_BIT_DITHERED
     
     if (jpeg.decodeDither(dither_space, 0))
       {
@@ -488,10 +465,6 @@ void app_main() {
       ESP_LOGE("main", "Initial alloc source_buf failed!");
   }
   printf("Free heap after buffers allocation: %d\n", xPortGetFreeHeapSize());
-
-  double gammaCorrection = 1.0 / gamma_value;
-  for (int gray_value =0; gray_value<256;gray_value++)
-    gamme_curve[gray_value]= round (255*pow(gray_value/255.0, gammaCorrection));
 
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
