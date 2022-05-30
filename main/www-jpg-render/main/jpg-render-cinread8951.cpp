@@ -3,6 +3,8 @@
 // This example does not use a decoded buffer hence leaves more external RAM free
 // and it uses a different JPEG decoder: https://github.com/bitbank2/JPEGDEC
 // as an ESP-IDF "component"
+
+// Important: This requires to use the develop branch of Lovyan GFX as a component
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -15,7 +17,6 @@
 // WiFi related
 #include "esp_wifi.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -32,6 +33,7 @@
 // - - - - Display configuration - - - - - - - - -
 #define EPD_WIDTH  1200
 #define EPD_HEIGHT 825
+
 #define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
 #define HTTP_RECEIVE_BUFFER_SIZE 1024
 
@@ -66,9 +68,9 @@ public:
 // SPIバスの設定
       cfg.spi_host = SPI2_HOST;     // 使用するSPIを選択  (VSPI_HOST or HSPI_HOST)
       cfg.spi_mode = 0;             // SPI通信モードを設定 (0 ~ 3)
-      cfg.freq_write = 20000000;    // 送信時のSPIクロック (最大80MHz, 80MHzを整数で割った値に丸められます)
+      cfg.freq_write = 40000000;    // 送信時のSPIクロック (最大80MHz, 80MHzを整数で割った値に丸められます)
       cfg.freq_read  = 16000000;    // 受信時のSPIクロック
-      cfg.spi_3wire  = true;        // 受信をMOSIピンで行う場合はtrueを設定
+      cfg.spi_3wire  = false;        // 受信をMOSI IMPORTANT use it on false to read from MISO!
       cfg.use_lock   = true;        // トランザクションロックを使用する場合はtrueを設定
       cfg.dma_channel = 1;          // Set the DMA channel (1 or 2. 0=disable)   使用するDMAチャンネルを設定 (0=DMA不使用)
       cfg.pin_sclk = CONFIG_EINK_SPI_CLK;            // SPIのSCLKピン番号を設定
@@ -277,7 +279,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
           ESP_LOGI("www-dw", "%d ms - download", time_download);
           ESP_LOGI("render", "%d ms - render", time_render);
 
-          display.fillCircle(300, EPD_HEIGHT/2, 10, 50);
+          //display.fillCircle(EPD_XOFFSET, EPD_HEIGHT/2, 10, 50);
           // Refresh display
           display.endWrite();
 
