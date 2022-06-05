@@ -4,3 +4,6 @@
 [submodule "main/www-jpg-render/components/bosch/bme280"]
 	path = main/www-jpg-render/components/bosch/bme280
 	url = https://github.com/BoschSensortec/BME280_driver.git
+[submodule "main/www-jpg-render/components/bosch/bmp280"]
+	path = main/www-jpg-render/components/bosch/bmp280
+	url = https://github.com/BoschSensortec/BMP280_driver.git
