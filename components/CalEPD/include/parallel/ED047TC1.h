@@ -10,7 +10,6 @@
 #include <string>
 #include <epdParallel.h>
 #include <Adafruit_GFX.h>
-#include <epdspi.h>
 #include "epd_driver.h"
 #include "epd_highlevel.h"
 #include "parallel/grayscales.h"
