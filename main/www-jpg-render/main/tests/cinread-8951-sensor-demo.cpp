@@ -17,6 +17,8 @@
 #include "esp_err.h"
 #include "nvs_flash.h"
 #include "bmp280.h"
+// Include Adafruit big font
+#include <Fonts/ubuntu/Ubuntu_M48pt8b.h>
 
 static const char *TAG = "Cinread PCB";
 // ESP32-S3 I2C
@@ -231,7 +233,8 @@ void app_main() {
 	// epd_fast:    LovyanGFX uses a 4×4 16pixel tile pattern to display a pseudo 17level grayscale.
 	// epd_quality: Uses 16 levels of grayscale
 	display.setEpdMode(epd_mode_t::epd_quality);
-	display.setFont(&AsciiFont24x48);
+	//display.setFont(&AsciiFont24x48);
+    display.setFont(&Ubuntu_M48pt8b);
     while (1)
     {
         /* Reading the raw data from sensor */
@@ -243,7 +246,7 @@ void app_main() {
         /* Getting the compensated temperature as floating point value */
         rslt = bmp280_get_comp_temp_double(&temp, ucomp_data.uncomp_temp, &bmp);
         printf("T: %f refresh\n", temp);
-		display.setCursor(100,100);
+		display.setCursor(100,EPD_HEIGHT/2);
 		display.printf("%.2f C", temp);
         /* Sleep time between measurements = BMP280_ODR_1000_MS */
         bmp.delay_ms(3000);
