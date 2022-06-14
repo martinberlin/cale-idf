@@ -1,5 +1,10 @@
-#define I2C_SDA_PIN 7
-#define I2C_SCL_PIN 15
+//ESP32-S3
+//#define SDA_GPIO 7
+//#define SCL_GPIO 15
+//ESP32
+#define SDA_GPIO 25
+#define SCL_GPIO 26
+
 #define I2C_MASTER_FREQ_HZ 200000                     /*!< I2C master clock frequency */
 #define I2C_SCLK_SRC_FLAG_FOR_NOMAL       (0)         /*!< Any one clock source that is available for the specified frequency may be choosen*/
 
@@ -19,8 +24,8 @@ static esp_err_t i2c_master_init()
 {
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = I2C_SDA_PIN;
-    conf.scl_io_num = I2C_SCL_PIN;
+    conf.sda_io_num = SDA_GPIO;
+    conf.scl_io_num = SCL_GPIO;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
