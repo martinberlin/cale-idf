@@ -165,7 +165,8 @@ void app_main() {
     rslt = bmp280_set_power_mode(BMP280_NORMAL_MODE, &bmp);
     print_rslt(" bmp280_set_power_mode status", rslt);
 
-
+    /* Add minimal delay after power mode is set otherwise the first read is wrong */
+    bmp.delay_ms(50);
     while (true)
     {
         /* Reading the raw data from sensor */

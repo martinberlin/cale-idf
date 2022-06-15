@@ -230,6 +230,7 @@ void app_main() {
     rslt = bmp280_set_power_mode(BMP280_NORMAL_MODE, &bmp);
 
 	display.init();
+    display.clearDisplay();
 	// epd_fast:    LovyanGFX uses a 4×4 16pixel tile pattern to display a pseudo 17level grayscale.
 	// epd_quality: Uses 16 levels of grayscale
 	display.setEpdMode(epd_mode_t::epd_quality);
