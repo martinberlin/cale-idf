@@ -153,8 +153,8 @@ void app_main() {
     /* Temperature oversampling set at 4x */
     conf.os_temp = BMP280_OS_4X;
 
-    /* Pressure over sampling none (disabling pressure measurement) */
-    conf.os_pres = BMP280_OS_NONE;
+    /* Pressure over sampling none (disabling pressure measurement with BMP280_OS_NONE) */
+    conf.os_pres = BMP280_OS_1X;
 
     /* Setting the output data rate as 1HZ(1000ms) */
     conf.odr = BMP280_ODR_1000_MS;
@@ -166,7 +166,7 @@ void app_main() {
     print_rslt(" bmp280_set_power_mode status", rslt);
 
 
-    while (1)
+    while (true)
     {
         /* Reading the raw data from sensor */
         rslt = bmp280_get_uncomp_data(&ucomp_data, &bmp);
@@ -176,7 +176,12 @@ void app_main() {
 
         /* Getting the compensated temperature as floating point value */
         rslt = bmp280_get_comp_temp_double(&temp, ucomp_data.uncomp_temp, &bmp);
-        printf("UT: %d, T32: %d, T: %f \r\n", ucomp_data.uncomp_temp, temp32, temp);
+
+        uint32_t pressure = 0;
+        rslt = bmp280_get_comp_pres_32bit(&pressure, ucomp_data.uncomp_press, &bmp);
+        /* Convert PA into hPA hecto pascal */
+        pressure = pressure/100;
+        printf("Temp: %f | Pressure: %d\r\n", temp, pressure);
 
         /* Sleep time between measurements = BMP280_ODR_1000_MS */
         bmp.delay_ms(2000);
