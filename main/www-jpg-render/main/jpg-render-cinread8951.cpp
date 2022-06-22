@@ -217,7 +217,9 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
     if (jpeg.decodeDither(dither_space, 0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
+        #if DEBUG_VERBOSE
         ESP_LOGI("decode", "%d ms - %dx%d", time_decomp, jpeg.getWidth(), jpeg.getHeight());
+        #endif
       } else {
         ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
       }
@@ -237,13 +239,19 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     switch (evt->event_id)
     {
     case HTTP_EVENT_ERROR:
+        #if DEBUG_VERBOSE
         ESP_LOGE(TAG, "HTTP_EVENT_ERROR");
+        #endif
         break;
     case HTTP_EVENT_ON_CONNECTED:
+        #if DEBUG_VERBOSE
         ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
+        #endif
         break;
     case HTTP_EVENT_HEADER_SENT:
+        #if DEBUG_VERBOSE
         ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
+        #endif
         break;
     case HTTP_EVENT_ON_HEADER:
         #if DEBUG_VERBOSE
@@ -272,15 +280,15 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         // Do not draw if it's a redirect (302)
         if (esp_http_client_get_status_code(evt->client) == 200) {
 
-          //display.startWrite();
-          printf("%d bytes read from %s\n", img_buf_pos, IMG_URL);
+          display.startWrite();
           time_download = (esp_timer_get_time()-startTime)/1000;
 
           decodeJpeg(source_buf, 0, 0);
           // Refresh display
-          //display.endWrite();
+          display.endWrite();
           
           #if DEBUG_VERBOSE
+          printf("%d bytes read from %s\n", img_buf_pos, IMG_URL);
           ESP_LOGI("www-dw", "%d ms - download", time_download);
           ESP_LOGI("render", "%d ms - render", time_render);
           ESP_LOGI("total", "%d ms - total time spent\n", time_download+time_decomp+time_render);
@@ -291,7 +299,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         break;
 
     case HTTP_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
+        //ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
         break;
     }
     return ESP_OK;
@@ -330,10 +338,12 @@ static void http_post(void)
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK)
     {
+      #if DEBUG_VERBOSE
         ESP_LOGI(TAG, "\nIMAGE URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
                  IMG_URL,
                  esp_http_client_get_status_code(client),
                  esp_http_client_get_content_length(client));
+      #endif
     }
     else
     {
@@ -497,11 +507,11 @@ void app_main() {
 
   // WiFi log level set only to Error otherwise outputs too much
   esp_log_level_set("wifi", ESP_LOG_ERROR);
-  //display.clearScreen();
   
   // Initialization: WiFi + clean screen while downloading image
   printf("Free heap before wifi_init_sta: %d\n", xPortGetFreeHeapSize());
   wifi_init_sta();
+  display.clearDisplay();
   #if VALIDATE_SSL_CERTIFICATE == true
     obtain_time();
   #endif
