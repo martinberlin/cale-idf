@@ -22,7 +22,7 @@
 #include "esp_netif.h"
 #include "esp_http_client.h"
 #include "esp_sntp.h"
-#include "soc/rtc_wdt.h"
+//#include "soc/rtc_wdt.h"
 
 // JPG decoder
 #if ESP_IDF_VERSION_MAJOR >= 4 // IDF 4+
@@ -51,9 +51,13 @@ double gamma_value = 0.8;
 #define STR(x) STR_HELPER(x)
 //DEMO: https://placekitten.com/  or http://lorempixel.com/
 //#define IMG_URL ("https://placekitten.com/" STR(EPD_WIDTH) "/" STR(EPD_HEIGHT))
-#define IMG_URL "http://img.cale.es/jpg/fasani/5ef94f52ad2f6"
-
+//#define IMG_URL "http://img.cale.es/jpg/fasani/5ef94f52ad2f6"
+//#define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
+#define IMG_URL "http://192.168.0.25/capture"
 #define LGFX_USE_V1
+
+// Uncomment the define to enable a JPG load in a loop
+#define JPG_RELOAD_LOOP
 #include <LovyanGFX.hpp>
 
 class LGFX : public lgfx::LGFX_Device
@@ -72,7 +76,7 @@ public:
       auto cfg = _bus_instance.config();    // バス設定用の構造体を取得します。
 
 // SPIバスの設定
-      cfg.spi_host = VSPI_HOST;     // 使用するSPIを選択  (VSPI_HOST or HSPI_HOST)
+      cfg.spi_host = SPI2_HOST;     // 使用するSPIを選択  (VSPI_HOST or HSPI_HOST)
       cfg.spi_mode = 0;             // SPI通信モードを設定 (0 ~ 3)
       cfg.freq_write = 40000000;    // 送信時のSPIクロック (最大80MHz, 80MHzを整数で割った値に丸められます)
       cfg.freq_read  = 16000000;    // 受信時のSPIクロック
@@ -97,10 +101,10 @@ public:
 
       // ※ 以下の設定値はパネル毎に一般的な初期値が設定されていますので、不明な項目はコメントアウトして試してみてください。
 
-      cfg.memory_width     =   1872;  // ドライバICがサポートしている最大の幅
-      cfg.memory_height    =   1404;  // ドライバICがサポートしている最大の高さ
-      cfg.panel_width      =   1872;  // 実際に表示可能な幅
-      cfg.panel_height     =   1404;  // 実際に表示可能な高さ
+      cfg.memory_width     =   EPD_WIDTH;  // ドライバICがサポートしている最大の幅
+      cfg.memory_height    =   EPD_HEIGHT;  // ドライバICがサポートしている最大の高さ
+      cfg.panel_width      =   EPD_WIDTH;  // 実際に表示可能な幅
+      cfg.panel_height     =   EPD_HEIGHT;  // 実際に表示可能な高さ
       cfg.offset_x         =     0;  // パネルのX方向オフセット量
       cfg.offset_y         =     0;  // パネルのY方向オフセット量
       cfg.offset_rotation  =     0;  // 回転方向の値のオフセット 0~7 (4~7は上下反転)
@@ -278,7 +282,7 @@ tjd_output(JDEC *jd,     /* Decompressor object of current session */
       buf[i] = gamme_curve[(r*38 + g*75 + b*15)>>7];
       // Avoid watchdog timer leaving some delay on each X row of the MCU
       if (i%w == 0) {
-        rtc_wdt_feed();
+        //rtc_wdt_feed();
         vTaskDelay(4 / portTICK_PERIOD_MS);
       }
     }
@@ -289,7 +293,7 @@ tjd_output(JDEC *jd,     /* Decompressor object of current session */
     display.pushImage(rect->left, rect->top, w, h, (lgfx::bgr888_t*)bitmap);
   #endif
 
-  rtc_wdt_feed();
+  //rtc_wdt_feed();
   time_render += (esp_timer_get_time() - render_start)/1000;
 
   return 1;
@@ -371,6 +375,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
           drawBufJpeg(source_buf, 0, 0);
           time_download = (esp_timer_get_time()-startTime)/1000;
           ESP_LOGI("www-dw", "%d ms - download", time_download);
+          
           // Refresh display
           display.endWrite();
 
@@ -430,8 +435,24 @@ static void http_post(void)
 
     printf("Go to sleep %d minutes\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
     esp_http_client_cleanup(client);
-    vTaskDelay(10);
-    deepsleep();
+    
+    // Reset initialization variables
+    buffer_pos = 0;
+    time_download = 0;
+    time_decomp = 0;
+    time_render = 0;
+    countDataEventCalls = 0;
+    countDataBytes = 0;
+    img_buf_pos = 0;
+    dataLenTotal = 0;
+    startTime = 0;
+    #ifdef JPG_RELOAD_LOOP
+      http_post();
+    #elif
+      // Uncomment JPG_RELOAD_LOOP to enable a constant JPG load
+      vTaskDelay(10);
+      deepsleep();
+    #endif
 }
 
 /* FreeRTOS event group to signal when we are connected*/
