@@ -34,7 +34,10 @@
 #define EPD_WIDTH  1200
 #define EPD_HEIGHT 825
 
-#define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
+// If it should reload a JPG in a loop then enable this comment
+#define JPG_RELOAD_LOOP
+//#define IMG_URL "http://img.cale.es/jpg/fasani/5e636b0f39aac"
+#define IMG_URL "http://192.168.0.25/capture"
 #define HTTP_RECEIVE_BUFFER_SIZE 1024
 
 // Load the EMBED_TXTFILES. Then doing (char*) server_cert_pem_start you get the SSL certificate
@@ -122,7 +125,7 @@ extern "C"
     void app_main();
 }
 
-#define DEBUG_VERBOSE true
+#define DEBUG_VERBOSE false
 
 // Buffers
 uint8_t *fb;            // EPD 2bpp buffer
@@ -188,13 +191,11 @@ uint64_t startTime = 0;
 /*
  * Used with jpeg.setPixelType(FOUR_BIT_DITHERED)
  */
-uint16_t mcu_count = 0;
 int JPEGDraw4Bits(JPEGDRAW *pDraw)
 {
   uint32_t render_start = esp_timer_get_time();
   display.pushImage(pDraw->x , pDraw->y, pDraw->iWidth, pDraw->iHeight, (lgfx::rgb565_t*)pDraw->pPixels);
 
-  mcu_count++;
   time_render += (esp_timer_get_time() - render_start) / 1000;
   return 1;
 }
@@ -216,7 +217,7 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
     if (jpeg.decodeDither(dither_space, 0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
-        ESP_LOGI("decode", "%d ms - %dx%d image MCUs:%d", time_decomp, jpeg.getWidth(), jpeg.getHeight(), mcu_count);
+        ESP_LOGI("decode", "%d ms - %dx%d", time_decomp, jpeg.getWidth(), jpeg.getHeight());
       } else {
         ESP_LOGE("jpeg.decode", "Failed with error: %d", jpeg.getLastError());
       }
@@ -224,6 +225,7 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
   } else {
     ESP_LOGE("jpeg.openRAM", "Failed with error: %d", jpeg.getLastError());
   }
+  
   jpeg.close();
   
   return 1;
@@ -270,20 +272,19 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         // Do not draw if it's a redirect (302)
         if (esp_http_client_get_status_code(evt->client) == 200) {
 
-        display.startWrite();
+          //display.startWrite();
           printf("%d bytes read from %s\n", img_buf_pos, IMG_URL);
           time_download = (esp_timer_get_time()-startTime)/1000;
 
           decodeJpeg(source_buf, 0, 0);
+          // Refresh display
+          //display.endWrite();
           
+          #if DEBUG_VERBOSE
           ESP_LOGI("www-dw", "%d ms - download", time_download);
           ESP_LOGI("render", "%d ms - render", time_render);
-
-          //display.fillCircle(EPD_XOFFSET, EPD_HEIGHT/2, 10, 50);
-          // Refresh display
-          display.endWrite();
-
           ESP_LOGI("total", "%d ms - total time spent\n", time_download+time_decomp+time_render);
+          #endif
         } else {
           printf("HTTP on finish got status code: %d\n", esp_http_client_get_status_code(evt->client));
         }
@@ -296,9 +297,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
+uint16_t http_post_count = 0;
 // Handles http request
 static void http_post(void)
-{    
+{
+  http_post_count++;
+    // Heap getting smaller on each http_post call:
+    printf("Free %d http_post %d\n",xPortGetFreeHeapSize(),http_post_count);
     /**
      * NOTE: All the configuration parameters for http_client must be specified
      * either in URL or as host and path parameters.
@@ -334,11 +339,24 @@ static void http_post(void)
     {
         ESP_LOGE(TAG, "\nHTTP GET request failed: %s", esp_err_to_name(err));
     }
-
-    printf("Go to sleep %d minutes\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
     esp_http_client_cleanup(client);
-    vTaskDelay(10);
-    deepsleep();
+
+    // Reset initialization variables
+    buffer_pos = 0;
+    time_download = 0;
+    time_decomp = 0;
+    time_render = 0;
+    countDataEventCalls = 0;
+    countDataBytes = 0;
+    img_buf_pos = 0;
+    startTime = 0;
+
+    #ifndef JPG_RELOAD_LOOP
+      // Uncomment JPG_RELOAD_LOOP to enable a constant JPG load
+      printf("Go to sleep %d minutes\n", CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+      vTaskDelay(10);
+      deepsleep();
+    #endif
 }
 
 /* FreeRTOS event group to signal when we are connected*/
@@ -488,5 +506,10 @@ void app_main() {
     obtain_time();
   #endif
   
-  http_post();
+  http_post();  
+  #ifdef JPG_RELOAD_LOOP
+  while(true) {
+    http_post();
+  }
+  #endif
 }
