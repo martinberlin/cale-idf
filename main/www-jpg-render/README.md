@@ -43,7 +43,6 @@ Detailed statistics:
 ```
 ![88Kb Cat in Lilygo EPD47](https://pbs.twimg.com/media/E934uz8WEAIyVLP?format=jpg&name=small)
 
-
 In order to get around using an ESP32 without external RAM a big refactoring is needed. Since JPEG images are compressed you need a buffer to store the image and another one to decompress it, if you want to do image manipulation like JPG dither.
 
 All that takes a big amount of RAM (Unless you use a small image)

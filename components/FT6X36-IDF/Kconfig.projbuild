@@ -16,6 +16,11 @@ menu "Touch FT6X36 Configuration"
         int "I2C Frequency"
         range 50000 500000
 
+    config L58_MULTITOUCH
+        int "Only L58: Use multitouch (returns make_pair 2 points vector)"
+        range 0 1
+        default 0
+
     config FT6X36_DEBUG
         int "FT6X36 debug: On 1 will output FocalTech touch events via serial"
         range 0 1

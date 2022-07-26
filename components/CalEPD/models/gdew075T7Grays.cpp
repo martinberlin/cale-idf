@@ -115,7 +115,9 @@ void Gdew075T7Grays::fillScreen(uint16_t color)
     _buffer[x] = color;
     if (x % 8 == 0)
         {
+          #if defined CONFIG_IDF_TARGET_ESP32
           rtc_wdt_feed();
+          #endif
           vTaskDelay(pdMS_TO_TICKS(2));
         }
   }

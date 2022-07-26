@@ -5,6 +5,7 @@
 // https://github.com/martinberlin/cale-idf/wiki/Model-parallel-ED047TC1.h
 #include <stdint.h>
 #include <cstdlib>
+#include <utility> // std::pair
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -60,6 +61,7 @@ public:
 	~L58Touch();
 	bool begin(uint16_t width = 0, uint16_t height = 0);
 	void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
+	void registerMultiTouchHandler(void (*fn)(TPoint point1, TPoint point2, TEvent e));
 	uint8_t touched();
 	void loop();
 	void processTouch();
@@ -81,6 +83,8 @@ public:
     }
 
 	void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
+	void(*_multiTouchHandler)(TPoint point1, TPoint point2, TEvent e) = nullptr;
+
 	TouchData_t data[5];
 	// Tap detection is enabled by default
 	bool tapDetectionEnabled = true;
@@ -89,11 +93,16 @@ public:
 	
 private:
 	TPoint scanPoint();
+	std::pair<TPoint, TPoint> scanMultiPoint();
+
 	void writeRegister8(uint8_t reg, uint8_t val);
 	void writeData(uint8_t *data, int len);
 	void readBytes(uint8_t *data, int len);
 	uint8_t readRegister8(uint8_t reg, uint8_t *data_buf);
+
 	void fireEvent(TPoint point, TEvent e);
+	void fireMultiTouch(TPoint point1, TPoint point2, TEvent e);
+
 	uint8_t read8(uint8_t regName);
 	void clearFlags();
 

@@ -38,27 +38,26 @@ bool debugVerbose = false;
 #define DOTSTAR_CLK 12
 
 // Important configuration. The class should match your epaper display model:
-//#include <gdew075T7.h>
-//#include "gdeh0213b73.h"
-#include "gdeh0154d67.h"
-EpdSpi io;
-//Gdeh0213b73 display(io);
-Gdeh0154d67 display(io);
+#include <plasticlogic021.h>
+// Plasticlogic EPD should implement EpdSpi2Cs Full duplex SPI
+EpdSpi2Cs io;
+PlasticLogic021 display(io);
+
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
 const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&f=HiD+d,+M";
 // Represents the sizeof D+d,+M Ex: Sun 19, Jul  (11 chars + \0 null terminator)
-char nvs_day_month[15];
+char nvs_day_month[10];  // 15 if you want to store ", MON" (month)
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 2;
+int sleepMinutes = 3;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
-uint8_t syncHour1 = 0;        // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
-uint8_t syncHour2 = 6;         // Same here, 2nd request to Sync hour 
-bool forceSync = false;        // IMPORTANT: Should be always false since on true is for debugging and will sync on every wakeup!
+uint8_t syncHour1 = 0;       // IMPORTANT: Leave it on 0 for the first run!    On -1 to not sync at this hour
+uint8_t syncHour2 = 9;       // Same here, 2nd request to Sync hour 
+bool forceSync = false;      // IMPORTANT: Should be always false since on true is for debugging and will sync on every wakeup!
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
 int64_t microsCorrection = -300000; // 0.3 predicted boot time
@@ -68,7 +67,6 @@ int64_t microsCorrection = -300000; // 0.3 predicted boot time
        
        9:02 -> textColor
 */
-bool supportsPartialUpdate = false;      // If updateWindow does not work good for your display model turns this to false
 uint16_t backgroundColor = EPD_WHITE;
 uint16_t textColor = EPD_BLACK;
 // Adafruit GFX Font selection - - - - - -
@@ -77,9 +75,9 @@ uint16_t textColor = EPD_BLACK;
 // Main digital clock hour font:
 #include <Fonts/ubuntu/Ubuntu_M24pt8b.h> // HH:mm
 #include <Fonts/ubuntu/Ubuntu_M36pt7b.h> // HH:mm
-#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm bigger in 48pt -> default selection
+#include <Fonts/ubuntu/Ubuntu_M48pt8b.h> // HH:mm
 // HH:MM font size - Select between 24 and 48. It should match the previously defined fonts size
-uint8_t fontSize = 36;
+uint8_t fontSize = 48;
 
 // HTTP_EVENT_ON_DATA callback needs to know what information is going to parse - UPDATE: Now parses always hour + date
 // - - - - - - - - On 1: time  2: day, month
@@ -118,39 +116,60 @@ void updateClock() {
    uint8_t fontSpace = (fontSize/2); // Calculate aprox. how much space we need per font Character
 
    display.init(debugVerbose);
+   display.clearScreen();
    display.fillScreen(backgroundColor);
    display.setRotation(CONFIG_DISPLAY_ROTATION); // Set this in "Cale configuration" -> idf.py menuconfig
    display.setFont(&Ubuntu_M16pt8b);
-   display.setTextColor(textColor);
 
-   // Day 01, Month  cursor location x,y
+   display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
+
+    
+   // Temperature
    switch(display.width()) {
-       case 200:
-        display.setCursor(10,52);
+       case 148: // Plogic 1.1"
+        display.setCursor(14,22);
        break;
-       case 250:
-        display.setCursor(40,25);
+       case 240:
+         display.setCursor(14,30);
        break;
+
        // Add more case's to adapt the cursor to your display size
        default: 
         display.setCursor(40,30);
        break;
    }
+   display.setTextColor(EPD_DGRAY);
+   display.print(display.readTemperatureString('c')); // use 'f' for fahrenheit
+   display.setTextColor(textColor);
    
-   
+    // Day 01, Month  cursor location x,y
+    switch(display.width()) {
+       case 148: // Plogic 1.1"
+        display.setCursor(92,22);
+        display.setFont(&Ubuntu_M8pt8b);
+       break;
+       case 240:
+        display.setCursor(92,32);
+        display.setFont(&Ubuntu_M16pt8b);
+       break;
+       // Add more case's to adapt the cursor to your display size
+       default: 
+        display.setCursor(80,30);
+       break;
+   }
+    
+    display.print(nvs_day_month);
+
    if (debugVerbose) {
     printf("updateClock() called\n");
     printf("display.print() Day, month: %s\n\n", nvs_day_month);
     }
-    
-    display.print(nvs_day_month);
-
    /**
     * set font depending on selected fontSize
     */
    switch (fontSize)
    {
-       /* Bigger font */
+       /* Bigger fonts */
    case 48:
        display.setFont(&Ubuntu_M48pt8b);
        break;
@@ -166,14 +185,12 @@ void updateClock() {
    }
    // HH:mm cursor location depending on display width. Add more case's to adapt the cursor to your display size
    switch(display.width()) {
-       case 200:
-        display.setCursor(5, 120);
+       case 148: // Plogic 1.1"
+        display.setCursor(5, 63);
        break;
-       case 250:
-        display.setCursor(36, 86);
-       break;
-       default:
-        display.setCursor(90, 80);
+
+       case 240: // Plogic 2.1"
+        display.setCursor(5, 110);
        break;
    }
    
@@ -205,55 +222,18 @@ void updateClock() {
    display.print(":");
    display.print(minuteBuffer);
 
-   // Show last update message
-   /* display.setFont(&Ubuntu_M8pt8b);
-   display.setCursor(10,display.height()-20);
-   display.print(nvs_last_sync_message); */
-
-    // Draw rectangles for hour
-   // Sizes are calculated dividing the screen in equal parts so it may not be perfect for all models
-   //uint8_t rectWday  = display.width()/7; // 7 rectangles for each day of the week
-   uint8_t rectWhour = (display.width()-2)/12; // 12 rectangles for each hour
-   uint8_t rectXHour = 0;
-   uint8_t rectYHour = display.height()-20;
-   uint8_t rectHeightHour = 6;
-   uint8_t hour12convert = 0;
-   uint16_t widthHour = 0;
-
-   for(uint8_t hourI = 1; hourI < 13; hourI++) {
-       hour12convert = (nvs_hour>12) ? nvs_hour-12 : nvs_hour;
-       rectXHour = (rectWhour*(hourI-1) == 0) ? 1 : rectWhour*(hourI-1);
-    
-     if (hourI == hour12convert) {
-        widthHour = rectWhour*nvs_minute/59;
-        display.fillRect(rectXHour, rectYHour, widthHour,rectHeightHour,textColor);
-        printf("hourI: %d rectXHour: %d min: %d rectWhour: %d widthHour: %d\n", 
-                    hourI, rectXHour, nvs_minute, rectWhour, widthHour);
-     } 
-     display.drawRect(rectXHour, rectYHour, rectWhour,rectHeightHour,textColor); 
-   }
-   
    // Partial update box calculation
     uint16_t x = 0;
     uint16_t y = 0;
     uint16_t w = display.width()-1;             // Update width should be smaller than full width() of the display
     uint16_t h = display.height()/2+fontSpace;
+    
    // NOTE for other display models: 
    // If you use another display, bigger or smaller, than the demo you will need to change the updateWindow box coordinates
    switch (onDataCheck)
    {
-       /* partial update    x  y  width               height                  */
    case 1:
-       
-       if (supportsPartialUpdate) {
-           printf("HH:MM updateWindow(%d, %d, %d, %d)\n",x,y,w,h);
-        display.updateWindow(x, y, w, h, true);
-       } else {
-        display.update(); 
-       }
-       //
-       // Let's do a faster refresh using awesome updateWindow method (Thanks Jean-Marc for awesome example in GxEPD)
-       // Note this x,y,width,height coordinates represent the bounding box where the update takes place:
+       display.update(); 
        break;
        /* Day N, Month update full display (Partial leaves with the time a small background difference on the updateWindow) */
    case 2:
@@ -311,7 +291,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         min[1] = output_buffer[3];
         min[2] = '\0';
         nvs_minute = atoi(min);
-        
+        // Remove -7 to have additional ", MON" (month)
         for (uint8_t c=4; c < sizeof(nvs_day_month); c++){
             nvs_day_month[c-4] = output_buffer[c];
         }

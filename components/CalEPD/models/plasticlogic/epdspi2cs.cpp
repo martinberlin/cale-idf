@@ -7,15 +7,16 @@
 #ifdef CONFIG_IDF_TARGET_ESP32
     #define EPD_HOST    HSPI_HOST
     #define DMA_CHAN    2
-
 #elif defined CONFIG_IDF_TARGET_ESP32S2
     #define EPD_HOST    SPI2_HOST
     #define DMA_CHAN    EPD_HOST
-    
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+    #define EPD_HOST    SPI2_HOST
+    #define DMA_CHAN    SPI_DMA_CH_AUTO
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     // chip only support spi dma channel auto-alloc
     #define EPD_HOST    SPI2_HOST
-    #define DMA_CHAN    SPI_DMA_DISABLED
+    #define DMA_CHAN    SPI_DMA_CH_AUTO
 #endif
 
 
@@ -25,9 +26,9 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         // debug: 50000  0.5 Mhz so we can sniff the SPI commands with a Slave
     uint16_t multiplier = 1000;
     if (true) {
-      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d MISO: %d CLK:%d CS:%d DC:%d RST:%d BUSY:%d\n",
+      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d MISO: %d CLK:%d CS:%d RST:%d BUSY:%d\n",
       frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_MISO, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
-      CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY);
+      CONFIG_EINK_RST,CONFIG_EINK_BUSY);
         }
     //Initialize GPIOs direction & initial states. MOSI/MISO are setup by SPI interface
     gpio_set_direction((gpio_num_t)CONFIG_EINK_SPI_CS, GPIO_MODE_OUTPUT);
@@ -49,7 +50,7 @@ void EpdSpi2Cs::init(uint8_t frequency=4,bool debug=false){
         .sclk_io_num=CONFIG_EINK_SPI_CLK,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=17520
+        .max_transfer_sz=32768
     };
     // max_transfer_sz   4Kb is the defaut SPI transfer size if 0
     

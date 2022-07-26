@@ -8,6 +8,7 @@ set(srcs
     "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew027w3.cpp"
+    "models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
     "models/gdew0213i5f.cpp"
@@ -23,7 +24,7 @@ set(srcs
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
-    "models/color/wave12i48BR.cpp"
+    #"models/color/wave12i48BR.cpp"
 
     # 7 colors Waveshare
     "models/color/wave4i7Color.cpp"
@@ -38,13 +39,16 @@ set(srcs
     # Not-tested (never had one)
     #"models/plasticlogic/plasticlogic031.cpp"
 
-    # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epd_driver")
+    # Parallel epapers supported by Epdiy driver (Uncomment epdParallel & REQUIRES "epdiy")
     # Uncomment for parallel epapers:
     #"epdParallel.cpp"
     #"models/parallel/ED047TC1.cpp"
     #"models/parallel/ED047TC1touch.cpp"
     #"models/parallel/ED060SC4.cpp"
     #"models/parallel/ED060XCN.cpp" # pending to be added
+
+    # Pending for more testing:
+    "models/gdeh0213b73.cpp"
 
     # Common base classes
     "epd.cpp"
@@ -56,11 +60,12 @@ set(srcs
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
-                    # REQUIRES "FT6X36-IDF"
+                    REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    # REQUIRES "epdiy"
+                    REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
+
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it
 #      giving errors. If that happens, just open the component CMakeLists and add:
 #      return()

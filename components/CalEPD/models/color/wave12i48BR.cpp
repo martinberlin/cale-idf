@@ -83,8 +83,6 @@ Wave12I48RB::Wave12I48RB(Epd4Spi& dio):
   Adafruit_GFX(WAVE12I48_WIDTH, WAVE12I48_HEIGHT),
   Epd(WAVE12I48_WIDTH, WAVE12I48_HEIGHT), IO(dio)
 {
-  rtc_wdt_feed();
-  vTaskDelay(pdMS_TO_TICKS(1));
   printf("Wave12I48RB() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
   WAVE12I48_WIDTH, WAVE12I48_HEIGHT, WAVE12I48_BUFFER_SIZE);
   printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());

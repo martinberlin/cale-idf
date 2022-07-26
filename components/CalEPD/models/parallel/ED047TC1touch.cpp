@@ -167,6 +167,11 @@ void Ed047TC1t::registerTouchHandler(void (*fn)(TPoint point, TEvent e))
 	Touch._touchHandler = fn;
 }
 
+void Ed047TC1t::registerMultiTouchHandler(void (*fn)(TPoint point1, TPoint point2, TEvent e))
+{
+	Touch._multiTouchHandler = fn;
+}
+
 void Ed047TC1t::touchLoop(){
   Touch.loop();
 }
