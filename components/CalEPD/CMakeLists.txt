@@ -7,12 +7,12 @@ set(srcs
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
+    "models/gdew042t2Grays.cpp"
     "models/gdew027w3.cpp"
     "models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
     "models/gdew0213i5f.cpp"
-    "models/gdeh0213b73.cpp"
     "models/gdep015OC1.cpp"
     "models/gdeh0154d67.cpp"
     "models/heltec0151.cpp"
@@ -49,7 +49,6 @@ set(srcs
 
     # Pending for more testing:
     "models/gdeh0213b73.cpp"
-
     # Common base classes
     "epd.cpp"
     "epd7color.cpp"
@@ -65,7 +64,6 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
-
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it
 #      giving errors. If that happens, just open the component CMakeLists and add:
 #      return()
