@@ -1,7 +1,7 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    #SRCS "cale.cpp"
+    SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
@@ -29,7 +29,8 @@ idf_component_register(
     # Demo only for plasticlogic.com epapers:
     #SRCS "demos/plasticlogic/demo-epaper-plasticlogic.cpp"
     #SRCS "demos/plasticlogic/demo-sleep-clock-temp.cpp"
-    SRCS "demos/plasticlogic/news-ticker.cpp"
+    #SRCS "demos/plasticlogic/news-ticker.cpp"
+
     # Plasticlogic video demo: Please build it in www-image/video
 
     # Only parallel epapers (Driven by I2Sbus)
@@ -37,9 +38,12 @@ idf_component_register(
     #SRCS "demos/parallel/demo-epaper-parallel-partial.cpp"
     #SRCS "demos/parallel/demo-touch-parallel.cpp"
     #SRCS "demos/parallel/demo-touch-keyboard.cpp"
+    
+    # Multi-touch L58 in LilygoEPD47 (Requires epdiy)
     #SRCS "demos/epd47-touch/touch-simple.cpp"
     # Note: Enable in menuconfig > Touch FT6X36 Configuration > L58_MULTITOUCH to 1 
     #SRCS "demos/epd47-touch/multitouch-circles.cpp"
+    
     INCLUDE_DIRS ".")
 
     # This is just to avoid that BitBank2 components include Arduino.h
