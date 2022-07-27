@@ -126,6 +126,7 @@ DRAM_ATTR const epd_init_3 Gdew042t2Grays::epd_soft_start={
 0x06,{0x17,0x17,0x17},3
 };
 
+// 0xbf, 0x0d seems appropiate for 4 grays mode
 DRAM_ATTR const epd_init_2 Gdew042t2Grays::epd_panel_setting={
 0x00,{0xbf, 0x0d}, 2
 };
@@ -194,16 +195,27 @@ void Gdew042t2Grays::init(bool debug)
 
 void Gdew042t2Grays::fillScreen(uint16_t color)
 {
-  for (uint32_t x = 0; x < GDEW042T2_BUFFER_SIZE; x++)
+
+  for (uint32_t y = 0; y < GDEW042T2_HEIGHT; y++)
   {
-    _buffer[x] = color;
-    if (x % 8 == 0)
+    for (uint32_t x = 0; x < GDEW042T2_WIDTH; x++)
+    {
+    uint8_t *buf_ptr = &_buffer[y * GDEW042T2_WIDTH / 2 + x / 2];
+
+    if (x % 2) {
+      *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
+    } else {
+      *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
+    }
+    
+      if (x % 8 == 0)
         {
           #if defined CONFIG_IDF_TARGET_ESP32
           rtc_wdt_feed();
           #endif
           vTaskDelay(pdMS_TO_TICKS(2));
         }
+    }
   }
 
   if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n", color,sizeof(_buffer));
@@ -466,7 +478,13 @@ void Gdew042t2Grays::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
-
+/**
+ * @brief  Main issue is that Adafruit is RGB565 (16 bit per pixel, not 4-bit like EPDiy)
+ *         But that should not be a problem, provided we keep our own _buffer
+ * @param x 
+ * @param y 
+ * @param color 
+ */
 void Gdew042t2Grays::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
