@@ -279,24 +279,25 @@ void Gdew042t2Grays::update()
   
   IO.cmd(0x10); //1st buffer: 2 grays
 
-  for(i=0;i<GDEW042T2_BUFFER_SIZE/4;i++)	               //400*300
+  for(i=0;i<GDEW042T2_BUFFER_SIZE/4;i++)	               // GDEW042T2_BUFFER_SIZE = 400*300/2 = 60000
 		{ 
 			temp3=0;
       for(j=0;j<4;j++)	
 			{
 				temp1 = _buffer[i*4+j];
-				temp2 = temp1&0xF0 ;
-				if(temp2 == 0xF0)
-					temp3 |= 0x01;//white
+				temp2 = temp1&0x0F;
+				if(temp2 == 0x0F)
+					temp3 |= 0x01;  //white
 				else if(temp2 == 0x00)
 					temp3 |= 0x00;  //black
-				else if((temp2>0xA0)&&(temp2<0xF0)) 
+				else if((temp2>0xA0)&&(temp2<0x0F)) 
 					temp3 |= 0x01;  //gray1
 				else 
 					temp3 |= 0x00; //gray2
-				temp3 <<= 1;	
-				temp1 <<= 4;
-				temp2 = temp1&0xF0 ;
+          temp3 <<= 1;	
+          temp1 <<= 4;
+
+				temp2 = temp1&0xF0;
 				if(temp2 == 0xF0)  //white
 					temp3 |= 0x01;
 				else if(temp2 == 0x00) //black
@@ -308,7 +309,7 @@ void Gdew042t2Grays::update()
         if(j!=3)					
 			  temp3 <<= 1;	
 		 }	
-       	IO.data(~temp3);			
+       	IO.data(temp3);			
 		}
   
   IO.cmd(0x13); //2nd buffer: 2 other grays
@@ -320,9 +321,9 @@ void Gdew042t2Grays::update()
         bufindex = i*4+j;
 				temp1 = _buffer[bufindex];
         //printf("%x ",temp1);
-				temp2 = temp1&0xF0 ;
+				temp2 = temp1&0x0F ;
 
-				if(temp2 == 0xF0) {
+				if(temp2 == 0x0F) {
 					temp3 |= 0x01;//white
           //printf("W ");
           }
@@ -349,7 +350,8 @@ void Gdew042t2Grays::update()
 			  temp3 <<= 1;				
 			
 		 }
-       	IO.data(~temp3);
+     //~
+       	IO.data(temp3); 
         //printf("%x ", temp3);
 		}
 
