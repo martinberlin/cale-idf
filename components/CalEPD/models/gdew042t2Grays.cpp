@@ -277,7 +277,7 @@ void Gdew042t2Grays::update()
   uint32_t i,j;
   uint32_t bufindex = 0;
   uint8_t temp1,temp2,temp3;
-  uint16_t bufferLenght = GDEW042T2_WIDTH * GDEW042T2_HEIGHT/8; // 15000
+  uint16_t bufferLenght = GDEW042T2_WIDTH * GDEW042T2_HEIGHT/8+1; // 15000
   uint16_t bufferMaxSpi = 3000;
   uint8_t xbuf[bufferMaxSpi];
 
@@ -315,7 +315,7 @@ void Gdew042t2Grays::update()
         xbuf[bufindex] = temp3;
         // Flush SPI buffer
         if (i>0 && i % bufferMaxSpi == 0) {
-          //printf("sent part buff %d from *%d\n", bufindex,i);
+          //printf("10 sent part buff %d from *%d\n", bufindex,i);
           IO.data(xbuf, bufferMaxSpi);
           bufindex = 0;
         }
@@ -330,12 +330,10 @@ void Gdew042t2Grays::update()
       for(j=0;j<4;j++)	
 			{
 				temp1 = _buffer[i*4+j];
-        //printf("%x ",temp1);
 				temp2 = temp1&0x0F ;
 
 				if(temp2 == 0x0F) {
 					temp3 |= 0x01;//white
-          //printf("W ");
           }
 				else if(temp2 == 0x00)
 					temp3 |= 0x00;  //black
@@ -362,7 +360,6 @@ void Gdew042t2Grays::update()
         xbuf[bufindex] = temp3;
         // Flush SPI buffer
         if (i>0 && i % bufferMaxSpi == 0) {
-          //printf("sent part buff %d from *%d\n", bufindex,i);
           IO.data(xbuf, bufferMaxSpi);
           bufindex = 0;
         }
