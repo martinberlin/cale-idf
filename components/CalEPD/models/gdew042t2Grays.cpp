@@ -274,12 +274,16 @@ void Gdew042t2Grays::update()
   _using_partial_mode = false;
   _wakeUp();
   
-  uint32_t i,j, bufindex;
+  uint32_t i,j;
+  uint32_t bufindex = 0;
   uint8_t temp1,temp2,temp3;
-  
+  uint16_t bufferLenght = GDEW042T2_WIDTH * GDEW042T2_HEIGHT/8; // 15000
+  uint16_t bufferMaxSpi = 3000;
+  uint8_t xbuf[bufferMaxSpi];
+
   IO.cmd(0x10); //1st buffer: 2 grays
 
-  for(i=0;i<GDEW042T2_BUFFER_SIZE/4;i++)	               // GDEW042T2_BUFFER_SIZE = 400*300/2 = 60000
+  for(i=0;i<bufferLenght;i++)
 		{ 
 			temp3=0;
       for(j=0;j<4;j++)	
@@ -293,33 +297,39 @@ void Gdew042t2Grays::update()
 				else if((temp2>0xA0)&&(temp2<0x0F)) 
 					temp3 |= 0x01;  //gray1
 				else 
-					temp3 |= 0x00; //gray2
+					temp3 |= 0x00;  //gray2
           temp3 <<= 1;	
           temp1 <<= 4;
-
-				temp2 = temp1&0xF0;
+          temp2 = temp1&0xF0;
 				if(temp2 == 0xF0)  //white
 					temp3 |= 0x01;
 				else if(temp2 == 0x00) //black
 					temp3 |= 0x00;
 				else if((temp2>0xA0)&&(temp2<0xF0))
-					temp3 |= 0x01; //gray1
+					temp3 |= 0x01;    //gray1
 				else    
 						temp3 |= 0x00;	//gray2	
         if(j!=3)					
 			  temp3 <<= 1;	
 		 }	
-       	IO.data(temp3);			
+        xbuf[bufindex] = temp3;
+        // Flush SPI buffer
+        if (i>0 && i % bufferMaxSpi == 0) {
+          //printf("sent part buff %d from *%d\n", bufindex,i);
+          IO.data(xbuf, bufferMaxSpi);
+          bufindex = 0;
+        }
+        bufindex++;
 		}
-  
+    
+  bufindex = 0;
   IO.cmd(0x13); //2nd buffer: 2 other grays
-  for(i=0;i<GDEW042T2_BUFFER_SIZE/4;i++)	               //48000*4   800*480
+  for(i=0;i<bufferLenght;i++)
 		{ 
 			temp3=0;
       for(j=0;j<4;j++)	
 			{
-        bufindex = i*4+j;
-				temp1 = _buffer[bufindex];
+				temp1 = _buffer[i*4+j];
         //printf("%x ",temp1);
 				temp2 = temp1&0x0F ;
 
@@ -332,8 +342,7 @@ void Gdew042t2Grays::update()
 				else if((temp2>0xA0)&&(temp2<0xF0)) 
 					temp3 |= 0x00;  //gray1
 				else {
-					temp3 |= 0x01; //gray2
-          //printf("G2 ");
+					temp3 |= 0x01;  //gray2
           }
 				temp3 <<= 1;	
 				temp1 <<= 4;
@@ -343,16 +352,21 @@ void Gdew042t2Grays::update()
 				else if(temp2 == 0x00) //black
 					temp3 |= 0x00;
 				else if((temp2>0xA0)&&(temp2<0xF0)) 
-					temp3 |= 0x00;//gray1
+					temp3 |= 0x00;    //gray1
 				else    
 						temp3 |= 0x01;	//gray2
         if(j!=3)				
 			  temp3 <<= 1;				
 			
 		 }
-     //~
-       	IO.data(temp3); 
-        //printf("%x ", temp3);
+        xbuf[bufindex] = temp3;
+        // Flush SPI buffer
+        if (i>0 && i % bufferMaxSpi == 0) {
+          //printf("sent part buff %d from *%d\n", bufindex,i);
+          IO.data(xbuf, bufferMaxSpi);
+          bufindex = 0;
+        }
+        bufindex++;
 		}
 
   uint64_t endTime = esp_timer_get_time();
