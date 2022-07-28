@@ -21,8 +21,10 @@
 #define GDEW042T2_WIDTH 400
 #define GDEW042T2_HEIGHT 300
 
-// 4 bit per pixel
+// 4 bit per pixel (4 gray mode)
 #define GDEW042T2_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 2)
+// 1 bit per pixel monochrome
+#define GDEW042T2_MONO_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 8)
 
 // Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdew042t2Grays : public Epd
@@ -36,6 +38,7 @@ class Gdew042t2Grays : public Epd
     
     // EPD tests 
     void init(bool debug = false);
+    void setMonoMode(bool mode);
     void initFullUpdate();
     void initPartialUpdate();
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
@@ -46,8 +49,9 @@ class Gdew042t2Grays : public Epd
 
   private:
     EpdSpi& IO;
-
+    bool _mono_mode = false;
     uint8_t _buffer[GDEW042T2_BUFFER_SIZE];
+    uint8_t _mono_buffer[GDEW042T2_MONO_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
 
@@ -58,15 +62,19 @@ class Gdew042t2Grays : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
     // Command & data structs - Mono?
-    static const epd_init_30 lut_full;
-    static const epd_init_30 lut_partial;
-
-    //static const epd_init_44 lut_vcom0_full;
+    static const epd_init_30 lut_full; // 4 gray
+    static const epd_init_44 lut_mono_mode;
+    static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_vcom11;
     static const epd_init_42 lut_ww_full;
     static const epd_init_42 lut_bw_full;
     static const epd_init_42 lut_wb_full;
     static const epd_init_42 lut_bb_full;
+
+    static const epd_init_42 lut_ww_mono;
+    static const epd_init_42 lut_bw_mono;
+    static const epd_init_42 lut_wb_mono;
+    static const epd_init_42 lut_bb_mono;
 
     //static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_21_ww_partial;

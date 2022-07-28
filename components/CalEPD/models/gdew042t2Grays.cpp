@@ -7,19 +7,6 @@
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
-
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-//C221 25C partial update waveform. Note: Partial does NOT work in 4 gray mode
-DRAM_ATTR const epd_init_30 Gdew042t2Grays::lut_partial={
-0x32, {
- 0x10 ,0x18 ,0x18 ,0x08 ,0x18
-,0x18 ,0x08 ,0x00 ,0x00 ,0x00
-,0x00 ,0x00 ,0x00 ,0x00 ,0x00
-,0x00 ,0x00 ,0x00 ,0x00 ,0x00
-,0x13 ,0x14 ,0x44 ,0x12 ,0x00
-,0x00 ,0x00 ,0x00 ,0x00 ,0x00
-},30};
-
 // Full screen update LUT 4 gray (Only full refresh)
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_vcom11={
 0x20, {
@@ -31,6 +18,30 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_vcom11={
   0x00  ,0x00 ,0x00 ,0x00 ,0x00 ,0x00,
   0x00  ,0x00 ,0x00 ,0x00 ,0x00 ,0x00
 },42};
+
+//full screen update LUT.  lut_vcom0_full in original class
+DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_mono_mode={
+0x20, {
+  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+  0x00, 0x17, 0x17, 0x00, 0x00, 0x02,
+  0x00, 0x0A, 0x01, 0x00, 0x00, 0x01,
+  0x00, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+},44};
+// R21 Mono
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_mono={
+0x21, {
+  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+  0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
+  0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+},42};
+
 // R21
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_full={
 0x21, {
@@ -41,6 +52,17 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
+},42};
+// R22 Mono
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_mono={
+0x22,{
+  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+  0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
+  0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 // R22H  r
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_full={
@@ -53,6 +75,18 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
 },42};
+
+//R23H  w
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_mono={
+0x23,{
+  0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+  0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
+  0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+},42};
 //R23H  w
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_full={
 0x23,{
@@ -63,6 +97,18 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
+},42};
+
+//R24 mono
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_mono={
+0x24,{
+  0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
+  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
+  0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
+  0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 },42};
 //R24H  b
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_full={
@@ -81,6 +127,16 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_full={
 #define T2  1 // color change or sustain charge balance pre-phase
 #define T3  2 // color change or sustain phase
 #define T4 25 // color change phase
+
+DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_20_vcom0_partial={
+0x20,{
+  0x00, T1, T2, T3, T4, 1, // 00 00 00 00
+  0x00,  1,  0,  0,  0, 1, // gnd phase
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00
+},44};
 
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_21_ww_partial={
 0x21,{
@@ -151,22 +207,36 @@ Gdew042t2Grays::Gdew042t2Grays(EpdSpi& dio):
 }
 
 void Gdew042t2Grays::initFullUpdate(){
+  if (_mono_mode) {
+    IO.cmd(0x00);   //300x400 B/W mode, LUT set by register
+    IO.data(0x3F);
+    IO.cmd(lut_mono_mode.cmd);
+    IO.data(lut_mono_mode.data,lut_mono_mode.databytes);
+
+    IO.cmd(lut_ww_mono.cmd);
+    IO.data(lut_ww_mono.data,lut_ww_mono.databytes);
+    IO.cmd(lut_bw_mono.cmd);
+    IO.data(lut_bw_mono.data,lut_bw_mono.databytes);
+    IO.cmd(lut_wb_mono.cmd);
+    IO.data(lut_wb_mono.data,lut_wb_mono.databytes);
+    IO.cmd(lut_bb_mono.cmd);
+    IO.data(lut_bb_mono.data,lut_bb_mono.databytes);
+
+  } else {
     IO.cmd(lut_vcom11.cmd);
     IO.data(lut_vcom11.data,lut_vcom11.databytes);
 
     IO.cmd(lut_ww_full.cmd);
     IO.data(lut_ww_full.data,lut_ww_full.databytes);
-
     IO.cmd(lut_bw_full.cmd);
     IO.data(lut_bw_full.data,lut_bw_full.databytes);
-
     IO.cmd(lut_wb_full.cmd);
     IO.data(lut_wb_full.data,lut_wb_full.databytes);
-
     IO.cmd(lut_bb_full.cmd);
     IO.data(lut_bb_full.data,lut_bb_full.databytes);
+  }
    
-    if (debug_enabled) printf("initFullUpdate() LUT\n");
+  if (debug_enabled) printf("initFullUpdate() LUT in mode %d\n", (uint8_t)_mono_mode);
 }
 
 /**
@@ -174,10 +244,24 @@ void Gdew042t2Grays::initFullUpdate(){
  * 
  */
 void Gdew042t2Grays::initPartialUpdate(){
+  IO.cmd(0x00);
+  IO.data(0x3F); //300x400 B/W mode, LUT set by register
 
   // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
-    IO.cmd(lut_partial.cmd);
-    IO.data(lut_partial.data,lut_partial.databytes);
+  IO.cmd(lut_20_vcom0_partial.cmd);
+  IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
+
+  IO.cmd(lut_21_ww_partial.cmd);
+  IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
+
+  IO.cmd(lut_22_bw_partial.cmd);
+  IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
+
+  IO.cmd(lut_23_wb_partial.cmd);
+  IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
+
+  IO.cmd(lut_24_bb_partial.cmd);
+  IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
  }
 
 //Initialize the display
@@ -190,12 +274,22 @@ void Gdew042t2Grays::init(bool debug)
 
     //Reset the display
     IO.reset(20);
+
+    fillScreen(EPD_WHITE);
+    _mono_mode = 1;
     fillScreen(EPD_WHITE);
 }
 
 void Gdew042t2Grays::fillScreen(uint16_t color)
 {
+  if (_mono_mode) {
+      uint8_t data = (color == EPD_BLACK) ? 0x00 : 0xFF;
+      for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
+      {
+        _mono_buffer[x] = data;
+      }
 
+  } else {
   for (uint32_t y = 0; y < GDEW042T2_HEIGHT; y++)
   {
     for (uint32_t x = 0; x < GDEW042T2_WIDTH; x++)
@@ -217,11 +311,12 @@ void Gdew042t2Grays::fillScreen(uint16_t color)
         }
     }
   }
-
+  }
   if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n", color,sizeof(_buffer));
 }
 
 void Gdew042t2Grays::_wakeUp(){
+  
   IO.reset(10);
 
   IO.cmd(epd_wakeup_power.cmd);
@@ -233,18 +328,21 @@ void Gdew042t2Grays::_wakeUp(){
   for (int i=0;i<epd_soft_start.databytes;++i) {
     IO.data(epd_soft_start.data[i]);
   }
-  IO.cmd(0x04);
-  vTaskDelay(2 / portTICK_PERIOD_MS);
-
-  IO.cmd(epd_panel_setting.cmd);
-  for (int i=0;i<epd_panel_setting.databytes;++i) {
-    IO.data(epd_panel_setting.data[i]);
-  }
   
+  IO.cmd(epd_panel_setting.cmd);
+  if (_mono_mode) {
+    IO.data(0x3f);
+  } else {
+    for (int i=0;i<epd_panel_setting.databytes;++i) {
+      IO.data(epd_panel_setting.data[i]);
+    }
+  }
 
   IO.cmd(epd_pll.cmd);
-  for (int i=0;i<epd_pll.databytes;++i) {
-    IO.data(epd_pll.data[i]);
+  if (_mono_mode) {
+    IO.data(0x3a);
+  } else {
+    IO.data(epd_pll.data[0]);
   }
   //resolution setting
   IO.cmd(epd_resolution.cmd);
@@ -256,25 +354,46 @@ void Gdew042t2Grays::_wakeUp(){
   IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
 
   IO.cmd(0x50);    // VCOM AND DATA INTERVAL SETTING
-  IO.data(0x97);
+    if (_mono_mode) {
+      IO.data(0xd7); // border floating to avoid flashing
+    } else {
+      IO.data(0x97);
+    }
+  IO.cmd(0x04);
 
   _waitBusy("epd_wakeup_power");
   initFullUpdate();
 }
 
-
-/**** Color display description
-      white  gray1  gray2  black
-0x10|  01     01     00     00
-0x13|  01     00     01     00
-****************/
 void Gdew042t2Grays::update()
 {
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
   _wakeUp();
+
+  uint32_t i = 0;
+  uint32_t j = 0;
+  if (_mono_mode) {
+    IO.cmd(0x13);
+    uint8_t xLineBytes = GDEW042T2_WIDTH/8;
+    uint8_t x1buf[xLineBytes];
+    for(uint16_t y =  1; y <= GDEW042T2_HEIGHT; y++) {
+        for(uint16_t x = 1; x <= xLineBytes; x++) {
+          uint8_t data = i < sizeof(_mono_buffer) ? _mono_buffer[i] : 0x00;
+          x1buf[x-1] = data;
+          if (x==xLineBytes) { // Flush the X line buffer to SPI
+            IO.data(x1buf,sizeof(x1buf));
+          }
+          ++i;
+        }
+    }
   
-  uint32_t i,j;
+  } else {
+  /**** Color display description
+        white  gray1  gray2  black
+  0x10|  01     01     00     00
+  0x13|  01     00     01     00
+  ****************/
   uint32_t bufindex = 0;
   uint8_t temp1,temp2,temp3;
   uint16_t bufferLenght = GDEW042T2_WIDTH * GDEW042T2_HEIGHT/8+1; // 15000
@@ -365,7 +484,7 @@ void Gdew042t2Grays::update()
         }
         bufindex++;
 		}
-
+  }
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x12);
   _waitBusy("update");
@@ -420,7 +539,7 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
       uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00; // white is 0x00 in buffer
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00; // white is 0x00 in buffer
       IO.data(data); // white is 0xFF on device
     }
   }
@@ -437,7 +556,7 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
       uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
       IO.data(data);
     }
   }
@@ -492,8 +611,6 @@ void Gdew042t2Grays::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 }
 
 /**
- * @brief  Main issue is that Adafruit is RGB565 (16 bit per pixel, not 4-bit like EPDiy)
- *         But that should not be a problem, provided we keep our own _buffer
  * @param x 
  * @param y 
  * @param color 
@@ -518,11 +635,28 @@ void Gdew042t2Grays::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   
-  uint8_t *buf_ptr = &_buffer[y * GDEW042T2_WIDTH / 2 + x / 2];
+  if (_mono_mode) {
+      uint16_t i = x / 8 + y * GDEW042T2_WIDTH / 8;
 
-  if (x % 2) {
-    *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
+     if (color) {
+      _mono_buffer[i] = (_mono_buffer[i] | (1 << (7 - x % 8)));
+      } else {
+      _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+      }
   } else {
-    *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
+    uint8_t *buf_ptr = &_buffer[y * GDEW042T2_WIDTH / 2 + x / 2];
+
+    if (x % 2) {
+      *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
+    } else {
+      *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
+    }
   }
+}
+
+/**
+ * @brief Sets private _mode. When true is monochrome mode
+ */
+void Gdew042t2Grays::setMonoMode(bool mode) {
+  _mono_mode = mode;
 }
