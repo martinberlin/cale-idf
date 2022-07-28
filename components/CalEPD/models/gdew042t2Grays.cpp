@@ -291,9 +291,9 @@ void Gdew042t2Grays::update()
 				else if(temp2 == 0x00)
 					temp3 |= 0x00;  //black
 				else if((temp2>0xA0)&&(temp2<0x0F)) 
-					temp3 |= 0x00;  //gray2
+					temp3 |= 0x01;  //gray1
 				else 
-					temp3 |= 0x01; //gray1
+					temp3 |= 0x00; //gray2
           temp3 <<= 1;	
           temp1 <<= 4;
 
@@ -303,9 +303,9 @@ void Gdew042t2Grays::update()
 				else if(temp2 == 0x00) //black
 					temp3 |= 0x00;
 				else if((temp2>0xA0)&&(temp2<0xF0))
-					temp3 |= 0x00; //gray2
+					temp3 |= 0x01; //gray1
 				else    
-						temp3 |= 0x01;	//gray1
+						temp3 |= 0x00;	//gray2	
         if(j!=3)					
 			  temp3 <<= 1;	
 		 }	
@@ -330,9 +330,10 @@ void Gdew042t2Grays::update()
 				else if(temp2 == 0x00)
 					temp3 |= 0x00;  //black
 				else if((temp2>0xA0)&&(temp2<0xF0)) 
-					temp3 |= 0x01;  //gray1
+					temp3 |= 0x00;  //gray1
 				else {
-					temp3 |= 0x00; //gray2
+					temp3 |= 0x01; //gray2
+          //printf("G2 ");
           }
 				temp3 <<= 1;	
 				temp1 <<= 4;
@@ -342,9 +343,9 @@ void Gdew042t2Grays::update()
 				else if(temp2 == 0x00) //black
 					temp3 |= 0x00;
 				else if((temp2>0xA0)&&(temp2<0xF0)) 
-					temp3 |= 0x01;    //gray2
+					temp3 |= 0x00;//gray1
 				else    
-						temp3 |= 0x00;	//gray1
+						temp3 |= 0x01;	//gray2
         if(j!=3)				
 			  temp3 <<= 1;				
 			
