@@ -123,10 +123,11 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_full={
 },42};
 
 // new waveform created by Jean-Marc Zingg for the actual panel
-#define T1 25 // color change charge balance pre-phase
-#define T2  1 // color change or sustain charge balance pre-phase
-#define T3  2 // color change or sustain phase
-#define T4 25 // color change phase
+// Fell free to play with this numbers, could not make it better
+#define T1 0 // color change charge balance pre-phase
+#define T2 25 // color change or sustain charge balance pre-phase
+#define T3 25 // color change or sustain phase
+#define T4 0  // color change phase
 
 DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_20_vcom0_partial={
 0x20,{
@@ -510,13 +511,14 @@ uint16_t Gdew042t2Grays::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe,
   IO.data(ye / 256);
   IO.data(ye % 256);
   //IO.data(0x01);         // Not any visual difference
-  IO.data(0x00);           // Not any visual difference
+  //IO.data(0x00);         // Same here
   return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
 void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("updateWindow is still being tested\n\n");
+    ++_partials;
+  printf("_partial %d\n", _partials);
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW042T2_WIDTH) return;
   if (y >= GDEW042T2_HEIGHT) return;
@@ -526,14 +528,14 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
   // _wakeUp has to be done always, since after update() it goes to sleep
-  if (!_using_partial_mode) _wakeUp();
+  _wakeUp();
   _using_partial_mode = true;
   initPartialUpdate();
 
   IO.cmd(0x91); // partial in
   _setPartialRamArea(x, y, xe, ye);
-  IO.cmd(0x13);
   
+  IO.cmd(0x13);
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
@@ -543,12 +545,11 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
       IO.data(data); // white is 0xFF on device
     }
   }
-
   IO.cmd(0x92);      // partial out
   IO.cmd(0x12);      // display refresh
   _waitBusy("updateWindow");
 
-  IO.cmd(0x91);      // partial out
+  IO.cmd(0x91);      // partial in
   _setPartialRamArea(x, y, xe, ye);
   IO.cmd(0x13);
   for (int16_t y1 = y; y1 <= ye; y1++)
