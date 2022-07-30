@@ -369,7 +369,6 @@ void Gdew042t2Grays::_wakeUp(){
 void Gdew042t2Grays::update()
 {
   uint64_t startTime = esp_timer_get_time();
-  _using_partial_mode = false;
   _wakeUp();
 
   uint32_t i = 0;
@@ -517,19 +516,19 @@ uint16_t Gdew042t2Grays::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe,
 
 void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-    ++_partials;
-  printf("_partial %d\n", _partials);
+  ++_partials;
+  if (debug_enabled) {
+    printf("_partial %d\n", _partials);
+  }
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW042T2_WIDTH) return;
   if (y >= GDEW042T2_HEIGHT) return;
   uint16_t xe = gx_uint16_min(GDEW042T2_WIDTH, x + w) - 1;
   uint16_t ye = gx_uint16_min(GDEW042T2_HEIGHT, y + h) - 1;
-  // x &= 0xFFF8; // byte boundary, not needed here
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
-  // _wakeUp has to be done always, since after update() it goes to sleep
+  // _wakeUp has to be done always, doing it only once is not working good the 2nd update
   _wakeUp();
-  _using_partial_mode = true;
   initPartialUpdate();
 
   IO.cmd(0x91); // partial in

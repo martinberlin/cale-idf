@@ -52,9 +52,9 @@ class Gdew042t2Grays : public Epd
     bool _mono_mode = false;
     uint8_t _buffer[GDEW042T2_BUFFER_SIZE];
     uint8_t _mono_buffer[GDEW042T2_MONO_BUFFER_SIZE];
-    bool _using_partial_mode = false;
     bool _initial = true;
     uint16_t _partials = 0;
+    
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
     void _sleep();
