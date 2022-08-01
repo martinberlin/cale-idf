@@ -602,8 +602,13 @@ void Gdew042t2Grays::drawPixel(int16_t x, int16_t y, uint16_t color) {
         _buffer1[i] = (_buffer1[i] | (1 << (7 - x % 8)));
         _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
         break;
+      case 3:
+        // WHITE
+        _buffer1[i] = (_buffer1[i] | (1 << (7 - x % 8)));
+        _buffer2[i] = (_buffer2[i] | (1 << (7 - x % 8)));
+        break;
       default:
-        // White & Black
+        // Black
         _buffer1[i] = (_buffer1[i] & (0xFF ^ (1 << (7 - x % 8))));
         _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
         break;
