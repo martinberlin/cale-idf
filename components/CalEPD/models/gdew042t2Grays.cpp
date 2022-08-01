@@ -291,29 +291,33 @@ void Gdew042t2Grays::fillScreen(uint16_t color)
       }
 
   } else {
-  for (uint32_t y = 0; y < GDEW042T2_HEIGHT; y++)
-  {
-    for (uint32_t x = 0; x < GDEW042T2_WIDTH; x++)
+    // This is to make faster black & white
+    if (color == 255 || color == 0) {
+      for(uint32_t i=0;i<GDEW042T2_MONO_BUFFER_SIZE;i++)
+      {
+        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
+        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
+      }
+    return;
+     }
+   
+    for (uint32_t y = 0; y < GDEW042T2_HEIGHT; y++)
     {
-    uint8_t *buf_ptr = &_buffer[y * GDEW042T2_WIDTH / 2 + x / 2];
+      for (uint32_t x = 0; x < GDEW042T2_WIDTH; x++)
+      {
+        drawPixel(x, y, color);
+        if (x % 8 == 0)
+          {
+            #if defined CONFIG_IDF_TARGET_ESP32
+            rtc_wdt_feed();
+            #endif
+            vTaskDelay(pdMS_TO_TICKS(2));
+          }
+      }
+    }
 
-    if (x % 2) {
-      *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
-    } else {
-      *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
-    }
-    
-      if (x % 8 == 0)
-        {
-          #if defined CONFIG_IDF_TARGET_ESP32
-          rtc_wdt_feed();
-          #endif
-          vTaskDelay(pdMS_TO_TICKS(2));
-        }
-    }
   }
-  }
-  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n", color,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%d)\n", color);
 }
 
 void Gdew042t2Grays::_wakeUp(){
@@ -372,7 +376,7 @@ void Gdew042t2Grays::update()
   _wakeUp();
 
   uint32_t i = 0;
-  uint32_t j = 0;
+
   if (_mono_mode) {
     IO.cmd(0x13);
     uint8_t xLineBytes = GDEW042T2_WIDTH/8;
@@ -395,43 +399,15 @@ void Gdew042t2Grays::update()
   0x13|  01     00     01     00
   ****************/
   uint32_t bufindex = 0;
-  uint8_t temp1,temp2,temp3;
-  uint16_t bufferLenght = GDEW042T2_WIDTH * GDEW042T2_HEIGHT/8+1; // 15000
+  uint16_t bufferLenght = GDEW042T2_MONO_BUFFER_SIZE+1; // 15000
   uint16_t bufferMaxSpi = 3000;
   uint8_t xbuf[bufferMaxSpi];
 
-  IO.cmd(0x10); //1st buffer: 2 grays
+  IO.cmd(0x10); //1st buffer: SPI1
 
   for(i=0;i<bufferLenght;i++)
 		{ 
-			temp3=0;
-      for(j=0;j<4;j++)	
-			{
-				temp1 = _buffer[i*4+j];
-				temp2 = temp1&0x0F;
-				if(temp2 == 0x0F)
-					temp3 |= 0x01;  //white
-				else if(temp2 == 0x00)
-					temp3 |= 0x00;  //black
-				else if((temp2>0xA0)&&(temp2<0x0F)) 
-					temp3 |= 0x01;  //gray1
-				else 
-					temp3 |= 0x00;  //gray2
-          temp3 <<= 1;	
-          temp1 <<= 4;
-          temp2 = temp1&0xF0;
-				if(temp2 == 0xF0)  //white
-					temp3 |= 0x01;
-				else if(temp2 == 0x00) //black
-					temp3 |= 0x00;
-				else if((temp2>0xA0)&&(temp2<0xF0))
-					temp3 |= 0x01;    //gray1
-				else    
-						temp3 |= 0x00;	//gray2	
-        if(j!=3)					
-			  temp3 <<= 1;	
-		 }	
-        xbuf[bufindex] = temp3;
+        xbuf[bufindex] = _buffer1[i];
         // Flush SPI buffer
         if (i>0 && i % bufferMaxSpi == 0) {
           //printf("10 sent part buff %d from *%d\n", bufindex,i);
@@ -440,43 +416,12 @@ void Gdew042t2Grays::update()
         }
         bufindex++;
 		}
-    
   bufindex = 0;
-  IO.cmd(0x13); //2nd buffer: 2 other grays
+
+  IO.cmd(0x13); //2nd buffer: SPI2
   for(i=0;i<bufferLenght;i++)
 		{ 
-			temp3=0;
-      for(j=0;j<4;j++)	
-			{
-				temp1 = _buffer[i*4+j];
-				temp2 = temp1&0x0F ;
-
-				if(temp2 == 0x0F) {
-					temp3 |= 0x01;//white
-          }
-				else if(temp2 == 0x00)
-					temp3 |= 0x00;  //black
-				else if((temp2>0xA0)&&(temp2<0xF0)) 
-					temp3 |= 0x00;  //gray1
-				else {
-					temp3 |= 0x01;  //gray2
-          }
-				temp3 <<= 1;	
-				temp1 <<= 4;
-				temp2 = temp1&0xF0 ;
-				if(temp2 == 0xF0)  //white
-					temp3 |= 0x01;
-				else if(temp2 == 0x00) //black
-					temp3 |= 0x00;
-				else if((temp2>0xA0)&&(temp2<0xF0)) 
-					temp3 |= 0x00;    //gray1
-				else    
-						temp3 |= 0x01;	//gray2
-        if(j!=3)				
-			  temp3 <<= 1;				
-			
-		 }
-        xbuf[bufindex] = temp3;
+        xbuf[bufindex] = _buffer2[i];
         // Flush SPI buffer
         if (i>0 && i % bufferMaxSpi == 0) {
           IO.data(xbuf, bufferMaxSpi);
@@ -635,22 +580,34 @@ void Gdew042t2Grays::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   
+  uint16_t i = x / 8 + y * GDEW042T2_WIDTH / 8;
   if (_mono_mode) {
-      uint16_t i = x / 8 + y * GDEW042T2_WIDTH / 8;
-
      if (color) {
       _mono_buffer[i] = (_mono_buffer[i] | (1 << (7 - x % 8)));
       } else {
       _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
       }
   } else {
-    uint8_t *buf_ptr = &_buffer[y * GDEW042T2_WIDTH / 2 + x / 2];
-
-    if (x % 2) {
-      *buf_ptr = (*buf_ptr & 0x0F) | (color & 0xF0);
-    } else {
-      *buf_ptr = (*buf_ptr & 0xF0) | (color >> 4);
-    }
+      // 4 gray mode
+      color >>= 6; // Color is from 0 (black) to 255 (white)
+      switch (color)
+      {
+      case 1:
+        // Dark gray: Correct
+        _buffer1[i] = (_buffer1[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _buffer2[i] = (_buffer2[i] | (1 << (7 - x % 8)));
+        break;
+      case 2:
+        // Light gray: Correct
+        _buffer1[i] = (_buffer1[i] | (1 << (7 - x % 8)));
+        _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
+        break;
+      default:
+        // White & Black
+        _buffer1[i] = (_buffer1[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
+        break;
+      }
   }
 }
 

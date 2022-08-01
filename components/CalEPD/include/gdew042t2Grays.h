@@ -15,14 +15,12 @@
 #if defined CONFIG_IDF_TARGET_ESP32
   #include "soc/rtc_wdt.h"
 #endif
-#include <gdew_colors.h>
+#include <gdew_4grays.h>
 
 // Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
 #define GDEW042T2_WIDTH 400
 #define GDEW042T2_HEIGHT 300
 
-// 4 bit per pixel (4 gray mode)
-#define GDEW042T2_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 2)
 // 1 bit per pixel monochrome
 #define GDEW042T2_MONO_BUFFER_SIZE (uint32_t(GDEW042T2_WIDTH) * uint32_t(GDEW042T2_HEIGHT) / 8)
 
@@ -50,7 +48,8 @@ class Gdew042t2Grays : public Epd
   private:
     EpdSpi& IO;
     bool _mono_mode = false;
-    uint8_t _buffer[GDEW042T2_BUFFER_SIZE];
+    uint8_t _buffer1[GDEW042T2_MONO_BUFFER_SIZE];
+    uint8_t _buffer2[GDEW042T2_MONO_BUFFER_SIZE];
     uint8_t _mono_buffer[GDEW042T2_MONO_BUFFER_SIZE];
     bool _initial = true;
     uint16_t _partials = 0;
