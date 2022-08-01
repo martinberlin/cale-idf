@@ -581,36 +581,39 @@ void Gdew042t2Grays::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   
   uint16_t i = x / 8 + y * GDEW042T2_WIDTH / 8;
+  uint8_t mask = 0x80 >> (x & 7);
+
   if (_mono_mode) {
      if (color) {
-      _mono_buffer[i] = (_mono_buffer[i] | (1 << (7 - x % 8)));
+      _mono_buffer[i] = _mono_buffer[i] | mask;
       } else {
-      _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+      _mono_buffer[i] = _mono_buffer[i] & (0xFF ^ mask);
       }
   } else {
       // 4 gray mode
       color >>= 6; // Color is from 0 (black) to 255 (white)
+      
       switch (color)
       {
       case 1:
         // Dark gray: Correct
-        _buffer1[i] = (_buffer1[i] & (0xFF ^ (1 << (7 - x % 8))));
-        _buffer2[i] = (_buffer2[i] | (1 << (7 - x % 8)));
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] | mask;
         break;
       case 2:
         // Light gray: Correct
-        _buffer1[i] = (_buffer1[i] | (1 << (7 - x % 8)));
-        _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
         break;
       case 3:
         // WHITE
-        _buffer1[i] = (_buffer1[i] | (1 << (7 - x % 8)));
-        _buffer2[i] = (_buffer2[i] | (1 << (7 - x % 8)));
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] | mask;
         break;
       default:
         // Black
-        _buffer1[i] = (_buffer1[i] & (0xFF ^ (1 << (7 - x % 8))));
-        _buffer2[i] = (_buffer2[i] & (0xFF ^ (1 << (7 - x % 8))));
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
         break;
       }
   }
