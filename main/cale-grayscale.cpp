@@ -22,14 +22,14 @@
 //#include <gdew075T8.h>
 //#include <gdew0583t7.h>
 //#include <gdew0583z21.h>
-#include <gdew075T7Grays.h>
+#include <gdew042t2Grays.h>
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 EpdSpi io;
 //Gdew0583z21 display(io);
 //Gdew0583T7 display(io);
 //Gdew027w3 display(io);
-Gdew075T7Grays display(io);
+Gdew042t2Grays display(io);
 //Gdew042t2 display(io);
 //#include <plasticlogic021.h>
 //EpdSpi2Cs io;
@@ -394,11 +394,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     }
                     else if (color_lgray)
                     {
-                        color = EPD_LGRAY;
+                        color = EPD_LIGHTGREY;
                     }
                     else if (color_dgray)
                     {
-                        color = EPD_DGRAY;
+                        color = EPD_DARKGREY;
                     }
                     #ifdef HAS_16_LEVELS_GRAY
                         else if (color_slgray)

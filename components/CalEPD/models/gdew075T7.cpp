@@ -272,7 +272,7 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
 
         if (idx % 8 == 0)
         {
-          #if defined CONFIG_IDF_TARGET_ESP32
+          #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
           rtc_wdt_feed();
           #endif
           vTaskDelay(pdMS_TO_TICKS(1));

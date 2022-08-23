@@ -143,7 +143,7 @@ void Gdew0583T7::update()
     _send8pixel(i < sizeof(_buffer) ? _buffer[i] : 0x00);
 
     if (i%2000==0) {
-       #if defined CONFIG_IDF_TARGET_ESP32
+       #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
        rtc_wdt_feed();
        #endif
        vTaskDelay(pdMS_TO_TICKS(10));

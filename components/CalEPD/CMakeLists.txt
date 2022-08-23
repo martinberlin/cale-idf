@@ -61,7 +61,7 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    REQUIRES "epdiy"
+                    REQUIRES epdiy esp_timer
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it

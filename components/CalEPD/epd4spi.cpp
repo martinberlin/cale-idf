@@ -3,7 +3,6 @@
 #include <string.h>
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "soc/rtc_wdt.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     #define EPD_HOST    HSPI_HOST

@@ -1,7 +1,7 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    SRCS "cale.cpp"
+    #SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
@@ -11,7 +11,7 @@ idf_component_register(
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
     #SRCS "demos/demo-epaper.cpp"
-    #SRCS "demos/demo-4-grays-7inch"
+    SRCS "demos/demo-grays.cpp"
     
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"

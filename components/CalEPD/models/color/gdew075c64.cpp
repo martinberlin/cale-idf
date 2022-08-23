@@ -36,6 +36,7 @@ Gdew075C64::Gdew075C64(EpdSpi &dio) : Adafruit_GFX(GDEW075C64_WIDTH, GDEW075C64_
 {
   printf("Gdew075C64() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
          GDEW075C64_WIDTH, GDEW075C64_HEIGHT, GDEW075C64_BUFFER_SIZE);
+         
   printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
 }
 

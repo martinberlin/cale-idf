@@ -12,11 +12,11 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#if defined CONFIG_IDF_TARGET_ESP32
+#if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
   #include "soc/rtc_wdt.h"
 #endif
 #include <gdew_4grays.h>
-
+#include <esp_timer.h>
 // Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
 #define GDEW042T2_WIDTH 400
 #define GDEW042T2_HEIGHT 300

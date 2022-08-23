@@ -2,7 +2,7 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "iointerface.h"
-
+#include <esp_timer.h>
 #ifndef epdspi2cs_h
 #define epdspi2cs_h
 // Instruction R/W bit set HIGH for data READ

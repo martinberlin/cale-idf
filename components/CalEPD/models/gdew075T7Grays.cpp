@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+// Important: I suspect this way of rendering grays is not valid
+//            Please check the 04t2Grays and submit a PR to fix this if you can
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T7_PU_DELAY 100
 #define T1 0x0A
@@ -115,7 +116,7 @@ void Gdew075T7Grays::fillScreen(uint16_t color)
     _buffer[x] = color;
     if (x % 8 == 0)
         {
-          #if defined CONFIG_IDF_TARGET_ESP32
+          #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
           rtc_wdt_feed();
           #endif
           vTaskDelay(pdMS_TO_TICKS(2));

@@ -13,6 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <color/wave7colors.h>
+#include <esp_timer.h>
 
 // Controller: Unknown
 #define WAVE5I7COLOR_WIDTH 600

@@ -26,8 +26,10 @@ void Gdew075T8::init(bool debug)
   // Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, true);
   fillScreen(EPD_WHITE);
-  // Update the TWDT’s timeout period and panic configurations 
-  esp_task_wdt_init(99, true);
+  #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+    // Update the TWDT’s timeout period and panic configurations 
+    esp_task_wdt_init(99, true);
+  #endif
 }
 
 void Gdew075T8::fillScreen(uint16_t color)
