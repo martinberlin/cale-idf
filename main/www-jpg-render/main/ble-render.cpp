@@ -27,7 +27,7 @@ Gdew042t2Grays display(io);
 
 
 // Fonts
-#include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M16pt8b.h>
 
 uint64_t USEC = 1000000;
 int cursor_x = 0;
@@ -44,7 +44,7 @@ uint8_t *source_buf;      // JPG receive buffer
 uint32_t img_buf_pos = 0;
 uint8_t gamme_curve[256]; // Internal array for gamma grayscale
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 1;
+double gamma_value = 1.4;
 // Timers
 #include "esp_timer.h"
 uint32_t time_decomp = 0;
@@ -216,22 +216,28 @@ void progressBar(long processed, long total)
 // JPEGDEC fucntions by Bitbank
 // Refactored by @martinberlin for EPDiy as a Jpeg receive and render example
 //====================================================================================
+
+// color Borders: This is a crap selection that could be made much better
+uint8_t white2lg = 150;
+uint8_t lg2dg = 100;
+uint8_t dg2black = 50;
+
+/**
+ * @brief Convert 255 (WHITE) gradient till 0 (BLACK) into 4 grays
+ */
 uint16_t colorTo4Gray(uint8_t color) {
-    if (color > 240) {
+    if (color > white2lg) {
         return EPD_WHITE;
     }
-    if (color >180 && color <240) {
+    if (color > lg2dg && color < white2lg) {
         //printf("LG ");
         return EPD_LIGHTGREY;
     }
-    if (color >90 && color <180) {
-        //printf("DG ");
+    if (color > dg2black && color < lg2dg) {
         return EPD_DARKGREY;
     }
-    if (color <5) {
-        return EPD_BLACK;
-    }
-    return EPD_WHITE;
+   
+    return EPD_BLACK;
 }
 
 int JPEGDraw4Bits(JPEGDRAW *pDraw)
@@ -245,10 +251,11 @@ int JPEGDraw4Bits(JPEGDRAW *pDraw)
         uint8_t col2 = (col >> 4) & 0xf;
         uint8_t col3 = (col >> 8) & 0xf;
         uint8_t col4 = (col >> 12) & 0xf;
-        display.drawPixel(pDraw->x + xx, pDraw->y + yy, colorTo4Gray(gamme_curve[col1*16]));
-        display.drawPixel(pDraw->x + xx + 1, pDraw->y + yy, colorTo4Gray(gamme_curve[col2*16]));
-        display.drawPixel(pDraw->x + xx + 2, pDraw->y + yy, colorTo4Gray(gamme_curve[col3*16]));
-        display.drawPixel(pDraw->x + xx + 3, pDraw->y + yy, colorTo4Gray(gamme_curve[col4*16]));
+        // Larry: It could be upper/lower nibble are reversed. Yes he was right:
+        display.drawPixel(pDraw->x + xx +1, pDraw->y + yy, colorTo4Gray(gamme_curve[col1*16])); // 0
+        display.drawPixel(pDraw->x + xx , pDraw->y + yy, colorTo4Gray(gamme_curve[col2*16]));   // 1
+        display.drawPixel(pDraw->x + xx + 3, pDraw->y + yy, colorTo4Gray(gamme_curve[col3*16]));// 2
+        display.drawPixel(pDraw->x + xx + 2, pDraw->y + yy, colorTo4Gray(gamme_curve[col4*16]));// 3
 
         /* if (yy==0 && mcu_count==0) {
           printf("1.%d %d %d %d ",col1,col2,col3,col4);
@@ -271,6 +278,7 @@ int decodeJpeg(uint8_t *source_buf, int xpos, int ypos) {
     jpeg.setPixelType(FOUR_BIT_DITHERED);
     
     if (jpeg.decodeDither(dither_space, 0))
+    //if (jpeg.decode(0,0,0))
       {
         time_decomp = (esp_timer_get_time() - decode_start)/1000 - time_render;
         ESP_LOGI("decode", "%d ms - %dx%d", time_decomp, jpeg.getWidth(), jpeg.getHeight());
@@ -692,7 +700,7 @@ void app_main(void)
     esp_err_t ret;
     display.init(0);
     display.setMonoMode(false); // Use 4 Grays
-    display.setFont(&Ubuntu_M24pt8b);
+    display.setFont(&Ubuntu_M16pt8b);
     
     printf("Free heap:%d\n",xPortGetFreeHeapSize());
 
@@ -720,14 +728,13 @@ void app_main(void)
     }
     //write_text(cursor_x, cursor_y, (char*)"Use Chrome only. Recommended: cale.es");
 
-    int cursor_x = 10;
-    int cursor_y = display.height() - 60;
-    display.setTextColor(EPD_BLACK);
+    int cursor_x = 60;
+    int cursor_y = display.height() - 30;
     write_text(cursor_x, cursor_y, (char*)"BLE initialized");
     cursor_y-= 44;
-    display.fillRect(10,260,10,10,EPD_BLACK);
-    display.fillRect(20,260,10,10,EPD_DARKGREY);
-    display.fillRect(30,260,10,10,EPD_LIGHTGREY);
+    display.fillRect(10,display.height()-40,10,10,EPD_BLACK);
+    display.fillRect(20,display.height()-40,10,10,EPD_DARKGREY);
+    display.fillRect(30,display.height()-40,10,10,EPD_LIGHTGREY);
     display.update();
 
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
