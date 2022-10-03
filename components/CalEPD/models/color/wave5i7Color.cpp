@@ -13,6 +13,7 @@ Wave5i7Color::Wave5i7Color(EpdSpi& dio):
 {
   printf("Wave5i7Color() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
   WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT);  
+  _buffer= (uint8_t *)malloc(WAVE5I7COLOR_BUFFER_SIZE); 
 }
 
 //Initialize the display

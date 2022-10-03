@@ -36,7 +36,8 @@ class Wave5i7Color : public Epd7Color
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[WAVE5I7COLOR_BUFFER_SIZE];
+    // uint8_t _buffer[WAVE5I7COLOR_BUFFER_SIZE];
+    uint8_t *_buffer;
 
     bool _initial = true;
     void _wakeUp();
