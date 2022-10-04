@@ -33,9 +33,9 @@ void Wave5i7Color::fillScreen(uint16_t color)
 {
   uint8_t pv = _color7(color);
   uint8_t pv2 = pv | pv << 4;
-  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  for (uint32_t x = 0; x <WAVE5I7COLOR_BUFFER_SIZE; x++)
   {
-    _buffer[x] = pv2;
+    *(_buffer + x)= pv2;
   }
 
   if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_buffer));
@@ -110,12 +110,13 @@ void Wave5i7Color::update()
   if (spi_optimized) {
     uint32_t i = 0;
     uint16_t xLineBytes = WAVE5I7COLOR_WIDTH/2;
+    // uint8_t *x1buf;
     uint8_t x1buf[xLineBytes];
     for (uint16_t y = 1; y <= WAVE5I7COLOR_HEIGHT; y++)
     {
       for (uint16_t x = 1; x <= xLineBytes; x++)
       {
-        uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x33;
+        uint8_t data = i < WAVE5I7COLOR_BUFFER_SIZE ? *(_buffer + i) : 0x33;
         x1buf[x - 1] = data;
         if (x == xLineBytes)
         { // Flush the X line buffer to SPI
@@ -131,7 +132,7 @@ void Wave5i7Color::update()
 
   } else {
     for (uint32_t i = 0; i < sizeof(_buffer); i++) {
-      IO.data(_buffer[i]);
+      IO.data(*(_buffer + i));
     }
   }
   
@@ -223,6 +224,6 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   uint32_t i = x / 2 + uint32_t(y) * (WAVE5I7COLOR_WIDTH / 2);
   uint8_t pv = _color7(color);
       
-  if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
-    else _buffer[i] = (_buffer[i] & 0x0F) | (pv << 4);
+  if (x & 1) *(_buffer + i) = (*(_buffer + i) & 0xF0) | pv;
+    else *(_buffer +i) = (*(_buffer + i) & 0x0F) | (pv << 4);
 }
