@@ -1,3 +1,5 @@
+#pragma once
+
 #include <calepd_version.h>
 #include <stdio.h>
 #include <stdlib.h>

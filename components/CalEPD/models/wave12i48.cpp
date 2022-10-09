@@ -1,3 +1,4 @@
+// WARNING: This epaper requires an ESP32 with PSRAM (Like esp32-wrover)
 #include "wave12i48.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,9 +20,7 @@ Wave12I48::Wave12I48(Epd4Spi& dio):
   Adafruit_GFX(WAVE12I48_WIDTH, WAVE12I48_HEIGHT),
   Epd(WAVE12I48_WIDTH, WAVE12I48_HEIGHT), IO(dio)
 {
-  rtc_wdt_feed();
-  vTaskDelay(pdMS_TO_TICKS(1));
-  printf("Wave12I48() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
+  printf("Wave12I48() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\nNOTE: Requires external RAM\n",
   WAVE12I48_WIDTH, WAVE12I48_HEIGHT, WAVE12I48_BUFFER_SIZE);
   printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());
 }
@@ -49,9 +48,9 @@ void Wave12I48::init(bool debug)
 
 void Wave12I48::fillScreen(uint16_t color)
 {
-  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n",color,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n", color, WAVE12I48_BUFFER_SIZE);
   uint8_t data = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK : WAVE12I48_8PIX_WHITE;
-  for (uint32_t x = 0; x < sizeof(_buffer); x++)
+  for (uint32_t x = 0; x < WAVE12I48_BUFFER_SIZE; x++)
   {
     _buffer[x] = data;
   }
@@ -135,7 +134,7 @@ void Wave12I48::update()
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   
-  printf("Sending a buffer[%d] via SPI\n",sizeof(_buffer));
+  printf("Sending a buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
   uint32_t i = 0;
   IO.cmdM1S1M2S2(0x13);
 
@@ -153,7 +152,7 @@ void Wave12I48::update()
   // Optimized to send in 81/82 byte chuncks (v2 after our conversation with Samuel)
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
         for(uint16_t x = 1; x <= WAVE12I48_WIDTH/8; x++) {
-          uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+          uint8_t data = i < WAVE12I48_BUFFER_SIZE ? _buffer[i] : 0x00;
 
         if (y <= 492) {  // S2 & M2 area
           if (x <= 81) { // 648/8 -> S2

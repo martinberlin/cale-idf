@@ -3,27 +3,27 @@ menu "Display Configuration"
     comment "Mosi and Clock should be set for any epaper"
     config EINK_SPI_MOSI
         int "EPD SPI: GPIO for MOSI (DIN in epaper) * Universal MOSI"
-        range 0 35
+        range 0 48
         default 23
     config EINK_SPI_CLK
         int "EPD SPI: GPIO for Clock                * Universal CLK"
-        range 0 37
+        range 0 48
         default 18
     config EINK_SPI_CS
         int "EPD SPI: GPIO for Chip Select"
-        range -1 34
+        range -1 48
         default 32
     config EINK_DC
         int "EPD: GPIO for DC"
-        range -1 34
+        range -1 48
         default 27
     config EINK_RST
         int "EPD: GPIO for Reset"
-        range -1 34
+        range -1 48
         default 26
     config EINK_BUSY
         int "EPD: GPIO for Busy signal - DONE for Good Display/Waveshare einks! Leave rest on 0 unless is Wave12I48 or PlasticLogic"
-        range -1 39
+        range -1 48
         default 35
     
     comment "Important: Leave the rest of unconfigured GPIOs to -1 unless multi-SPI channels (wave12I48) or Plasticlogic EPDs"
@@ -35,7 +35,7 @@ menu "Display Configuration"
         default 4
     config EINK_SPI_MISO
         int "EPD SPI: GPIO for MISO"
-        range -1 36
+        range -1 48
         default 19
         
     comment "Config below applies to 4 epaper module wave12I48 w/4 SPI CS & BUSY pins (14 pins)"

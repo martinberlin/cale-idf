@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: IL91874  Note: This is the display that the T5S from TTGO use
 #define GDEW027W3_WIDTH 176

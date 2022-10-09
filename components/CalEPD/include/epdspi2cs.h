@@ -2,8 +2,11 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "iointerface.h"
+
 #include <vector>
 using namespace std;
+
+#include <esp_timer.h>
 
 #ifndef epdspi2cs_h
 #define epdspi2cs_h

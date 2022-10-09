@@ -2,24 +2,59 @@
 
 ### Requirements
 
+<<<<<<< HEAD
 * esp32 or esp32S2 with PSRAM (C3 also works check notes below)
 * Espressif IDF framework 4.3
 * An SPI epaper (see wiki for supported models)
 * Please read [RainMaker WiFi provisioning in the Wiki to get more details about this branch](https://github.com/martinberlin/cale-idf/wiki/RainMaker-WiFi-provisioning)
+=======
+* esp32 or esp32S2 / C3 in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
+* Espressif IDF framework >= 4.2 (4.3 -> 4.4 ideally to support latest S3)
+* An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
+>>>>>>> idf_v5
 
-ESP32C3 also works as a target. For C3 the compilation of
-/component/epd_driver is excluded since this uses ESP32 two cores and won't compile in C3.
-Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working.
+ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
+ **idf.py set-target esp32c3**
 
-Then just select one of the SPI examples, and do a: **idf.py set-target esp32c3**
+ **idf.py --preview set-target esp32s3**  (Only v4.4 since tried this only with beta3)
 
+Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
-Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of CalEPD epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
-On latest release, CalEPD has also support for FocalTech I2C touch panel, enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
+### 2022 update
+
+This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Also in my top list is to make this work with latest Espressif workhorse, the ESP32S3, since it seems that with two LX7 cores is the fastest one so far.
+
+Please note that parallel driver epdiy is not anymore a requirement and after last update **epdiy V6** is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
+
+    git submodule update --init --recursive
+
+Also please notice that if you need to exclude any of the components, like for example epdiy or any other, the fastest and most straigh-forward way is to open the CMakeLists of that component and add as the first line:
+
+return()
+
+That will make this component not to get in the build process.
+If you are not using EPDiy to drive your epapers, this step is not needed. If you are, please go to:
+CalEPD/CMakeLists.txt
+
+And enable epdiy in the REQUIRE section and the related classes:
+
+    # Uncomment for parallel epapers:
+    "epdParallel.cpp"
+    "models/parallel/ED047TC1.cpp"
+    "models/parallel/ED047TC1touch.cpp"
+    "models/parallel/ED060SC4.cpp"
+    # Add more if you need to copying one of the existing, since not all eink sizes are supported
+
+### Additional features
+
+CalEPD has also support for FocalTech and L58 I2C touch panels used in Lilygo parallel epaper [EPD047](https://github.com/martinberlin/cale-idf/tree/master/components/CalEPD/models/parallel), enabling you to make simple UX interfaces using small epaper displays. This is optional and can be enabled only when the Firmware requires touch.
 Please check the [Wiki](https://github.com/martinberlin/cale-idf/wiki) for latest news and to see what displays are supported. The Wiki is the perfect place to make updates that are not branch dependant so our documentation efforts will be focused there.
-CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83 and 7.5 inches).
+CalEPD supports currently the most popular epaper sizes and four color models (4.2, 5.83, 7.5 and 12.48 inches).
 
-- Use **refactor/oop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- Use **develop** to try the latest features. Only after days or even weeks of testing, it will be merged in master, and eventually land in a new [CalEPD epaper component release](https://github.com/martinberlin/CalEPD)
+- If you are interested in LVGL / UX please check our project [lv_port_esp32-epaper](https://github.com/martinberlin/lv_port_esp32-epaper). In this experimental LVGL esp32 fork we are exploring the possibility to make UX in fast paralell displays.
+
+Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/tree/master/hardware) or a [Lilygo T5-4.7 inches epaper](https://github.com/Xinyuan-LilyGO/LilyGo-EPD47).
 
 ## Fork policy
 
@@ -29,48 +64,59 @@ CalEPD supports currently the most popular epaper sizes and four color models (4
 2. You will contribute adding a new epaper model that does not exist or add a new functionality to an existing one.
 3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
 
-All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. Forking is not bookmarking!
+All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. 
 
-We don't like having copies of this without any reason. It is just a bad practice, makes things confusing, and makes absolutely no sense. 
+We don't like having copies of the whole repository without any reason. 
+    
+## News
+
+- We worked in making an example and merge request, for the EPDiy parallel epaper component, in order to add a [JPG download plus render with HTTPS support example](https://github.com/vroland/epdiy/tree/master/examples/www-image). If there is interest in having this for the Black/White and 3 color epaper models (B/R or B/Yellow) I will adapt a version in the examples. Just contact me on the email that is on my Github profile.
+- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/42-wifi-provisioning](https://github.com/martinberlin/cale-idf/tree/feature/42-wifi-provisioning) **Note:** It needs an external submodule component so don't forget to run:
+
+    git submodule update --init --recursive
+
+[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 ## Requesting for new models
 
 If your epaper model is not there just open an Issue and send us one epaper with the SPI interface. If we can make a working implementation and new C++ class then you can use it in your Firmware and we keep the eink as a payment for our effort. If we fail and cannot make a working implementation then it comes back to you at no cost.
+Also following existing classes you can do it yourself. Just check on the pull requests to see how other developers did to add their epapers!
 
 ## CALE Firmware
 
 **CALE does only 3 things at the moment and is very easy to set up:**
 
-1. It connects to cale.es and downloads a Screen bitmap.
+1. It connects to [cale.es](http://cale.es) and downloads a Screen bitmap.
 2. In "Streaming mode" it pushes the pixels to Adafruit GFX buffer and at the end renders it in your Epaper.
 3. It goes to sleep the amount of minutes you define in the ESP-IDF menuconfig
 
-And of course wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper.
+It wakes up after this deepsleep and goes back to point 1 making it an ideal Firmware if you want to refresh an Events calendar or weather Forecast display. It does not need to be tied to our CALE service. You can use your own full url to your bitmap image. We just recommend to use CALE.es since you can easily connect it to external APIs and have a living epaper. Optionally you can do the same, but with a JPG, using our [www-jpg-render example](https://github.com/martinberlin/cale-idf/tree/master/main/www-jpg-render). Please note that in many cases you will require an ESP32-Wrover or similar with PSRAM.
 
 **Different cpp examples:**
 
 - **cale.cpp** Main example to use with monochrome or 3 color epapers from Goodisplay/Waveshare
-- **cale-grayscale.cpp** Example only to use with PlasticLogic epapers
+- **cale-grayscale.cpp** Example only to use with PlasticLogic epapers, serves as footprint to do it with other models
 - **cale-sensor.cpp** Same as cale.cpp but it has a sensor interrupt when a GPIO goes HIGH (Rising) this triggers a new image request
 - **cale-7-color.cpp** Example to retrieve an 4 bits image and send it with up to 7 colors the 5.65 Acep epaper
 
+Best settings on CALE.es website that we found to display color photos with cale-7-color is to use **Dither mode: 3x3** and **Bits per pixel: 24**. This is downgraded to 4bpp using dithering but that's really ok since 16 colors are more than the epaper supports. It's not a great photo quality but this epapers where designed to make labels and supermarket prices, not to display quality color pictures.
+
 ROADMAP
     
-    Rest of 2020 Enabling touch support to enable UX design in ESP32
+    2022->till April performance optimization and research in parallel eink drivers
+    2021->Oct->Dec Testing other projects and small pause (Lot's of other work that are not electronics related...)
+    2021->Aug->Oct Imaging libraries: Adding JPG support and optimizing processes
+    2021-Jun->Aug Parallel interaction research: UX on epaper displays
+    2021-Mar till June Enabling touch support to enable UX design in ESP32
     2020-Sep Optimizing instantiation and configuration
     2020-Aug Adding color epapers 5.83 and 7.5 inches
     2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
-    
-## News
-
-- Multi SPI epaper 12.48 class Wave12I48 is working. This epaper has Waveshare added electronics and ESP32 support. It has a 160 Kb buffer, so it leaves no DRAM for your program. Check my PSIRAM hack to replace the DevKitC with a ESP32 WROVER-B board if you want to have a working sketch with additional libraries (WiFi, download image from www, etc) Without PSIRAM only a very basic sketch can be made.
-
-[News section has been moved to the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 **CALE-IDF uses this components:**
 
 - [CalEPD](https://github.com/martinberlin/CalEPD) the epaper component
 - [Adafruit GFX for ESP-IDF](https://github.com/martinberlin/Adafruit-GFX-Library-ESP-IDF) My own fork of Adafruit display library
+- [EPDiy](https://github.com/martinberlin/epdiy-rotation) it's our own fork of the parallel epaper component EPDiy with only the directory structure to use it as an IDF component
 
 They are at the moment included without git submodules so we can develop fast without updating them all the time. But they are also available to be used as your project ESP-IDF components.
 

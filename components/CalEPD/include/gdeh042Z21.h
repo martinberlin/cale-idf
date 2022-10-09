@@ -13,6 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: UC8276
 

@@ -39,10 +39,11 @@ bool debugVerbose = false;
 
 // Important configuration. The class should match your epaper display model:
 //#include <gdew075T7.h>
-#include "gdeh0213b73.h"
+//#include "gdeh0213b73.h"
+#include "gdeh0154d67.h"
 EpdSpi io;
-Gdeh0213b73 display(io);
-
+//Gdeh0213b73 display(io);
+Gdeh0154d67 display(io);
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
@@ -51,7 +52,7 @@ const char* timeQuery = "http://fs.fasani.de/api/?q=date&timezone=Europe/Berlin&
 char nvs_day_month[15];
 
 // Clock will refresh each N minutes. Use one if you want a more realtime digital clock (But battery will last less)
-int sleepMinutes = 4;
+int sleepMinutes = 2;
 
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
@@ -437,7 +438,7 @@ void wifi_init_sta(void)
     sprintf(reinterpret_cast<char *>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD);
     wifi_config.sta.pmf_cfg.capable = true;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");

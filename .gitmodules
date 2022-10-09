@@ -1,3 +1,8 @@
 [submodule "components/rmaker_common"]
 	path = components/rmaker_common
 	url = https://github.com/espressif/esp-rainmaker-common.git
+
+[submodule "components/epdiy"]
+	path = components/epdiy
+	url = https://github.com/martinberlin/epdiy-rotation.git
+	branch = lilygos3

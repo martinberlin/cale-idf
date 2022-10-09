@@ -12,8 +12,12 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include "soc/rtc_wdt.h"
+// Note in S3 rtc_wdt has errors: https://github.com/espressif/esp-idf/issues/8038
+#if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+  #include "soc/rtc_wdt.h"
+#endif
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 #define GDEW075T7_WIDTH 800
 #define GDEW075T7_HEIGHT 480
@@ -40,16 +44,18 @@ class Gdew075T7 : public Epd
     void initPartialUpdate();
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
-    // Alternative method to updateWindow
-    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
+    void fillRawBufferPos(uint16_t index, uint8_t value);
+    void fillRawBufferImage(uint8_t image[], uint16_t size);
     void update();
 
   private:
     EpdSpi& IO;
 
     uint8_t _buffer[GDEW075T7_BUFFER_SIZE];
+    // Place _buffer in external RAM
+    //uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEW075T7_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
+
     bool _using_partial_mode = false;
     bool _initial = true;
     

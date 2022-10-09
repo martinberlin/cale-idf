@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: IL3829
 #define HEL0151_WIDTH 200

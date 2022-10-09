@@ -2,6 +2,9 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "iointerface.h"
+#if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+  #include "soc/rtc_wdt.h"
+#endif
 
 #ifndef epd4spi_h
 #define epd4spi_h

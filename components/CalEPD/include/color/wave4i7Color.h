@@ -13,6 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <color/wave7colors.h>
+#include <esp_timer.h>
 
 // Controller: SPD1656 https://www.waveshare.com/w/upload/b/bf/SPD1656_1.1.pdf
 #define WAVE4I7COLOR_WIDTH 640

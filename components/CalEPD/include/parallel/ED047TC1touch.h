@@ -45,6 +45,7 @@ class Ed047TC1t : public EpdParallel
     // Touch methods
     void touchLoop();
     void registerTouchHandler(void(*fn)(TPoint point, TEvent e));
+    void registerMultiTouchHandler(void(*fn)(TPoint point1, TPoint point2, TEvent e));
     void(*_touchHandler)(TPoint point, TEvent e) = nullptr;
     void displayRotation(uint8_t rotation); // Rotates both Epd & Touch
 
