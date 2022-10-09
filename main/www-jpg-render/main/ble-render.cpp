@@ -44,7 +44,7 @@ uint8_t *source_buf;      // JPG receive buffer
 uint32_t img_buf_pos = 0;
 uint8_t gamme_curve[256]; // Internal array for gamma grayscale
 // Nice test values: 0.9 1.2 1.4 higher and is too bright
-double gamma_value = 1.4;
+double gamma_value = 1.1;
 // Timers
 #include "esp_timer.h"
 uint32_t time_decomp = 0;
@@ -511,11 +511,14 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                 ESP_LOGI("ble-rec", "%d ms - download", time_receive);
                 ESP_LOGI("render", "%d ms - copying pix", time_render);
 
-                printf("Free heap:%d after JPG decode\n",xPortGetFreeHeapSize());
+                // For some unknown reason BT is interfiering with display update that does not fire in this point
+                //esp_bluedroid_disable();
+                //esp_bt_controller_disable();
+                vTaskDelay(100);
+                display.update();
+
                 // RESET Pointers
                 reset_variables();
-
-                display.update();
                 break;
             }
             if (!is_short_cmd) {
@@ -527,9 +530,9 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             }
 
             // TO Debug received bytes
-            /* if (received_events<3) {
+            if (received_events<3) {
                 esp_log_buffer_hex(GATTS_TAG, param->write.value, param->write.len);
-            } */
+            }
             #if DOWNLOAD_PROGRESS_BAR
             if (received_events%10 == 0) {
                 progressBar(img_buf_pos, received_length);
@@ -637,6 +640,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
     }
     case ESP_GATTS_DISCONNECT_EVT:
         ESP_LOGI(GATTS_TAG, "ESP_GATTS_DISCONNECT_EVT, disconnect reason 0x%x", param->disconnect.reason);
+        
         reset_variables();
 
         esp_ble_gap_start_advertising(&adv_params);
@@ -726,7 +730,6 @@ void app_main(void)
     if (nvs_boots%2 == 0) {
         // One boot yes, one no A - B test do something different
     }
-    //write_text(cursor_x, cursor_y, (char*)"Use Chrome only. Recommended: cale.es");
 
     int cursor_x = 60;
     int cursor_y = display.height() - 30;
@@ -788,8 +791,6 @@ void app_main(void)
     if (local_mtu_ret){
         ESP_LOGE(GATTS_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
-    
-    printf("Free heap:%d after BLE init\n",xPortGetFreeHeapSize());
     cursor_y = 10;
 
         double gammaCorrection = 1.0 / gamma_value;
@@ -808,5 +809,5 @@ void app_main(void)
         ESP_LOGE("main", "Initial alloc source_buf failed!");
     }
 
-    printf("Free heap:%d after JPG buffer\n",xPortGetFreeHeapSize());
+    printf("Free heap:%d after JPG buffer creation\n",xPortGetFreeHeapSize());
 }

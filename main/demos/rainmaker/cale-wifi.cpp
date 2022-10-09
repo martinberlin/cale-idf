@@ -42,12 +42,12 @@ bool readyToRequestImage = false;
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-#include <gdew0583z21.h>
+#include <gdeh042Z96.h>
 // Font always after display
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
 
 EpdSpi io;
-Gdew0583z21 display(io);
+Gdeh042Z96 display(io);
 
 esp_rmaker_device_t *epaper_device;
 
@@ -85,8 +85,8 @@ struct BmpHeader
     uint32_t format;
 } bmp;
 
-extern const char ota_server_cert[] asm("_binary_server_crt_start");
-
+// OTA Disabled
+//extern const char ota_server_cert[] asm("_binary_server_crt_start");
 
 void deepsleep(){
     nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);
@@ -438,6 +438,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
         break;
+        // Not handled, ex. HTTP_EVENT_REDIRECT
+    default:
+        break;
     }
     return ESP_OK;
 }
@@ -608,10 +611,10 @@ void app_main(void)
     esp_rmaker_node_add_device(node, epaper_device);
 
     /* Enable OTA */
-    esp_rmaker_ota_config_t ota_config = {
+    /* esp_rmaker_ota_config_t ota_config = {
         .server_cert = ota_server_cert,
     };
-    esp_rmaker_ota_enable(&ota_config, OTA_USING_PARAMS);
+    esp_rmaker_ota_enable(&ota_config, OTA_USING_PARAMS); */
 
     /* Enable timezone service which will be require for setting appropriate timezone
      * from the phone apps for scheduling to work correctly.

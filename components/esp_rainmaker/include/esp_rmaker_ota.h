@@ -21,6 +21,29 @@ extern "C"
 {
 #endif
 
+/** @cond **/
+/** ESP RainMaker Event Base */
+ESP_EVENT_DECLARE_BASE(RMAKER_OTA_EVENT);
+/** @endcond **/
+
+/** ESP RainMaker Events */
+typedef enum {
+    /* Invalid event. Used for internal handling only */
+    RMAKER_OTA_EVENT_INVALID = 0,
+    /** RainMaker OTA is Starting */
+    RMAKER_OTA_EVENT_STARTING,
+    /** RainMaker OTA has Started */
+    RMAKER_OTA_EVENT_IN_PROGRESS,
+    /** RainMaker OTA Successful */
+    RMAKER_OTA_EVENT_SUCCESSFUL,
+    /** RainMaker OTA Failed */
+    RMAKER_OTA_EVENT_FAILED,
+    /** RainMaker OTA Rejected */
+    RMAKER_OTA_EVENT_REJECTED,
+    /** RainMaker OTA Delayed */
+    RMAKER_OTA_EVENT_DELAYED,
+} esp_rmaker_ota_event_t;
+
 /** Default ESP RainMaker OTA Server Certificate */
 extern const char *ESP_RMAKER_OTA_DEFAULT_SERVER_CERT;
 
@@ -34,6 +57,8 @@ typedef enum {
     OTA_STATUS_FAILED,
     /** OTA was delayed by the application */
     OTA_STATUS_DELAYED,
+    /** OTA rejected due to some reason (wrong project, version, etc.) */
+    OTA_STATUS_REJECTED,
 } ota_status_t;
 
 /** OTA Workflow type */
@@ -58,6 +83,8 @@ typedef struct {
     const char *server_cert;
     /** The private data passed in esp_rmaker_enable_ota() */
     char *priv;
+    /** OTA Metadata. Applicable only for OTA using Topics. Will be received (if applicable) from the backend, alongwith the OTA URL */
+    char *metadata;
 } esp_rmaker_ota_data_t;
 
 /** Function prototype for OTA Callback
@@ -104,7 +131,7 @@ typedef struct {
      * The certificate to be passed to the OTA callback for server authentication.
      * This is mandatory, unless you have disabled it in ESP HTTPS OTA config option.
      * If you are using the ESP RainMaker OTA Service, you can just set this to
-     * `ESP_RMAKER_DEFAULT_OTA_SERVER_CERT`.
+     * `ESP_RMAKER_OTA_DEFAULT_SERVER_CERT`.
      */
     const char *server_cert;
     /** Private Data.
@@ -145,6 +172,29 @@ esp_err_t esp_rmaker_ota_enable(esp_rmaker_ota_config_t *ota_config, esp_rmaker_
  */
 esp_err_t esp_rmaker_ota_report_status(esp_rmaker_ota_handle_t ota_handle, ota_status_t status, char *additional_info);
 
+/** Default OTA callback
+ *
+ * This is the default OTA callback which will get used if you do not pass your own callback. You can call this
+ * even from your callback, in case you want better control on when the OTA can proceed and yet let the actual
+ * OTA process be managed by the RainMaker Core.
+ *
+ * @param[in] handle An OTA handle assigned by the ESP RainMaker Core
+ * @param[in] ota_data The data to be used for the OTA
+ *
+ * @return ESP_OK if the OTA was successful
+ * @return ESP_FAIL if the OTA failed.
+ * */
+esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t handle, esp_rmaker_ota_data_t *ota_data);
+
+/** Fetch OTA Info
+ *
+ * For OTA using Topics, this API can be used to explicitly ask the backend if an OTA is available.
+ * If it is, then the OTA callback would get invoked.
+ *
+ * @return ESP_OK if the OTA fetch publish message was successful.
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_ota_fetch(void);
 #ifdef __cplusplus
 }
 #endif

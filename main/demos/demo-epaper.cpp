@@ -7,13 +7,13 @@
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
-#include <gdew0213i5f.h>
+//#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 
 // Color
 //#include <gdew0583z21.h>
-//#include <gdeh042Z96.h>
+#include <gdeh042Z96.h>
 //#include <gdeh042Z21.h>
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
@@ -25,8 +25,8 @@ Wave12I48 display(io); */
 EpdSpi io;
 //Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-Gdew0213i5f display(io);
-
+//Gdeh042Z21 display(io);
+Gdeh042Z96 display(io);
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
@@ -59,8 +59,8 @@ void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
-   display.init(true);
-   display.update();
+   display.init();
+   
    //display.setRotation(2);
    //display.update();return;
    //delay(1000);
@@ -76,16 +76,18 @@ void app_main(void)
    }
    
    //return;
-   display.fillScreen(EPD_WHITE);
+   /* display.fillScreen(EPD_WHITE);
+   display.update();
+   delay(6000); */
    uint16_t firstBlock = display.width()/4;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE);
+   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_BLACK);
 
    display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
    display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
-   display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
+   display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_WHITE); 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
    display.setCursor(display.width()/2-130,display.height()-90);
@@ -96,7 +98,7 @@ void app_main(void)
    display.println("demo-epaper.cpp full update is done!");
    display.update();
    // Leave the epaper White ready for storage
-   delay(2000);
+   delay(19000);
    display.fillScreen(EPD_WHITE);
    display.update();
 

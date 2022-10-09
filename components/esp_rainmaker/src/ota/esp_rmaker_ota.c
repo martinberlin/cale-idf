@@ -14,24 +14,52 @@
 
 #include <string.h>
 #include <freertos/FreeRTOS.h>
+#include <freertos/timers.h>
 #include <freertos/task.h>
+#include <esp_event.h>
 #include <esp_log.h>
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 #include <esp_https_ota.h>
 #include <esp_wifi_types.h>
 #include <esp_wifi.h>
+#include <nvs.h>
+#if CONFIG_BT_ENABLED
+#include <esp_bt.h>
+#endif /* CONFIG_BT_ENABLED */
 
 #include <esp_rmaker_utils.h>
+#include <esp_rmaker_common_events.h>
+
+#include "esp_rmaker_internal.h"
 #include "esp_rmaker_ota_internal.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
+// Features supported in 4.4+
+
+#ifdef CONFIG_ESP_RMAKER_USE_CERT_BUNDLE
+#define ESP_RMAKER_USE_CERT_BUNDLE
+#include <esp_crt_bundle.h>
+#endif
+
+#else
+
+#ifdef CONFIG_ESP_RMAKER_USE_CERT_BUNDLE
+#warning "Certificate Bundle not supported below IDF v4.4. Using provided certificate instead."
+#endif
+
+#endif /* !IDF4.4 */
 static const char *TAG = "esp_rmaker_ota";
+static TimerHandle_t s_ota_rollback_timer;
 
 #define OTA_REBOOT_TIMER_SEC    10
-#define DEF_HTTP_BUFFER_SIZE    1024
-
-extern const char esp_rmaker_ota_def_cert[] asm("_binary_ota_server_crt_start");
+#define DEF_HTTP_TX_BUFFER_SIZE    1024
+#define DEF_HTTP_RX_BUFFER_SIZE    CONFIG_ESP_RMAKER_OTA_HTTP_RX_BUFFER_SIZE
+#define RMAKER_OTA_ROLLBACK_WAIT_PERIOD    CONFIG_ESP_RMAKER_OTA_ROLLBACK_WAIT_PERIOD
+extern const char esp_rmaker_ota_def_cert[] asm("_binary_rmaker_ota_server_crt_start");
 const char *ESP_RMAKER_OTA_DEFAULT_SERVER_CERT = esp_rmaker_ota_def_cert;
+ESP_EVENT_DEFINE_BASE(RMAKER_OTA_EVENT);
+
 char *esp_rmaker_ota_status_to_string(ota_status_t status)
 {
     switch (status) {
@@ -43,13 +71,43 @@ char *esp_rmaker_ota_status_to_string(ota_status_t status)
             return "failed";
         case OTA_STATUS_DELAYED:
             return "delayed";
+        case OTA_STATUS_REJECTED:
+            return "rejected";
         default:
             return "invalid";
     }
     return "invalid";
 }
+
+esp_rmaker_ota_event_t esp_rmaker_ota_status_to_event(ota_status_t status)
+{
+    switch (status) {
+        case OTA_STATUS_IN_PROGRESS:
+            return RMAKER_OTA_EVENT_IN_PROGRESS;
+        case OTA_STATUS_SUCCESS:
+            return RMAKER_OTA_EVENT_SUCCESSFUL;
+        case OTA_STATUS_FAILED:
+            return RMAKER_OTA_EVENT_FAILED;
+        case OTA_STATUS_DELAYED:
+            return RMAKER_OTA_EVENT_DELAYED;
+        case OTA_STATUS_REJECTED:
+            return RMAKER_OTA_EVENT_REJECTED;
+        default:
+            ESP_LOGD(TAG, "No Rmaker OTA Event for given status: %d: %s",
+                    status, esp_rmaker_ota_status_to_string(status));
+    }
+    return RMAKER_OTA_EVENT_INVALID;
+}
+
+static inline esp_err_t esp_rmaker_ota_post_event(esp_rmaker_event_t event_id, void* data, size_t data_size)
+{
+    return esp_event_post(RMAKER_OTA_EVENT, event_id, data, data_size, portMAX_DELAY);
+}
+
 esp_err_t esp_rmaker_ota_report_status(esp_rmaker_ota_handle_t ota_handle, ota_status_t status, char *additional_info)
 {
+    ESP_LOGI(TAG, "Reporting %s: %s", esp_rmaker_ota_status_to_string(status), additional_info);
+
     if (!ota_handle) {
         return ESP_FAIL;
     }
@@ -64,6 +122,7 @@ esp_err_t esp_rmaker_ota_report_status(esp_rmaker_ota_handle_t ota_handle, ota_s
         esp_rmaker_ota_t *ota = (esp_rmaker_ota_t *)ota_handle;
         ota->last_reported_status = status;
     }
+    esp_rmaker_ota_post_event(esp_rmaker_ota_status_to_event(status), additional_info, strlen(additional_info) + 1);
     return err;
 }
 
@@ -80,7 +139,8 @@ void esp_rmaker_ota_common_cb(void *priv)
         .url = ota->url,
         .filesize = ota->filesize,
         .server_cert = ota->server_cert,
-        .priv = ota->priv
+        .priv = ota->priv,
+        .metadata = ota->metadata
     };
     ota->ota_cb((esp_rmaker_ota_handle_t) ota, &ota_data);
 ota_finish:
@@ -104,32 +164,34 @@ static esp_err_t validate_image_header(esp_rmaker_ota_handle_t ota_handle,
         ESP_LOGD(TAG, "Running firmware version: %s", running_app_info.version);
     }
 
-#ifndef CONFIG_ESP_RMAKER_SKIP_VERSION_CHECK
-    if (memcmp(new_app_info->version, running_app_info.version, sizeof(new_app_info->version)) == 0) {
-        ESP_LOGW(TAG, "Current running version is same as the new. We will not continue the update.");
-        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_FAILED, "Same version received");
-        return ESP_FAIL;
-    }
-#endif
-
 #ifndef CONFIG_ESP_RMAKER_SKIP_PROJECT_NAME_CHECK
     if (memcmp(new_app_info->project_name, running_app_info.project_name, sizeof(new_app_info->project_name)) != 0) {
         ESP_LOGW(TAG, "OTA Image built for Project: %s. Expected: %s",
                 new_app_info->project_name, running_app_info.project_name);
-        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_FAILED, "Project Name mismatch");
+        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_REJECTED, "Project Name mismatch");
         return ESP_FAIL;
     }
 #endif
 
+#ifndef CONFIG_ESP_RMAKER_SKIP_VERSION_CHECK
+    if (memcmp(new_app_info->version, running_app_info.version, sizeof(new_app_info->version)) == 0) {
+        ESP_LOGW(TAG, "Current running version is same as the new. We will not continue the update.");
+        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_REJECTED, "Same version received");
+        return ESP_FAIL;
+    }
+#endif
+
+
     return ESP_OK;
 }
 
-static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, esp_rmaker_ota_data_t *ota_data)
+esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, esp_rmaker_ota_data_t *ota_data)
 {
     if (!ota_data->url) {
         return ESP_FAIL;
     }
-    int buffer_size_tx = DEF_HTTP_BUFFER_SIZE;
+    esp_rmaker_ota_post_event(RMAKER_OTA_EVENT_STARTING, NULL, 0);
+    int buffer_size_tx = DEF_HTTP_TX_BUFFER_SIZE;
     /* In case received url is longer, we will increase the tx buffer size
      * to accomodate the longer url and other headers.
      */
@@ -139,12 +201,16 @@ static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, e
     esp_err_t ota_finish_err = ESP_OK;
     esp_http_client_config_t config = {
         .url = ota_data->url,
+#ifdef ESP_RMAKER_USE_CERT_BUNDLE
+        .crt_bundle_attach = esp_crt_bundle_attach,
+#else
         .cert_pem = ota_data->server_cert,
+#endif
         .timeout_ms = 5000,
-        .buffer_size = DEF_HTTP_BUFFER_SIZE,
-        .buffer_size_tx = buffer_size_tx
+        .buffer_size = DEF_HTTP_RX_BUFFER_SIZE,
+        .buffer_size_tx = buffer_size_tx,
+        .keep_alive_enable = true
     };
-    config.skip_cert_common_name_check = true;
 #ifdef CONFIG_ESP_RMAKER_SKIP_COMMON_NAME_CHECK
     config.skip_cert_common_name_check = true;
 #endif
@@ -159,7 +225,7 @@ static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, e
 
     esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_IN_PROGRESS, "Starting OTA Upgrade");
 
-/* Using a warning just to highlight the message */
+    /* Using a warning just to highlight the message */
     ESP_LOGW(TAG, "Starting OTA. This may take time.");
     esp_https_ota_handle_t https_ota_handle = NULL;
     esp_err_t err = esp_https_ota_begin(&ota_config, &https_ota_handle);
@@ -174,9 +240,15 @@ static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, e
  */
     wifi_ps_type_t ps_type;
     esp_wifi_get_ps(&ps_type);
-/* Disable Wi-Fi power save to speed up OTA
- */
+/* Disable Wi-Fi power save to speed up OTA, iff BT is controller is idle/disabled.
+ * Co-ex requirement, device panics otherwise.*/
+#if CONFIG_BT_ENABLED
+    if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
+        esp_wifi_set_ps(WIFI_PS_NONE);
+    }
+#else
     esp_wifi_set_ps(WIFI_PS_NONE);
+#endif /* CONFIG_BT_ENABLED */
 
     esp_app_desc_t app_desc;
     err = esp_https_ota_get_img_desc(https_ota_handle, &app_desc);
@@ -211,6 +283,7 @@ static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, e
         }
     }
     if (err != ESP_OK) {
+        ESP_LOGE(TAG, "ESP_HTTPS_OTA upgrade failed %s", esp_err_to_name(err));
         char description[40];
         snprintf(description, sizeof(description), "OTA failed: Error %s", esp_err_to_name(err));
         esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_FAILED, description);
@@ -222,12 +295,31 @@ static esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t ota_handle, e
     } else {
         esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_IN_PROGRESS, "Firmware Image download complete");
     }
+
 ota_end:
+#ifdef CONFIG_BT_ENABLED
+    if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
+        esp_wifi_set_ps(ps_type);
+    }
+#else
     esp_wifi_set_ps(ps_type);
+#endif /* CONFIG_BT_ENABLED */
     ota_finish_err = esp_https_ota_finish(https_ota_handle);
     if ((err == ESP_OK) && (ota_finish_err == ESP_OK)) {
         ESP_LOGI(TAG, "OTA upgrade successful. Rebooting in %d seconds...", OTA_REBOOT_TIMER_SEC);
+#ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
+        nvs_handle handle;
+        esp_err_t err = nvs_open_from_partition(ESP_RMAKER_NVS_PART_NAME, RMAKER_OTA_NVS_NAMESPACE, NVS_READWRITE, &handle);
+        if (err == ESP_OK) {
+            uint8_t ota_update = 1;
+            nvs_set_blob(handle, RMAKER_OTA_UPDATE_FLAG_NVS_NAME, &ota_update, sizeof(ota_update));
+            nvs_close(handle);
+        }
+        /* Success will be reported after a reboot since Rollback is enabled */
+        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_IN_PROGRESS, "Rebooting into new firmware");
+#else
         esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_SUCCESS, "OTA Upgrade finished successfully");
+#endif
         esp_rmaker_reboot(OTA_REBOOT_TIMER_SEC);
         return ESP_OK;
     } else {
@@ -244,10 +336,111 @@ ota_end:
     return ESP_FAIL;
 }
 
+
+static void event_handler(void* arg, esp_event_base_t event_base,
+                          int32_t event_id, void* event_data)
+{
+    esp_rmaker_ota_t *ota = (esp_rmaker_ota_t *)arg;
+    esp_event_handler_unregister(RMAKER_COMMON_EVENT, RMAKER_MQTT_EVENT_CONNECTED, &event_handler);
+    esp_rmaker_ota_report_status((esp_rmaker_ota_handle_t )ota, OTA_STATUS_SUCCESS, "OTA Upgrade finished and verified successfully");
+    esp_ota_mark_app_valid_cancel_rollback();
+    ota->ota_in_progress = false;
+    if (s_ota_rollback_timer) {
+        xTimerStop(s_ota_rollback_timer, portMAX_DELAY);
+        xTimerDelete(s_ota_rollback_timer, portMAX_DELAY);
+        s_ota_rollback_timer = NULL;
+    }
+    if (ota->type == OTA_USING_TOPICS) {
+        esp_rmaker_ota_fetch();
+    }
+}
+
+static void esp_ota_rollback(TimerHandle_t handle)
+{
+    ESP_LOGE(TAG, "Could not verify firmware even after %d seconds since boot-up. Rolling back.",
+            RMAKER_OTA_ROLLBACK_WAIT_PERIOD);
+    esp_ota_mark_app_invalid_rollback_and_reboot();
+}
+
+static esp_err_t esp_ota_check_for_mqtt(esp_rmaker_ota_t *ota)
+{
+    s_ota_rollback_timer = xTimerCreate("ota_rollback_tm", (RMAKER_OTA_ROLLBACK_WAIT_PERIOD * 1000) / portTICK_PERIOD_MS,
+                            pdTRUE, NULL, esp_ota_rollback);
+    if (s_ota_rollback_timer) {
+        xTimerStart(s_ota_rollback_timer, 0);
+    } else {
+        ESP_LOGW(TAG, "Could not create rollback timer. Will require manual reboot if firmware verification fails");
+    }
+
+    return esp_event_handler_register(RMAKER_COMMON_EVENT, RMAKER_MQTT_EVENT_CONNECTED, &event_handler, ota);
+}
+
+static void esp_rmaker_ota_manage_rollback(esp_rmaker_ota_config_t *ota_config, esp_rmaker_ota_t *ota)
+{
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_ota_img_states_t ota_state;
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+        ESP_LOGI(TAG, "OTA state = %d", ota_state);
+        /* Not checking for CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE here because the firmware may have
+         * it disabled, but bootloader may have it enabled, in which case, we will have to
+         * handle this state.
+         */
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+            ESP_LOGI(TAG, "First Boot after an OTA");
+            /* Run diagnostic function */
+            bool diagnostic_is_ok = true;
+            if (ota_config->ota_diag) {
+                diagnostic_is_ok = ota_config->ota_diag();
+            }
+            if (diagnostic_is_ok) {
+                ESP_LOGI(TAG, "Diagnostics completed successfully! Continuing execution ...");
+                /* Will not mark the image valid here immediately, but instead will wait for
+                 * MQTT connection. The below flag will tell the OTA functions that the earlier
+                 * OTA is still in progress.
+                 */
+                ota->ota_in_progress = true;
+                esp_ota_check_for_mqtt(ota);
+            } else {
+                ESP_LOGE(TAG, "Diagnostics failed! Start rollback to the previous version ...");
+                esp_ota_mark_app_invalid_rollback_and_reboot();
+            }
+#ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
+        } else {
+            /* If rollback is enabled, and the ota update flag is found, it means that the firmware was rolled back
+            */
+            nvs_handle handle;
+            esp_err_t err = nvs_open_from_partition(ESP_RMAKER_NVS_PART_NAME, RMAKER_OTA_NVS_NAMESPACE, NVS_READWRITE, &handle);
+            if (err == ESP_OK) {
+                uint8_t ota_update = 0;
+                size_t len = sizeof(ota_update);
+                if ((err = nvs_get_blob(handle, RMAKER_OTA_UPDATE_FLAG_NVS_NAME, &ota_update, &len)) == ESP_OK) {
+                    ota->rolled_back = true;
+                    nvs_erase_key(handle, RMAKER_OTA_UPDATE_FLAG_NVS_NAME);
+                    if (ota->type == OTA_USING_PARAMS) {
+                        /* Calling this only for OTA_USING_PARAMS, because for OTA_USING_TOPICS,
+                         * the work queue function will manage the status reporting later.
+                         */
+                        esp_rmaker_ota_report_status((esp_rmaker_ota_handle_t )ota,
+                                OTA_STATUS_REJECTED, "Firmware rolled back");
+                    }
+                }
+                nvs_close(handle);
+            }
+#endif
+        }
+    }
+}
+
+static const esp_rmaker_ota_config_t ota_default_config = {
+    .server_cert = esp_rmaker_ota_def_cert,
+};
 /* Enable the ESP RainMaker specific OTA */
 esp_err_t esp_rmaker_ota_enable(esp_rmaker_ota_config_t *ota_config, esp_rmaker_ota_type_t type)
 {
-    if (!ota_config || ((type != OTA_USING_PARAMS) && (type != OTA_USING_TOPICS))) {
+    if (ota_config == NULL) {
+        ota_config = (esp_rmaker_ota_config_t *)&ota_default_config;
+    }
+    if ((type != OTA_USING_PARAMS) && (type != OTA_USING_TOPICS)) {
         ESP_LOGE(TAG,"Invalid arguments for esp_rmaker_ota_enable()");
         return ESP_ERR_INVALID_ARG;
     }
@@ -260,26 +453,6 @@ esp_err_t esp_rmaker_ota_enable(esp_rmaker_ota_config_t *ota_config, esp_rmaker_
     if (!ota) {
         ESP_LOGE(TAG, "Failed to allocate memory for esp_rmaker_ota_t");
         return ESP_ERR_NO_MEM;
-    }
-    const esp_partition_t *running = esp_ota_get_running_partition();
-    esp_ota_img_states_t ota_state;
-    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
-            ESP_LOGI(TAG, "OTA state = %d", ota_state);
-        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
-            ESP_LOGI(TAG, "First Boot after an OTA");
-            /* Run diagnostic function */
-            bool diagnostic_is_ok = true;
-            if (ota_config->ota_diag) {
-                diagnostic_is_ok = ota_config->ota_diag();
-            }
-            if (diagnostic_is_ok) {
-                ESP_LOGI(TAG, "Diagnostics completed successfully! Continuing execution ...");
-                esp_ota_mark_app_valid_cancel_rollback();
-            } else {
-                ESP_LOGE(TAG, "Diagnostics failed! Start rollback to the previous version ...");
-                esp_ota_mark_app_invalid_rollback_and_reboot();
-            }
-        }
     }
     if (ota_config->ota_cb) {
         ota->ota_cb = ota_config->ota_cb;
@@ -296,10 +469,16 @@ esp_err_t esp_rmaker_ota_enable(esp_rmaker_ota_config_t *ota_config, esp_rmaker_
         err = esp_rmaker_ota_enable_using_topics(ota);
     }
     if (err == ESP_OK) {
+        esp_rmaker_ota_manage_rollback(ota_config, ota);
         ota_init_done = true;
     } else {
         free(ota);
         ESP_LOGE(TAG, "Failed to enable OTA");
     }
     return err;
+}
+
+esp_err_t esp_rmaker_ota_enable_default(void)
+{
+    return esp_rmaker_ota_enable(NULL, OTA_USING_TOPICS);
 }

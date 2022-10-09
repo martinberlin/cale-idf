@@ -30,7 +30,7 @@ class PlasticLogic021 : public PlasticLogic
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     void setEpdRotation(uint8_t o); // Override
 
-    uint8_t _buffer[PLOGIC021_BUFFER_SIZE];
+    //uint8_t _buffer[PLOGIC021_BUFFER_SIZE];
   private:
     EpdSpi2Cs& IO;
     

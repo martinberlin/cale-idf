@@ -21,6 +21,10 @@
 
 #include "esp_rmaker_internal.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#include <esp_app_desc.h>
+#endif
+
 static const char *TAG = "esp_rmaker_node";
 
 static void esp_rmaker_node_info_free(esp_rmaker_node_info_t *info)
@@ -37,6 +41,9 @@ static void esp_rmaker_node_info_free(esp_rmaker_node_info_t *info)
         }
         if (info->fw_version) {
             free(info->fw_version);
+        }
+        if (info->subtype) {
+            free(info->subtype);
         }
         free(info);
     }
@@ -118,7 +125,12 @@ esp_rmaker_node_t *esp_rmaker_node_create(const char *name, const char *type)
     }
     node->info->name = strdup(name);
     node->info->type = strdup(type);
-    const esp_app_desc_t *app_desc = esp_ota_get_app_description();
+    const esp_app_desc_t *app_desc;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    app_desc = esp_app_get_description();
+#else
+    app_desc = esp_ota_get_app_description();
+#endif
     node->info->fw_version = strdup(app_desc->version);
     node->info->model = strdup(app_desc->project_name);
     if (!node->info->name || !node->info->type
@@ -150,6 +162,7 @@ esp_err_t esp_rmaker_node_add_fw_version(const esp_rmaker_node_t *node, const ch
     info->fw_version = strdup(fw_version);
     if (!info->fw_version) {
         ESP_LOGE(TAG, "Failed to allocate memory for fw version.");
+        return ESP_ERR_NO_MEM;
     }
     return ESP_OK;
 }
@@ -171,6 +184,29 @@ esp_err_t esp_rmaker_node_add_model(const esp_rmaker_node_t *node, const char *m
     info->model = strdup(model);
     if (!info->model) {
         ESP_LOGE(TAG, "Failed to allocate memory for node model.");
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
+}
+
+esp_err_t esp_rmaker_node_add_subtype(const esp_rmaker_node_t *node, const char *subtype)
+{
+    if (!node || !subtype) {
+        ESP_LOGE(TAG, "Node handle or subtype cannot be NULL.");
+        return ESP_ERR_INVALID_ARG;
+    }
+    esp_rmaker_node_info_t *info = esp_rmaker_node_get_info(node);
+    if (!info) {
+        ESP_LOGE(TAG, "Failed to get Node Info.");
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (info->subtype) {
+        free(info->subtype);
+    }
+    info->subtype = strdup(subtype);
+    if (!info->subtype) {
+        ESP_LOGE(TAG, "Failed to allocate memory for node subtype.");
+        return ESP_ERR_NO_MEM;
     }
     return ESP_OK;
 }
@@ -269,6 +305,22 @@ esp_err_t esp_rmaker_node_remove_device(const esp_rmaker_node_t *node, const esp
     }
     tmp_device->parent = NULL;
     return ESP_OK;
+}
+
+esp_rmaker_device_t *esp_rmaker_node_get_device_by_name(const esp_rmaker_node_t *node, const char *device_name)
+{
+    if (!node || !device_name) {
+        ESP_LOGE(TAG, "Node handle or device name cannot be NULL");
+        return NULL;
+    }
+    _esp_rmaker_device_t *device = ((_esp_rmaker_node_t *)node)->devices;
+    while(device) {
+        if (strcmp(device->name, device_name) == 0) {
+            break;
+        }
+        device = device->next;
+    }
+    return (esp_rmaker_device_t *)device;
 }
 
 _esp_rmaker_device_t *esp_rmaker_node_get_first_device(const esp_rmaker_node_t *node)

@@ -275,9 +275,9 @@ void Gdew042t2Grays::init(bool debug)
 
     //Reset the display
     IO.reset(20);
-
+    
     fillScreen(EPD_WHITE);
-    _mono_mode = 1;
+    _mono_mode = false;
     fillScreen(EPD_WHITE);
 }
 

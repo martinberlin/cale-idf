@@ -13,6 +13,18 @@
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 >>>>>>> idf_v5
 
+**IMPORTANT: This branch is prepared to be used with ESP-IDF v5**
+
+If you get this error when using any component:
+
+error: 'portTICK_RATE_MS' was not declared in this scope; did you mean 'portTICK_PERIOD_MS'?
+  357 |     i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+
+ 
+     → Component config → FreeRTOS → Kernel
+     and enable BLACKWARDS Compatibility.
+
+Alternatively you can also rename portTICK_RATE_MS to portTICK_PERIOD_MS in the clases. 
 ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
  **idf.py set-target esp32c3**
 

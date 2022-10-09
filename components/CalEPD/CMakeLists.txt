@@ -32,11 +32,11 @@ set(srcs
     #"models/color/wave5i7ColorVector.cpp"
 
     # Plasticlogic.com Flex epaper models:
-    "models/plasticlogic/epdspi2cs.cpp"
-    "models/plasticlogic/plasticlogic.cpp"
-    "models/plasticlogic/plasticlogic011.cpp"
-    "models/plasticlogic/plasticlogic014.cpp"
-    "models/plasticlogic/plasticlogic021.cpp"
+    #"models/plasticlogic/epdspi2cs.cpp"
+    #"models/plasticlogic/plasticlogic.cpp"
+    #"models/plasticlogic/plasticlogic011.cpp"
+    #"models/plasticlogic/plasticlogic014.cpp"
+    #"models/plasticlogic/plasticlogic021.cpp"
     # Not-tested (never had one)
     #"models/plasticlogic/plasticlogic031.cpp"
 
@@ -62,7 +62,8 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    REQUIRES epdiy esp_timer
+                    REQUIRES qrcode esp_rainmaker app_wifi
+                    REQUIRES esp_timer
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it
