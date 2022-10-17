@@ -1,5 +1,10 @@
 /**
  * Cale version that uses Espressif RainMaker for the WiFi provisioning
+ * 
+ * Important: esp-idf branch used is release/v5.0
+ * 
+ * Needs this additional commit mentioned in this Issue
+ * https://github.com/espressif/esp-rainmaker/issues/183
  */ 
 #include "string.h"
 #include "freertos/FreeRTOS.h"
@@ -43,8 +48,8 @@ bool readyToRequestImage = false;
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
 #include <gdeh042Z96.h>
-// Font always after display
-#include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
+// Font always after display Ubuntu_M12pt8b
+#include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 
 EpdSpi io;
 Gdeh042Z96 display(io);
@@ -91,8 +96,10 @@ struct BmpHeader
 void deepsleep(){
     nvs_get_u16(nvs_h, "mtr", &nvs_minutes_till_refresh);
     nvs_close(nvs_h);
-    printf("Going to deepsleep %d minutes\n\n", nvs_minutes_till_refresh);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    printf("10 seconds wait before sleep\n");
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    printf("Going to deepsleep %d minutes\n\n", (int)nvs_minutes_till_refresh);
+    
     esp_deep_sleep(1000000LL * 60 * nvs_minutes_till_refresh);
 }
 
@@ -114,7 +121,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
     } else if (strcmp(param_name, DEVICE_PARAM_1) == 0) {
         ESP_LOGI(TAG, "%d for %s-%s",
-                val.val.i, device_name, param_name);
+                (int)val.val.i, device_name, param_name);
 
         nvs_handle_t my_handle;
         esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
@@ -124,12 +131,12 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
         nvs_set_u16(my_handle, "mtr", (uint16_t) val.val.i);
 
         err = nvs_commit(my_handle);
-        printf((err != ESP_OK) ? "NVS Failed to store %d\n" : "NVS Stored %d\n", val.val.i);
+        printf((err != ESP_OK) ? "NVS Failed to store %d\n" : "NVS Stored %d\n", (int)val.val.i);
         nvs_close(my_handle);    
 
     } else if (strcmp(param_name, DEVICE_PARAM_WIFI_RESET) == 0) {
         ESP_LOGI(TAG, "%d for %s-%s",
-                val.val.i, device_name, param_name);
+               (int) val.val.i, device_name, param_name);
         if (val.val.i == 100) {
             printf("Reseting WiFi credentials. Please reprovision your device\n\n");
             esp_rmaker_wifi_reset(1,10);
@@ -216,7 +223,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_ON_DATA:
         ++countDataEventCalls;
         if (countDataEventCalls%10==0) {
-        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len); }
+        ESP_LOGI(TAG, "%d len:%d\n", (int)countDataEventCalls, (int)evt->data_len); }
         dataLenTotal += evt->data_len;
         // Unless bmp.imageOffset initial skip we start reading stream always on byte pointer 0:
         bPointer = 0;
@@ -238,7 +245,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             drawY = bmp.height;
             ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n",
-                     bmp.fileSize, bmp.imageOffset, bmp.width, bmp.height, bmp.planes, bmp.depth, bmp.format);
+                     (int)bmp.fileSize, (int)bmp.imageOffset, (int)bmp.width, (int)bmp.height, (int)bmp.planes, (int)bmp.depth, (int)bmp.format);
 
             if (bmp.depth == 1)
             {
@@ -253,13 +260,13 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmp.depth > 8)
             {
                 isSupportedBitmap = false;
-                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
+                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", (int)bmp.depth);
             }
 
             rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
 
             if (bmpDebug)
-                printf("ROW Size %d\n", rowSize);
+                printf("ROW Size %d\n", (int)rowSize);
 
             w = bmp.width;
             h = bmp.height;
@@ -280,7 +287,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                 // Color-palette location:
                 bPointer = bmp.imageOffset - (4 << bmp.depth);
                 if (bmpDebug)
-                    printf("Palette location: %d\n\n", bPointer);
+                    printf("Palette location: %d\n\n", (int)bPointer);
 
                 for (uint16_t pn = 0; pn < (1 << bmp.depth); pn++)
                 {
@@ -312,8 +319,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         if (bmpDebug)
         {
             printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n",
-                   bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
-            printf("Is reading image: %d\n", isReadingImage);
+                   (int)bPointer, (int)drawX, (int)drawY, (int)dataLenTotal, (int)imageBytesRead);
+            printf("Is reading image: %d\n", (int)isReadingImage);
         }
 
         // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
@@ -321,7 +328,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         {
             imageBytesRead = dataLenTotal;
             if (bmpDebug)
-                printf("IF read<offset UPDATE bytesRead:%d\n", imageBytesRead);
+                printf("IF read<offset UPDATE bytesRead:%d\n", (int)imageBytesRead);
             return ESP_OK;
         }
         else
@@ -331,14 +338,14 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             {
                 bPointer = bmp.imageOffset;
                 isReadingImage = true;
-                printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n", bPointer);
+                printf("Offset comes in first DATA callback. bPointer: %d == bmp.imageOffset\n", (int)bPointer);
             }
             if (!isReadingImage)
             {
                 bPointer = bmp.imageOffset - imageBytesRead;
                 imageBytesRead += bPointer;
                 isReadingImage = true;
-                printf("Start reading image. bPointer: %d\n", bPointer);
+                printf("Start reading image. bPointer: %d\n", (int)bPointer);
             }
         }
         forCount = 0;
@@ -349,7 +356,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
-                printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
+                printf("L%d: BrsF:%d %x\n", (int)byteIndex, (int)imageBytesRead, in_byte);
             }
             in_bits = 8;
 
@@ -426,10 +433,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
     case HTTP_EVENT_ON_FINISH:
         countDataEventCalls=0;
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, (int)CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
         if (bmpDebug) 
-            printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
+            printf("Free heap after display render: %d\n", (int)xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
         vTaskDelay(14000 / portTICK_PERIOD_MS);
         deepsleep();
@@ -448,7 +455,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 static void http_post(void)
 {
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\n", xPortGetFreeHeapSize());
+    printf("Free heap: %d (After epaper instantiation)\n", (int)xPortGetFreeHeapSize());
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
@@ -490,8 +497,8 @@ static void http_post(void)
     {
         ESP_LOGI(TAG, "\nIMAGE URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
                  CONFIG_CALE_SCREEN_URL,
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int)esp_http_client_get_status_code(client),
+                 (int)esp_http_client_get_content_length(client));
     }
     else
     {
@@ -504,7 +511,7 @@ static void http_post(void)
 static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)
 {
-    printf("EVENT ID:%d\n", event_id);
+    printf("EVENT ID:%d\n", (int)event_id);
     display.setCursor(10,10);
     display.setTextColor(EPD_BLACK);
     if (event_base == RMAKER_EVENT) {
@@ -522,7 +529,7 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                 ESP_LOGI(TAG, "RainMaker Claim Failed.");
                 break;
             default:
-                ESP_LOGW(TAG, "Unhandled RainMaker Event: %d", event_id);
+                ESP_LOGW(TAG, "Unhandled RainMaker Event: %d", (int)event_id);
         }
     } else if (event_base == RMAKER_COMMON_EVENT) {
         switch (event_id) {
@@ -550,7 +557,7 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
                 readyToRequestImage = true;
                 break;
             default:
-                ESP_LOGW(TAG, "Unhandled RainMaker Common Event: %d", event_id);
+                ESP_LOGW(TAG, "Unhandled RainMaker Common Event: %d", (int)event_id);
         }
     } else {
         ESP_LOGW(TAG, "Invalid event received!");
@@ -559,11 +566,7 @@ static void event_handler_rmk(void* arg, esp_event_base_t event_base,
 
 void app_main(void)
 {
-    //  On  init(true) activates debug (And makes SPI communication slower too)
-    display.init();
-    display.setRotation(CONFIG_DISPLAY_ROTATION);
-    display.setFont(&Ubuntu_M12pt8b);
-
+ 
     esp_err_t err;
     // WiFi log level
     esp_log_level_set("wifi", ESP_LOG_ERROR);
@@ -638,6 +641,11 @@ void app_main(void)
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
+ 
+    //  On  init(true) activates debug (And makes SPI communication slower too)
+    display.init();
+    display.setRotation(CONFIG_DISPLAY_ROTATION);
+    display.setFont(&Ubuntu_M8pt8b);
 
     while(true) {
         if (readyToRequestImage){
