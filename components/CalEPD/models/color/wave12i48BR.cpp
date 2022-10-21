@@ -84,8 +84,7 @@ Wave12I48RB::Wave12I48RB(Epd4Spi& dio):
   Epd(WAVE12I48_WIDTH, WAVE12I48_HEIGHT), IO(dio)
 {
   printf("Wave12I48RB() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-  WAVE12I48_WIDTH, WAVE12I48_HEIGHT, WAVE12I48_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());
+  (int)WAVE12I48_WIDTH, (int)WAVE12I48_HEIGHT, (int)WAVE12I48_BUFFER_SIZE);
 }
 
 void Wave12I48RB::initFullUpdate(){
@@ -105,7 +104,7 @@ void Wave12I48RB::init(bool debug)
     IO.init(4, debug_enabled);
 
     fillScreen(EPD_WHITE);
-    printf("\nAvailable heap after Epd init:%d\n",xPortGetFreeHeapSize());
+    printf("\nAvailable heap after Epd init:%d\n", (int)xPortGetFreeHeapSize());
     //clear(); // No need to do this, but will leave it in the class
 }
 
@@ -117,7 +116,7 @@ void Wave12I48RB::fillScreen(uint16_t color)
   uint8_t data_red = (color == EPD_RED) ? WAVE12I48_8PIX_RED_INK : WAVE12I48_8PIX_RED_CLEAR;
 
   //if (debug_enabled) 
-  printf("fillScreen(%x) BLACK(%x) RED(%x) Buffer size:%d\n", color, data_black, data_red,  WAVE12I48_BUFFER_SIZE);
+  printf("fillScreen(%x) BLACK(%x) RED(%x) Buffer size:%d\n", (int)color, (int)data_black, (int)data_red, (int) WAVE12I48_BUFFER_SIZE);
 
   for (uint32_t x = 0; x < WAVE12I48_BUFFER_SIZE; x++)
   {
@@ -264,7 +263,7 @@ void Wave12I48RB::update()
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   
-  printf("\nSending BLACK buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  printf("\nSending BLACK buffer[%d] via SPI\n", (int)WAVE12I48_BUFFER_SIZE);
   uint32_t i = 0;
     /*
    DISPLAYS:
@@ -320,7 +319,7 @@ void Wave12I48RB::update()
   }
 
   i = 0;
-  printf("\nSending RED buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  printf("\nSending RED buffer[%d] via SPI\n", (int)WAVE12I48_BUFFER_SIZE);
   IO.cmdM1S1M2S2(0x13); // Red buffer
 
   for(uint16_t y =  1; y <= WAVE12I48_HEIGHT; y++) {
@@ -363,7 +362,7 @@ void Wave12I48RB::update()
   _powerOn();
   uint64_t powerOnTime = esp_timer_get_time();
   printf("\nAvailable heap after Epd update: %d bytes\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
-  xPortGetFreeHeapSize(), (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
+  (int) xPortGetFreeHeapSize(), (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 }
 
 uint16_t Wave12I48RB::_setPartialRamArea(uint16_t, uint16_t, uint16_t, uint16_t){

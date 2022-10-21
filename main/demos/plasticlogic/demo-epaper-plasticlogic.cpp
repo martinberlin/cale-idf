@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Should match with your epaper module and size
 // One or many classes can be included at the same time
 #include <plasticlogic011.h>

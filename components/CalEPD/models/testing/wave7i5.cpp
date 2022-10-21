@@ -12,7 +12,6 @@ Wave7i5::Wave7i5(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIGHT),
 {
   printf("Wave7i5() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
          GDEW075T7_WIDTH, GDEW075T7_HEIGHT, GDEW075T7_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
 }
 
 //Initialize the display

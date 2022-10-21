@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 /*
 History & fail record: https://twitter.com/martinfasani/status/1265762052880175107
 
@@ -105,7 +107,7 @@ void Gdew027w3::init(bool debug)
     if (debug_enabled) printf("Gdew027w3::init(%d)\n", debug);
     IO.init(4, debug); // 4 MHz frequency
 
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 

@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Constructor
 Gdeh042Z96::Gdeh042Z96(EpdSpi& dio): 
   Adafruit_GFX(GDEH042Z96_WIDTH, GDEH042Z96_HEIGHT),

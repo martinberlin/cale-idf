@@ -24,7 +24,7 @@ void PlasticLogic014::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) {
       printf("PlasticLogic014::init(%d) bufferSize: %d width: %d height: %d\n", 
-    debug, PLOGIC014_BUFFER_SIZE, PLOGIC014_WIDTH, PLOGIC014_HEIGHT);
+    debug, (int)PLOGIC014_BUFFER_SIZE, (int)PLOGIC014_WIDTH, (int)PLOGIC014_HEIGHT);
     }
     initIO(debug);
     

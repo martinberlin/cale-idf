@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Partial Update Delay
 #define GDEH0154D67_PU_DELAY 300
 
@@ -38,7 +40,7 @@ void Gdeh0154d67::init(bool debug)
     if (debug_enabled) printf("Gdeh0154d67::init(%d)\n", debug);
     IO.init(4, debug); // 4MHz frequency
 
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 
