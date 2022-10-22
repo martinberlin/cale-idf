@@ -62,7 +62,7 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
                     # Uncomment for parallel epapers:
-                    REQUIRES "epdiy"
+                    # REQUIRES "epdiy"
                     INCLUDE_DIRS "include"
 )
 
