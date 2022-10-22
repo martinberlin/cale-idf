@@ -108,9 +108,9 @@ void EpdSpi::cmd(const uint8_t cmd)
 
 void EpdSpi::data(uint8_t data)
 {
-    /* if (debug_enabled) {
+    if (debug_enabled) {
       printf("D %x\n",data);
-    } */
+    }
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
