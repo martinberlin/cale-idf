@@ -15,6 +15,8 @@
 #include <string.h>
 #include <json_parser.h>
 #include <json_generator.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/timers.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <nvs.h>
@@ -30,7 +32,7 @@
 #include <esp_timer.h>
 static esp_timer_handle_t ota_autofetch_timer;
 /* Autofetch period in hours */
-#define OTA_AUTOFETCH_PERIOD   CONFIG_ESP_RMAKER_OTA_AUTOFETCH_PERIOD 
+#define OTA_AUTOFETCH_PERIOD   CONFIG_ESP_RMAKER_OTA_AUTOFETCH_PERIOD
 /* Autofetch period in micro-seconds */
 static uint64_t ota_autofetch_period = (OTA_AUTOFETCH_PERIOD * 60 * 60 * 1000000LL);
 #endif /* CONFIG_ESP_RMAKER_OTA_AUTOFETCH */
@@ -103,6 +105,10 @@ void esp_rmaker_ota_finish_using_topics(esp_rmaker_ota_t *ota)
         free(ota->metadata);
         ota->metadata = NULL;
     }
+    if (ota->fw_version) {
+        free(ota->fw_version);
+        ota->fw_version = NULL;
+    }
     ota->ota_in_progress = false;
 }
 static void ota_url_handler(const char *topic, void *payload, size_t payload_len, void *priv_data)
@@ -128,7 +134,7 @@ static void ota_url_handler(const char *topic, void *payload, size_t payload_len
        }
     */
     jparse_ctx_t jctx;
-    char *url = NULL, *ota_job_id = NULL;
+    char *url = NULL, *ota_job_id = NULL, *fw_version = NULL;
     int ret = json_parse_start(&jctx, (char *)payload, (int) payload_len);
     if (ret != 0) {
         ESP_LOGE(TAG, "Invalid JSON received: %s", (char *)payload);
@@ -180,16 +186,29 @@ static void ota_url_handler(const char *topic, void *payload, size_t payload_len
     json_obj_get_int(&jctx, "file_size", &filesize);
     ESP_LOGI(TAG, "File Size: %d", filesize);
 
+    len = 0;
+    ret = json_obj_get_strlen(&jctx, "fw_version", &len);
+    if (ret == ESP_OK && len > 0) {
+        len++; /* Increment for NULL character */
+        fw_version = calloc(1, len);
+        if (!fw_version) {
+            ESP_LOGE(TAG, "Aborted. Firmware version memory allocation failed");
+            esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_FAILED, "Aborted. Firmware version memory allocation failed");
+            goto end;
+        }
+        json_obj_get_string(&jctx, "fw_version", fw_version, len);
+        ESP_LOGI(TAG, "Firmware version: %s", fw_version);
+    }
+
     int metadata_size = 0;
     char *metadata = NULL;
-    json_obj_get_object_strlen(&jctx, "metadata", &metadata_size);
-    if (metadata_size > 0) {
+    ret = json_obj_get_object_strlen(&jctx, "metadata", &metadata_size);
+    if (ret == ESP_OK && metadata_size > 0) {
         metadata_size++; /* Increment for NULL character */
         metadata = calloc(1, metadata_size);
         if (!metadata) {
             ESP_LOGE(TAG, "Aborted. OTA metadata memory allocation failed");
             esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_FAILED, "Aborted. OTA metadata memory allocation failed");
-            free(url);
             goto end;
         }
         json_obj_get_object_str(&jctx, "metadata", metadata, metadata_size);
@@ -201,6 +220,7 @@ static void ota_url_handler(const char *topic, void *payload, size_t payload_len
         free(ota->url);
     }
     ota->url = url;
+    ota->fw_version = fw_version;
     ota->filesize = filesize;
     ota->ota_in_progress = true;
     if (esp_rmaker_work_queue_add_task(esp_rmaker_ota_common_cb, ota) != ESP_OK) {
@@ -208,6 +228,12 @@ static void ota_url_handler(const char *topic, void *payload, size_t payload_len
     }
     return;
 end:
+    if (url) {
+        free(url);
+    }
+    if (fw_version) {
+        free(fw_version);
+    }
     esp_rmaker_ota_finish_using_topics(ota);
     json_parse_end(&jctx);
     return;
@@ -239,7 +265,7 @@ esp_err_t esp_rmaker_ota_fetch(void)
     return err;
 }
 
-void esp_rmaker_ota_timer_cb_fetch(void *priv)
+void esp_rmaker_ota_autofetch_timer_cb(void *priv)
 {
     esp_rmaker_ota_fetch();
 }
@@ -254,7 +280,7 @@ static esp_err_t esp_rmaker_ota_subscribe(void *priv_data)
     /* First unsubscribe, in case there is a stale subscription */
     esp_rmaker_mqtt_unsubscribe(subscribe_topic);
     esp_err_t err = esp_rmaker_mqtt_subscribe(subscribe_topic, ota_url_handler, RMAKER_MQTT_QOS1, priv_data);
-    if(err != ESP_OK) {
+    if (err != ESP_OK) {
         ESP_LOGE(TAG, "OTA URL Subscription Error %d", err);
     }
     return err;
@@ -271,11 +297,13 @@ static void esp_rmaker_ota_work_fn(void *priv_data)
     esp_rmaker_ota_subscribe(priv_data);
 #ifdef CONFIG_ESP_RMAKER_OTA_AUTOFETCH
     if (ota->ota_in_progress != true) {
-        esp_rmaker_ota_fetch();
+        if (esp_rmaker_ota_fetch_with_delay(RMAKER_OTA_FETCH_DELAY) != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to create OTA Fetch timer.");
+        }
     }
     if (ota_autofetch_period > 0) {
         esp_timer_create_args_t autofetch_timer_conf = {
-            .callback = esp_rmaker_ota_timer_cb_fetch,
+            .callback = esp_rmaker_ota_autofetch_timer_cb,
             .arg = priv_data,
             .dispatch_method = ESP_TIMER_TASK,
             .name = "ota_autofetch_tm"
@@ -283,7 +311,7 @@ static void esp_rmaker_ota_work_fn(void *priv_data)
         if (esp_timer_create(&autofetch_timer_conf, &ota_autofetch_timer) == ESP_OK) {
             esp_timer_start_periodic(ota_autofetch_timer, ota_autofetch_period);
         } else {
-            ESP_LOGE(TAG, "Failes to create OTA Autofetch timer");
+            ESP_LOGE(TAG, "Failed to create OTA Autofetch timer");
         }
     }
 #endif /* CONFIG_ESP_RMAKER_OTA_AUTOFETCH */
@@ -297,4 +325,21 @@ esp_err_t esp_rmaker_ota_enable_using_topics(esp_rmaker_ota_t *ota)
         ESP_LOGI(TAG, "OTA enabled with Topics");
     }
     return err;
+}
+
+static void esp_rmaker_ota_fetch_timer_cb(TimerHandle_t xTimer)
+{
+    esp_rmaker_ota_fetch();
+    xTimerDelete(xTimer, 0);
+}
+
+esp_err_t esp_rmaker_ota_fetch_with_delay(int time)
+{
+    TimerHandle_t timer = xTimerCreate(NULL, (time * 1000) / portTICK_PERIOD_MS, pdFALSE, NULL, esp_rmaker_ota_fetch_timer_cb);
+    if (timer == NULL) {
+        return ESP_ERR_NO_MEM;
+    } else {
+        xTimerStart(timer, 0);
+    }
+    return ESP_OK;
 }
