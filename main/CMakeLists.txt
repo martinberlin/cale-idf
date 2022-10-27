@@ -1,13 +1,13 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    SRCS "cale.cpp"
+    #SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
     # CALE with grayscale support (For now only plasticLogic)
     # Grayscale is also good to test parallel epaper with 16 gray levels
-    #SRCS "cale-grayscale.cpp"
+    SRCS "cale-grayscale.cpp"
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
     #SRCS "demos/demo-epaper.cpp"
