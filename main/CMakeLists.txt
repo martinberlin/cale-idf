@@ -24,11 +24,11 @@ idf_component_register(
     #SRCS "demos/demo-fonts.cpp"
 
     # Demo to print 7 colors in Waveshare Acep epapers
-    #SRCS "demos/demo-7-colors.cpp"
+    SRCS "demos/demo-7-colors.cpp"
 
     # Demo only for plasticlogic.com epapers:
     #SRCS "demos/plasticlogic/demo-epaper-plasticlogic.cpp"
-    SRCS "demos/plasticlogic/demo-sleep-clock-temp.cpp"
+    #SRCS "demos/plasticlogic/demo-sleep-clock-temp.cpp"
     #SRCS "demos/plasticlogic/news-ticker.cpp"
 
     # Plasticlogic video demo: Please build it in www-image/video
