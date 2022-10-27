@@ -1,12 +1,16 @@
+// DEMO for 7 color ACEP epapers
+// Works with displays offered by GOODISPLAY and Waveshare
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "color/wave5i7Color.h"
 #include <stdlib.h>     /* srand, rand */
+// EPD class: Select yours
+#include "color/gdey073d46.h"
+//#include "color/wave5i7Color.h" // Waveshare test
 
-// Single SPI EPD
+// Inject SPI on class
 EpdSpi io;
-Wave5i7Color display(io);
+gdey073d46 display(io);
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M18pt8b.h>
@@ -94,9 +98,10 @@ void app_main(void)
    display.setFont(&Ubuntu_M18pt8b);
    display.println("BERLIN");
    display.setTextColor(EPD_BLACK);
-   display.println("wave5i7Color class for Waveshare\n600x448 7 color epaper\nNext slide in 2 seconds >");
+   display.println("Acep / color test\nNext slide in 2 seconds");
    display.update();
-   nextSlide();
+   return;
+   //nextSlide();
 
    // Draw some Random color small 2x2 squares in center of the screen
    for (uint16_t repeat = 1; repeat <= 10000; repeat++)

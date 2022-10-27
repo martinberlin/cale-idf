@@ -9,7 +9,7 @@ set(srcs
     "models/gdew042t2.cpp"
     "models/gdew042t2Grays.cpp"
     "models/gdew027w3.cpp"
-    "models/wave12i48.cpp"
+    #"models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
     "models/gdew0213i5f.cpp"
@@ -24,9 +24,10 @@ set(srcs
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
-    "models/color/wave12i48BR.cpp"
+    #"models/color/wave12i48BR.cpp"
 
-    # 7 colors Waveshare
+    # 7 colors ACEP
+    "models/color/gdey073d46.cpp"
     "models/color/wave4i7Color.cpp"
     "models/color/wave5i7Color.cpp"
 
@@ -53,7 +54,7 @@ set(srcs
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    "epd4spi.cpp"
+    #"epd4spi.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
