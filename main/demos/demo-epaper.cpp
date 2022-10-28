@@ -33,6 +33,7 @@ gdey0213b74 display(io);
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
+#include <Fonts/ubuntu/Ubuntu_M24pt8b.h>
 
 extern "C"
 {
@@ -58,20 +59,8 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
    }
 }
 
-void app_main(void)
-{
-   printf("CalEPD version: %s\n", CALEPD_VERSION);
-   
-   gpio_set_level(GPIO_ENABLE_5V, 1);
-
-   // Test Epd class
-   display.init(false);
-   //display.update();
-   display.setRotation(0);
-   //display.update();return;
-   //delay(1000);
-
-      // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
+void draw_content(uint8_t rotation){
+   // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
    uint16_t foregroundColor = EPD_BLACK;
@@ -81,7 +70,15 @@ void app_main(void)
       foregroundColor = EPD_RED;
    }
    
-   //return;
+   display.setCursor(4, 30);
+   display.setTextColor(EPD_BLACK);
+   display.setFont(&Ubuntu_M24pt8b);
+   display.println("HELLO");
+   display.println("TWITTER");
+   display.update();
+   delay(2000);
+
+   display.setFont(&Ubuntu_M12pt8b);
    display.fillScreen(EPD_WHITE);
    uint16_t firstBlock = display.width()/8;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
@@ -100,7 +97,6 @@ void app_main(void)
 
    display.setCursor(4, 10);
    display.setTextColor(EPD_WHITE);
-   display.setFont(&Ubuntu_M12pt8b);
    display.println("OK");
 
    display.setCursor(1, 90);
@@ -118,12 +114,35 @@ void app_main(void)
    display.fillCircle(30,120,20, EPD_BLACK);
    // Doing a    1, 100 prints again DISPLAY
    display.updateWindow(1,100, 120, 60);
+   delay(2000);
+}
+
+void app_main(void)
+{
+   printf("CalEPD version: %s\n", CALEPD_VERSION);
+   // 5V is not enought for Front light if there are Leds in serie
+   //gpio_set_level(GPIO_ENABLE_5V, 1);
+
+   // Test Epd class
+   display.init(false);
+   display.setMonoMode(true); // false = 4 gray mode without partial update
+   //display.update();
+   display.setRotation(0);
+   display.fillCircle(80, 50, 40, EPD_DARKGREY);
+   display.fillCircle(100, 50, 20, EPD_LIGHTGREY);
+   //display.update();return;
+   
+   delay(1000);
+
+   draw_content(display.getRotation());
+   display.fillScreen(EPD_WHITE);
+   display.setRotation(1);
+   draw_content(display.getRotation());
    // Leave the epaper White ready for storage
    /* delay(2000);
    display.fillScreen(EPD_WHITE);
    display.update(); */
 
-   delay(4000);
    gpio_set_level(GPIO_ENABLE_5V, 0);
    printf("display: We are done here");
 }

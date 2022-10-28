@@ -31,17 +31,47 @@ void gdey0213b74::init(bool debug)
     //Reset the display
     IO.reset(20);
     fillScreen(EPD_WHITE);
+    _mono_mode = 1;
+    fillScreen(EPD_WHITE);
 }
 
 void gdey0213b74::fillScreen(uint16_t color)
 {
-  uint8_t data = (color == EPD_WHITE) ? 0x00 : 0xFF;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
-  {
-    _buffer[x] = data;
+  if (_mono_mode) {
+    uint8_t data = (color == EPD_WHITE) ?  0xFF : 0x00;
+    for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
+    {
+      _mono_buffer[x] = data;
+    }
+    if (debug_enabled) printf("fillScreen(%d) _mono_buffer len:%d\n",data,sizeof(_mono_buffer));
+  } else {
+
+    // This is to make faster black & white
+    if (color == 255 || color == 0) {
+      for(uint32_t i=0;i<GDEH0213B73_BUFFER_SIZE;i++)
+      {
+        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
+        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
+      }
+    return;
+     }
+   
+    for (uint32_t y = 0; y < GDEH0213B73_HEIGHT; y++)
+    {
+      for (uint32_t x = 0; x < GDEH0213B73_WIDTH; x++)
+      {
+        drawPixel(x, y, color);
+        if (x % 8 == 0)
+          {
+            #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+            rtc_wdt_feed();
+            #endif
+            vTaskDelay(pdMS_TO_TICKS(2));
+          }
+      }
+    }
   }
 
-  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
 }
 
 
@@ -52,37 +82,60 @@ void gdey0213b74::update()
   _wakeUp();
   IO.cmd(0x22); // Display Update Control
   IO.data(0xF7);
-  
-  IO.cmd(0x24); // write RAM for black(0)/white (1)
 
   // For v1.0 only monochrome supported
   uint8_t xLineBytes = GDEH0213B73_WIDTH/8;
-  
   uint8_t x1buf[xLineBytes];
   uint32_t i = 0;
-  for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
-    for (uint16_t x = 0; x < xLineBytes; x++)
-    {
-      uint16_t idx = y * xLineBytes + x;
-      uint8_t data = i < sizeof(_buffer) ? _buffer[idx] : 0x00;
-      x1buf[x] = ~data; // ~ is invert
 
-      if (x==xLineBytes-1) { // Flush the X line buffer to SPI
-            IO.data(x1buf,sizeof(x1buf));
-          }
-      ++i;
+  if (_mono_mode) {
+    IO.cmd(0x24); // write RAM for black(0)/white (1)
+    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_mono_buffer) ? _mono_buffer[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
+
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
+      }
+    }
+  } else {
+    // 4 grays mode
+    IO.cmd(0x24); // BW RAM
+    
+    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer1) ? _buffer1[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
+
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
+      }
+    }
+    i = 0;
+    IO.cmd(0x26); // 2nd RAM
+    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer2) ? _buffer2[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
+
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
+      }
     }
   }
-  // Non SPI-Optimized
-  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
-    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  } */
-
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x20); // Update sequence
   _waitBusy("update full");
@@ -92,6 +145,15 @@ void gdey0213b74::update()
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   _sleep(); // power off
+  // Non SPI-Optimized
+  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
+    {
+      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
+      IO.data(~data);
+    }
+  } */
 }
 
 void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
@@ -122,14 +184,14 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   
   IO.cmd(0x24); // BW RAM
   printf("Loop from ys:%d to ye:%d\n", y, ye);
-  
+
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
     {
       uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
+      IO.data(data);
     }
   }
 
@@ -140,8 +202,8 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
     {
       uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
+      IO.data(~data);
     }
   }
   
@@ -192,7 +254,6 @@ void gdey0213b74::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
   }
 }
 
-
 void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
     if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
@@ -204,8 +265,7 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
     case 1:
       swap(x, y);
-      // Do not swap x for this display:
-      //x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
+      // Do not swap x for this display
       break;
     case 2:
       //x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
@@ -217,11 +277,44 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   uint16_t i = x / 8 + y * GDEH0213B73_WIDTH / 8;
-  if (!color) {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    } else {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+  uint8_t mask = 1 << (7 - x % 8);
+
+  if (_mono_mode) {
+    if (color) {
+        _mono_buffer[i] = _mono_buffer[i] | mask;
+      } else {
+        _mono_buffer[i] = _mono_buffer[i] & (0xFF ^ mask);
+      }
+  } else {
+    // 4 gray mode
+    mask = 0x80 >> (x & 7);
+    color >>= 6; // Color is from 0 (black) to 255 (white)
+    
+    switch (color)
+    {
+    case 1:
+      // Dark gray: Correct
+      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+      _buffer2[i] = _buffer2[i] | mask;
+      break;
+    case 2:
+      // Light gray: Correct
+      _buffer1[i] = _buffer1[i] | mask;
+      _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+      break;
+    case 3:
+      // WHITE
+      _buffer1[i] = _buffer1[i] | mask;
+      _buffer2[i] = _buffer2[i] | mask;
+      break;
+    default:
+      // Black
+      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+      _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+      break;
     }
+    //printf("%x %x|", _buffer1[i], _buffer2[i]);
+  }
 }
 
 // _InitDisplay generalizing names here
@@ -317,7 +410,7 @@ void gdey0213b74::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
   IO.data(addrY1);
 }
 
-//We use only 0x03
+//We use only 0x03: At the moment this method is not used
 //ram_entry_mode = 0x03; // y-increment, x-increment : normal mode
 //ram_entry_mode = 0x00; // y-decrement, x-decrement
 //ram_entry_mode = 0x01; // y-decrement, x-increment
@@ -348,4 +441,11 @@ void gdey0213b74::_setRamDataEntryMode(uint8_t em)
       _SetRamPointer(0x00, 0x00, 0x00); // set ram
       break;
   }
+}
+
+/**
+ * @brief Sets private _mode. When true is monochrome mode
+ */
+void gdey0213b74::setMonoMode(bool mode) {
+  _mono_mode = mode;
 }

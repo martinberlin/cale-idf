@@ -42,7 +42,7 @@ class gdey0213b74 : public Epd
     
     // EPD tests 
     void init(bool debug = false);
-
+    void setMonoMode(bool mode);
     void fillScreen(uint16_t color);
     void update();
     void eraseDisplay(bool using_partial_update = false);
@@ -52,9 +52,11 @@ class gdey0213b74 : public Epd
   
   private:
     EpdSpi& IO;
-
-    uint8_t _buffer[GDEH0213B73_BUFFER_SIZE];
-
+    bool _mono_mode = false;
+    uint8_t _mono_buffer[GDEH0213B73_BUFFER_SIZE];
+    uint8_t _buffer1[GDEH0213B73_BUFFER_SIZE];
+    uint8_t _buffer2[GDEH0213B73_BUFFER_SIZE];
+    
     bool debug_enabled = false;
     
     void _wakeUp();
