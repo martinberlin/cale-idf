@@ -34,15 +34,14 @@ class gdey0213b74 : public Epd
 {
   public:
     gdey0213b74(EpdSpi& IO);
-    // Sorry manufacturers but I will count on black/white only real ink colors supported not white (Others will respect your color number definition)
+    // Counts only Ink color so BWR will have 2
     uint8_t colors_supported = 1;
-    
+    uint8_t partial_supported = 1;
+
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
     // EPD tests 
     void init(bool debug = false);
-
-    void initPartialUpdate();
 
     void fillScreen(uint16_t color);
     void update();
@@ -50,9 +49,7 @@ class gdey0213b74 : public Epd
 
     // Partial update test status please check repository Wiki
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    // Partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
-
+  
   private:
     EpdSpi& IO;
 
@@ -61,8 +58,9 @@ class gdey0213b74 : public Epd
     bool debug_enabled = false;
     
     void _wakeUp();
+    void _wakeUpFast(); // Not implemented, only checked in GD example
     void _sleep();
-    void cmd(uint8_t command);
+
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     // Ram data entry mode methods

@@ -27,6 +27,9 @@ EpdSpi io;
 //Gdep015OC1 display(io);
 gdey0213b74 display(io);
 
+// Enable on HIGH 5V boost converter
+#define GPIO_ENABLE_5V GPIO_NUM_38
+
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M12pt8b.h>
@@ -58,10 +61,13 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
 void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
+   
+   gpio_set_level(GPIO_ENABLE_5V, 1);
+
    // Test Epd class
    display.init(false);
    //display.update();
-   display.setRotation(1);
+   display.setRotation(0);
    //display.update();return;
    //delay(1000);
 
@@ -95,16 +101,29 @@ void app_main(void)
    display.setCursor(4, 10);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M12pt8b);
-   display.println("BERLIN");
+   display.println("OK");
 
    display.setCursor(1, 90);
    display.setTextColor(EPD_BLACK);
-   display.println("demo-epaper.cpp full update is done!");
+   display.println("GOOD\nDISPLAY");
+   // DRAW Marker line
+   display.fillRect(1, 97, 20, 2, EPD_BLACK);
+   display.fillRect(1, 159, 20, 2, EPD_BLACK);
    display.update();
+
+   delay(2000);
+   // test partial update
+   display.setCursor(1, 140);
+   //display.println("XXX");
+   display.fillCircle(30,120,20, EPD_BLACK);
+   // Doing a    1, 100 prints again DISPLAY
+   display.updateWindow(1,100, 120, 60);
    // Leave the epaper White ready for storage
    /* delay(2000);
    display.fillScreen(EPD_WHITE);
    display.update(); */
 
+   delay(4000);
+   gpio_set_level(GPIO_ENABLE_5V, 0);
    printf("display: We are done here");
 }

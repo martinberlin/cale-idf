@@ -10,27 +10,6 @@
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
 #define GDEH0213B73_PU_DELAY 300
-//Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-
-DRAM_ATTR const epd_lut_100 gdey0213b74::lut_data_part={
-0x32, {
-  0x40,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-
-  0x0A, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00,
-},100};
 
 // Constructor GDEY0213B74
 gdey0213b74::gdey0213b74(EpdSpi& dio): 
@@ -39,21 +18,6 @@ gdey0213b74::gdey0213b74(EpdSpi& dio):
 {
   printf("gdey0213b74() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
   GDEH0213B73_WIDTH, GDEH0213B73_HEIGHT);  
-}
-
-void gdey0213b74::initPartialUpdate(){
-  _wakeUp();
-
-  cmd(0x2C);      // VCOM Voltage
-  IO.data(0x26);  // ???
-
-  // Send partial update LUT table 0x32 -> LUT data
-  cmd(lut_data_part.cmd);
-  for (uint16_t i = 0; i < sizeof(lut_data_part.data); i++) {
-    IO.data(lut_data_part.data[i]);
-  }
-
-  if (debug_enabled) printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -132,6 +96,10 @@ void gdey0213b74::update()
 
 void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
+  ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
+
+  IO.cmd(0x3C); // BorderWavefrom
+  IO.data(0x80);  
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEH0213B73_WIDTH) return;
   if (y >= GDEH0213B73_HEIGHT) return;
@@ -139,48 +107,46 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   uint16_t ye = gx_uint16_min(GDEH0213B73_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
-  initPartialUpdate();
+  _wakeUp();
+  
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("updateWindow I");
-  cmd(0x24);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
-    }
-  }
-  //_Update_Part();
-  cmd(0x22);
-  IO.data(0x04); // use Mode 1 for GxEPD
-  cmd(0x20);
-  _waitBusy("updateWindow II");
-  vTaskDelay(GDEH0213B73_PU_DELAY / portTICK_PERIOD_MS);
 
-  // update erase buffer
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("updateWindow III erase buffer");
-  cmd(0x26);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(data);
-    }
-  }
-  vTaskDelay(GDEH0213B73_PU_DELAY / portTICK_PERIOD_MS);
+  // Partial but get's out GRAY
+  /* Display Update Sequence Option: Enable the stage for Master Activation
+     A[7:0]= FFh (POR)
+  */
+  IO.cmd(0x22);
+  IO.data(0xFF); 
   
-}
+  IO.cmd(0x24); // BW RAM
+  printf("Loop from ys:%d to ye:%d\n", y, ye);
+  
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
+    {
+      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(~data);
+    }
+  }
 
-void gdey0213b74::updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation)
-{
-  printf("Method not implemented\n");
+  // If I don't do this then the partial comes out gray:
+  IO.cmd(0x26); // Gray RAM
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
+    {
+      uint16_t idx = y1 * (GDEH0213B73_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      IO.data(data);
+    }
+  }
+  
+  IO.cmd(0x20);
+  _waitBusy("update partial");  
 }
 
 void gdey0213b74::_waitBusy(const char* message){
@@ -200,17 +166,8 @@ void gdey0213b74::_waitBusy(const char* message){
   }
 }
 
-void gdey0213b74::cmd(uint8_t command){
-  char buffer[3];
-  sprintf(buffer,"%x",command);
-  if (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 1) {
-    _waitBusy(buffer);
-  }
-  IO.cmd(command);
-}
-
 void gdey0213b74::_sleep(){
-  cmd(0x10); // deep sleep
+  IO.cmd(0x10); // deep sleep
   IO.data(0x01);
 }
 
@@ -290,17 +247,17 @@ void gdey0213b74::_wakeUp(){
   IO.data(0xF9);   //0xF9-->(249+1)=250
   IO.data(0x00);
   IO.data(0x00);
-  IO.data(0x00); 
+  IO.data(0x00);
 
   IO.cmd(0x3C); //BorderWavefrom
-  IO.data(0x05);  
-      
+  IO.data(0x05);
+  
   IO.cmd(0x21); //  Display update control
-  IO.data(0x00);    
-  IO.data(0x80);  
+  IO.data(0x00);
+  IO.data(0x80);
       
   IO.cmd(0x18); //Read built-in temperature sensor
-  IO.data(0x80);  
+  IO.data(0x80);
 
   IO.cmd(0x4E);   // set RAM x address count to 0;
   IO.data(0x00);
@@ -310,14 +267,38 @@ void gdey0213b74::_wakeUp(){
   _waitBusy("wakeup CMDs");
 }
 
+void gdey0213b74::_wakeUpFast(){
+  IO.reset(10);
+  _waitBusy("RST reset");
+  IO.cmd(0x12); //SWRESET
+  _waitBusy("SWRESET");
+
+  IO.cmd(0x18); //Read built-in temperature sensor
+  IO.data(0x80);
+      
+  IO.cmd(0x22); // Load temperature value
+  IO.data(0xB1);
+  IO.cmd(0x20);
+  _waitBusy("Temp. value");  
+
+  IO.cmd(0x1A); // Write to temperature register
+  IO.data(0x64);
+  IO.data(0x00);
+            
+  IO.cmd(0x22); // Load temperature value
+  IO.data(0x91);   
+  IO.cmd(0x20);
+}
 
 void gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
-  if (debug_enabled) printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
-  cmd(0x44);
+  // if (debug_enabled) 
+    printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
+  // }
+  IO.cmd(0x44);
   IO.data(Xstart);
   IO.data(Xend);
-  cmd(0x45);
+  IO.cmd(0x45);
   IO.data(Ystart);
   IO.data(Ystart1);
   IO.data(Yend);
@@ -326,10 +307,12 @@ void gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint
 
 void gdey0213b74::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
-  if (debug_enabled)  printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
-  cmd(0x4e);
+  // if (debug_enabled) {
+   printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
+  // }
+  IO.cmd(0x4e);
   IO.data(addrX);
-  cmd(0x4f);
+  IO.cmd(0x4f);
   IO.data(addrY);
   IO.data(addrY1);
 }
@@ -344,7 +327,7 @@ void gdey0213b74::_setRamDataEntryMode(uint8_t em)
   const uint16_t xPixelsPar = GDEH0213B73_X_PIXELS - 1;
   const uint16_t yPixelsPar = GDEH0213B73_Y_PIXELS - 1;
   em = gx_uint16_min(em, 0x03);
-  cmd(0x11);
+  IO.cmd(0x11);
   IO.data(em);
   switch (em)
   {
