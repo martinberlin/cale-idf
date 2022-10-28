@@ -84,6 +84,7 @@ void gdey0213b74::fillScreen(uint16_t color)
 void gdey0213b74::update()
 {
   _using_partial_mode = false;
+  uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   IO.cmd(0x22); // Display Update Control
   IO.data(0xF7);
@@ -91,17 +92,40 @@ void gdey0213b74::update()
   IO.cmd(0x24); // write RAM for black(0)/white (1)
 
   // For v1.0 only monochrome supported
+  uint8_t xLineBytes = GDEH0213B73_WIDTH/8;
+  
+  uint8_t x1buf[xLineBytes];
+  uint32_t i = 0;
   for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+    for (uint16_t x = 0; x < xLineBytes; x++)
+    {
+      uint16_t idx = y * xLineBytes + x;
+      uint8_t data = i < sizeof(_buffer) ? _buffer[idx] : 0x00;
+      x1buf[x] = ~data; // ~ is invert
+
+      if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+            IO.data(x1buf,sizeof(x1buf));
+          }
+      ++i;
+    }
+  }
+  // Non SPI-Optimized
+  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
     for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
     {
       uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
       uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
       IO.data(~data);
     }
-  }
+  } */
 
+  uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x20); // Update sequence
   _waitBusy("update full");
+  uint64_t powerOnTime = esp_timer_get_time();
+  
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
+  (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   _sleep(); // power off
 }
@@ -218,6 +242,9 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
   // check rotation, move pixel around if necessary
   switch (getRotation())
   {
+    case 0:
+      x = GDEH0213B73_VISIBLE_WIDTH - x;
+      break;
     case 1:
       swap(x, y);
       // Do not swap x for this display:
