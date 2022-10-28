@@ -454,25 +454,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 static void http_post(void)
 {
+    printf("HTTP_POST get image: %s\n\n", CONFIG_CALE_SCREEN_URL);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\n", (int)xPortGetFreeHeapSize());
-    /**
-     * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
-     * If host and path parameters are not set, query parameter will be ignored. In such cases,
-     * query parameter should be specified in URL.
-     *
-     * If URL as well as host and path parameters are specified, values of host and path will be considered. TESTs:
-       http://img.cale.es/bmp/fasani/5e8cc4cf03d81  -> 4 bit 2.7 tests
-       http://cale.es/img/test/1.bmp                -> vertical line
-       http://cale.es/img/test/circle.bmp           -> Circle test
-       timeout_ms set to 9 seconds since for large displays a dynamic BMP can take some seconds to be generated
-     */
-    
-    // TODO POST Send the IP for logging purpouses
-    /* char post_data[22];
-    uint8_t postsize = sizeof(post_data);
-    strlcpy(post_data, "ip=", postsize);
-    strlcat(post_data, espIpAddress, postsize); */
+    //printf("Free heap: %d (After epaper instantiation)\n", (int)xPortGetFreeHeapSize());
 
     esp_http_client_config_t config = {
         .url = CONFIG_CALE_SCREEN_URL,
