@@ -7,10 +7,10 @@
 //#include "wave12i48.h"
 //#include <gdew042t2.h>  // Tested correctly 06.06.20
 //#include <gdew0583t7.h>
-#include <gdew0213i5f.h>
+//#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-
+#include "goodisplay/gdey0213b74.h"
 // Color
 //#include <gdew0583z21.h>
 //#include <gdeh042Z96.h>
@@ -25,7 +25,7 @@ Wave12I48 display(io); */
 EpdSpi io;
 //Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-Gdew0213i5f display(io);
+gdey0213b74 display(io);
 
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
@@ -59,16 +59,16 @@ void app_main(void)
 {
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    // Test Epd class
-   display.init(true);
-   display.update();
-   //display.setRotation(2);
+   display.init(false);
+   //display.update();
+   display.setRotation(1);
    //display.update();return;
    //delay(1000);
 
       // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
    uint8_t rectW = display.width()/4; // For 11 is 37.
 
-   uint16_t foregroundColor = EPD_WHITE;
+   uint16_t foregroundColor = EPD_BLACK;
    // Make some rectangles showing the different colors or grays
    if (display.colors_supported>1) {
       printf("display.colors_supported:%d\n", display.colors_supported);
@@ -77,28 +77,34 @@ void app_main(void)
    
    //return;
    display.fillScreen(EPD_WHITE);
-   uint16_t firstBlock = display.width()/4;
+   uint16_t firstBlock = display.width()/8;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor); 
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE);
-
-   display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
+   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE); 
+   // Second row, comment if your epaper is too small
+   display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_WHITE);
    display.fillRect(rectW,firstBlock,rectW,firstBlock,foregroundColor);
-   display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK); 
+   if (display.colors_supported>1) {
+      display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK);
+   } else {
+      display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_WHITE);
+   } 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
-   display.setCursor(display.width()/2-130,display.height()-90);
+   display.setCursor(4, 10);
    display.setTextColor(EPD_WHITE);
    display.setFont(&Ubuntu_M12pt8b);
    display.println("BERLIN");
+
+   display.setCursor(1, 90);
    display.setTextColor(EPD_BLACK);
    display.println("demo-epaper.cpp full update is done!");
    display.update();
    // Leave the epaper White ready for storage
-   delay(2000);
+   /* delay(2000);
    display.fillScreen(EPD_WHITE);
-   display.update();
+   display.update(); */
 
    printf("display: We are done here");
 }

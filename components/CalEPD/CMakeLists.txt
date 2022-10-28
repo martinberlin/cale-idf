@@ -12,6 +12,7 @@ set(srcs
     "models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
+    "models/goodisplay/gdey0213b74.cpp"
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/gdeh0154d67.cpp"
