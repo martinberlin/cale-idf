@@ -13,7 +13,7 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include <gdew_colors.h>
+#include <gdew_4grays.h>
 #include <esp_timer.h>
 
 // All comments below are from J-M Zingg (Ref. EPD)
@@ -56,7 +56,7 @@ class gdey0213b74 : public Epd
     uint8_t _mono_buffer[GDEH0213B73_BUFFER_SIZE];
     uint8_t _buffer1[GDEH0213B73_BUFFER_SIZE];
     uint8_t _buffer2[GDEH0213B73_BUFFER_SIZE];
-    
+
     bool debug_enabled = false;
     
     void _wakeUp();

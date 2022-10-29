@@ -79,17 +79,16 @@ void gdey0213b74::update()
 {
   _using_partial_mode = false;
   uint64_t startTime = esp_timer_get_time();
+  // _wakeUpFast seems to deliver another init params which make EPD show contents mirrored (?)
   _wakeUp();
-  IO.cmd(0x22); // Display Update Control
-  IO.data(0xF7);
-
+  
   // For v1.0 only monochrome supported
   uint8_t xLineBytes = GDEH0213B73_WIDTH/8;
   uint8_t x1buf[xLineBytes];
   uint32_t i = 0;
-
+ 
   if (_mono_mode) {
-    IO.cmd(0x24); // write RAM for black(0)/white (1)
+     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
     for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
@@ -105,38 +104,41 @@ void gdey0213b74::update()
     }
   } else {
     // 4 grays mode
-    IO.cmd(0x24); // BW RAM
-    
-    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
-      for (uint16_t x = 0; x < xLineBytes; x++)
-      {
-        uint16_t idx = y * xLineBytes + x;
-        uint8_t data = i < sizeof(_buffer1) ? _buffer1[idx] : 0x00;
-        x1buf[x] = data; // ~ is invert
+    printf("\n4 gray MODE\n");
+    uint32_t bufindex = 0;
+    uint16_t bufferLenght = GDEH0213B73_BUFFER_SIZE+1; // 4000
+    uint16_t bufferMaxSpi = 2000;
+    uint8_t xbuf[bufferMaxSpi];
 
-        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
-              IO.data(x1buf,sizeof(x1buf));
-            }
-        ++i;
+    IO.cmd(0x24); // write RAM1 for black(0)/white (1)
+    for(i=0;i<bufferLenght;i++)
+      { 
+          xbuf[bufindex] = _buffer1[i];
+          // Flush SPI buffer
+          if (i>0 && i % bufferMaxSpi == 0) {
+            //printf("10 sent part buff %d from *%d\n", bufindex,i);
+            IO.data(xbuf, bufferMaxSpi);
+            bufindex = 0;
+          }
+          bufindex++;
       }
-    }
-    i = 0;
-    IO.cmd(0x26); // 2nd RAM
-    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
-      for (uint16_t x = 0; x < xLineBytes; x++)
-      {
-        uint16_t idx = y * xLineBytes + x;
-        uint8_t data = i < sizeof(_buffer2) ? _buffer2[idx] : 0x00;
-        x1buf[x] = data; // ~ is invert
 
-        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
-              IO.data(x1buf,sizeof(x1buf));
-            }
-        ++i;
+    bufindex = 0;
+    IO.cmd(0x26); //RAM2 buffer: SPI2
+    for(i=0;i<bufferLenght;i++)
+      { 
+          xbuf[bufindex] = _buffer2[i];
+          if (i>0 && i % bufferMaxSpi == 0) {
+            IO.data(xbuf, bufferMaxSpi);
+            bufindex = 0;
+          }
+          bufindex++;
       }
-    }
   }
   uint64_t endTime = esp_timer_get_time();
+
+  IO.cmd(0x22); // Display Update Control
+  IO.data(0xF7); // 0xC7 : fast > Does not work
   IO.cmd(0x20); // Update sequence
   _waitBusy("update full");
   uint64_t powerOnTime = esp_timer_get_time();
@@ -265,10 +267,9 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
     case 1:
       swap(x, y);
-      // Do not swap x for this display
       break;
     case 2:
-      //x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
+      //x = GDEH0213B73_VISIBLE_WIDTH - x - 1; // Do not mirror X here
       y = GDEH0213B73_HEIGHT - y - 1;
       break;
     case 3:
@@ -293,11 +294,13 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
     switch (color)
     {
     case 1:
+      //printf("dg ");
       // Dark gray: Correct
       _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
       _buffer2[i] = _buffer2[i] | mask;
       break;
     case 2:
+      //printf("g ");
       // Light gray: Correct
       _buffer1[i] = _buffer1[i] | mask;
       _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
@@ -308,12 +311,13 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
       _buffer2[i] = _buffer2[i] | mask;
       break;
     default:
-      // Black
+      // Black 
       _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
       _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+      //printf("%d %x %x|", i, _buffer1[i], _buffer2[i]);
       break;
     }
-    //printf("%x %x|", _buffer1[i], _buffer2[i]);
+    
   }
 }
 
@@ -366,21 +370,40 @@ void gdey0213b74::_wakeUpFast(){
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
 
-  IO.cmd(0x18); //Read built-in temperature sensor
-  IO.data(0x80);
-      
-  IO.cmd(0x22); // Load temperature value
-  IO.data(0xB1);
-  IO.cmd(0x20);
-  _waitBusy("Temp. value");  
+  IO.cmd(0x01); //Driver output control      
+	IO.data(0x27);
+	IO.data(0x01);
+	IO.data(0x01); //Show mirror
 
-  IO.cmd(0x1A); // Write to temperature register
-  IO.data(0x64);
-  IO.data(0x00);
-            
-  IO.cmd(0x22); // Load temperature value
-  IO.data(0x91);   
-  IO.cmd(0x20);
+	IO.cmd(0x11); //data entry mode       
+	IO.data(0x01);
+	
+	IO.cmd(0x44); //set Ram-X address start/end position   
+	IO.data(0x00);
+	IO.data(0x0F);//0x0F-->(15+1)*8=128
+
+	IO.cmd(0x45); //set Ram-Y address start/end position          
+	IO.data(0x27);//0x0127-->(295+1)=296
+	IO.data(0x01);
+	IO.data(0x00);
+	IO.data(0x00); 
+
+	IO.cmd(0x3C); //BorderWavefrom
+	IO.data(0x05);	
+	  	
+  IO.cmd(0x18); //Read built-in temperature sensor
+	IO.data(0x80);	
+	
+	IO.cmd(0x21); //  Display update control
+  IO.data(0x00);	
+	IO.data(0x80);
+
+	IO.cmd(0x4E);   // set RAM x address count to 0;
+	IO.data(0x00);
+	IO.cmd(0x4F);   // set RAM y address count to 0X199;    
+	IO.data(0x27);
+	IO.data(0x01);
+  _waitBusy("wakeup GUI");
 }
 
 void gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
