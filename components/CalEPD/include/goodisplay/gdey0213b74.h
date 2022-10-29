@@ -60,7 +60,7 @@ class gdey0213b74 : public Epd
     bool debug_enabled = false;
     
     void _wakeUp();
-    void _wakeUpFast(); // Not implemented, only checked in GD example
+    void _wakeUpGrayMode();
     void _sleep();
 
     void _waitBusy(const char* message);

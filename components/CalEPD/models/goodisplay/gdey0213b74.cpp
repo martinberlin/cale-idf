@@ -79,8 +79,6 @@ void gdey0213b74::update()
 {
   _using_partial_mode = false;
   uint64_t startTime = esp_timer_get_time();
-  // _wakeUpFast seems to deliver another init params which make EPD show contents mirrored (?)
-  _wakeUp();
   
   // For v1.0 only monochrome supported
   uint8_t xLineBytes = GDEH0213B73_WIDTH/8;
@@ -88,6 +86,7 @@ void gdey0213b74::update()
   uint32_t i = 0;
  
   if (_mono_mode) {
+    _wakeUp();
      IO.cmd(0x24); // write RAM1 for black(0)/white (1)
     for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
       for (uint16_t x = 0; x < xLineBytes; x++)
@@ -103,6 +102,7 @@ void gdey0213b74::update()
       }
     }
   } else {
+    _wakeUpGrayMode();
     // 4 grays mode
     printf("\n4 gray MODE\n");
     uint32_t bufindex = 0;
@@ -137,25 +137,18 @@ void gdey0213b74::update()
   }
   uint64_t endTime = esp_timer_get_time();
 
-  IO.cmd(0x22); // Display Update Control
-  IO.data(0xF7); // 0xC7 : fast > Does not work
-  IO.cmd(0x20); // Update sequence
+  IO.cmd(0x22);  // Display Update Control
+  uint8_t twenty_two = (_mono_mode) ? 0xF7 : 0xC7;
+  IO.data(twenty_two); // When 4 gray 0xC7 : Same as gdeh042Z96
+  IO.cmd(0x20);  // Update sequence
+
   _waitBusy("update full");
   uint64_t powerOnTime = esp_timer_get_time();
   
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
-  _sleep(); // power off
-  // Non SPI-Optimized
-  /* for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
-    for (uint16_t x = 0; x < GDEH0213B73_WIDTH / 8; x++)
-    {
-      uint16_t idx = y * (GDEH0213B73_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  } */
+  _sleep();
 }
 
 void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
@@ -364,46 +357,45 @@ void gdey0213b74::_wakeUp(){
   _waitBusy("wakeup CMDs");
 }
 
-void gdey0213b74::_wakeUpFast(){
+void gdey0213b74::_wakeUpGrayMode(){
   IO.reset(10);
   _waitBusy("RST reset");
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
 
-  IO.cmd(0x01); //Driver output control      
-	IO.data(0x27);
-	IO.data(0x01);
-	IO.data(0x01); //Show mirror
+  IO.cmd(0x0C);  // Soft start setting
+  IO.data(0x8B);      
+  IO.data(0x9C);
+  IO.data(0x96);
+  IO.data(0x0F);
 
-	IO.cmd(0x11); //data entry mode       
-	IO.data(0x01);
-	
-	IO.cmd(0x44); //set Ram-X address start/end position   
-	IO.data(0x00);
-	IO.data(0x0F);//0x0F-->(15+1)*8=128
+  IO.cmd(0x11);  // Data entry mode
+  IO.data(0x01); 
+  IO.cmd(0x44);
 
-	IO.cmd(0x45); //set Ram-Y address start/end position          
-	IO.data(0x27);//0x0127-->(295+1)=296
-	IO.data(0x01);
-	IO.data(0x00);
-	IO.data(0x00); 
+  // RAM Addresses
+  IO.cmd(0x44); //set Ram-X address start/end position   
+  IO.data(0x00);
+  IO.data(0x0F);
 
-	IO.cmd(0x3C); //BorderWavefrom
-	IO.data(0x05);	
-	  	
-  IO.cmd(0x18); //Read built-in temperature sensor
-	IO.data(0x80);	
-	
-	IO.cmd(0x21); //  Display update control
-  IO.data(0x00);	
-	IO.data(0x80);
+  IO.cmd(0x45); //set Ram-Y address start/end position          
+  IO.data(0xF9);
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.data(0x00);
 
-	IO.cmd(0x4E);   // set RAM x address count to 0;
-	IO.data(0x00);
-	IO.cmd(0x4F);   // set RAM y address count to 0X199;    
-	IO.data(0x27);
-	IO.data(0x01);
-  _waitBusy("wakeup GUI");
+  IO.data(0x01);
+  IO.data(0x00); // RAM y address end at 00h     
+  IO.data(0x00);
+  IO.cmd(0x3C);  // board
+  IO.data(0x01); // HIZ
+  
+  IO.cmd(0x18);
+  IO.data(0X80);
+  IO.cmd(0x22);
+  IO.data(0XB1);  //Load Temperature and waveform setting.
+  IO.cmd(0x20);
+  _waitBusy("epd_wakeup swreset");
 }
 
 void gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
