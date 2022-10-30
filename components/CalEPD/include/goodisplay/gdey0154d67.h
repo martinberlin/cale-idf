@@ -1,4 +1,5 @@
 // GOODISPLAY product https://www.good-display.com/product/388.html
+//            can be used alond DESPI-C03 adapter with Front light 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

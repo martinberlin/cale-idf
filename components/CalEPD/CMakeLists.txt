@@ -1,5 +1,10 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
+    # New GOODISPLAY models will be in goodisplay directory
+    "models/goodisplay/gdey0213b74.cpp"
+    "models/goodisplay/gdey0154d67.cpp"
+    
+    # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
@@ -12,11 +17,6 @@ set(srcs
     "models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
-    # New GOODISPLAY models will be in goodisplay directory
-    "models/goodisplay/gdey0213b74.cpp"
-    "models/goodisplay/gdey0154d67.cpp"
-
-
     "models/gdew0213i5f.cpp"
     "models/gdep015OC1.cpp"
     "models/gdeh0154d67.cpp"
