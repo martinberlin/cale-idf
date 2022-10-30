@@ -8,12 +8,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-//full screen update LUT
-const epd_init_30 gdey0154d67::LUTDefault_full={
-0x32, {
-  0x50, 0xAA, 0x55, 0xAA, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-},30};
 
 const epd_init_30 gdey0154d67::LUTDefault_part={
 0x32, {
@@ -40,11 +34,7 @@ gdey0154d67::gdey0154d67(EpdSpi& dio):
 
 void gdey0154d67::initFullUpdate(){
     _wakeUp(0x01);
-    
-    IO.cmd(LUTDefault_full.cmd);     // boost
-    for (int i=0;i<LUTDefault_full.databytes;++i) {
-        IO.data(LUTDefault_full.data[i]);
-    } 
+
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }

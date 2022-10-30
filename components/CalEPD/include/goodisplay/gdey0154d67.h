@@ -64,7 +64,6 @@ class gdey0154d67 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
     // Command & data structs
-    static const epd_init_30 LUTDefault_full;
     static const epd_init_30 LUTDefault_part;
     static const epd_init_3 GDOControl;
 };
