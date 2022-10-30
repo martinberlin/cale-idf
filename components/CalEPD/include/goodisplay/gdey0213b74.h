@@ -70,5 +70,6 @@ class gdey0213b74 : public Epd
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
     // Command & data structs
-    static const epd_lut_100 lut_data_part;
+    // LUT tables for this display are filled with zeroes at the end with writeLuts()
+    static const epd_init_42 lut;
 };

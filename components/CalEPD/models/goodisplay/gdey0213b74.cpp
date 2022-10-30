@@ -10,6 +10,18 @@
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
 #define GDEH0213B73_PU_DELAY 300
+#define T1 0x0A
+
+// Grays Waveform
+DRAM_ATTR const epd_init_42 gdey0213b74::lut = {
+    0x32, {
+      0x00	,T1	,0x00	,0x00	,0x00	,0x01,
+0x60	,0x14	,0x14	,0x00	,0x00	,0x01,
+0x00	,0x14	,0x00	,0x00	,0x00	,0x01,
+0x00	,0x13	,0x0A	,0x01	,0x00	,0x01,
+0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
+0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
+0x00	,0x00	,0x00	,0x00	,0x00	,0x00}, 42};
 
 // Constructor GDEY0213B74
 gdey0213b74::gdey0213b74(EpdSpi& dio): 
@@ -103,8 +115,13 @@ void gdey0213b74::update()
     }
   } else {
     _wakeUpGrayMode();
+    IO.cmd(0x32);
+    for (int i = 0; i < sizeof(lut.data); ++i) {
+      IO.data(lut.data[i]);
+    }
+    
     // 4 grays mode
-    printf("\n4 gray MODE\n");
+    printf("\n4 gray MODE. LUT table needs additional settings!\n");
     uint32_t bufindex = 0;
     uint16_t bufferLenght = GDEH0213B73_BUFFER_SIZE+1; // 4000
     uint16_t bufferMaxSpi = 2000;
@@ -137,10 +154,10 @@ void gdey0213b74::update()
   }
   uint64_t endTime = esp_timer_get_time();
 
-  IO.cmd(0x22);  // Display Update Control
+  IO.cmd(0x22);        // Display Update Control
   uint8_t twenty_two = (_mono_mode) ? 0xF7 : 0xC7;
   IO.data(twenty_two); // When 4 gray 0xC7 : Same as gdeh042Z96
-  IO.cmd(0x20);  // Update sequence
+  IO.cmd(0x20);        // Update sequence
 
   _waitBusy("update full");
   uint64_t powerOnTime = esp_timer_get_time();
@@ -288,14 +305,13 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
     {
     case 1:
       //printf("dg ");
-      // Dark gray: Correct
+      // Dark gray: Could not make this work
       _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
       _buffer2[i] = _buffer2[i] | mask;
       break;
     case 2:
-      //printf("g ");
-      // Light gray: Correct
-      _buffer1[i] = _buffer1[i] | mask;
+      //printf("lg ");
+      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
       _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
       break;
     case 3:
@@ -304,9 +320,10 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
       _buffer2[i] = _buffer2[i] | mask;
       break;
     default:
-      // Black 
-      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+      // Light gray
+      _buffer1[i] = _buffer1[i] | mask;
       _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+      
       //printf("%d %x %x|", i, _buffer1[i], _buffer2[i]);
       break;
     }
