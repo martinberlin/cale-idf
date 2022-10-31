@@ -192,24 +192,11 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
 
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
-
-  IO.cmd(0x01); //Driver output control      
-  IO.data(0xF9);
-  IO.data(0x00);
-  IO.data(0x00);
-  IO.cmd(0x11); //data entry mode       
-  IO.data(0x01);
-  IO.cmd(0x3C); // BorderWavefrom
-  IO.data(0x80);
   
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("updateWindow I");
 
-  // Partial but get's out GRAY
-  /* Display Update Sequence Option: Enable the stage for Master Activation
-     A[7:0]= FFh (POR)
-  */
   IO.cmd(0x22);
   IO.data(0xFF); 
   
@@ -226,8 +213,8 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     }
   }
 
-  // If I don't do this then the partial comes out gray:
-  IO.cmd(0x26); // Gray RAM
+  // If I don't do this then the 2nd partial comes out gray:
+  IO.cmd(0x26); // RAM2
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
