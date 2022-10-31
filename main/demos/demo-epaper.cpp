@@ -10,7 +10,8 @@
 //#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include "goodisplay/gdey0213b74.h"
+//#include "goodisplay/gdey0213b74.h"
+#include "goodisplay/gdey0154d67.h"
 // Color
 //#include <gdew0583z21.h>
 //#include <gdeh042Z96.h>
@@ -25,7 +26,7 @@ Wave12I48 display(io); */
 EpdSpi io;
 //Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-gdey0213b74 display(io);
+gdey0154d67 display(io);
 
 // Enable on HIGH 5V boost converter
 #define GPIO_ENABLE_5V GPIO_NUM_38
@@ -69,17 +70,27 @@ void draw_content(uint8_t rotation){
       printf("display.colors_supported:%d\n", display.colors_supported);
       foregroundColor = EPD_RED;
    }
-   
-   display.setCursor(4, 30);
    display.setTextColor(EPD_BLACK);
+   display.setFont(&Ubuntu_M12pt8b);
+   display.fillRect(1,1,11,11,EPD_BLACK);
+   display.fillRect(1,display.width()-10,11,11,EPD_BLACK);
+   display.fillRect(display.height()-10,0,10,10,EPD_BLACK);
+   display.fillRect(display.height()-10,display.width()-10,10,10,EPD_BLACK);
+   display.setCursor(10, display.height()/2-12);
+   display.print("corners");
+   display.update();
+   delay(2000);
+
+   display.fillScreen(EPD_WHITE);
+   display.setCursor(4, 34);
    display.setFont(&Ubuntu_M24pt8b);
    display.println("HELLO");
    display.println("TWITTER");
    display.update();
    delay(2000);
 
-   display.setFont(&Ubuntu_M12pt8b);
    display.fillScreen(EPD_WHITE);
+   display.setFont(&Ubuntu_M12pt8b);
    uint16_t firstBlock = display.width()/8;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
@@ -95,7 +106,7 @@ void draw_content(uint8_t rotation){
    } 
    display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,foregroundColor);
 
-   display.setCursor(4, 10);
+   display.setCursor(4, 20);
    display.setTextColor(EPD_WHITE);
    display.println("OK");
 
@@ -103,18 +114,19 @@ void draw_content(uint8_t rotation){
    display.setTextColor(EPD_BLACK);
    display.println("GOOD\nDISPLAY");
    // DRAW Marker line
-   display.fillRect(1, 97, 20, 2, EPD_BLACK);
-   display.fillRect(1, 159, 20, 2, EPD_BLACK);
+   //display.fillRect(1, 97, 20, 2, EPD_BLACK);
+   //display.fillRect(1, 159, 20, 2, EPD_BLACK);
    display.update();
 
-   delay(2000);
+   delay(1000);
+   display.fillScreen(EPD_WHITE);
    // test partial update
-   display.setCursor(1, 140);
+   /* display.setCursor(1, 140);
    //display.println("XXX");
    display.fillCircle(30,120,20, EPD_BLACK);
    // Doing a    1, 100 prints again DISPLAY
    display.updateWindow(1,100, 120, 60);
-   delay(2000);
+   delay(2000); */
 }
 
 void app_main(void)
@@ -125,24 +137,20 @@ void app_main(void)
 
    // Test Epd class
    display.init(false);
-   display.setMonoMode(true); // false = 4 gray mode without partial update
-   //display.update();
-   display.setRotation(0);
-   display.fillCircle(80, 50, 40, EPD_DARKGREY);
-   display.fillCircle(100, 50, 20, EPD_LIGHTGREY);
-   //display.update();return;
    
-   delay(1000);
-
+   //display.setMonoMode(true); // false = 4 gray mode without partial update
+   
+   display.setRotation(0);
    draw_content(display.getRotation());
-   display.fillScreen(EPD_WHITE);
+   display.spi_optimized = false;
    display.setRotation(1);
-   draw_content(display.getRotation());
-   // Leave the epaper White ready for storage
-   /* delay(2000);
-   display.fillScreen(EPD_WHITE);
-   display.update(); */
+   draw_content(display.getRotation()); 
 
-   gpio_set_level(GPIO_ENABLE_5V, 0);
-   printf("display: We are done here");
+   /*  
+    display.setRotation(2);
+   draw_content(display.getRotation());
+   display.setRotation(3);
+   draw_content(display.getRotation()); */
+
+   printf("display: We are done with the demo");
 }

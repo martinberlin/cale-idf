@@ -29,6 +29,7 @@ class gdey0154d67 : public Epd
   public:
     gdey0154d67(EpdSpi& IO);
     uint8_t colors_supported = 1;
+    bool spi_optimized = true;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     

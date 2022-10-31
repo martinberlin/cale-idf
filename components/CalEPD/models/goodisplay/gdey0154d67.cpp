@@ -82,15 +82,16 @@ void gdey0154d67::_wakeUp(){
   printf("_wakeUp not used in gdey0154d67");
 }
 
-void gdey0154d67::_wakeUp(uint8_t em){
-  printf("wakeup() start commands\n");
+void gdey0154d67::_wakeUp(uint8_t em) {
+  IO.reset(10);
+  IO.cmd(0x12); // SWRESET
+  // Theoretically this display could be driven without RST pin connected
+  _waitBusy("RST reset");
 
   IO.cmd(GDOControl.cmd);
   for (int i=0;i<GDOControl.databytes;++i) {
       IO.data(GDOControl.data[i]);
   }
-  //data entry mode - Used according to Heltec
-  //_setRamDataEntryMode(em); - Interesting effect: Mirrored!
 
   IO.cmd(0x11); //data entry mode       
   IO.data(0x01);
@@ -118,24 +119,52 @@ void gdey0154d67::_wakeUp(uint8_t em){
 
 void gdey0154d67::update()
 {
+  uint64_t startTime = esp_timer_get_time();
   initFullUpdate();
-  printf("BUFF Size:%d\n",sizeof(_buffer));
+  
 
-  IO.cmd(0x24);        // update current data
-  for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
-  {
-    for (uint16_t x = 0; x < GDEY0154D67_WIDTH / 8; x++)
+  IO.cmd(0x24);        // send framebuffer
+  
+  if (spi_optimized) {
+    // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+    printf("SPI optimized buffer_len:%d", sizeof(_buffer));
+
+    uint8_t xLineBytes = GDEY0154D67_WIDTH / 8;
+    uint8_t x1buf[xLineBytes];
+
+      for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
     {
-      uint16_t idx = y * (GDEY0154D67_WIDTH / 8) + x;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;  
+        x1buf[x] = (idx < sizeof(_buffer)) ? ~ _buffer[idx] : 0xFF;
+      }
+      // Flush the X line buffer to SPI
+      IO.data(x1buf, sizeof(x1buf));
+    }
+
+  } else  {
+    // NOT optimized: is minimal the time difference for small buffers like this one
+    for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
+    {
+      for (uint16_t x = 0; x < GDEY0154D67_WIDTH / 8; x++)
+      {
+        uint16_t idx = y * (GDEY0154D67_WIDTH / 8) + x;
+        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0xFF;
+        IO.data(~data);
+      }
     }
   }
+  uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x22);
   IO.data(0xc4);
+  // NOTE: Using F7 as in the GD example the display turns black into gray at the end. With C4 is fine
   IO.cmd(0x20);
   _waitBusy("_Update_Full", 1200);
-  IO.cmd(0xff);
+  uint64_t powerOnTime = esp_timer_get_time();
+
+  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
+  (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
   _sleep();
 }
