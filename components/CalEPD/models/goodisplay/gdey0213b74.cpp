@@ -10,7 +10,6 @@
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
 #define GDEH0213B73_PU_DELAY 300
-#define T1 0x0A
 
 // Grays Waveform
 const epd_lut_159 gdey0213b74::lut_4_grays={
@@ -182,9 +181,7 @@ void gdey0213b74::update()
 void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
-
-  IO.cmd(0x3C); // BorderWavefrom
-  IO.data(0x80);  
+ 
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEH0213B73_WIDTH) return;
   if (y >= GDEH0213B73_HEIGHT) return;
@@ -192,7 +189,18 @@ void gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   uint16_t ye = gx_uint16_min(GDEH0213B73_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
-  _wakeUp();
+
+  IO.cmd(0x12); //SWRESET
+  _waitBusy("SWRESET");
+
+  IO.cmd(0x01); //Driver output control      
+  IO.data(0xF9);
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.cmd(0x11); //data entry mode       
+  IO.data(0x01);
+  IO.cmd(0x3C); // BorderWavefrom
+  IO.data(0x80);
   
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
