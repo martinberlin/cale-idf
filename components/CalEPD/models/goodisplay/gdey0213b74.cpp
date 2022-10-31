@@ -13,15 +13,28 @@
 #define T1 0x0A
 
 // Grays Waveform
-DRAM_ATTR const epd_init_42 gdey0213b74::lut = {
-    0x32, {
-      0x00	,T1	,0x00	,0x00	,0x00	,0x01,
-0x60	,0x14	,0x14	,0x00	,0x00	,0x01,
-0x00	,0x14	,0x00	,0x00	,0x00	,0x01,
-0x00	,0x13	,0x0A	,0x01	,0x00	,0x01,
-0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
-0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
-0x00	,0x00	,0x00	,0x00	,0x00	,0x00}, 42};
+const epd_lut_159 gdey0213b74::lut_4_grays={
+0x32, {
+  0x40,	0x48,	0x80,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x8,	0x48,	0x10,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x2,	0x48,	0x4,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x20,	0x48,	0x1,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0xA,	0x19,	0x0,	0x3,	0x8,	0x0,	0x0,					
+0x14,	0x1,	0x0,	0x14,	0x1,	0x0,	0x3,					
+0xA,	0x3,	0x0,	0x8,	0x19,	0x0,	0x0,					
+0x1,	0x0,	0x0,	0x0,	0x0,	0x0,	0x1,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x22,	0x22,	0x22,	0x22,	0x22,	0x22,	0x0,	0x0,	0x0,			
+0x22,	0x17,	0x41,	0x0,	0x32,	0x1C
+},159};
 
 // Constructor GDEY0213B74
 gdey0213b74::gdey0213b74(EpdSpi& dio): 
@@ -62,8 +75,8 @@ void gdey0213b74::fillScreen(uint16_t color)
     if (color == 255 || color == 0) {
       for(uint32_t i=0;i<GDEH0213B73_BUFFER_SIZE;i++)
       {
-        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
-        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
+        _buffer1[i] = (color == 0xFF) ? 0x00 : 0xFF;
+        _buffer2[i] = (color == 0xFF) ? 0x00 : 0xFF;
       }
     return;
      }
@@ -99,7 +112,8 @@ void gdey0213b74::update()
  
   if (_mono_mode) {
     _wakeUp();
-     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
+
+    IO.cmd(0x24); // write RAM1 for black(0)/white (1)
     for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
@@ -113,15 +127,12 @@ void gdey0213b74::update()
         ++i;
       }
     }
+
   } else {
     _wakeUpGrayMode();
-    IO.cmd(0x32);
-    for (int i = 0; i < sizeof(lut.data); ++i) {
-      IO.data(lut.data[i]);
-    }
     
     // 4 grays mode
-    printf("\n4 gray MODE. LUT table needs additional settings!\n");
+    printf("\n4 gray MODE. sends LUT 159 bytes\n");
     uint32_t bufindex = 0;
     uint16_t bufferLenght = GDEH0213B73_BUFFER_SIZE+1; // 4000
     uint16_t bufferMaxSpi = 2000;
@@ -155,7 +166,7 @@ void gdey0213b74::update()
   uint64_t endTime = esp_timer_get_time();
 
   IO.cmd(0x22);        // Display Update Control
-  uint8_t twenty_two = (_mono_mode) ? 0xF7 : 0xC7;
+  uint8_t twenty_two = (_mono_mode) ? 0xF7 : 0xC4;
   IO.data(twenty_two); // When 4 gray 0xC7 : Same as gdeh042Z96
   IO.cmd(0x20);        // Update sequence
 
@@ -303,31 +314,27 @@ void gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
     
     switch (color)
     {
-    case 1:
-      //printf("dg ");
-      // Dark gray: Could not make this work
-      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
-      _buffer2[i] = _buffer2[i] | mask;
-      break;
-    case 2:
-      //printf("lg ");
-      _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
-      _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
-      break;
-    case 3:
-      // WHITE
-      _buffer1[i] = _buffer1[i] | mask;
-      _buffer2[i] = _buffer2[i] | mask;
-      break;
-    default:
-      // Light gray
-      _buffer1[i] = _buffer1[i] | mask;
-      _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
-      
-      //printf("%d %x %x|", i, _buffer1[i], _buffer2[i]);
-      break;
-    }
-    
+      case 1:
+        // Dark gray
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      case 2:
+        // Light gray
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      case 3:
+        // White
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      default:
+        // Black
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      }
   }
 }
 
@@ -380,39 +387,51 @@ void gdey0213b74::_wakeUpGrayMode(){
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
 
-  IO.cmd(0x0C);  // Soft start setting
-  IO.data(0x8B);      
-  IO.data(0x9C);
-  IO.data(0x96);
-  IO.data(0x0F);
+  IO.cmd(0x74); //set analog block control       
+	IO.data(0x54);
+	IO.cmd(0x7E); //set digital block control          
+	IO.data(0x3B);
 
-  IO.cmd(0x11);  // Data entry mode
-  IO.data(0x01); 
-  IO.cmd(0x44);
+	IO.cmd(0x01); //Driver output control      
+	IO.data(0x07);
+	IO.data(0x01);
+	IO.data(0x00);
 
-  // RAM Addresses
+	IO.cmd(0x11); //data entry mode       
+	IO.data(0x01);
+
   IO.cmd(0x44); //set Ram-X address start/end position   
   IO.data(0x00);
-  IO.data(0x0F);
+  IO.data(0x0F);    //0x0F-->(15+1)*8=128
 
   IO.cmd(0x45); //set Ram-Y address start/end position          
-  IO.data(0xF9);
+  IO.data(0xF9);   //0xF9-->(249+1)=250
   IO.data(0x00);
   IO.data(0x00);
   IO.data(0x00);
 
-  IO.data(0x01);
-  IO.data(0x00); // RAM y address end at 00h     
-  IO.data(0x00);
-  IO.cmd(0x3C);  // board
-  IO.data(0x01); // HIZ
-  
-  IO.cmd(0x18);
-  IO.data(0X80);
-  IO.cmd(0x22);
-  IO.data(0XB1);  //Load Temperature and waveform setting.
-  IO.cmd(0x20);
-  _waitBusy("epd_wakeup swreset");
+	IO.cmd(0x3C); //BorderWavefrom
+	IO.data(0x00);	
+
+	IO.cmd(0x2C);     //VCOM Voltage
+	IO.data(lut_4_grays.data[158]);    //0x1C
+
+	IO.cmd(0x3F); //EOPQ    
+	IO.data(lut_4_grays.data[153]);
+	
+	IO.cmd(0x03); //VGH      
+	IO.data(lut_4_grays.data[154]);
+
+	IO.cmd(0x04); //      
+	IO.data(lut_4_grays.data[155]); //VSH1   
+	IO.data(lut_4_grays.data[156]); //VSH2   
+	IO.data(lut_4_grays.data[157]); //VSL
+
+  // LUT init table for 4 gray. Check if it's needed!
+  IO.cmd(lut_4_grays.cmd);     // boost
+  for (int i=0; i<lut_4_grays.databytes; ++i) {
+      IO.data(lut_4_grays.data[i]);
+  }
 }
 
 void gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)

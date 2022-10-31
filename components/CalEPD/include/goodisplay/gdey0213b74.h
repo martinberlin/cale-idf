@@ -35,8 +35,9 @@ class gdey0213b74 : public Epd
   public:
     gdey0213b74(EpdSpi& IO);
     // Counts only Ink color so BWR will have 2
-    uint8_t colors_supported = 1;
-    uint8_t partial_supported = 1;
+    const uint8_t colors_supported = 1;
+    const uint8_t partial_supported = 1;
+    uint8_t spi_optimized = true;
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -71,5 +72,5 @@ class gdey0213b74 : public Epd
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
     // Command & data structs
     // LUT tables for this display are filled with zeroes at the end with writeLuts()
-    static const epd_init_42 lut;
+    static const epd_lut_159 lut_4_grays;
 };

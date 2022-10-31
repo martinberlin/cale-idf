@@ -10,8 +10,9 @@
 //#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-//#include "goodisplay/gdey0213b74.h"
-#include "goodisplay/gdey0154d67.h"
+// New GOODISPLAY models
+#include "goodisplay/gdey0213b74.h"
+//#include "goodisplay/gdey0154d67.h"
 // Color
 //#include <gdew0583z21.h>
 //#include <gdeh042Z96.h>
@@ -26,7 +27,8 @@ Wave12I48 display(io); */
 EpdSpi io;
 //Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-gdey0154d67 display(io);
+gdey0213b74 display(io);
+//gdey0154d67 display(io);
 
 // Enable on HIGH 5V boost converter
 #define GPIO_ENABLE_5V GPIO_NUM_38
@@ -62,21 +64,28 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
 
 void draw_content(uint8_t rotation){
    // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
-   uint8_t rectW = display.width()/4; // For 11 is 37.
+    
 
    uint16_t foregroundColor = EPD_BLACK;
    // Make some rectangles showing the different colors or grays
    if (display.colors_supported>1) {
       printf("display.colors_supported:%d\n", display.colors_supported);
-      foregroundColor = EPD_RED;
+      foregroundColor = 0xF700; // RED
    }
    display.setTextColor(EPD_BLACK);
    display.setFont(&Ubuntu_M12pt8b);
+   
+   uint8_t rectW = display.width();
+   uint8_t rectH = display.height();
+   if (display.getRotation() %2 == 0) {
+     rectW = display.height();
+     rectH = display.width();
+   }
    display.fillRect(1,1,11,11,EPD_BLACK);
-   display.fillRect(1,display.width()-10,11,11,EPD_BLACK);
-   display.fillRect(display.height()-10,0,10,10,EPD_BLACK);
-   display.fillRect(display.height()-10,display.width()-10,10,10,EPD_BLACK);
-   display.setCursor(10, display.height()/2-12);
+   display.fillRect(1,rectW-10,11,11,EPD_BLACK);
+   display.fillRect(rectH-10,0,10,10,EPD_BLACK);
+   display.fillRect(rectH-10,rectW-10,10,10,EPD_BLACK);
+   display.setCursor(10, rectH/2-12);
    display.print("corners");
    display.update();
    delay(2000);
@@ -89,6 +98,7 @@ void draw_content(uint8_t rotation){
    display.update();
    delay(2000);
 
+   rectW = display.width()/4; // For 11 is 37.
    display.fillScreen(EPD_WHITE);
    display.setFont(&Ubuntu_M12pt8b);
    uint16_t firstBlock = display.width()/8;
@@ -137,8 +147,28 @@ void app_main(void)
 
    // Test Epd class
    display.init(false);
-   
+   display.setFont(&Ubuntu_M12pt8b);
+   display.setMonoMode(true);
+   display.update();
+
+   display.setMonoMode(false); // 4 grays slower update
+   uint8_t xCircle = display.width()/2;
+
+   display.fillScreen(EPD_WHITE);
+   display.fillCircle(xCircle,31, 30, EPD_DARKGREY);
+   display.fillCircle(xCircle,81, 30, EPD_LIGHTGREY);
+   display.fillCircle(xCircle,121, 30, EPD_BLACK);
+   display.fillCircle(xCircle,171, 30, EPD_WHITE);
+   display.setCursor(4, 140);
+   display.setTextColor(EPD_LIGHTGREY);
+   display.println("4 GRAY");
+   display.setTextColor(EPD_BLACK);
+   display.println("4 gray");
+   display.update();
+
+   display.setMonoMode(true); // Monochrome fast mode
    //display.setMonoMode(true); // false = 4 gray mode without partial update
+   // Partial update test
    
    display.setRotation(0);
    draw_content(display.getRotation());
@@ -146,8 +176,7 @@ void app_main(void)
    display.setRotation(1);
    draw_content(display.getRotation()); 
 
-   /*  
-    display.setRotation(2);
+  /*  display.setRotation(2);
    draw_content(display.getRotation());
    display.setRotation(3);
    draw_content(display.getRotation()); */
