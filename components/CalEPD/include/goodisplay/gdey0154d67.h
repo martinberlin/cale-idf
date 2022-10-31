@@ -13,7 +13,7 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include <gdew_colors.h>
+#include <gdew_4grays.h>
 #include <esp_timer.h>
 
 // Controller: SSD1681 (Acts similar than IL3829)
@@ -28,7 +28,8 @@ class gdey0154d67 : public Epd
 {
   public:
     gdey0154d67(EpdSpi& IO);
-    uint8_t colors_supported = 1;
+    const uint8_t colors_supported = 1;
+    const uint8_t partial_supported = 0;
     bool spi_optimized = true;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
@@ -37,7 +38,7 @@ class gdey0154d67 : public Epd
     void init(bool debug = false);
     void initFullUpdate();
     void initPartialUpdate();
-
+    void setMonoMode(bool mode);
     void fillScreen(uint16_t color);
     void update();
     // Partial update of rectangle from buffer to screen, does not power off
@@ -45,17 +46,21 @@ class gdey0154d67 : public Epd
 
   private:
     EpdSpi& IO;
-    uint8_t _buffer[GDEY0154D67_BUFFER_SIZE];
-    bool color = false;
-    bool _initial = true;
-    bool _debug_buffer = false;
-    void _PowerOn();
+
+    uint8_t _mono_buffer[GDEY0154D67_BUFFER_SIZE];
+    uint8_t _buffer1[GDEY0154D67_BUFFER_SIZE];
+    uint8_t _buffer2[GDEY0154D67_BUFFER_SIZE];
     
+    bool _initial = true;
+    bool _mono_mode = true;
+
+    void _PowerOn();
     void _setRamDataEntryMode(uint8_t em);
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
 
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
+    // Default wakeUp used for 4 gray mode
     void _wakeUp();
 
     void _wakeUp(uint8_t em);
@@ -65,6 +70,6 @@ class gdey0154d67 : public Epd
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 
     // Command & data structs
-    static const epd_init_30 LUTDefault_part;
+    static const epd_lut_159 lut_4_grays;
     static const epd_init_3 GDOControl;
 };

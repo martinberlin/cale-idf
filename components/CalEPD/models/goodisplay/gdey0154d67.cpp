@@ -9,11 +9,28 @@
 #include <inttypes.h>
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 
-const epd_init_30 gdey0154d67::LUTDefault_part={
+const epd_lut_159 gdey0154d67::lut_4_grays={
 0x32, {
-  0x10, 0x18, 0x18, 0x08, 0x18, 0x18, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x14, 0x44, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-},30};
+  0x40,	0x48,	0x80,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x8,	0x48,	0x10,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x2,	0x48,	0x4,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x20,	0x48,	0x1,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0xA,	0x19,	0x0,	0x3,	0x8,	0x0,	0x0,					
+0x14,	0x1,	0x0,	0x14,	0x1,	0x0,	0x3,					
+0xA,	0x3,	0x0,	0x8,	0x19,	0x0,	0x0,					
+0x1,	0x0,	0x0,	0x0,	0x0,	0x0,	0x1,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
+0x22,	0x22,	0x22,	0x22,	0x22,	0x22,	0x0,	0x0,	0x0,			
+0x22,	0x17,	0x41,	0x0,	0x32,	0x1C
+},159};
 
 DRAM_ATTR const epd_init_3 gdey0154d67::GDOControl={
 0x01,{(GDEY0154D67_HEIGHT - 1) % 256, (GDEY0154D67_HEIGHT - 1) / 256, 0x00},3
@@ -34,7 +51,6 @@ gdey0154d67::gdey0154d67(EpdSpi& dio):
 
 void gdey0154d67::initFullUpdate(){
     _wakeUp(0x01);
-
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
@@ -42,10 +58,6 @@ void gdey0154d67::initFullUpdate(){
 void gdey0154d67::initPartialUpdate(){
     _wakeUp(0x03);
 
-    IO.cmd(LUTDefault_part.cmd);     // boost
-    for (int i=0;i<LUTDefault_part.databytes;++i) {
-        IO.data(LUTDefault_part.data[i]);
-    }
     _PowerOn();
 
     if (debug_enabled) printf("initPartialUpdate() LUT\n");
@@ -60,26 +72,106 @@ void gdey0154d67::init(bool debug)
 
     printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
+    _mono_mode = 1;
+    fillScreen(EPD_WHITE);
 }
 
 void gdey0154d67::fillScreen(uint16_t color)
 {
-  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
-  uint8_t data = (color == EPD_BLACK) ? GDEY0154D67_8PIX_BLACK : GDEY0154D67_8PIX_WHITE;
-  for (uint16_t x = 0; x < sizeof(_buffer); x++)
-  {
-    _buffer[x] = data;
+  if (_mono_mode) {
+    // 0xFF = 8 pixels black, 0x00 = 8 pix. white
+    uint8_t data = (color == EPD_BLACK) ? GDEY0154D67_8PIX_BLACK : GDEY0154D67_8PIX_WHITE;
+    for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
+    {
+      _mono_buffer[x] = data;
+    }
+  } else {
+    // 4 Grays mode
+    // This is to make faster black & white
+    if (color == 255 || color == 0) {
+      for(uint32_t i=0;i<GDEY0154D67_BUFFER_SIZE;i++)
+      {
+        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
+        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
+      }
+    return;
+     }
+   
+    for (uint32_t y = 0; y < GDEY0154D67_HEIGHT; y++)
+    {
+      for (uint32_t x = 0; x < GDEY0154D67_WIDTH; x++)
+      {
+        drawPixel(x, y, color);
+        if (x % 8 == 0)
+          {
+            #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+            rtc_wdt_feed();
+            #endif
+            vTaskDelay(pdMS_TO_TICKS(2));
+          }
+      }
+    }
   }
 
-  if (debug_enabled) printf("fillScreen(%d) _buffer len:%d\n",data,sizeof(_buffer));
+  if (debug_enabled) printf("fillScreen(%d) _mono_buffer len:%d\n",color,sizeof(_mono_buffer));
 }
 
 uint16_t gdey0154d67::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
   printf("_setPartialRamArea not used in gdey0154d67");
   return 0;
 }
+
+// Now redefined as 4 gray mode
 void gdey0154d67::_wakeUp(){
-  printf("_wakeUp not used in gdey0154d67");
+  printf("_wakeUp 4 Gray\n");
+  IO.reset(10);
+  IO.cmd(0x12);  //SWRESET
+  _waitBusy("SWRESET");
+  
+  IO.cmd(0x74); //set analog block control       
+	IO.data(0x54);
+	IO.cmd(0x7E); //set digital block control          
+	IO.data(0x3B);
+
+	IO.cmd(0x01); //Driver output control      
+	IO.data(0x07);
+	IO.data(0x01);
+	IO.data(0x00);
+
+	IO.cmd(0x11); //data entry mode       
+	IO.data(0x01);
+
+  IO.cmd(0x44); //set Ram-X address start/end position   
+  IO.data(0x00);
+  IO.data(0x18);    //0x0C-->(18+1)*8=200
+  IO.cmd(0x45); //set Ram-Y address start/end position          
+  IO.data(0xC7);   //0xC7-->(199+1)=200
+  IO.data(0x00);
+  IO.data(0x00);
+  IO.data(0x00);
+
+	IO.cmd(0x3C); //BorderWavefrom
+	IO.data(0x00);	
+
+	IO.cmd(0x2C);     //VCOM Voltage
+	IO.data(lut_4_grays.data[158]);    //0x1C
+
+	IO.cmd(0x3F); //EOPQ    
+	IO.data(lut_4_grays.data[153]);
+	
+	IO.cmd(0x03); //VGH      
+	IO.data(lut_4_grays.data[154]);
+
+	IO.cmd(0x04); //      
+	IO.data(lut_4_grays.data[155]); //VSH1   
+	IO.data(lut_4_grays.data[156]); //VSH2   
+	IO.data(lut_4_grays.data[157]); //VSL
+
+  // LUT init table for 4 gray. Check if it's needed!
+  IO.cmd(lut_4_grays.cmd);     // boost
+  for (int i=0; i<lut_4_grays.databytes; ++i) {
+      IO.data(lut_4_grays.data[i]);
+  }
 }
 
 void gdey0154d67::_wakeUp(uint8_t em) {
@@ -115,45 +207,74 @@ void gdey0154d67::_wakeUp(uint8_t em) {
   IO.cmd(0x4f);   // set RAM y address count to 0X199;    
   IO.data(0xC7);
   IO.data(0x00);
+  
 }
 
 void gdey0154d67::update()
 {
   uint64_t startTime = esp_timer_get_time();
-  initFullUpdate();
-  
+  uint8_t xLineBytes = GDEY0154D67_WIDTH / 8;
+  uint8_t x1buf[xLineBytes];
+  if (_mono_mode) {
+    _wakeUp(0x01);
+    _PowerOn();
+    IO.cmd(0x24);        // send framebuffer
+    
+    if (spi_optimized) {
+      // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+      printf("SPI optimized buffer_len:%d", sizeof(_mono_buffer));
 
-  IO.cmd(0x24);        // send framebuffer
-  
-  if (spi_optimized) {
-    // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-    printf("SPI optimized buffer_len:%d", sizeof(_buffer));
+        for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
+      {
+        for (uint16_t x = 0; x < xLineBytes; x++)
+        {
+          uint16_t idx = y * xLineBytes + x;  
+          x1buf[x] = (idx < sizeof(_mono_buffer)) ? ~ _mono_buffer[idx] : 0xFF;
+        }
+        // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
 
-    uint8_t xLineBytes = GDEY0154D67_WIDTH / 8;
-    uint8_t x1buf[xLineBytes];
-
+    } else  {
+      // NOT optimized: is minimal the time difference for small buffers like this one
       for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
-    {
-      for (uint16_t x = 0; x < xLineBytes; x++)
       {
-        uint16_t idx = y * xLineBytes + x;  
-        x1buf[x] = (idx < sizeof(_buffer)) ? ~ _buffer[idx] : 0xFF;
+        for (uint16_t x = 0; x < GDEY0154D67_WIDTH / 8; x++)
+        {
+          uint16_t idx = y * (GDEY0154D67_WIDTH / 8) + x;
+          uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0xFF;
+          IO.data(~data);
+        }
       }
-      // Flush the X line buffer to SPI
-      IO.data(x1buf, sizeof(x1buf));
     }
 
-  } else  {
-    // NOT optimized: is minimal the time difference for small buffers like this one
+  } else {
+    // 4 gray mode!
+    _wakeUp();
+    printf("buffer size: %d", sizeof(_buffer1));
+
+    IO.cmd(0x24); // RAM1
     for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
-    {
-      for (uint16_t x = 0; x < GDEY0154D67_WIDTH / 8; x++)
       {
-        uint16_t idx = y * (GDEY0154D67_WIDTH / 8) + x;
-        uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0xFF;
-        IO.data(~data);
+        for (uint16_t x = 0; x < xLineBytes; x++)
+        {
+          uint16_t idx = y * xLineBytes + x;  
+          x1buf[x] = (idx < sizeof(_buffer1)) ? ~ _buffer1[idx] : 0xFF;
+        }
+        // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
       }
-    }
+    IO.cmd(0x26); // RAM2
+    for (uint16_t y = GDEY0154D67_HEIGHT; y > 0; y--)
+      {
+        for (uint16_t x = 0; x < xLineBytes; x++)
+        {
+          uint16_t idx = y * xLineBytes + x;  
+          x1buf[x] = (idx < sizeof(_buffer2)) ? ~ _buffer2[idx] : 0xFF;
+        }
+        // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
   }
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x22);
@@ -228,7 +349,7 @@ void gdey0154d67::_PowerOn(void)
 
 void gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  ESP_LOGE("gdey0154d67", "Partial update still not implemented on this display");
+  
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEY0154D67_WIDTH) return;
   if (y >= GDEY0154D67_HEIGHT) return;
@@ -240,41 +361,26 @@ void gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("partialUpdate1", 100); // needed ?
+
+  ESP_LOGE("gdey0154d67", "Partial update still not tested on this display");
+
   IO.cmd(0x24);
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
     {
       uint16_t idx = y1 * (GDEY0154D67_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
       IO.data(~data);
     }
   }
   
   IO.cmd(0x22);
-  IO.data(0x04);
+  IO.data(0xFF); //0x04
   IO.cmd(0x20);
   _waitBusy("partialUpdate2", 300);
-  IO.cmd(0xff);
-
-  vTaskDelay(GDEY0154D67_PU_DELAY/portTICK_RATE_MS); 
-
-  // update erase buffer
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate3", 100); // needed ?
-  IO.cmd(0x24);
-
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEY0154D67_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_buffer)) ? _buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  }
-  vTaskDelay(GDEY0154D67_PU_DELAY/portTICK_RATE_MS); 
+  
+  vTaskDelay(GDEY0154D67_PU_DELAY/portTICK_RATE_MS);
 }
 
 void gdey0154d67::_waitBusy(const char* message, uint16_t busy_time){
@@ -366,10 +472,45 @@ void gdey0154d67::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
   uint16_t i = x / 8 + y * GDEY0154D67_WIDTH / 8;
 
-  // This is the trick to draw colors right. Genious Jean-Marc
-  if (color) {
-    _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    } else {
-    _buffer[i] = (_buffer[i] | (1 << (7 - x % 8)));
-    }
+ if (_mono_mode) {
+    // This is the trick to draw colors right. Genious Jean-Marc
+    if (color) {
+      _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
+      } else {
+      _mono_buffer[i] = (_mono_buffer[i] | (1 << (7 - x % 8)));
+      }
+ } else {
+  // 4 gray mode
+  uint8_t mask = 0x80 >> (x & 7);
+
+  color >>= 6; // Color is from 0 (black) to 255 (white)
+      
+      switch (color)
+      {
+      case 1:
+        // Dark gray: Correct
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      case 2:
+        // Light gray: Correct
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      case 3:
+        // WHITE
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      default:
+        // Black
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      }
+ }
+}
+
+void gdey0154d67::setMonoMode(bool mode) {
+  _mono_mode = mode;
 }
