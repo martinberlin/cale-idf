@@ -3,6 +3,7 @@
 
 #include <calepd_version.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -121,6 +122,7 @@ class Epd : public virtual Adafruit_GFX
     void print(const std::string& text);
     void print(const char c);
     void println(const std::string& text);
+    void printerf(const char *format, ...);
     void newline();
   // Methods that should be accesible by inheriting this abstract class
   protected: 
