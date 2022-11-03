@@ -30,10 +30,10 @@
 
 #define GDEH0213B73_BUFFER_SIZE (uint32_t(GDEH0213B73_WIDTH) * uint32_t(GDEH0213B73_HEIGHT) / 8)
 
-class gdey0213b74 : public Epd
+class Gdey0213b74 : public Epd
 {
   public:
-    gdey0213b74(EpdSpi& IO);
+    Gdey0213b74(EpdSpi& IO);
     // Counts only Ink color so BWR will have 2
     const uint8_t colors_supported = 1;
     const uint8_t partial_supported = 1;

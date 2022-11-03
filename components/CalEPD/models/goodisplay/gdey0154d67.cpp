@@ -9,7 +9,7 @@
 #include <inttypes.h>
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 
-const epd_lut_159 gdey0154d67::lut_4_grays={
+const epd_lut_159 Gdey0154d67::lut_4_grays={
 0x32, {
   0x40,	0x48,	0x80,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 0x8,	0x48,	0x10,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
@@ -32,7 +32,7 @@ const epd_lut_159 gdey0154d67::lut_4_grays={
 0x22,	0x17,	0x41,	0x0,	0x32,	0x1C
 },159};
 
-DRAM_ATTR const epd_init_3 gdey0154d67::GDOControl={
+DRAM_ATTR const epd_init_3 Gdey0154d67::GDOControl={
 0x01,{(GDEY0154D67_HEIGHT - 1) % 256, (GDEY0154D67_HEIGHT - 1) / 256, 0x00},3
 };
 
@@ -41,21 +41,21 @@ DRAM_ATTR const epd_init_3 gdey0154d67::GDOControl={
 
 
 // Constructor
-gdey0154d67::gdey0154d67(EpdSpi& dio): 
+Gdey0154d67::Gdey0154d67(EpdSpi& dio): 
   Adafruit_GFX(GDEY0154D67_WIDTH, GDEY0154D67_HEIGHT),
   Epd(GDEY0154D67_WIDTH, GDEY0154D67_HEIGHT), IO(dio)
 {
-  printf("gdey0154d67() %d*%d\n",
+  printf("Gdey0154d67() %d*%d\n",
   GDEY0154D67_WIDTH, GDEY0154D67_HEIGHT);  
 }
 
-void gdey0154d67::initFullUpdate(){
+void Gdey0154d67::initFullUpdate(){
     _wakeUp(0x01);
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
 
-void gdey0154d67::initPartialUpdate(){
+void Gdey0154d67::initPartialUpdate(){
     _wakeUp(0x03);
 
     _PowerOn();
@@ -64,10 +64,10 @@ void gdey0154d67::initPartialUpdate(){
 }
 
 //Initialize the display
-void gdey0154d67::init(bool debug)
+void Gdey0154d67::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("gdey0154d67::init(%d)\n", debug);
+    if (debug_enabled) printf("Gdey0154d67::init(%d)\n", debug);
     IO.init(4, debug); // 4MHz frequency
 
     printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
@@ -76,7 +76,7 @@ void gdey0154d67::init(bool debug)
     fillScreen(EPD_WHITE);
 }
 
-void gdey0154d67::fillScreen(uint16_t color)
+void Gdey0154d67::fillScreen(uint16_t color)
 {
   if (_mono_mode) {
     // 0xFF = 8 pixels black, 0x00 = 8 pix. white
@@ -116,13 +116,13 @@ void gdey0154d67::fillScreen(uint16_t color)
   if (debug_enabled) printf("fillScreen(%d) _mono_buffer len:%d\n",color,sizeof(_mono_buffer));
 }
 
-uint16_t gdey0154d67::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
-  printf("_setPartialRamArea not used in gdey0154d67");
+uint16_t Gdey0154d67::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye) {
+  printf("_setPartialRamArea not used in Gdey0154d67");
   return 0;
 }
 
 // Now redefined as 4 gray mode
-void gdey0154d67::_wakeUp(){
+void Gdey0154d67::_wakeUp(){
   printf("_wakeUp 4 Gray\n");
   IO.reset(10);
   IO.cmd(0x12);  //SWRESET
@@ -174,7 +174,7 @@ void gdey0154d67::_wakeUp(){
   }
 }
 
-void gdey0154d67::_wakeUp(uint8_t em) {
+void Gdey0154d67::_wakeUp(uint8_t em) {
   IO.reset(10);
   IO.cmd(0x12); // SWRESET
   // Theoretically this display could be driven without RST pin connected
@@ -210,7 +210,7 @@ void gdey0154d67::_wakeUp(uint8_t em) {
   
 }
 
-void gdey0154d67::update()
+void Gdey0154d67::update()
 {
   uint64_t startTime = esp_timer_get_time();
   uint8_t xLineBytes = GDEY0154D67_WIDTH / 8;
@@ -290,7 +290,7 @@ void gdey0154d67::update()
   _sleep();
 }
 
-void gdey0154d67::_setRamDataEntryMode(uint8_t em)
+void Gdey0154d67::_setRamDataEntryMode(uint8_t em)
 {
   const uint16_t xPixelsPar = GDEY0154D67_WIDTH - 1;
   const uint16_t yPixelsPar = GDEY0154D67_HEIGHT - 1;
@@ -318,7 +318,7 @@ void gdey0154d67::_setRamDataEntryMode(uint8_t em)
   }
 }
 
-void gdey0154d67::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
+void Gdey0154d67::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
   IO.cmd(0x44);
   IO.data(Xstart);
@@ -330,7 +330,7 @@ void gdey0154d67::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint
   IO.data(Yend1);
 }
 
-void gdey0154d67::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
+void Gdey0154d67::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
   IO.cmd(0x4e);
   IO.data(addrX);
@@ -339,7 +339,7 @@ void gdey0154d67::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
   IO.data(addrY1);
 }
 
-void gdey0154d67::_PowerOn(void)
+void Gdey0154d67::_PowerOn(void)
 {
   IO.cmd(0x22);
   IO.data(0xc0);
@@ -347,7 +347,7 @@ void gdey0154d67::_PowerOn(void)
   _waitBusy("_PowerOn");
 }
 
-void gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
+void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   
   if (using_rotation) _rotate(x, y, w, h);
@@ -362,7 +362,7 @@ void gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("partialUpdate1", 100); // needed ?
 
-  ESP_LOGE("gdey0154d67", "Partial update still not tested on this display");
+  ESP_LOGE("Gdey0154d67", "Partial update still not tested on this display");
 
   IO.cmd(0x24);
   for (int16_t y1 = y; y1 <= ye; y1++)
@@ -383,7 +383,7 @@ void gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   vTaskDelay(GDEY0154D67_PU_DELAY/portTICK_RATE_MS);
 }
 
-void gdey0154d67::_waitBusy(const char* message, uint16_t busy_time){
+void Gdey0154d67::_waitBusy(const char* message, uint16_t busy_time){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -404,7 +404,7 @@ void gdey0154d67::_waitBusy(const char* message, uint16_t busy_time){
   }
 }
 
-void gdey0154d67::_waitBusy(const char* message){
+void Gdey0154d67::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -422,14 +422,14 @@ void gdey0154d67::_waitBusy(const char* message){
   }
 }
 
-void gdey0154d67::_sleep(){
+void Gdey0154d67::_sleep(){
   IO.cmd(0x22); // power off display
   IO.data(0xc3);
   IO.cmd(0x20);
   _waitBusy("power_off");
 }
 
-void gdey0154d67::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void Gdey0154d67::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
@@ -451,7 +451,7 @@ void gdey0154d67::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 }
 
 
-void gdey0154d67::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void Gdey0154d67::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
 
   // check rotation, move pixel around if necessary
@@ -511,6 +511,6 @@ void gdey0154d67::drawPixel(int16_t x, int16_t y, uint16_t color) {
  }
 }
 
-void gdey0154d67::setMonoMode(bool mode) {
+void Gdey0154d67::setMonoMode(bool mode) {
   _mono_mode = mode;
 }

@@ -24,10 +24,10 @@
 #define GDEY0154D67_8PIX_BLACK 0xFF
 #define GDEY0154D67_8PIX_WHITE 0x00
 
-class gdey0154d67 : public Epd
+class Gdey0154d67 : public Epd
 {
   public:
-    gdey0154d67(EpdSpi& IO);
+    Gdey0154d67(EpdSpi& IO);
     const uint8_t colors_supported = 1;
     const uint8_t partial_supported = 0;
     bool spi_optimized = true;
