@@ -13,6 +13,17 @@ ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-s
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
+
+### Important updates coming
+
+We recently received a new batch of [epapers from Good-Display](https://www.good-display.com) and you can track our progress checking the [Issues tagged with GOODISPLAY](https://github.com/martinberlin/cale-idf/issues?q=is%3Aissue+is%3Aopen+label%3AGOODISPLAY)
+
+We are thankful for that since our mission is to offer developers a stable and modern ESP-IDF component. Enabling them to develop Firmware using epaper displays in the latest Espressif System on a Chip MCUs like ESP32S3, C3, and the new ones supporting WiFi 5 GHz as C5. This new epaper models are being added in the branch **idf_v5** that is going to be merged in **develop** in the next weeks and later released on master.
+This will take some more days since Espressif still didn't released officially ESP-IDF version 5, most developers still use stable 4.4 version. We respectfully ask you to switch to this branch to try this new models and also help us correct latest details before merging.
+The new models added will support also 4 Gray mode whenever possible, being this the first component supporting this update mode, since is not fully supported in other known libraries as GxEPD. After this merge we will come back to the touch support topic and update the component too, in order to try LVGL in epapers that support partial update correctly such as the Ultrachip (UCxxx) models
+
+_4th November 2022, Barcelona, **Fasani Corporation** headquarters_
+
 ### 2022 update
 
 This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Also in my top list is to make this work with latest Espressif workhorse, the ESP32S3, since it seems that with two LX7 cores is the fastest one so far.
