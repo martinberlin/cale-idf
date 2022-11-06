@@ -3,6 +3,7 @@ set(srcs
     # New GOODISPLAY models will be in goodisplay directory
     "models/goodisplay/gdey0213b74.cpp"
     "models/goodisplay/gdey0154d67.cpp"
+    "models/goodisplay/gdey029T94.cpp"
     
     # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
