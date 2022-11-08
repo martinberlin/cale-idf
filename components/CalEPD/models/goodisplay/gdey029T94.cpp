@@ -112,7 +112,8 @@ void Gdey029T94::update()
     _wakeUp();
 
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for (uint16_t y = 0; y < GDEY029T94_HEIGHT; y++) {
+    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+    //for (uint16_t y = 0; y < GDEY029T94_HEIGHT; y++) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
@@ -203,7 +204,7 @@ void Gdey029T94::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   IO.data(0xFF); 
   
   IO.cmd(0x24); // BW RAM
-  printf("Loop from ys:%d to ye:%d\n", y, ye);
+  //printf("Loop from ys:%d to ye:%d\n", y, ye);
 
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
@@ -281,17 +282,17 @@ void Gdey029T94::drawPixel(int16_t x, int16_t y, uint16_t color) {
   // check rotation, move pixel around if necessary
   switch (getRotation())
   {
-    case 0:
-      x = GDEY029T94_VISIBLE_WIDTH - x;
-      break;
     case 1:
       swap(x, y);
+      x = GDEY029T94_VISIBLE_WIDTH - x -1;
       break;
     case 2:
+      x = GDEY029T94_VISIBLE_WIDTH - x -1;
       y = GDEY029T94_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
+      y = GDEY029T94_HEIGHT - y - 1;
       break;
   }
   uint16_t i = x / 8 + y * GDEY029T94_WIDTH / 8;
@@ -409,9 +410,9 @@ void Gdey029T94::_wakeUpGrayMode(){
 
 void Gdey029T94::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
-  // if (debug_enabled) 
+  if (debug_enabled) {
     printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
-  // }
+  }
   IO.cmd(0x44);
   IO.data(Xstart);
   IO.data(Xend);
@@ -424,9 +425,9 @@ void Gdey029T94::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8
 
 void Gdey029T94::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
-  // if (debug_enabled) {
+  if (debug_enabled) {
    printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
-  // }
+  }
   IO.cmd(0x4e);
   IO.data(addrX);
   IO.cmd(0x4f);
