@@ -178,8 +178,11 @@ void Gdey029T94::update()
 
 void Gdey029T94::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
- 
+  //ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
+  if (!_using_partial_mode) {
+    _using_partial_mode = true;
+    _wakeUp();
+  }
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEY029T94_WIDTH) return;
   if (y >= GDEY029T94_HEIGHT) return;
@@ -190,7 +193,8 @@ void Gdey029T94::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
 
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
-  
+
+  _setRamDataEntryMode(0x03);
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("updateWindow I");
@@ -224,7 +228,8 @@ void Gdey029T94::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   }
   
   IO.cmd(0x20);
-  _waitBusy("update partial");  
+  _waitBusy("update partial");
+  //_sleep();
 }
 
 void Gdey029T94::_waitBusy(const char* message){
