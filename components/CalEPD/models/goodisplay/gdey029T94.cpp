@@ -113,7 +113,6 @@ void Gdey029T94::update()
 
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
     for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
-    //for (uint16_t y = 0; y < GDEY029T94_HEIGHT; y++) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
@@ -131,35 +130,35 @@ void Gdey029T94::update()
     _wakeUpGrayMode();
     
     // 4 grays mode
-    uint32_t bufindex = 0;
-    uint16_t bufferLenght = GDEY029T94_BUFFER_SIZE+1;
-    uint16_t bufferMaxSpi = 1579;
-    uint8_t xbuf[bufferMaxSpi];
-    
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for(i=0; i<=bufferLenght; i++)
-      { 
-          xbuf[bufindex] = _buffer1[i];
-          // Flush SPI buffer
-          if (i>0 && i % bufferMaxSpi == 0) {
-            //printf("Sent part buff %ld from %ld\n", bufindex, i);
-            IO.data(xbuf, bufferMaxSpi);
-            bufindex = 0;
-          }
-          bufindex++;
-      }
+    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer1) ? _buffer1[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
 
-    bufindex = 0;
-    IO.cmd(0x26); //RAM2 buffer: SPI2
-    for(i=0;i<=bufferLenght;i++)
-      { 
-          xbuf[bufindex] = _buffer2[i];
-          if (i>0 && i % bufferMaxSpi == 0) {
-            IO.data(xbuf, bufferMaxSpi);
-            bufindex = 0;
-          }
-          bufindex++;
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
       }
+    }
+    i = 0;
+    IO.cmd(0x26); //RAM2 buffer: SPI2
+    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer2) ? _buffer2[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
+
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
+      }
+    }
   }
   uint64_t endTime = esp_timer_get_time();
 
