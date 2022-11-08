@@ -172,30 +172,30 @@ void Gdey0154d67::_wakeUp(uint8_t em) {
   for (int i=0;i<GDOControl.databytes;++i) {
       IO.data(GDOControl.data[i]);
   } */
-  IO.cmd(0x01); //Driver output control      
-  IO.data(0xF9);
+  IO.cmd(0x01);   // Driver output control      
+  IO.data(0xC7);
   IO.data(0x00);
   IO.data(0x00);
 
-  IO.cmd(0x11); //data entry mode       
+  IO.cmd(0x11);   //data entry mode       
   IO.data(0x01);
 
-  IO.cmd(0x44); //set Ram-X address start/end position   
+  IO.cmd(0x44);   //set Ram-X address start/end position   
   IO.data(0x00);
-  IO.data(0x18);    //0x0C-->(18+1)*8=200
-  IO.cmd(0x45); //set Ram-Y address start/end position          
-  IO.data(0xC7);   //0xC7-->(199+1)=200
+  IO.data(0x18);  //0x0C-->(18+1)*8=200
+  IO.cmd(0x45);   //set Ram-Y address start/end position          
+  IO.data(0xC7);  //0xC7-->(199+1)=200
   IO.data(0x00);
   IO.data(0x00);
   IO.data(0x00);
 
-  IO.cmd(0x3c); //BorderWavefrom
+  IO.cmd(0x3c);   //BorderWavefrom
   IO.data(0x05);
 
-  IO.cmd(0x18); 
-  IO.data(0x80);	
+  IO.cmd(0x18);
+  IO.data(0x80);
   IO.cmd(0x22);   //Load Temperature and waveform setting.
-  IO.data(0XB1); 
+  IO.data(0XB1);
   IO.cmd(0x20);
 
   IO.cmd(0x4e);   // set RAM x address count to 0;
@@ -350,6 +350,12 @@ void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
     _using_partial_mode = true;
     _wakeUp(0x03);
     _PowerOn();
+    // Fix gray partial update
+    IO.cmd(0x26);
+    for (int16_t i = 0; i <= GDEY0154D67_BUFFER_SIZE; i++)
+    {
+      IO.data(0xFF);
+    }
   }
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEY0154D67_WIDTH) return;
@@ -364,10 +370,8 @@ void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   _setRamDataEntryMode(0x03);
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("partialUpdate1", 100); // needed ?
+  //_waitBusy("partialUpdate1", 100); // needed ?
 
-  IO.cmd(0x22);
-  IO.data(0xFF); //0x04
   IO.cmd(0x24);
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
@@ -378,17 +382,10 @@ void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
       IO.data(~data);
     }
   }
-  /* IO.cmd(0x26);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEY0154D67_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  } */
   
+
+  IO.cmd(0x22);
+  IO.data(0xFF); //0x04
   IO.cmd(0x20);
   _waitBusy("updateWindow");
 }
