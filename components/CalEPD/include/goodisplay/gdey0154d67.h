@@ -37,7 +37,6 @@ class Gdey0154d67 : public Epd
     // EPD tests 
     void init(bool debug = false);
     void initFullUpdate();
-    void initPartialUpdate();
     void setMonoMode(bool mode);
     void fillScreen(uint16_t color);
     void update();

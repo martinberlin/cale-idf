@@ -36,10 +36,6 @@ DRAM_ATTR const epd_init_3 Gdey0154d67::GDOControl={
 0x01,{(GDEY0154D67_HEIGHT - 1) % 256, (GDEY0154D67_HEIGHT - 1) / 256, 0x00},3
 };
 
-// Partial Update Delay
-#define GDEY0154D67_PU_DELAY 100
-
-
 // Constructor
 Gdey0154d67::Gdey0154d67(EpdSpi& dio): 
   Adafruit_GFX(GDEY0154D67_WIDTH, GDEY0154D67_HEIGHT),
@@ -53,14 +49,6 @@ void Gdey0154d67::initFullUpdate(){
     _wakeUp(0x01);
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
-}
-
-void Gdey0154d67::initPartialUpdate(){
-    _wakeUp(0x03);
-
-    _PowerOn();
-
-    if (debug_enabled) printf("initPartialUpdate() LUT\n");
 }
 
 //Initialize the display
@@ -178,15 +166,20 @@ void Gdey0154d67::_wakeUp(uint8_t em) {
   IO.reset(10);
   IO.cmd(0x12); // SWRESET
   // Theoretically this display could be driven without RST pin connected
-  _waitBusy("RST reset");
+  _waitBusy("SWRESET");
 
-  IO.cmd(GDOControl.cmd);
+  /* IO.cmd(GDOControl.cmd);
   for (int i=0;i<GDOControl.databytes;++i) {
       IO.data(GDOControl.data[i]);
-  }
+  } */
+  IO.cmd(0x01); //Driver output control      
+  IO.data(0xF9);
+  IO.data(0x00);
+  IO.data(0x00);
 
   IO.cmd(0x11); //data entry mode       
   IO.data(0x01);
+
   IO.cmd(0x44); //set Ram-X address start/end position   
   IO.data(0x00);
   IO.data(0x18);    //0x0C-->(18+1)*8=200
@@ -194,20 +187,22 @@ void Gdey0154d67::_wakeUp(uint8_t em) {
   IO.data(0xC7);   //0xC7-->(199+1)=200
   IO.data(0x00);
   IO.data(0x00);
-  IO.data(0x00); 
+  IO.data(0x00);
+
   IO.cmd(0x3c); //BorderWavefrom
-  IO.data(0x01);	  
+  IO.data(0x05);
+
   IO.cmd(0x18); 
   IO.data(0x80);	
-  IO.cmd(0x22); // //Load Temperature and waveform setting.
-  IO.data(0XB1);	
-  IO.cmd(0x20); 
+  IO.cmd(0x22);   //Load Temperature and waveform setting.
+  IO.data(0XB1); 
+  IO.cmd(0x20);
+
   IO.cmd(0x4e);   // set RAM x address count to 0;
   IO.data(0x00);
   IO.cmd(0x4f);   // set RAM y address count to 0X199;    
   IO.data(0xC7);
   IO.data(0x00);
-  
 }
 
 void Gdey0154d67::update()
@@ -349,7 +344,13 @@ void Gdey0154d67::_PowerOn(void)
 
 void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  
+  ESP_LOGE("PARTIAL", "update is still coming out gray. Corrections needed! x:%d y:%d\n", (int)x, (int)y);
+
+  if (!_using_partial_mode) {
+    _using_partial_mode = true;
+    _wakeUp(0x03);
+    _PowerOn();
+  }
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEY0154D67_WIDTH) return;
   if (y >= GDEY0154D67_HEIGHT) return;
@@ -357,13 +358,16 @@ void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   uint16_t ye = gx_uint16_min(GDEY0154D67_HEIGHT, y + h) - 1;
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
-  initPartialUpdate();
+
+  IO.cmd(0x12); //SWRESET
+  _waitBusy("SWRESET");
+  _setRamDataEntryMode(0x03);
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("partialUpdate1", 100); // needed ?
 
-  ESP_LOGE("Gdey0154d67", "Partial update still not tested on this display");
-
+  IO.cmd(0x22);
+  IO.data(0xFF); //0x04
   IO.cmd(0x24);
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
@@ -374,13 +378,19 @@ void Gdey0154d67::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
       IO.data(~data);
     }
   }
+  /* IO.cmd(0x26);
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
+    {
+      uint16_t idx = y1 * (GDEY0154D67_WIDTH / 8) + x1;
+      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
+      IO.data(~data);
+    }
+  } */
   
-  IO.cmd(0x22);
-  IO.data(0xFF); //0x04
   IO.cmd(0x20);
-  _waitBusy("partialUpdate2", 300);
-  
-  vTaskDelay(GDEY0154D67_PU_DELAY/portTICK_RATE_MS);
+  _waitBusy("updateWindow");
 }
 
 void Gdey0154d67::_waitBusy(const char* message, uint16_t busy_time){
