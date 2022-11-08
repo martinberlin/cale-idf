@@ -113,7 +113,7 @@ void Gdey0213b74::update()
     _wakeUp();
 
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for (uint16_t y = 0; y < GDEH0213B73_HEIGHT; y++) {
+    for (uint16_t y = GDEH0213B73_HEIGHT; y >0; y--) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
@@ -130,37 +130,39 @@ void Gdey0213b74::update()
   } else {
     _wakeUpGrayMode();
     
-    // 4 grays mode
+    // 4 grays mode GDEH0213B73
     printf("\n4 gray MODE. sends LUT 159 bytes\n");
-    uint32_t bufindex = 0;
-    uint16_t bufferLenght = GDEH0213B73_BUFFER_SIZE+1; // 4000
-    uint16_t bufferMaxSpi = 2000;
-    uint8_t xbuf[bufferMaxSpi];
-
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for(i=0;i<bufferLenght;i++)
-      { 
-          xbuf[bufindex] = _buffer1[i];
-          // Flush SPI buffer
-          if (i>0 && i % bufferMaxSpi == 0) {
-            //printf("10 sent part buff %d from *%d\n", bufindex,i);
-            IO.data(xbuf, bufferMaxSpi);
-            bufindex = 0;
-          }
-          bufindex++;
-      }
+    for (uint16_t y = GDEH0213B73_HEIGHT; y > 0; y--) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer1) ? _buffer1[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
 
-    bufindex = 0;
-    IO.cmd(0x26); //RAM2 buffer: SPI2
-    for(i=0;i<bufferLenght;i++)
-      { 
-          xbuf[bufindex] = _buffer2[i];
-          if (i>0 && i % bufferMaxSpi == 0) {
-            IO.data(xbuf, bufferMaxSpi);
-            bufindex = 0;
-          }
-          bufindex++;
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
       }
+    }
+    
+    i = 0;
+    IO.cmd(0x26); //RAM2 buffer: SPI2
+    for (uint16_t y = GDEH0213B73_HEIGHT; y > 0; y--) {
+      for (uint16_t x = 0; x < xLineBytes; x++)
+      {
+        uint16_t idx = y * xLineBytes + x;
+        uint8_t data = i < sizeof(_buffer2) ? _buffer2[idx] : 0x00;
+        x1buf[x] = data; // ~ is invert
+
+        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+              IO.data(x1buf,sizeof(x1buf));
+            }
+        ++i;
+      }
+    }
+
   }
   uint64_t endTime = esp_timer_get_time();
 
@@ -180,8 +182,11 @@ void Gdey0213b74::update()
 
 void Gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
- 
+  //ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
+  if (!_using_partial_mode) {
+    _using_partial_mode = true;
+    _wakeUp();
+  }
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEH0213B73_WIDTH) return;
   if (y >= GDEH0213B73_HEIGHT) return;
@@ -192,7 +197,7 @@ void Gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
 
   IO.cmd(0x12); //SWRESET
   _waitBusy("SWRESET");
-  
+  _setRamDataEntryMode(0x03);
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
   _waitBusy("updateWindow I");
@@ -201,8 +206,6 @@ void Gdey0213b74::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   IO.data(0xFF); 
   
   IO.cmd(0x24); // BW RAM
-  printf("Loop from ys:%d to ye:%d\n", y, ye);
-
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
@@ -278,19 +281,17 @@ void Gdey0213b74::drawPixel(int16_t x, int16_t y, uint16_t color) {
   // check rotation, move pixel around if necessary
   switch (getRotation())
   {
-    case 0:
-      x = GDEH0213B73_VISIBLE_WIDTH - x;
-      break;
     case 1:
       swap(x, y);
+      x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
       break;
     case 2:
-      //x = GDEH0213B73_VISIBLE_WIDTH - x - 1; // Do not mirror X here
+      x = GDEH0213B73_VISIBLE_WIDTH - x - 1;
       y = GDEH0213B73_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      //y = GDEH0213B73_HEIGHT - y - 1;
+      y = GDEH0213B73_HEIGHT - y - 1;
       break;
   }
   uint16_t i = x / 8 + y * GDEH0213B73_WIDTH / 8;
@@ -431,9 +432,9 @@ void Gdey0213b74::_wakeUpGrayMode(){
 
 void Gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
-  // if (debug_enabled) 
+  if (debug_enabled) {
     printf("_SetRamArea(xS:%d,xE:%d,Ys:%d,Y1s:%d,Ye:%d,Ye1:%d)\n",Xstart,Xend,Ystart,Ystart1,Yend,Yend1);
-  // }
+  }
   IO.cmd(0x44);
   IO.data(Xstart);
   IO.data(Xend);
@@ -446,9 +447,9 @@ void Gdey0213b74::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint
 
 void Gdey0213b74::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
 {
-  // if (debug_enabled) {
+  if (debug_enabled) {
    printf("_SetRamPointer(addrX:%d,addrY:%d,addrY1:%d)\n",addrX,addrY,addrY1);
-  // }
+  }
   IO.cmd(0x4e);
   IO.data(addrX);
   IO.cmd(0x4f);
