@@ -164,7 +164,8 @@ void EpdSpi::reset(uint8_t millis=20) {
 }
 
 /**
- * Send multiple data in one transaction using vectors
+ * @deprecated Not used at the moment
+ * @brief      Send multiple data in one transaction using vectors
  */
 void EpdSpi::dataVector(vector<uint8_t> _buffer)
 {

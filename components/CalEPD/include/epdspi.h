@@ -18,7 +18,8 @@ class EpdSpi
     void data(uint8_t data) ;
     void dataBuffer(uint8_t data);
     void data(const uint8_t *data, int len) ;
-    
+    // Deprecated
+    void dataVector(vector<uint8_t> _buffer);
     void reset(uint8_t millis) ;
     void init(uint8_t frequency, bool debug) ;
   private:
