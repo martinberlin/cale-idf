@@ -4,7 +4,7 @@ set(srcs
     "models/goodisplay/gdey0213b74.cpp"
     "models/goodisplay/gdey0154d67.cpp"
     "models/goodisplay/gdey029T94.cpp"
-    
+    "models/goodisplay/gdey027T91.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"

@@ -369,11 +369,15 @@ void Gdey029T94::_wakeUp(){
   IO.cmd(0x18); //Read built-in temperature sensor
   IO.data(0x80);
 
-  IO.cmd(0x4E);   // set RAM x address count to 0;
+  IO.cmd(0x44); //set Ram-X address start/end position   
   IO.data(0x00);
-  IO.cmd(0x4F);   // set RAM y address count to 0X199;    
-  IO.data(0x27);
+  IO.data(0x0F);    //0x0F-->(15+1)*8=128
+
+  IO.cmd(0x45); //set Ram-Y address start/end position          
+  IO.data(0x27);   //0x0127-->(295+1)=296
   IO.data(0x01);
+  IO.data(0x00);
+  IO.data(0x00);
   _waitBusy("wakeup CMDs");
 }
 
