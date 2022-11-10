@@ -13,6 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: SSD1681  Note: Used by Waveshare in https://www.waveshare.com/wiki/1.54inch_e-Paper_Module_(B)
 #define GDEH0154Z90_WIDTH 200

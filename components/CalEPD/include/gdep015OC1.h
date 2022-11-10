@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: IL3829  Note: Used by Waveshare in https://www.waveshare.com/wiki/1.54inch_e-Paper_Module
 #define GDEP015OC1_WIDTH 200

@@ -19,6 +19,12 @@
 // Shared struct(s) for different models
 typedef struct {
     uint8_t cmd;
+    uint8_t data[159];
+    uint8_t databytes;
+} epd_lut_159;
+
+typedef struct {
+    uint8_t cmd;
     uint8_t data[100];
     uint8_t databytes;
 } epd_lut_100;

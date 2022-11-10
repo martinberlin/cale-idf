@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 
 // Constructor
 Gdeh042Z21::Gdeh042Z21(EpdSpi& dio): 

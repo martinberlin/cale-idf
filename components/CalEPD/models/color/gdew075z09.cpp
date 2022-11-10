@@ -130,7 +130,7 @@ void Gdew075z09::update()
     
     if (i%2000 == 0 && debug_enabled) {
        // Funny without outputting this to serial is not refreshing. Seems no need of rtc_wdt_feed();
-       printf("%d ",i);
+       printf("%d ", (int)i);
        vTaskDelay(pdMS_TO_TICKS(10));   
     }
   

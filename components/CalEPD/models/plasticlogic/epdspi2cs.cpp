@@ -84,7 +84,7 @@ void EpdSpi2Cs::release() {
     esp_err_t ret;
     ret = spi_bus_remove_device(spi);
     ESP_ERROR_CHECK(ret);
-    printf("Free heap: %d after releasing SPI\n", xPortGetFreeHeapSize());
+    printf("Free heap: %d after releasing SPI\n", (int)xPortGetFreeHeapSize());
 }
 
 /* Send a command to the Epaper. Uses spi_device_polling_transmit, which waits

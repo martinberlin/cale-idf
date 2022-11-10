@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // CMD, DATA, Databytes * Optional we are going to use sizeof(data)
 DRAM_ATTR const epd_init_2 Gdew0583z21::epd_wakeup_power={
 0x01,{
@@ -130,7 +132,7 @@ void Gdew0583z21::update()
     
     if (i%2000 == 0 && debug_enabled) {
        // Funny without outputting this to serial is not refreshing. Seems no need of rtc_wdt_feed();
-       printf("%d ",i);
+       printf("%d ", (int)i);
        vTaskDelay(pdMS_TO_TICKS(10));   
     }
   

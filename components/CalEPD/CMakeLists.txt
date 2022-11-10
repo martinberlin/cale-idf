@@ -1,5 +1,11 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
+    # New GOODISPLAY models will be in goodisplay directory
+    "models/goodisplay/gdey0213b74.cpp"
+    "models/goodisplay/gdey0154d67.cpp"
+    "models/goodisplay/gdey029T94.cpp"
+    "models/goodisplay/gdey027T91.cpp"
+    # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
@@ -24,9 +30,11 @@ set(srcs
     "models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
+    "models/color/gdeq042Z21.cpp"
     "models/color/wave12i48BR.cpp"
 
-    # 7 colors Waveshare
+    # 7 colors ACEP
+    "models/color/gdey073d46.cpp"
     "models/color/wave4i7Color.cpp"
     "models/color/wave5i7Color.cpp"
 
@@ -60,8 +68,8 @@ set(srcs
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
-                    # Uncomment for parallel epapers:
-                    REQUIRES "epdiy"
+                    # Uncomment for parallel epapers: epdiy
+                    REQUIRES esp_timer
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it

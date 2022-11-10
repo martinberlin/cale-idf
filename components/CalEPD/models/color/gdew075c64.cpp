@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Controller: GD7965 (EK79655)
 // Specification: https://www.scribd.com/document/448888338/GDEW075C64-V1-0-Specification
 
@@ -35,8 +38,7 @@ Gdew075C64::Gdew075C64(EpdSpi &dio) : Adafruit_GFX(GDEW075C64_WIDTH, GDEW075C64_
                                     Epd(GDEW075C64_WIDTH, GDEW075C64_HEIGHT), IO(dio)
 {
   printf("Gdew075C64() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-         GDEW075C64_WIDTH, GDEW075C64_HEIGHT, GDEW075C64_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+         GDEW075C64_WIDTH, GDEW075C64_HEIGHT, (int)GDEW075C64_BUFFER_SIZE);
 }
 
 //Initialize the display

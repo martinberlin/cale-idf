@@ -3,7 +3,6 @@
 #include <string.h>
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "soc/rtc_wdt.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     #define EPD_HOST    HSPI_HOST
@@ -11,11 +10,11 @@
 #elif defined CONFIG_IDF_TARGET_ESP32S2
     #define EPD_HOST    SPI2_HOST
     #define DMA_CHAN    EPD_HOST
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-    // chip only support spi dma channel auto-alloc
+#elif defined CONFIG_IDF_TARGET_ESP32S3
     #define EPD_HOST    SPI2_HOST
     #define DMA_CHAN    SPI_DMA_CH_AUTO
 #endif
+
 /** DISPLAYS REF:
 __________
 | S2 | M2 |

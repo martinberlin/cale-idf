@@ -3,7 +3,11 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
+// Important: I suspect this way of rendering grays is not valid
+//            Please check the 04t2Grays and submit a PR to fix this if you can
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T7_PU_DELAY 100
 #define T1 0x0A
@@ -82,8 +86,7 @@ Gdew075T7Grays::Gdew075T7Grays(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW
                                     Epd(GDEW075T7_WIDTH, GDEW075T7_HEIGHT), IO(dio)
 {
   printf("Gdew075T7Grays() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-         GDEW075T7_WIDTH, GDEW075T7_HEIGHT, GDEW075T7_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+         GDEW075T7_WIDTH, GDEW075T7_HEIGHT, (int) GDEW075T7_BUFFER_SIZE);
   multi_heap_info_t info;
   heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
   printf("Total PSRAM allocated: %d Free: %d\n", info.total_allocated_bytes, info.total_free_bytes);
@@ -115,7 +118,7 @@ void Gdew075T7Grays::fillScreen(uint16_t color)
     _buffer[x] = color;
     if (x % 8 == 0)
         {
-          #if defined CONFIG_IDF_TARGET_ESP32
+          #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
           rtc_wdt_feed();
           #endif
           vTaskDelay(pdMS_TO_TICKS(2));
@@ -172,7 +175,7 @@ void Gdew075T7Grays::update()
 
    _wakeUp();
   
-  printf("Sending a %d bytes buffer via SPI\n", GDEW075T7_BUFFER_SIZE);
+  printf("Sending a %d bytes buffer via SPI\n", (int) GDEW075T7_BUFFER_SIZE);
   uint32_t i,j, bufindex;
   uint8_t temp1,temp2,temp3;
   

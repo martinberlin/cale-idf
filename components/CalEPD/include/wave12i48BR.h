@@ -13,10 +13,11 @@
 #include <Adafruit_GFX.h>
 #include <epd4spi.h>
 // Note in S3 rtc_wdt has errors: https://github.com/espressif/esp-idf/issues/8038
-#if defined CONFIG_IDF_TARGET_ESP32
+#if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
   #include "soc/rtc_wdt.h"       // Watchdog control
 #endif
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 #define WAVE12I48_WIDTH 1304
 #define WAVE12I48_HEIGHT 984

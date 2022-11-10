@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
@@ -308,7 +310,7 @@ void Gdew042t2Grays::fillScreen(uint16_t color)
         drawPixel(x, y, color);
         if (x % 8 == 0)
           {
-            #if defined CONFIG_IDF_TARGET_ESP32
+            #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
             rtc_wdt_feed();
             #endif
             vTaskDelay(pdMS_TO_TICKS(2));
@@ -359,11 +361,9 @@ void Gdew042t2Grays::_wakeUp(){
   IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
 
   IO.cmd(0x50);    // VCOM AND DATA INTERVAL SETTING
-    if (_mono_mode) {
-      IO.data(0xd7); // border floating to avoid flashing
-    } else {
-      IO.data(0x97);
-    }
+  //IO.data(0x97);  // GxEPD: WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
+  IO.data(0xd7); // border floating to avoid flashing
+
   IO.cmd(0x04);
 
   _waitBusy("epd_wakeup_power");

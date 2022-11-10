@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
  Manufacturer sample: https://github.com/waveshare/e-Paper/blob/master/Arduino/epd7in5_V2/epd7in5_V2.cpp
@@ -71,8 +73,8 @@ Gdew075T7::Gdew075T7(EpdSpi &dio) : Adafruit_GFX(GDEW075T7_WIDTH, GDEW075T7_HEIG
                                     Epd(GDEW075T7_WIDTH, GDEW075T7_HEIGHT), IO(dio)
 {
   printf("Gdew075T7() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-         GDEW075T7_WIDTH, GDEW075T7_HEIGHT, GDEW075T7_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+         GDEW075T7_WIDTH, GDEW075T7_HEIGHT, (int)GDEW075T7_BUFFER_SIZE);
+  printf("\nAvailable heap after Epd bootstrap:%d\n", (int) xPortGetFreeHeapSize());
 }
 
 void Gdew075T7::initFullUpdate()
@@ -272,7 +274,7 @@ void Gdew075T7::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
 
         if (idx % 8 == 0)
         {
-          #if defined CONFIG_IDF_TARGET_ESP32
+          #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
           rtc_wdt_feed();
           #endif
           vTaskDelay(pdMS_TO_TICKS(1));

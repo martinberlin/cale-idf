@@ -4,7 +4,12 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Partial Update Delay, may have an influence on degradation
 #define GDEW075T8_PU_DELAY 100
 
@@ -13,8 +18,8 @@ Gdew075T8::Gdew075T8(EpdSpi &dio) : Adafruit_GFX(GDEW075T8_WIDTH, GDEW075T8_HEIG
                                     Epd(GDEW075T8_WIDTH, GDEW075T8_HEIGHT), IO(dio)
 {
   printf("Gdew075T8() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-         GDEW075T8_WIDTH, GDEW075T8_HEIGHT, GDEW075T8_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+         GDEW075T8_WIDTH, GDEW075T8_HEIGHT, (int) GDEW075T8_BUFFER_SIZE);
+  printf("\nAvailable heap after Epd bootstrap:%d\n", (int)xPortGetFreeHeapSize());
 }
 
 //Initialize the display
@@ -26,8 +31,10 @@ void Gdew075T8::init(bool debug)
   // Initialize SPI at 4MHz frequency. true for debug
   IO.init(4, true);
   fillScreen(EPD_WHITE);
-  // Update the TWDT’s timeout period and panic configurations 
-  esp_task_wdt_init(99, true);
+  #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+    // Update the TWDT’s timeout period and panic configurations 
+    esp_task_wdt_init(99, true);
+  #endif
 }
 
 void Gdew075T8::fillScreen(uint16_t color)

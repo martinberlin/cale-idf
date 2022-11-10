@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Partial Update Delay
 #define GDEH0154Z90_PU_DELAY 300
 
@@ -24,7 +26,6 @@ void Gdeh0154z90::init(bool debug)
     }
     IO.init(4, debug); // 4MHz frequency
 
-    ESP_LOGI(TAG, "Free heap:%d", xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 

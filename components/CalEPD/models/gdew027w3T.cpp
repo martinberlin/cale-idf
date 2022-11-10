@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // This class is refactored to cope with Good display Arduino example
 DRAM_ATTR const epd_init_3 Gdew027w3T::epd_soft_start={
 0x06,{0x07,0x07,0x17},3
@@ -98,7 +100,7 @@ void Gdew027w3T::init(bool debug)
     // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
     Touch.begin(22, width(), height());
     
-    printf("IO & touch initialized. Free heap:%d\n",xPortGetFreeHeapSize());
+    printf("IO & touch initialized. Free heap:%d\n", (int)xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 

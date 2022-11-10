@@ -4,7 +4,12 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 DRAM_ATTR const epd_init_1 Wave12I48::epd_panel_setting_full={
 0x00,{0x1f},1
 };
@@ -21,8 +26,7 @@ Wave12I48::Wave12I48(Epd4Spi& dio):
   Epd(WAVE12I48_WIDTH, WAVE12I48_HEIGHT), IO(dio)
 {
   printf("Wave12I48() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\nNOTE: Requires external RAM\n",
-  WAVE12I48_WIDTH, WAVE12I48_HEIGHT, WAVE12I48_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n",xPortGetFreeHeapSize());
+  WAVE12I48_WIDTH, WAVE12I48_HEIGHT, (int) WAVE12I48_BUFFER_SIZE);
 }
 
 void Wave12I48::initFullUpdate(){
@@ -42,13 +46,13 @@ void Wave12I48::init(bool debug)
     IO.init(4, false);
 
     fillScreen(EPD_WHITE);
-    printf("\nAvailable heap after Epd init:%d\n",xPortGetFreeHeapSize());
+    printf("\nAvailable heap after Epd init:%d\n", (int) xPortGetFreeHeapSize());
     //clear(); // No need to do this, but will leave it in the class
 }
 
 void Wave12I48::fillScreen(uint16_t color)
 {
-  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n", color, WAVE12I48_BUFFER_SIZE);
+  if (debug_enabled) printf("fillScreen(%x) Buffer size:%d\n", color, (int)WAVE12I48_BUFFER_SIZE);
   uint8_t data = (color == EPD_BLACK) ? WAVE12I48_8PIX_BLACK : WAVE12I48_8PIX_WHITE;
   for (uint32_t x = 0; x < WAVE12I48_BUFFER_SIZE; x++)
   {
@@ -134,7 +138,7 @@ void Wave12I48::update()
   uint64_t startTime = esp_timer_get_time();
   _wakeUp();
   
-  printf("Sending a buffer[%d] via SPI\n", WAVE12I48_BUFFER_SIZE);
+  printf("Sending a buffer[%d] via SPI\n", (int)WAVE12I48_BUFFER_SIZE);
   uint32_t i = 0;
   IO.cmdM1S1M2S2(0x13);
 
@@ -185,7 +189,7 @@ void Wave12I48::update()
   _powerOn();
   uint64_t powerOnTime = esp_timer_get_time();
   printf("\nAvailable heap after Epd update: %d bytes\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
-  xPortGetFreeHeapSize(), (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
+  (int)xPortGetFreeHeapSize(), (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 }
 
 uint16_t Wave12I48::_setPartialRamArea(uint16_t, uint16_t, uint16_t, uint16_t){

@@ -120,7 +120,7 @@ void Wave4i7Color::update()
     }
     if (debug_enabled) {
       printf("\nSPI optimization is on. Sending full xLineBytes: %d per SPI (4 bits per pixel)\n\nBuffer size: %d  expected size: %d\n", 
-     xLineBytes, i, WAVE4I7COLOR_BUFFER_SIZE);
+     (int) xLineBytes, (int) i, (int) WAVE4I7COLOR_BUFFER_SIZE);
     }
 
   } else {
