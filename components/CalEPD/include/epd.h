@@ -145,7 +145,7 @@ class Epd : public virtual Adafruit_GFX
     virtual void _wakeUp() = 0;
     virtual void _sleep() = 0;
     virtual void _waitBusy(const char* message) = 0;
-    
+
     uint8_t _unicodePerChar(uint8_t c);
     uint8_t _unicodeEasy(uint8_t c);
     // Command & data structs should be implemented by every MODELX display
