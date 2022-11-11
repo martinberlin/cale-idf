@@ -35,10 +35,10 @@ class gdey073d46 : public Epd7Color
 
   private:
     EpdSpi& IO;
+    // In case this _buffer is too large and there is no DRAM available to build, then store it in PSRAM
+    //uint8_t _buffer[GDEY073D46_BUFFER_SIZE];
+    uint8_t* _buffer = (uint8_t*)heap_caps_malloc(GDEY073D46_BUFFER_SIZE, MALLOC_CAP_SPIRAM);
 
-    uint8_t _buffer[GDEY073D46_BUFFER_SIZE];
-
-    bool _initial = true;
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);
