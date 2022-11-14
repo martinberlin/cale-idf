@@ -2,7 +2,7 @@
 
 ### Requirements
 
-* esp32 or esp32S2 / C3 in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
+* esp32 or S2 / S3 / C3 MCU versions in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
 * Espressif IDF framework >= 4.2 (4.3 -> 4.4 ideally to support latest S3)
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 
@@ -13,6 +13,9 @@ ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-s
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
+### VSCODE and Platformio ★
+
+In the repository [cale-platformio](https://github.com/martinberlin/cale-platformio) you can have a quick start skeleton to use CalEPD and Adafruit-GFX components, along with optional FocalTech touch I2C. Please be aware that there are some corrections to do by hand until we figure out what is the best way to do it. Read those in the WiKi and please give a **★ to the cale-platformio** repository if you find it useful
 
 ### Important updates coming
 
