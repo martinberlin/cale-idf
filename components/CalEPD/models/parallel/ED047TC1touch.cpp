@@ -1,3 +1,6 @@
+// Excluded when this define is present
+#ifndef CALEPD_EXCLUDE_PARALLEL
+
 #include "parallel/ED047TC1touch.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -173,3 +176,5 @@ void Ed047TC1t::registerMultiTouchHandler(void (*fn)(TPoint point1, TPoint point
 void Ed047TC1t::touchLoop(){
   Touch.loop();
 }
+
+#endif
