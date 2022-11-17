@@ -87,9 +87,6 @@ void Gdey0213b74::fillScreen(uint16_t color)
         drawPixel(x, y, color);
         if (x % 8 == 0)
           {
-            #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
-            rtc_wdt_feed();
-            #endif
             vTaskDelay(pdMS_TO_TICKS(2));
           }
       }
