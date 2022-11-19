@@ -12,7 +12,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "FT6X36.h"
-#include <gdew027w3T.h>
+
+#include "goodisplay/touch/gdey027T91T.h"
+//#include <gdew027w3T.h>
 // Optional font for the writing box:
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
 bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8px)
@@ -22,7 +24,8 @@ bool use_custom_font = true; // false to use default Adafruit GFX font (Small 8p
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
 EpdSpi io;
-Gdew027w3T display(io, ts);
+Gdey027T91T display(io, ts);
+//Gdew027w3T display(io, ts);
 uint8_t display_rotation = 3; // 1 or 3: Landscape mode
 extern "C"
 {
