@@ -9,6 +9,66 @@
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */
+// new waveform created by Jean-Marc Zingg for the actual panel
+// Fell free to play with this numbers and mess it up
+/*
+#define T1 0 // color change charge balance pre-phase
+#define T2 25 // color change or sustain charge balance pre-phase
+#define T3 25 // color change or sustain phase
+#define T4 0  // color change phase */
+#define T1 20 // charge balance pre-phase
+#define T2 20 // optional extension
+#define T3 40 // color change phase (b/w)
+#define T4 40 // optional extension for one color
+#define T5  3 // white sustain phase
+#define T6  3 // black sustain phase
+
+DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_20_vcom0_partial={
+0x20,{
+  0x00, T1, T2, T3, T4, 1, // 00 00 00 00
+  0x00,  0,  0,  0,  0, 0, // gnd phase
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00
+},44};
+
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_21_ww_partial={
+0x21,{  // 10 w
+  0x18, T1, T2, T3, T5, 1, // 00 01 10 00
+  0x00,  0,  0,  0,  0, 0, // gnd phase - 12 till here
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_22_bw_partial={
+0x22,{ // 10 w
+  0x5A, T1, T2, T3, T4, 1, // 01 01 10 10
+  0x00,  0,  0,  0,  0, 0, // gnd phase
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_23_wb_partial={
+0x23,{
+  0xA5, T1, T2, T3, T4, 1, // 10 10 01 01
+  0x00,  0,  0,  0,  0, 0, // gnd phase
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
+
+DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_24_bb_partial={
+0x24,{
+  0x24, T1, T2, T3, T6, 1, // 00 10 01 00
+  0x00,  0,  0,  0,  0, 0, // gnd phase
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+},42};
+
 // Full screen update LUT 4 gray (Only full refresh)
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_vcom11={
 0x20, {
@@ -69,59 +129,6 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
 },42};
 
-// new waveform created by Jean-Marc Zingg for the actual panel
-// Fell free to play with this numbers, could not make it better
-#define T1 0 // color change charge balance pre-phase
-#define T2 25 // color change or sustain charge balance pre-phase
-#define T3 25 // color change or sustain phase
-#define T4 0  // color change phase
-
-DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_20_vcom0_partial={
-0x20,{
-  0x00, T1, T2, T3, T4, 1, // 00 00 00 00
-  0x00,  1,  0,  0,  0, 1, // gnd phase
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00
-},44};
-
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_21_ww_partial={
-0x21,{
-  0x18, T1, T2, T3, T4, 1, // 00 01 10 00
-  0x00,  1,  0,  0,  0, 1, // gnd phase - 12 till here
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-},42};
-
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_22_bw_partial={
-0x22,{ // 10 w
-  0x5A, T1, T2, T3, T4, 1, // 01 01 10 10
-  0x00,  1,  0,  0,  0, 1, // gnd phase
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-},42};
-
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_23_wb_partial={
-0x23,{
-  0xA5, T1, T2, T3, T4, 1, // 10 10 01 01
-  0x00,  1,  0,  0,  0, 1, // gnd phase
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-},42};
-
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_24_bb_partial={
-0x24,{
-  0x24, T1, T2, T3, T4, 1, // 00 10 01 00
-  0x00,  1,  0,  0,  0, 1, // gnd phase
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-},42};
-
 DRAM_ATTR const epd_power_4 Gdew042t2Grays::epd_wakeup_power={
 0x01,{0x03,0x00,0x2b,0x2b},4
 };
@@ -176,24 +183,46 @@ void Gdew042t2Grays::initFullUpdate(){
  * 
  */
 void Gdew042t2Grays::initPartialUpdate(){
-  IO.cmd(0x00);
-  IO.data(0x3F); //300x400 B/W mode, LUT set by register
-  
-  // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
-  IO.cmd(lut_20_vcom0_partial.cmd);
-  IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
+    printf("INIT PARTIAL MODE\n");
+    IO.reset(10);
 
-  IO.cmd(lut_21_ww_partial.cmd);
-  IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
+    IO.cmd(0x04); // Power on
+		_waitBusy("0x04");
 
-  IO.cmd(lut_22_bw_partial.cmd);
-  IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
+    IO.cmd(epd_wakeup_power.cmd);
+    for (int i=0;i<epd_wakeup_power.databytes;++i) {
+      IO.data(epd_wakeup_power.data[i]);
+    }
+    IO.cmd(epd_soft_start.cmd);
+    for (int i=0;i<epd_soft_start.databytes;++i) {
+      IO.data(epd_soft_start.data[i]);
+    }
+    IO.cmd(0x00);     // panel setting
+    IO.data(0x3f);    // 300x400 B/W mode, LUT set by register
+    IO.cmd(0x30);     // PLL setting
+    IO.data(0x3a);    // 3a 100HZ   29 150Hz 39 200HZ 31 171HZ
 
-  IO.cmd(lut_23_wb_partial.cmd);
-  IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
+    IO.cmd(0x82); // vcom_DC setting
+    IO.data(0x1A);
+    IO.cmd(0X50);			// VCOM AND DATA INTERVAL SETTING
+		IO.data(0xD7);		// Border avoid flashing
+    
+    // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
+    IO.cmd(lut_20_vcom0_partial.cmd);
+    IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
 
-  IO.cmd(lut_24_bb_partial.cmd);
-  IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
+    IO.cmd(lut_21_ww_partial.cmd);
+    IO.data(lut_21_ww_partial.data,lut_21_ww_partial.databytes);
+
+    IO.cmd(lut_22_bw_partial.cmd);
+    IO.data(lut_22_bw_partial.data,lut_22_bw_partial.databytes);
+
+    IO.cmd(lut_23_wb_partial.cmd);
+    IO.data(lut_23_wb_partial.data,lut_23_wb_partial.databytes);
+
+    IO.cmd(lut_24_bb_partial.cmd);
+    IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
+
 }
 
 //Initialize the display
@@ -312,6 +341,7 @@ void Gdew042t2Grays::_wakeUp(){
 void Gdew042t2Grays::update()
 {
   uint64_t startTime = esp_timer_get_time();
+  _partial_mode = false;
   _wakeUp();
 
   uint32_t i = 0;
@@ -386,24 +416,24 @@ uint16_t Gdew042t2Grays::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe,
   xe = (xe - 1) | 0x0007; // byte boundary - 1
   IO.cmd(0x90);           // partial window
   IO.data(x / 256);
-  IO.data(x % 256);
+  IO.data(x % 256);        // x-start 
   IO.data(xe / 256);
-  IO.data(xe % 256);
+  IO.data(xe % 256-1);     // x-end
   IO.data(y / 256);
   IO.data(y % 256);
   IO.data(ye / 256);
-  IO.data(ye % 256);
-  //IO.data(0x01);         // Not any visual difference
-  //IO.data(0x00);         // Same here
+  IO.data(ye % 256-1);     // y-end
+  
   return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
 void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  ++_partials;
-  if (debug_enabled) {
-    printf("_partial %d\n", _partials);
+  if (! _partial_mode) { 
+    initPartialUpdate();
+    _partial_mode = true;
   }
+  
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW042T2_WIDTH) return;
   if (y >= GDEW042T2_HEIGHT) return;
@@ -411,15 +441,25 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
   uint16_t ye = gx_uint16_min(GDEW042T2_HEIGHT, y + h) - 1;
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
-  // _wakeUp has to be done always, doing it only once is not working good the 2nd update
-  _wakeUp();
-  initPartialUpdate();
-
+  
+  // This command makes the display enter partial mode
   IO.cmd(0x91); // partial in
+  // Here it sets where in RAM is going to write it
   _setPartialRamArea(x, y, xe, ye);
   
-  IO.cmd(0x13);
+  // OLD data (Gray channel)
+  /* IO.cmd(0x10);
   for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+    {
+      IO.data(0x00);
+    }
+  } */
+
+  // New data
+  IO.cmd(0x13);
+  for (int16_t y1 = y; y1 <= ye+1; y1++)
   {
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
@@ -428,23 +468,10 @@ void Gdew042t2Grays::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h
       IO.data(data); // white is 0xFF on device
     }
   }
-  IO.cmd(0x92);      // partial out
-  IO.cmd(0x12);      // display refresh
-  _waitBusy("updateWindow");
 
-  IO.cmd(0x91);      // partial in
-  _setPartialRamArea(x, y, xe, ye);
-  IO.cmd(0x13);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
-    {
-      uint16_t idx = y1 * (GDEW042T2_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-      IO.data(data);
-    }
-  }
-  IO.cmd(0x92); // partial out
+  IO.cmd(0x12); // Refresh
+  _waitBusy("partial");
+  IO.cmd(0x92); // Partial out
 }
 
 void Gdew042t2Grays::_waitBusy(const char* message){

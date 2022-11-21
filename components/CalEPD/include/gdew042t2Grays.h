@@ -52,7 +52,8 @@ class Gdew042t2Grays : public Epd
     uint8_t _buffer2[GDEW042T2_MONO_BUFFER_SIZE];
     uint8_t _mono_buffer[GDEW042T2_MONO_BUFFER_SIZE];
     bool _initial = true;
-    uint16_t _partials = 0;
+    bool _partial_mode = false;
+    //uint16_t _partials = 0;
     
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _wakeUp();
@@ -63,15 +64,13 @@ class Gdew042t2Grays : public Epd
     // Command & data structs - Mono?
     static const epd_init_30 lut_full; // 4 gray
 
-    static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_vcom11;
     static const epd_init_42 lut_ww_full;
     static const epd_init_42 lut_bw_full;
     static const epd_init_42 lut_wb_full;
     static const epd_init_42 lut_bb_full;
-
-
-    //static const epd_init_44 lut_20_vcom0_partial;
+    
+    static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_21_ww_partial;
     static const epd_init_42 lut_22_bw_partial;
     static const epd_init_42 lut_23_wb_partial;
