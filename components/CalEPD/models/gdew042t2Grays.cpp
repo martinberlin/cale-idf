@@ -21,29 +21,6 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_vcom11={
   0x00  ,0x00 ,0x00 ,0x00 ,0x00 ,0x00
 },42};
 
-//full screen update LUT.  lut_vcom0_full in original class
-DRAM_ATTR const epd_init_44 Gdew042t2Grays::lut_mono_mode={
-0x20, {
-  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
-  0x00, 0x17, 0x17, 0x00, 0x00, 0x02,
-  0x00, 0x0A, 0x01, 0x00, 0x00, 0x01,
-  0x00, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-},44};
-// R21 Mono
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_mono={
-0x21, {
-  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
-  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
-  0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
-  0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-},42};
-
 // R21
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_full={
 0x21, {
@@ -55,17 +32,7 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_ww_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
 },42};
-// R22 Mono
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_mono={
-0x22,{
-  0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
-  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
-  0x40, 0x0A, 0x01, 0x00, 0x00, 0x01,
-  0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-},42};
+
 // R22H  r
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_full={
 0x22,{
@@ -79,17 +46,6 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bw_full={
 },42};
 
 //R23H  w
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_mono={
-0x23,{
-  0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
-  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
-  0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
-  0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-},42};
-//R23H  w
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_full={
 0x23,{
   0x40	,0x0A	,0x00	,0x00	,0x00	,0x01,
@@ -101,17 +57,6 @@ DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_wb_full={
   0x00	,0x00	,0x00	,0x00	,0x00	,0x00,
 },42};
 
-//R24 mono
-DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_mono={
-0x24,{
-  0x80, 0x17, 0x00, 0x00, 0x00, 0x02,
-  0x90, 0x17, 0x17, 0x00, 0x00, 0x02,
-  0x80, 0x0A, 0x01, 0x00, 0x00, 0x01,
-  0x50, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-},42};
 //R24H  b
 DRAM_ATTR const epd_init_42 Gdew042t2Grays::lut_bb_full={
 0x24,{
@@ -210,25 +155,9 @@ Gdew042t2Grays::Gdew042t2Grays(EpdSpi& dio):
 }
 
 void Gdew042t2Grays::initFullUpdate(){
-  if (_mono_mode) {
-    IO.cmd(0x00);   //300x400 B/W mode, LUT set by register
-    IO.data(0x3F);
-    IO.cmd(lut_mono_mode.cmd);
-    IO.data(lut_mono_mode.data,lut_mono_mode.databytes);
-
-    IO.cmd(lut_ww_mono.cmd);
-    IO.data(lut_ww_mono.data,lut_ww_mono.databytes);
-    IO.cmd(lut_bw_mono.cmd);
-    IO.data(lut_bw_mono.data,lut_bw_mono.databytes);
-    IO.cmd(lut_wb_mono.cmd);
-    IO.data(lut_wb_mono.data,lut_wb_mono.databytes);
-    IO.cmd(lut_bb_mono.cmd);
-    IO.data(lut_bb_mono.data,lut_bb_mono.databytes);
-
-  } else {
+  if (_mono_mode == false) {
     IO.cmd(lut_vcom11.cmd);
     IO.data(lut_vcom11.data,lut_vcom11.databytes);
-
     IO.cmd(lut_ww_full.cmd);
     IO.data(lut_ww_full.data,lut_ww_full.databytes);
     IO.cmd(lut_bw_full.cmd);
@@ -249,7 +178,7 @@ void Gdew042t2Grays::initFullUpdate(){
 void Gdew042t2Grays::initPartialUpdate(){
   IO.cmd(0x00);
   IO.data(0x3F); //300x400 B/W mode, LUT set by register
-
+  
   // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
   IO.cmd(lut_20_vcom0_partial.cmd);
   IO.data(lut_20_vcom0_partial.data,lut_20_vcom0_partial.databytes);
@@ -265,7 +194,7 @@ void Gdew042t2Grays::initPartialUpdate(){
 
   IO.cmd(lut_24_bb_partial.cmd);
   IO.data(lut_24_bb_partial.data,lut_24_bb_partial.databytes);
- }
+}
 
 //Initialize the display
 void Gdew042t2Grays::init(bool debug)
@@ -326,48 +255,58 @@ void Gdew042t2Grays::_wakeUp(){
   
   IO.reset(10);
 
-  IO.cmd(epd_wakeup_power.cmd);
-  for (int i=0;i<epd_wakeup_power.databytes;++i) {
-    IO.data(epd_wakeup_power.data[i]);
-  }
- 
   IO.cmd(epd_soft_start.cmd);
   for (int i=0;i<epd_soft_start.databytes;++i) {
     IO.data(epd_soft_start.data[i]);
   }
-  
-  IO.cmd(epd_panel_setting.cmd);
-  if (_mono_mode) {
-    IO.data(0x3f);
-  } else {
-    for (int i=0;i<epd_panel_setting.databytes;++i) {
-      IO.data(epd_panel_setting.data[i]);
-    }
-  }
-
-  IO.cmd(epd_pll.cmd);
-  if (_mono_mode) {
-    IO.data(0x3a);
-  } else {
-    IO.data(epd_pll.data[0]);
-  }
-  //resolution setting
+  // Resolution setting
   IO.cmd(epd_resolution.cmd);
   for (int i=0;i<epd_resolution.databytes;++i) {
     IO.data(epd_resolution.data[i]);
   }
 
-  IO.cmd(0x82);    // vcom_DC setting
-  IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
+  if (_mono_mode) {    
+    IO.cmd(0x04);  
+    _waitBusy("0x04");//waiting for the electronic paper IC to release the idle signal
 
-  IO.cmd(0x50);    // VCOM AND DATA INTERVAL SETTING
-  //IO.data(0x97);  // GxEPD: WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
-  IO.data(0xd7); // border floating to avoid flashing
+    IO.cmd(0x00);     //panel setting
+    IO.data(0x1f);    //LUT from OTP£¬KW-BF   KWR-AF  BWROTP 0f BWOTP 1f
 
-  IO.cmd(0x04);
+    IO.cmd(0x61);     //resolution setting
+    IO.data(0x01); 
+    IO.data(0x90);    //400   
+    IO.data(0x01);   //300
+    IO.data(0x2c); 
+    
+    IO.cmd(0X50);     //VCOM AND DATA INTERVAL SETTING      
+    IO.data(0x97);    //WBmode:VBDF 17|D7 VBDW 97 VBDB 57
+  } else {
 
-  _waitBusy("epd_wakeup_power");
-  initFullUpdate();
+    IO.cmd(epd_wakeup_power.cmd);
+    for (int i=0;i<epd_wakeup_power.databytes;++i) {
+      IO.data(epd_wakeup_power.data[i]);
+    }
+    
+    IO.cmd(epd_panel_setting.cmd);
+    for (int i=0;i<epd_panel_setting.databytes;++i) {
+      IO.data(epd_panel_setting.data[i]);
+    }
+
+    IO.cmd(epd_pll.cmd);
+    IO.data(epd_pll.data[0]);
+
+    IO.cmd(0x82);    // vcom_DC setting
+    IO.data(0x12);   // -0.1 + 18 * -0.05 = -1.0V from OTP, slightly better
+
+    IO.cmd(0x50);    // VCOM AND DATA INTERVAL SETTING
+    //IO.data(0x97);  // GxEPD: WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
+    IO.data(0xd7); // border floating to avoid flashing
+
+    IO.cmd(0x04);
+
+    _waitBusy("epd_wakeup_power");
+    initFullUpdate();
+  }
 }
 
 void Gdew042t2Grays::update()
@@ -526,12 +465,10 @@ void Gdew042t2Grays::_waitBusy(const char* message){
 }
 
 void Gdew042t2Grays::_sleep(){
-  IO.cmd(0x50); // border floating
-  IO.cmd(0x17);
   IO.data(0x02);// power off
   _waitBusy("power_off");
-  IO.cmd(0x07);
-  IO.data(0xA5);// power off
+  IO.cmd(0x07); // deepsleep
+  IO.data(0xA5);
 }
 
 void Gdew042t2Grays::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)

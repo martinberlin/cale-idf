@@ -1,3 +1,4 @@
+// GOODISPLAY product https://www.good-display.com/product/432.html
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

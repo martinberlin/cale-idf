@@ -17,7 +17,7 @@
 #endif
 #include <gdew_4grays.h>
 #include <esp_timer.h>
-// Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
+// Controller: UC8176
 #define GDEW042T2_WIDTH 400
 #define GDEW042T2_HEIGHT 300
 
@@ -39,7 +39,7 @@ class Gdew042t2Grays : public Epd
     void setMonoMode(bool mode);
     void initFullUpdate();
     void initPartialUpdate();
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     void fillScreen(uint16_t color);
     void update();
 
@@ -62,7 +62,7 @@ class Gdew042t2Grays : public Epd
 
     // Command & data structs - Mono?
     static const epd_init_30 lut_full; // 4 gray
-    static const epd_init_44 lut_mono_mode;
+
     static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_vcom11;
     static const epd_init_42 lut_ww_full;
@@ -70,10 +70,6 @@ class Gdew042t2Grays : public Epd
     static const epd_init_42 lut_wb_full;
     static const epd_init_42 lut_bb_full;
 
-    static const epd_init_42 lut_ww_mono;
-    static const epd_init_42 lut_bw_mono;
-    static const epd_init_42 lut_wb_mono;
-    static const epd_init_42 lut_bb_mono;
 
     //static const epd_init_44 lut_20_vcom0_partial;
     static const epd_init_42 lut_21_ww_partial;
