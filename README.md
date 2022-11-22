@@ -2,7 +2,7 @@
 
 ### Requirements
 
-* esp32 or esp32S2 / C3 in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
+* esp32 or S2 / S3 / C3 MCU versions in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
 * Espressif IDF framework >= 4.2 (4.3 -> 4.4 ideally to support latest S3)
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 
@@ -12,6 +12,31 @@ ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-s
  **idf.py --preview set-target esp32s3**  (Only v4.4 since tried this only with beta3)
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
+
+### VSCODE and Platformio ★
+
+In the repository [cale-platformio](https://github.com/martinberlin/cale-platformio) you can have a quick start skeleton to use CalEPD and Adafruit-GFX components, along with optional FocalTech touch I2C. Please be aware that there are some corrections to do by hand until we figure out what is the best way to do it. Read those in the WiKi and please give a **★ to the cale-platformio** repository if you find it useful
+
+### Important updates coming
+
+We recently received a new batch of [epapers from Good-Display](https://www.good-display.com) and you can track our progress checking the [Issues tagged with GOODISPLAY](https://github.com/martinberlin/cale-idf/issues?q=is%3Aissue+is%3Aopen+label%3AGOODISPLAY)
+
+We are thankful for that since our mission is to offer developers a stable and modern ESP-IDF component. Enabling them to develop Firmware using epaper displays in the latest Espressif System on a Chip MCUs like ESP32S3, C3, and the new ones supporting WiFi 5 GHz as C5. 
+
+This new epaper models are merged now in **develop**. Please use that branch to test them.
+Note that we started adding this new models under goodisplay directory. To include them use this from your CPP file:
+
+```C
+#include "goodisplay/gdey027T91.h"
+// After that check WiKi for examples
+EpdSpi io;
+Gdey027T91 display(io);
+```
+
+This will take some more days since Espressif still didn't released officially ESP-IDF version 5, most developers still use stable 4.4 version. We respectfully ask you to switch to this branch to try this new models and also help us correct latest details before merging.
+The new models added will support also 4 Gray mode whenever possible, being this the first component supporting this update mode, since is not fully supported in other known libraries as GxEPD. After this merge we will come back to the touch support topic and update the component too, in order to try LVGL in epapers that support partial update correctly such as the Ultrachip (UCxxx) models
+
+_4th November 2022, Barcelona, **Fasani Corporation** headquarters_
 
 ### 2022 update
 
