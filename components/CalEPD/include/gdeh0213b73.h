@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: SSD1675B 
 // All comments below are from J-M Zingg (Ref. EPD)

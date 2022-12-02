@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: IL0373
 #define GDEW0213I5F_WIDTH 104

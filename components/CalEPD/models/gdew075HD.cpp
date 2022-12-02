@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Constructor
 Gdew075HD::Gdew075HD(EpdSpi &dio) : Adafruit_GFX(GDEW075HD_WIDTH, GDEW075HD_HEIGHT),
                                     Epd(GDEW075HD_WIDTH, GDEW075HD_HEIGHT), IO(dio)
 {
   printf("Gdew075HD() constructor injects IO and extends Adafruit_GFX(%d,%d) Pix Buffer[%d]\n",
-         GDEW075HD_WIDTH, GDEW075HD_HEIGHT, GDEW075HD_BUFFER_SIZE);
-  printf("\nAvailable heap after Epd bootstrap:%d\n", xPortGetFreeHeapSize());
+         GDEW075HD_WIDTH, GDEW075HD_HEIGHT, (int)GDEW075HD_BUFFER_SIZE);
 }
 
 //Initialize the display

@@ -13,6 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
 #include <gdew_colors.h>
+#include <esp_timer.h>
 
 // Controller: SSD1619A https://v4.cecdn.yun300.cn/100001_1909185148/SSD1619A.pdf
 

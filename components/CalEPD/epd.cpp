@@ -91,11 +91,26 @@ void Epd::println(const std::string& text){
    write(10); // newline
 }
 
+/**
+ * @brief Similar to printf
+ * Note that buffer needs to end with null character
+ * @param format 
+ * @param ... va_list
+ */
+void Epd::printerf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    char max_buffer[1024];
+    int size = vsnprintf(max_buffer, sizeof max_buffer, format, args);
+    va_end(args);
+
+    if (size < sizeof(max_buffer)) {
+        print(std::string(max_buffer));
+    } else {
+      ESP_LOGE("Epd::printerf", "max_buffer out of range. Increase max_buffer!");
+    }
+}
+
 void Epd::newline() {
   write(10);
 }
-
-/* 
-  // Optionally if we would need to access GFX
-  // Adafruit_GFX::setTextColor(color);
-*/

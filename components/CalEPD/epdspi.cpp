@@ -70,11 +70,11 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
     ESP_ERROR_CHECK(ret);
     
     if (debug_enabled) {
-      printf("EpdSpi::init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d DMA_CH: %d\n",
+      ESP_LOGI("EpdSPI", "init() Debug enabled. SPI master at frequency:%d  MOSI:%d CLK:%d CS:%d DC:%d RST:%d BUSY:%d DMA_CH: %d\n",
       frequency*multiplier*1000, CONFIG_EINK_SPI_MOSI, CONFIG_EINK_SPI_CLK, CONFIG_EINK_SPI_CS,
       CONFIG_EINK_DC,CONFIG_EINK_RST,CONFIG_EINK_BUSY, DMA_CHAN);
         } else {
-           printf("EpdSPI started at frequency: %d000\n", frequency*multiplier);
+           ESP_LOGI(TAG, "started at frequency: %d000", frequency*multiplier);
         }
     }
 
@@ -88,7 +88,7 @@ void EpdSpi::init(uint8_t frequency=4,bool debug=false){
 void EpdSpi::cmd(const uint8_t cmd)
 {
     if (debug_enabled) {
-        printf("C %x\n",cmd);
+        ESP_LOGI(TAG, "C %x",cmd);
     } 
 
     esp_err_t ret;
@@ -109,7 +109,7 @@ void EpdSpi::cmd(const uint8_t cmd)
 void EpdSpi::data(uint8_t data)
 {
     if (debug_enabled) {
-      printf("D %x\n",data);
+      ESP_LOGI(TAG,"D %x",data);
     }
     esp_err_t ret;
     spi_transaction_t t;
@@ -120,7 +120,6 @@ void EpdSpi::data(uint8_t data)
     
     assert(ret==ESP_OK);
 }
-
 
 void EpdSpi::dataBuffer(uint8_t data)
 {
@@ -142,11 +141,10 @@ void EpdSpi::data(const uint8_t *data, int len)
 {
   if (len==0) return; 
     if (debug_enabled && false) {
-        printf("D\n");
+        ESP_LOGI(TAG,"D");
         for (int i = 0; i < len; i++)  {
-            printf("%x ",data[i]);
+            ESP_LOGI(TAG, "%x ",data[i]);
         }
-        printf("\n");
     }
     esp_err_t ret;
     spi_transaction_t t;
@@ -163,4 +161,29 @@ void EpdSpi::reset(uint8_t millis=20) {
     vTaskDelay(millis / portTICK_RATE_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
     vTaskDelay(millis / portTICK_RATE_MS);
+}
+
+/**
+ * @deprecated Not used at the moment
+ * @brief      Send multiple data in one transaction using vectors
+ */
+void EpdSpi::dataVector(vector<uint8_t> _buffer)
+{
+    if (_buffer.size()==0) return;
+
+    if (debug_enabled) {
+        ESP_LOGI(TAG,"D");
+        for (int i = 0; i < _buffer.size(); i++)  {
+            ESP_LOGI(TAG, "%x ", _buffer.operator[](i));
+        }
+    }
+    esp_err_t ret;
+    spi_transaction_t t;
+                
+    memset(&t, 0, sizeof(t));
+    t.length = _buffer.size()*8;
+    t.tx_buffer = _buffer.data();
+    ret=spi_device_polling_transmit(spi, &t);
+
+    assert(ret==ESP_OK);
 }

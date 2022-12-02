@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "sdkconfig.h"
+#include <esp_timer.h>
 
 #ifndef ft6x36_h
 #define ft6x36_h

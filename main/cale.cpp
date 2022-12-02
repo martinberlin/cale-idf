@@ -132,6 +132,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
     switch (evt->event_id)
     {
+    default:
+        break;
     case HTTP_EVENT_ERROR:
         ESP_LOGE(TAG, "HTTP_EVENT_ERROR");
         break;
@@ -147,7 +149,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_ON_DATA:
         ++countDataEventCalls;
         if (countDataEventCalls%10==0) {
-        ESP_LOGI(TAG, "%d len:%d\n", countDataEventCalls, evt->data_len); }
+        ESP_LOGI(TAG, "%d len:%d\n", (int)countDataEventCalls, (int)evt->data_len); }
         dataLenTotal += evt->data_len;
         // Unless bmp.imageOffset initial skip we start reading stream always on byte pointer 0:
         bPointer = 0;
@@ -169,7 +171,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
             drawY = bmp.height;
             ESP_LOGI(TAG, "BMP HEADERS\nfilesize:%d\noffset:%d\nW:%d\nH:%d\nplanes:%d\ndepth:%d\nformat:%d\n",
-                     bmp.fileSize, bmp.imageOffset, bmp.width, bmp.height, bmp.planes, bmp.depth, bmp.format);
+                     (int)bmp.fileSize, (int)bmp.imageOffset, (int)bmp.width, (int)bmp.height, (int)bmp.planes, (int)bmp.depth, (int)bmp.format);
 
             if (bmp.depth == 1)
             {
@@ -184,13 +186,10 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (bmp.depth > 8)
             {
                 isSupportedBitmap = false;
-                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", bmp.depth);
+                ESP_LOGE(TAG, "BMP DEPTH %d: Only 1, 4, and 8 bits depth are supported.\n", (int)bmp.depth);
             }
 
             rowSize = ((bmp.width * bmp.depth + 8 - bmp.depth) / 8 + 3) & ~3;
-
-            if (bmpDebug)
-                printf("ROW Size %d\n", rowSize);
 
             w = bmp.width;
             h = bmp.height;
@@ -243,8 +242,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         if (bmpDebug)
         {
             printf("\n--> bPointer %d\n_inX: %d _inY: %d DATALEN TOTAL:%d bytesRead so far:%d\n",
-                   bPointer, drawX, drawY, dataLenTotal, imageBytesRead);
-            printf("Is reading image: %d\n", isReadingImage);
+                   (int)bPointer, (int)drawX, (int)drawY, (int)dataLenTotal, (int)imageBytesRead);
         }
 
         // Didn't arrived to imageOffset YET, it will in next calls of HTTP_EVENT_ON_DATA:
@@ -280,7 +278,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             // Dump only the first calls
             if (countDataEventCalls < 2 && bmpDebug)
             {
-                printf("L%d: BrsF:%d %x\n", byteIndex, imageBytesRead, in_byte);
+                printf("L%d: BrsF:%d %x\n", (int)byteIndex, (int)imageBytesRead, (int)in_byte);
             }
             in_bits = 8;
 
@@ -360,7 +358,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH\nDownload took: %llu ms\nRefresh and go to sleep %d minutes\n", (esp_timer_get_time()-startTime)/1000, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
         display.update();
         if (bmpDebug) 
-            printf("Free heap after display render: %d\n", xPortGetFreeHeapSize());
+            printf("Free heap after display render: %d\n", (int)xPortGetFreeHeapSize());
         // Go to deepsleep after rendering
         vTaskDelay(14000 / portTICK_PERIOD_MS);
         deepsleep();
@@ -416,8 +414,8 @@ static void http_post(void)
     {
         ESP_LOGI(TAG, "\nIMAGE URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
                  CONFIG_CALE_SCREEN_URL,
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int) esp_http_client_get_status_code(client),
+                 (int) esp_http_client_get_content_length(client));
     }
     else
     {
@@ -454,7 +452,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         else
         {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-            ESP_LOGI(TAG, "Connect to the AP failed %d times. Going to deepsleep %d minutes", CONFIG_ESP_MAXIMUM_RETRY, CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
+            ESP_LOGI(TAG, "Connect to the AP failed %d times. Going to deepsleep %d minutes", (int)CONFIG_ESP_MAXIMUM_RETRY, (int)CONFIG_DEEPSLEEP_MINUTES_AFTER_RENDER);
             deepsleep();
         }
     }
@@ -556,8 +554,7 @@ void app_main(void)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
-    printf("Free heap: %d (After epaper instantiation)\nDRAM     : %d\n", 
-    xPortGetFreeHeapSize(),heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printf("Free heap: %d (After epaper instantiation)\n", (int) xPortGetFreeHeapSize());
 
     http_post();
 
