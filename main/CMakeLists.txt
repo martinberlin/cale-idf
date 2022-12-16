@@ -10,13 +10,14 @@ idf_component_register(
     #SRCS "cale-grayscale.cpp"
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
-    SRCS "demos/demo-epaper.cpp"
+    #SRCS "demos/demo-epaper.cpp"
     #SRCS "demos/demo-grays.cpp"
     
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"
     #SRCS "demos/demo-touch-epd-implemented.cpp"
     #SRCS "demos/demo-touch-keyboard.cpp"
+    SRCS "demos/on-off-switch.cpp"
 
     # Generic demos for any displays
     #SRCS "demos/demo-sleep-clock.cpp"
