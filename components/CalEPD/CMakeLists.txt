@@ -71,14 +71,9 @@ idf_component_register(SRCS ${srcs}
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
                     REQUIRES esp_timer
-                    # Uncomment for parallel epapers:
-<<<<<<< HEAD
+                    # Uncomment for parallel epapers: epdiy
                     REQUIRES qrcode esp_rainmaker app_wifi
-                    REQUIRES esp_timer
-=======
-                    # REQUIRES "epdiy"
 
->>>>>>> develop
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it

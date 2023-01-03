@@ -1,6 +1,6 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
-    SRCS "demos/rainmaker/cale-wifi.cpp"
+    #SRCS "demos/rainmaker/cale-wifi.cpp"
     #SRCS "demos/rainmaker/cale-7-color-wifi.cpp"
     
     #SRCS "cale.cpp"

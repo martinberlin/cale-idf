@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 dependencies:
   espressif/mdns:
     component_hash: 2e95568e6fb1b1e5933217556db18b29affd4f706a6d90636fbb88dd32fc3e29
@@ -13,8 +12,4 @@ dependencies:
     version: 5.0.0
 manifest_hash: e7943fdec0b8f7060bb57cfc87f722df41d386fd057c6523405c3c92d1b2aa8a
 target: esp32
-=======
-manifest_hash: af80dd68bc674d0bd725fc63d1287180424f4ef686530b02e4f0be0ec2633f0f
-target: esp32s3
->>>>>>> develop
 version: 1.0.0
