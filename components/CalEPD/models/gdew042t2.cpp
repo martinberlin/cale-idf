@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 /*
  The EPD needs a bunch of command/data values to be initialized. They are send using the IO class
 */

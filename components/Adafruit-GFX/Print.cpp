@@ -46,37 +46,9 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 
 // This printf will generate an error :
 //undefined reference to `Print::printf(char const*, ...)
-// I just want to use Adafruit_GFX print function but not
-// overload ESP-IDF owns means to do printf
-/* size_t Print::printf(const char *format, ...)
-{
-    char loc_buf[64];
-    char * temp = loc_buf;
-    va_list arg;
-    va_list copy;
-    va_start(arg, format);
-    va_copy(copy, arg);
-    int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
-    va_end(copy);
-    if(len < 0) {
-        va_end(arg);
-        return 0;
-    };
-    if(len >= sizeof(loc_buf)){
-        temp = (char*) malloc(len+1);
-        if(temp == NULL) {
-            va_end(arg);
-            return 0;
-        }
-        len = vsnprintf(temp, len+1, format, arg);
-    }
-    va_end(arg);
-    len = write((uint8_t*)temp, len);
-    if(temp != loc_buf){
-        free(temp);
-    }
-    return len;
-} */
+// I just want to use Adafruit_GFX print function but not overload ESP-IDF owns means to do printf
+
+// Please use: display.printerf(const char *format, ...) instead
 
 size_t Print::print(const __FlashStringHelper *ifsh)
 {

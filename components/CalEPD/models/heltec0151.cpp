@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 //full screen update LUT
 const epd_init_30 Hel0151::LUTDefault_full={
@@ -65,7 +67,7 @@ void Hel0151::init(bool debug)
     if (debug_enabled) printf("Hel0151::init(%d)\n", debug);
     IO.init(4, debug); // 4MHz frequency
 
-    printf("Free heap:%d\n",xPortGetFreeHeapSize());
+    printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
     fillScreen(EPD_WHITE);
 }
 

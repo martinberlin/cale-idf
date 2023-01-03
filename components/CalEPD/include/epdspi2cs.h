@@ -13,18 +13,17 @@ using namespace std;
 // Instruction R/W bit set HIGH for data READ
 #define EPD_REGREAD           0x80
 
-class EpdSpi2Cs : IoInterface
+class EpdSpi2Cs
 {
   public:
     spi_device_handle_t spi;
 
-    void cmd(const uint8_t cmd) override;
-    void data(uint8_t data) override;
+    void cmd(const uint8_t cmd);
+    void data(uint8_t data);
     // No data is used here (No DC pin)
-    void data(const uint8_t *data, int len) override; 
-    void reset(uint8_t millis) override;
-    void init(uint8_t frequency, bool debug) override;
-    void dataVector(vector<uint8_t> _buffer);
+    void data(const uint8_t *data, int len); 
+    void reset(uint8_t millis);
+    void init(uint8_t frequency, bool debug);
 
     void release();
     uint8_t readTemp();

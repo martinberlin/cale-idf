@@ -14,7 +14,7 @@
 #include <epdspi.h>
 #include <gdew_colors.h>
 #include <esp_timer.h>
-// Controller: IL0398 : http://www.good-display.com/download_detail/downloadsId=537.html
+// Controller: IL0398 (old version, new see Grays class) : http://www.good-display.com/download_detail/downloadsId=537.html
 
 #define GDEW042T2_WIDTH 400
 #define GDEW042T2_HEIGHT 300
@@ -37,7 +37,7 @@ class Gdew042t2 : public Epd
     void init(bool debug = false);
     void initFullUpdate();
     void initPartialUpdate();
-    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
+    void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
     void fillScreen(uint16_t color);
     void update();
 

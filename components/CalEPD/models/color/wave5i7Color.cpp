@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Constructor
 Wave5i7Color::Wave5i7Color(EpdSpi& dio): 
   Adafruit_GFX(WAVE5I7COLOR_WIDTH, WAVE5I7COLOR_HEIGHT),
@@ -125,7 +127,7 @@ void Wave5i7Color::update()
     }
     if (debug_enabled) {
       printf("\nSPI optimization is on. Sending full xLineBytes: %d per SPI (4 bits per pixel)\n\nBuffer size: %d  expected size: %d\n", 
-     xLineBytes, i, WAVE5I7COLOR_BUFFER_SIZE);
+      (int)xLineBytes, (int)i, (int)WAVE5I7COLOR_BUFFER_SIZE);
     }
 
   } else {

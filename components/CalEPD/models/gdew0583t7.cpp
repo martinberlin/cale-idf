@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include "esp_log.h"
 #include "freertos/task.h"
-
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // CMD, DATA, Databytes * Optional we are going to use sizeof(data)
 DRAM_ATTR const epd_init_2 Gdew0583T7::epd_wakeup_power={
 0x01,{0x37,0x00},2
@@ -147,7 +149,7 @@ void Gdew0583T7::update()
        rtc_wdt_feed();
        #endif
        vTaskDelay(pdMS_TO_TICKS(10));
-       if (debug_enabled) printf("%d ",i);
+       if (debug_enabled) printf("%d ", (int) i);
     }
   
   }

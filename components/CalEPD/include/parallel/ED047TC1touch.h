@@ -1,3 +1,5 @@
+#ifndef CALEPD_EXCLUDE_PARALLEL
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,3 +59,5 @@ class Ed047TC1t : public EpdParallel
     bool _debug_buffer = false;
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
 };
+
+#endif

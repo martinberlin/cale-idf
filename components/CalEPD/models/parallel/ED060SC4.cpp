@@ -1,3 +1,6 @@
+// Excluded when this define is present
+#ifndef CALEPD_EXCLUDE_PARALLEL
+
 #include "parallel/ED060SC4.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,3 +133,5 @@ void Ed060SC4::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
       printf("x:%d y:%d w:%d h:%d\n",x,y,w,h);
   */
 }
+
+#endif

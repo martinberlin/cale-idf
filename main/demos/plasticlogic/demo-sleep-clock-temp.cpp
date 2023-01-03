@@ -12,6 +12,9 @@
 #include "freertos/task.h"
 #include "esp_sleep.h"
 #include <sstream>
+#include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 // Non-Volatile Storage (NVS) - borrrowed from esp-idf/examples/storage/nvs_rw_value
 #include "esp_system.h"
 #include "nvs_flash.h"
@@ -306,6 +309,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
         break;
+    default:
+        break;
     }
     return ESP_OK;
 }
@@ -335,8 +340,8 @@ static void http_get(const char * requestUrl)
     {
         ESP_LOGI(TAG, "\nREQUEST URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
                  requestUrl,
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int)esp_http_client_get_status_code(client),
+                 (int)esp_http_client_get_content_length(client));
     }
     else
     {
@@ -458,7 +463,7 @@ void app_main(void)
     uint64_t startTime = esp_timer_get_time();
     
     printf("ESP32 deepsleep clock\n");
-    printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
+    printf("Free heap memory: %d\n", (int) xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
 
     // Turn off neopixel to keep consumption to the minimum
     gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);

@@ -1,3 +1,6 @@
+// Excluded when this define is present
+#ifndef CALEPD_EXCLUDE_PARALLEL
+
 #include "parallel/ED047TC1touch.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,8 +30,6 @@ void Ed047TC1t::init(bool debug)
   epd_poweron();
   // Initialize touch. Default: 22 FT6X36_DEFAULT_THRESHOLD
   Touch.begin(width(), height());
-  printf("Touch initialized. Free heap:%d\n",xPortGetFreeHeapSize());
-
 }
 
 void Ed047TC1t::fillScreen(uint16_t color) {
@@ -175,3 +176,5 @@ void Ed047TC1t::registerMultiTouchHandler(void (*fn)(TPoint point1, TPoint point
 void Ed047TC1t::touchLoop(){
   Touch.loop();
 }
+
+#endif

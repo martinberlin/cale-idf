@@ -13,13 +13,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "FT6X36.h"
-#include "soc/rtc_wdt.h"
-#include <gdew027w3.h>
+
+#include "goodisplay/gdey027T91.h"
+//#include <gdew027w3.h>
 
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
 EpdSpi io;
-Gdew027w3 display(io);
+Gdey027T91 display(io);
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH

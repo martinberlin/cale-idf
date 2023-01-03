@@ -1,3 +1,6 @@
+// Excluded when this define is present
+#ifndef CALEPD_EXCLUDE_PARALLEL
+
 #include "parallel/ED047TC1.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,3 +145,5 @@ void Ed047TC1::cpyFramebuffer(uint16_t x, uint16_t y, const void * src, size_t n
 void Ed047TC1::setAllWhite() {
   epd_hl_set_all_white(&hl);
 }
+
+#endif

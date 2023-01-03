@@ -1,14 +1,22 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
-    #"models/wave12i48.cpp"
-    #"models/gdew075HD.cpp"
-    #"models/gdew075T7.cpp"
-    #"models/gdew075T7Grays.cpp"
-    #"models/gdew075T8.cpp"
-    #"models/gdew0583t7.cpp"
-    #"models/gdew042t2.cpp"
-    #"models/gdew042t2Grays.cpp"
-    #"models/gdew027w3.cpp"
+    # New GOODISPLAY models will be in goodisplay directory
+    "models/goodisplay/gdey0213b74.cpp"
+    "models/goodisplay/gdey0154d67.cpp"
+    "models/goodisplay/gdey029T94.cpp"
+    "models/goodisplay/gdey027T91.cpp"
+    # With touch integrated
+    "models/goodisplay/touch/gdey027T91T.cpp"
+    # Other mixed brands mostly GOODISPLAY based or using their epapers
+    "models/wave12i48.cpp"
+    "models/gdew075HD.cpp"
+    "models/gdew075T7.cpp"
+    "models/gdew075T7Grays.cpp"
+    "models/gdew075T8.cpp"
+    "models/gdew0583t7.cpp"
+    "models/gdew042t2.cpp"
+    "models/gdew042t2Grays.cpp"
+    "models/gdew027w3.cpp"
     #"models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
     #"models/gdew027w3T.cpp"
@@ -24,12 +32,13 @@ set(srcs
     #"models/color/gdew075c64.cpp"
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
+    "models/color/gdeq042Z21.cpp"
     #"models/color/wave12i48BR.cpp"
 
-    # 7 colors Waveshare
-    #"models/color/wave4i7Color.cpp"
-    #"models/color/wave5i7Color.cpp"
-    #"models/color/wave5i7ColorVector.cpp"
+    # 7 colors ACEP
+    "models/color/gdey073d46.cpp"
+    "models/color/wave4i7Color.cpp"
+    "models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
     #"models/plasticlogic/epdspi2cs.cpp"
@@ -61,9 +70,15 @@ set(srcs
 idf_component_register(SRCS ${srcs}      
                     REQUIRES "Adafruit-GFX"
                     REQUIRES "FT6X36-IDF"
+                    REQUIRES esp_timer
                     # Uncomment for parallel epapers:
+<<<<<<< HEAD
                     REQUIRES qrcode esp_rainmaker app_wifi
                     REQUIRES esp_timer
+=======
+                    # REQUIRES "epdiy"
+
+>>>>>>> develop
                     INCLUDE_DIRS "include"
 )
 # Note about epdiy component: Even if it's not REQUIRED sometimes CMake includes it

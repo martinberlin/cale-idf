@@ -10,7 +10,7 @@ PlasticLogic021::PlasticLogic021(EpdSpi2Cs& dio):
   PlasticLogic(PLOGIC021_WIDTH, PLOGIC021_HEIGHT, dio), IO(dio)
 {
   printf("PlasticLogic021() %d*%d _buffer:%d\n",
-  PLOGIC021_WIDTH, PLOGIC021_HEIGHT, PLOGIC021_BUFFER_SIZE);
+  PLOGIC021_WIDTH, PLOGIC021_HEIGHT, (int)PLOGIC021_BUFFER_SIZE);
 }
 
 // Destructor
@@ -24,7 +24,7 @@ void PlasticLogic021::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) {
       printf("PlasticLogic021::init(%d) bufferSize: %d width: %d height: %d\n", 
-    debug, PLOGIC021_BUFFER_SIZE, PLOGIC021_WIDTH, PLOGIC021_HEIGHT);
+    debug, (int)PLOGIC021_BUFFER_SIZE, (int)PLOGIC021_WIDTH, (int)PLOGIC021_HEIGHT);
     }
     initIO(debug);
     

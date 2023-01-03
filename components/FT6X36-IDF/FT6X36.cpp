@@ -13,10 +13,13 @@ FT6X36::FT6X36(int8_t intPin)
 	i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
     conf.sda_io_num = (gpio_num_t)CONFIG_TOUCH_SDA;
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    //conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_io_num = (gpio_num_t)CONFIG_TOUCH_SDL;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    //conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = CONFIG_I2C_MASTER_FREQUENCY;
+	// you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here
+	conf.clk_flags = 0;
+
     i2c_param_config(I2C_NUM_0, &conf);
     esp_err_t i2c_driver = i2c_driver_install(I2C_NUM_0, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 	if (i2c_driver == ESP_OK) {
