@@ -49,6 +49,29 @@ void Gdew0102I4FC::_wakeUp(){
   IO.data(0x97);  
 }
 
+void Gdew0102I4FC::_wakeUpPart(){
+  _using_partial_mode = true;
+  IO.reset(10);
+  
+  IO.cmd(0x00);  // Panel setting
+  IO.data(0x6F); // LUT from Registers
+
+  IO.cmd(0x30);  // PLL
+  IO.data(0x05); // 15Hz
+  IO.cmd(0x50);  // VCOM and Data interval setting
+  IO.data(0xF2); // DDX 11 : differential, VBD 11 : vcom, CDI 2 : 5 hsync
+  IO.cmd(0x82);  // Vcom DC Setting
+  IO.data(0x00);    // -0.1 V
+  
+  IO.cmd(0x23);
+  IO.data(lut_w_partial, sizeof(lut_w_partial));
+  IO.cmd(0x24);
+  IO.data(lut_b_partial, sizeof(lut_b_partial));
+
+  IO.cmd(0x04);  //Power on
+  _waitBusy("epd_wakeup");; //waiting for the electronic paper IC to release the idle signal
+}
+
 void Gdew0102I4FC::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
@@ -185,4 +208,68 @@ void Gdew0102I4FC::fillScreen(uint16_t color)
   }
 
   if (debug_enabled) printf("fillScreen(%x) black len:%d\n", fill, sizeof(_black_buffer));
+}
+
+void Gdew0102I4FC::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+{
+  uint16_t w = (x + xe - 1) | 0x0007; // byte boundary inclusive (last byte)
+  uint16_t h = y + ye - 1;
+  x &= 0xFFF8;
+  IO.cmd(0x90); // partial window
+  IO.data(x);
+  IO.data(w);
+  IO.data(y);
+  IO.data(h);
+  IO.data(0x00);
+}
+
+void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
+  //printf("updateWindow is still not implemented\n");
+  if (!_using_partial_mode) {
+    _wakeUpPart();
+  }
+  int16_t w1 = x < 0 ? w + x : w;
+  int16_t h1 = y < 0 ? h + y : h;
+  int16_t x1 = x < 0 ? 0 : x;
+  int16_t y1 = y < 0 ? 0 : y;
+  w1 = x1 + w1 < int16_t(GDEW0102I4FC_WIDTH) ? w1 : int16_t(GDEW0102I4FC_WIDTH) - x1;
+  h1 = y1 + h1 < int16_t(GDEW0102I4FC_HEIGHT) ? h1 : int16_t(GDEW0102I4FC_HEIGHT) - y1;
+  if (using_rotation) _rotate(x, y, w, h);
+  if (x >= GDEW0102I4FC_WIDTH) {
+    ESP_LOGE(TAG, "Given width exceeds display");
+    return;
+  }
+  if (y >= GDEW0102I4FC_HEIGHT) {
+    ESP_LOGE(TAG, "Given height exceeds display");
+    return;
+  }
+  uint16_t xe = gx_uint16_min(GDEW0102I4FC_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEW0102I4FC_HEIGHT, y + h) - 1;
+  uint16_t xs_bx = x / 8;
+  uint16_t xe_bx = (xe + 7) / 8;
+  
+  w1 += x1 % 8;
+  if (w1 % 8 > 0) w1 += 8 - w1 % 8;
+  x1 -= x1 % 8;
+
+  // This command makes the display enter partial mode
+  IO.cmd(0x91); // partial in
+  // Here it sets where in RAM is going to write it
+  _setPartialRamArea(x1, y1, w1, h1);
+
+  // New data
+  IO.cmd(0x13);
+  for (int16_t y1 = y; y1 <= ye+1; y1++)
+  {
+    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+    {
+      uint16_t idx = y1 * (GDEW0102I4FC_WIDTH/ 8) + x1;
+      uint8_t data = (idx < sizeof(_black_buffer)) ? _black_buffer[idx] : 0x00; // white is 0x00 in buffer
+      IO.data(data); // white is 0xFF on device
+    }
+  }
+
+  IO.cmd(0x12); // Refresh
+  _waitBusy("partial");
+  IO.cmd(0x92); // Partial out
 }

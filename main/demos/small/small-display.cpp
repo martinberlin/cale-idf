@@ -71,11 +71,16 @@ void app_main(void)
    // Test Epd class
    display.init(false);
    display.setFont(&Ubuntu_M12pt8b);
-   display.fillCircle(30,display.height()/2,30,EPD_BLACK);
+   /* display.fillCircle(display.width()/2,display.height()/2,30,EPD_BLACK);
    display.update();
-   delay(1000);
+   delay(1000); */
    display.fillScreen(EPD_WHITE);
-   //return; // Just clean display and draw a circle
+   uint8_t radius = 20;
+   display.fillCircle(display.width()/2,display.height()/2,radius,EPD_BLACK);
+   display.updateWindow(display.width()/2-radius,display.height()/2-radius,radius*2,radius*2);
+   printf("Partial update test\n");
+   delay(2000);
+   return; // Just clean display and draw a circle
 
    display.setRotation(0);
    draw_content(display.getRotation());
