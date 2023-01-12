@@ -225,15 +225,7 @@ void Gdew0102I4FC::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint1
 
 void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
   //printf("updateWindow is still not implemented\n");
-  if (!_using_partial_mode) {
-    _wakeUpPart();
-  }
-  int16_t w1 = x < 0 ? w + x : w;
-  int16_t h1 = y < 0 ? h + y : h;
-  int16_t x1 = x < 0 ? 0 : x;
-  int16_t y1 = y < 0 ? 0 : y;
-  w1 = x1 + w1 < int16_t(GDEW0102I4FC_WIDTH) ? w1 : int16_t(GDEW0102I4FC_WIDTH) - x1;
-  h1 = y1 + h1 < int16_t(GDEW0102I4FC_HEIGHT) ? h1 : int16_t(GDEW0102I4FC_HEIGHT) - y1;
+
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW0102I4FC_WIDTH) {
     ESP_LOGE(TAG, "Given width exceeds display");
@@ -243,20 +235,30 @@ void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
     ESP_LOGE(TAG, "Given height exceeds display");
     return;
   }
+  if (!_using_partial_mode) {
+    _wakeUpPart();
+  }
   uint16_t xe = gx_uint16_min(GDEW0102I4FC_WIDTH, x + w) - 1;
   uint16_t ye = gx_uint16_min(GDEW0102I4FC_HEIGHT, y + h) - 1;
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
-  
-  w1 += x1 % 8;
+  uint8_t w1 = w;
+  w1 += x % 8;
   if (w1 % 8 > 0) w1 += 8 - w1 % 8;
-  x1 -= x1 % 8;
+  x -= x % 8;
 
   // This command makes the display enter partial mode
   IO.cmd(0x91); // partial in
   // Here it sets where in RAM is going to write it
-  _setPartialRamArea(x1, y1, w1, h1);
+  _setPartialRamArea(x, y, w1, h);
 
+  // NO need to fill 0x10 buffer or send it for partial 
+  /* IO.cmd(0x10);
+  uint8_t full_buff[GDEW0102I4FC_BUFFER_SIZE];
+  for(uint16_t y =  0; y < GDEW0102I4FC_BUFFER_SIZE; y++) {
+    full_buff[y] = 0xFF;
+  }
+  IO.data(full_buff, GDEW0102I4FC_BUFFER_SIZE); */
   // New data
   IO.cmd(0x13);
   for (int16_t y1 = y; y1 <= ye+1; y1++)
@@ -264,8 +266,7 @@ void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
       uint16_t idx = y1 * (GDEW0102I4FC_WIDTH/ 8) + x1;
-      uint8_t data = (idx < sizeof(_black_buffer)) ? _black_buffer[idx] : 0x00; // white is 0x00 in buffer
-      IO.data(data); // white is 0xFF on device
+      IO.data(_black_buffer[idx]); // white is 0xFF on device
     }
   }
 
