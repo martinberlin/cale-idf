@@ -224,8 +224,6 @@ void Gdew0102I3F::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16
 }
 
 void Gdew0102I3F::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
-  //printf("updateWindow is still not implemented\n");
-
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEW0102I3F_WIDTH) {
     ESP_LOGE(TAG, "Given width exceeds display");
@@ -237,9 +235,10 @@ void Gdew0102I3F::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   }
   if (!_using_partial_mode) {
     _wakeUpPart();
+    printf("updateWindow is still not implemented 100%% correctly\n");
   }
-  uint16_t xe = gx_uint16_min(GDEW0102I3F_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEW0102I3F_HEIGHT, y + h) - 1;
+  uint16_t xe = gx_uint16_min(GDEW0102I3F_WIDTH, x + w) ;
+  uint16_t ye = gx_uint16_min(GDEW0102I3F_HEIGHT, y + h) ;
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
   uint8_t w1 = w;
@@ -251,7 +250,6 @@ void Gdew0102I3F::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   IO.cmd(0x91); // partial in
   // Here it sets where in RAM is going to write it
   _setPartialRamArea(x, y, w1, h);
-
   // NO need to fill 0x10 buffer or send it for partial 
   /* IO.cmd(0x10);
   uint8_t full_buff[GDEW0102I3F_BUFFER_SIZE];
@@ -261,14 +259,18 @@ void Gdew0102I3F::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, b
   IO.data(full_buff, GDEW0102I3F_BUFFER_SIZE); */
   // New data
   IO.cmd(0x13);
+  uint8_t temp_buffer[ye+1*xe_bx];
+  uint16_t buff_pointer = 0;
   for (int16_t y1 = y; y1 <= ye+1; y1++)
   {
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
       uint16_t idx = y1 * (GDEW0102I3F_WIDTH/ 8) + x1;
-      IO.data(_black_buffer[idx]); // white is 0xFF on device
+      temp_buffer[buff_pointer] = _black_buffer[idx]; // white is 0xFF on device
+      buff_pointer++;
     }
   }
+  IO.data(temp_buffer, buff_pointer);
 
   IO.cmd(0x12); // Refresh
   _waitBusy("partial");
