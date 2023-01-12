@@ -5,12 +5,12 @@
 // Should match with your epaper module, size
 
 // New small GOODISPLAY models
-#include "small/gdew0102I4FC.h"
+#include "small/gdew0102I3F.h"
 
 
 // Single SPI EPD
 EpdSpi io;
-Gdew0102I4FC display(io);
+Gdew0102I3F display(io);
 
 
 // FONT used for title / message body - Only after display library

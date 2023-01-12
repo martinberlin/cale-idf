@@ -1,4 +1,4 @@
-#include "small/gdew0102I4FC.h"
+#include "small/gdew0102I3F.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
@@ -8,19 +8,19 @@
 #include <inttypes.h>
 
 // Constructor
-Gdew0102I4FC::Gdew0102I4FC(EpdSpi& dio): 
-  Adafruit_GFX(GDEW0102I4FC_WIDTH, GDEW0102I4FC_HEIGHT),
-  Epd(GDEW0102I4FC_WIDTH, GDEW0102I4FC_HEIGHT), IO(dio)
+Gdew0102I3F::Gdew0102I3F(EpdSpi& dio): 
+  Adafruit_GFX(GDEW0102I3F_WIDTH, GDEW0102I3F_HEIGHT),
+  Epd(GDEW0102I3F_WIDTH, GDEW0102I3F_HEIGHT), IO(dio)
 {
-  printf("Gdew0102I4FC() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
-  GDEW0102I4FC_WIDTH, GDEW0102I4FC_HEIGHT);  
+  printf("Gdew0102I3F() constructor injects IO and extends Adafruit_GFX(%d,%d)\n",
+  GDEW0102I3F_WIDTH, GDEW0102I3F_HEIGHT);  
 }
 
 //Initialize the display
-void Gdew0102I4FC::init(bool debug)
+void Gdew0102I3F::init(bool debug)
 {
     debug_enabled = debug;
-    if (debug_enabled) printf("Gdew0102I4FC::init(%d) and reset EPD\n", debug);
+    if (debug_enabled) printf("Gdew0102I3F::init(%d) and reset EPD\n", debug);
     //Initialize the Epaper and reset it
     IO.init(4, debug); // 4MHz frequency, debug
 
@@ -31,7 +31,7 @@ void Gdew0102I4FC::init(bool debug)
 }
 
 
-void Gdew0102I4FC::_wakeUp(){
+void Gdew0102I3F::_wakeUp(){
 
   IO.reset(10);
     
@@ -49,7 +49,7 @@ void Gdew0102I4FC::_wakeUp(){
   IO.data(0x97);  
 }
 
-void Gdew0102I4FC::_wakeUpPart(){
+void Gdew0102I3F::_wakeUpPart(){
   _using_partial_mode = true;
   IO.reset(10);
   
@@ -72,7 +72,7 @@ void Gdew0102I4FC::_wakeUpPart(){
   _waitBusy("epd_wakeup");; //waiting for the electronic paper IC to release the idle signal
 }
 
-void Gdew0102I4FC::_waitBusy(const char* message){
+void Gdew0102I3F::_waitBusy(const char* message){
   if (debug_enabled) {
     ESP_LOGI(TAG, "_waitBusy for %s", message);
   }
@@ -89,7 +89,7 @@ void Gdew0102I4FC::_waitBusy(const char* message){
   }
 }
 
-void Gdew0102I4FC::_sleep(){
+void Gdew0102I3F::_sleep(){
     IO.cmd(0X50);  //VCOM AND DATA INTERVAL SETTING  
     IO.data(0xf7);
        
@@ -99,28 +99,28 @@ void Gdew0102I4FC::_sleep(){
     IO.data(0xA5);
 }
 
-void Gdew0102I4FC::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
+void Gdew0102I3F::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
 {
   switch (getRotation())
   {
     case 1:
       swap(x, y);
       swap(w, h);
-      x = GDEW0102I4FC_WIDTH - x - w - 1;
+      x = GDEW0102I3F_WIDTH - x - w - 1;
       break;
     case 2:
-      x = GDEW0102I4FC_WIDTH - x - w - 1;
-      y = GDEW0102I4FC_HEIGHT - y - h - 1;
+      x = GDEW0102I3F_WIDTH - x - w - 1;
+      y = GDEW0102I3F_HEIGHT - y - h - 1;
       break;
     case 3:
       swap(x, y);
       swap(w, h);
-      y = GDEW0102I4FC_HEIGHT - y - h - 1;
+      y = GDEW0102I3F_HEIGHT - y - h - 1;
       break;
   }
 }
 
-void Gdew0102I4FC::update()
+void Gdew0102I3F::update()
 {
   uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
@@ -130,22 +130,22 @@ void Gdew0102I4FC::update()
   // BLACK: Write RAM for black(0)/white (1)
   // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
   uint16_t i = 0;
-  uint8_t xLineBytes = GDEW0102I4FC_WIDTH/8;
+  uint8_t xLineBytes = GDEW0102I3F_WIDTH/8;
   uint8_t x1buf[xLineBytes];
 
 // Note that in IC specs is 0x10 old data (?) and 0x13 new
   IO.cmd(0x10);
-  uint8_t full_buff[GDEW0102I4FC_BUFFER_SIZE];
-  for(uint16_t y =  0; y < GDEW0102I4FC_BUFFER_SIZE; y++) {
+  uint8_t full_buff[GDEW0102I3F_BUFFER_SIZE];
+  for(uint16_t y =  0; y < GDEW0102I3F_BUFFER_SIZE; y++) {
     full_buff[y] = 0xFF;
   }
-  IO.data(full_buff, GDEW0102I4FC_BUFFER_SIZE);
+  IO.data(full_buff, GDEW0102I3F_BUFFER_SIZE);
 
 // BLACK new data: Write RAM
   IO.cmd(0x13);
-  for(uint16_t y =  1; y <= GDEW0102I4FC_HEIGHT; y++) {
+  for(uint16_t y =  1; y <= GDEW0102I3F_HEIGHT; y++) {
         for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEW0102I4FC_8PIX_WHITE;
+          uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEW0102I3F_8PIX_WHITE;
           x1buf[x-1] = data;
           if (x==xLineBytes) { // Flush the X line buffer to SPI
             IO.data(x1buf,sizeof(x1buf));
@@ -166,24 +166,24 @@ void Gdew0102I4FC::update()
   _sleep();
 }
 
-void Gdew0102I4FC::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void Gdew0102I3F::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) return;
   switch (getRotation())
   {
     case 1:
       swap(x, y);
-      x = GDEW0102I4FC_WIDTH - x - 1;
+      x = GDEW0102I3F_WIDTH - x - 1;
       break;
     case 2:
-      x = GDEW0102I4FC_WIDTH - x - 1;
-      y = GDEW0102I4FC_HEIGHT - y - 1;
+      x = GDEW0102I3F_WIDTH - x - 1;
+      y = GDEW0102I3F_HEIGHT - y - 1;
       break;
     case 3:
       swap(x, y);
-      y = GDEW0102I4FC_HEIGHT - y - 1;
+      y = GDEW0102I3F_HEIGHT - y - 1;
       break;
   }
-  uint16_t i = x / 8 + y * GDEW0102I4FC_WIDTH / 8;
+  uint16_t i = x / 8 + y * GDEW0102I3F_WIDTH / 8;
   
   if (!color) {
     _black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
@@ -193,13 +193,13 @@ void Gdew0102I4FC::drawPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 
-void Gdew0102I4FC::fillScreen(uint16_t color)
+void Gdew0102I3F::fillScreen(uint16_t color)
 {
   // Fill screen will be inverted with the way is done NOW
-  uint8_t fill = GDEW0102I4FC_8PIX_WHITE;
+  uint8_t fill = GDEW0102I3F_8PIX_WHITE;
   
   if (color == EPD_BLACK) {
-    fill = GDEW0102I4FC_8PIX_BLACK;
+    fill = GDEW0102I3F_8PIX_BLACK;
   }
   
   for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
@@ -210,7 +210,7 @@ void Gdew0102I4FC::fillScreen(uint16_t color)
   if (debug_enabled) printf("fillScreen(%x) black len:%d\n", fill, sizeof(_black_buffer));
 }
 
-void Gdew0102I4FC::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+void Gdew0102I3F::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
   uint16_t w = (x + xe - 1) | 0x0007; // byte boundary inclusive (last byte)
   uint16_t h = y + ye - 1;
@@ -223,23 +223,23 @@ void Gdew0102I4FC::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint1
   IO.data(0x00);
 }
 
-void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
+void Gdew0102I3F::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
   //printf("updateWindow is still not implemented\n");
 
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GDEW0102I4FC_WIDTH) {
+  if (x >= GDEW0102I3F_WIDTH) {
     ESP_LOGE(TAG, "Given width exceeds display");
     return;
   }
-  if (y >= GDEW0102I4FC_HEIGHT) {
+  if (y >= GDEW0102I3F_HEIGHT) {
     ESP_LOGE(TAG, "Given height exceeds display");
     return;
   }
   if (!_using_partial_mode) {
     _wakeUpPart();
   }
-  uint16_t xe = gx_uint16_min(GDEW0102I4FC_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEW0102I4FC_HEIGHT, y + h) - 1;
+  uint16_t xe = gx_uint16_min(GDEW0102I3F_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(GDEW0102I3F_HEIGHT, y + h) - 1;
   uint16_t xs_bx = x / 8;
   uint16_t xe_bx = (xe + 7) / 8;
   uint8_t w1 = w;
@@ -254,18 +254,18 @@ void Gdew0102I4FC::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
 
   // NO need to fill 0x10 buffer or send it for partial 
   /* IO.cmd(0x10);
-  uint8_t full_buff[GDEW0102I4FC_BUFFER_SIZE];
-  for(uint16_t y =  0; y < GDEW0102I4FC_BUFFER_SIZE; y++) {
+  uint8_t full_buff[GDEW0102I3F_BUFFER_SIZE];
+  for(uint16_t y =  0; y < GDEW0102I3F_BUFFER_SIZE; y++) {
     full_buff[y] = 0xFF;
   }
-  IO.data(full_buff, GDEW0102I4FC_BUFFER_SIZE); */
+  IO.data(full_buff, GDEW0102I3F_BUFFER_SIZE); */
   // New data
   IO.cmd(0x13);
   for (int16_t y1 = y; y1 <= ye+1; y1++)
   {
     for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
     {
-      uint16_t idx = y1 * (GDEW0102I4FC_WIDTH/ 8) + x1;
+      uint16_t idx = y1 * (GDEW0102I3F_WIDTH/ 8) + x1;
       IO.data(_black_buffer[idx]); // white is 0xFF on device
     }
   }
