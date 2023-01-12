@@ -16,18 +16,18 @@
 #include <gdew_4grays.h>
 #include <esp_timer.h>
 
-#define GDEW0102I4FC_WIDTH 80
-#define GDEW0102I4FC_HEIGHT 128
-#define GDEW0102I4FC_BUFFER_SIZE (uint32_t(GDEW0102I4FC_WIDTH) * uint32_t(GDEW0102I4FC_HEIGHT) / 8)
+#define GDEW0102I3F_WIDTH 80
+#define GDEW0102I3F_HEIGHT 128
+#define GDEW0102I3F_BUFFER_SIZE (uint32_t(GDEW0102I3F_WIDTH) * uint32_t(GDEW0102I3F_HEIGHT) / 8)
 
-#define GDEW0102I4FC_8PIX_BLACK 0x00
-#define GDEW0102I4FC_8PIX_WHITE 0xFF
+#define GDEW0102I3F_8PIX_BLACK 0x00
+#define GDEW0102I3F_8PIX_WHITE 0xFF
 
-class Gdew0102I4FC : public Epd
+class Gdew0102I3F : public Epd
 {
   public:
     // & Copy contructor: Copying the injected IO into our class so we can access IO methods
-    Gdew0102I4FC(EpdSpi& IO);
+    Gdew0102I3F(EpdSpi& IO);
     uint8_t colors_supported = 1;
     
     // EPD tests 
@@ -41,7 +41,7 @@ class Gdew0102I4FC : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _black_buffer[GDEW0102I4FC_BUFFER_SIZE];
+    uint8_t _black_buffer[GDEW0102I3F_BUFFER_SIZE];
 
     bool _initial = true;
 

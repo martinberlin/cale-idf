@@ -26,7 +26,7 @@ set(srcs
     "models/heltec0151.cpp"
     
     # SMALL epapers
-    "models/small/gdew0102I4FC.cpp"
+    "models/small/gdew0102I3F.cpp"
     
     # 3 colors Goodisplay
     "models/color/gdeh0154z90.cpp"
