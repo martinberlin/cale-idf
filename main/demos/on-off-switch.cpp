@@ -19,7 +19,7 @@ Gdey027T91 display(io);
 //#define DEBUG_COUNT_TOUCH
 
 // Relay ON (high) / OFF
-#define GPIO_RELAY 25
+#define GPIO_RELAY 1
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>

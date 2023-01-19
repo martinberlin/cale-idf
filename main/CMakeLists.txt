@@ -14,14 +14,15 @@ idf_component_register(
     #SRCS "demos/demo-grays.cpp"
     
     # SMALL displays
-    SRCS "demos/small/small-display.cpp"
+    #SRCS "demos/small/small-display.cpp"
     
     # TOUCH examples. 1- Touch indepently from Epd class uses Gdew027w3   2- Touch implemented in Gdew027w3T class
     #SRCS "demos/demo-touch.cpp"
     #SRCS "demos/demo-touch-epd-implemented.cpp"
     #SRCS "demos/demo-touch-keyboard.cpp"
     #SRCS "demos/on-off-switch.cpp"
-
+    SRCS "demos/i2c-scan.cpp"
+    
     # Generic demos for any displays
     #SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
