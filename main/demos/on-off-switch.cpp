@@ -8,28 +8,33 @@
 #include "FT6X36.h"
 #include "driver/gpio.h"
 
+//#include "gdew027w3.h"
 #include "goodisplay/gdey027T91.h"
-
 // INTGPIO is touch interrupt, goes low when it detects a touch, which coordinates are read by I2C
 FT6X36 ts(CONFIG_TOUCH_INT);
 EpdSpi io;
+//Gdew027w3 display(io);
+//Gdey029T94 display(io);
 Gdey027T91 display(io);
 
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
 
-// Relay ON (high) / OFF
-#define GPIO_RELAY 1
+// Relay Latch (high) / OFF
+#define GPIO_RELAY_ON 1
+#define GPIO_RELAY_OFF 3
+// Pulse to move the switch in millis
+const uint16_t signal_ms = 50;
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
-uint8_t display_rotation = 0;
+uint8_t display_rotation = 2;
 
 extern "C"
 {
    void app_main();
 }
-
+void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 // Some GFX constants
 uint16_t blockWidth = 42;
 uint16_t blockHeight = display.height()/4;
@@ -46,11 +51,11 @@ swap(T& a, T& b)
   b = t;
 }
 
-bool switch_state = false; // false = OFF
+bool switch_state = false; // starts false = OFF
 
 void draw_centered_text(const GFXfont *font, char * text, int16_t x, int16_t y, uint16_t w, uint16_t h) {
     // Draw external boundary where text needs to be centered in the middle
-    printf("drawRect x:%d y:%d w:%d h:%d\n\n", x, y, w, h);
+    //printf("drawRect x:%d y:%d w:%d h:%d\n\n", x, y, w, h);
     display.drawRect(x, y, w, h, EPD_DARKGREY);
 
     display.setFont(font);
@@ -60,7 +65,7 @@ void draw_centered_text(const GFXfont *font, char * text, int16_t x, int16_t y, 
     uint16_t text_h = 0;
 
     display.getTextBounds(text, x, y, &text_x, &text_y, &text_w, &text_h);
-    printf("text_x:%d y:%d w:%d h:%d\n\n", text_x,text_y,text_w,text_h);
+    //printf("text_x:%d y:%d w:%d h:%d\n\n", text_x,text_y,text_w,text_h);
     //display.drawRect(text_x, text_y, text_w, text_h, EPD_BLACK); // text boundaries
 
     if (text_w > w) {
@@ -73,10 +78,20 @@ void draw_centered_text(const GFXfont *font, char * text, int16_t x, int16_t y, 
     text_x += (w-text_w)/2;
 
     uint ty = (h/2)+y+(text_h/2);
-
-    printf("setCusor x:%d y:%d\n", text_x, ty);
     display.setCursor(text_x, ty);
     display.print(text);
+}
+
+void switchState(bool state) {
+  if (state) {
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 1); // OFF
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 0); // OFF release
+  } else {
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 1); // OFF
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 0); // OFF release
+  }
 }
 
 void drawUX(){
@@ -92,10 +107,16 @@ void drawUX(){
   // OFF position
   if (!switch_state) {
     display.fillRoundRect(dw/2-keyw/2, dh/2, keyw, keyh, 5, EPD_BLACK);
-    gpio_set_level((gpio_num_t)GPIO_RELAY, 0); // OFF
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 1); // OFF
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 0); // OFF release
+    printf("Draw OFF\n\n");
   } else {
     display.fillRoundRect(dw/2-keyw/2, dh/2-keyh, keyw, keyh, 5, EPD_BLACK);
-    gpio_set_level((gpio_num_t)GPIO_RELAY, 1); // ON
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 1); // ON
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 0); // ON release
+    printf("Draw ON\n\n");
   }
   
   char * label = (switch_state) ? (char *)"ON" : (char *)"OFF";
@@ -119,7 +140,6 @@ void touchEvent(TPoint p, TEvent e)
     return;
 
   switch_state = !switch_state;
-  printf("state:%d\n", (int)switch_state);
   drawUX();
 }
 
@@ -128,21 +148,27 @@ void app_main(void)
    printf("CalEPD version: %s\n", CALEPD_VERSION);
 
    //Initialize GPIOs direction & initial states
-  gpio_set_direction((gpio_num_t)GPIO_RELAY, GPIO_MODE_OUTPUT);
-  gpio_set_level((gpio_num_t)GPIO_RELAY, 0); // OFF
+  gpio_set_direction((gpio_num_t)GPIO_RELAY_ON, GPIO_MODE_OUTPUT);
+  gpio_set_direction((gpio_num_t)GPIO_RELAY_OFF, GPIO_MODE_OUTPUT);
+  switchState(false); // OFF at the beginning
+
+  //DEBUG turning on/off the Relay to make sure it ticks (just change to true)
+  while(false) {
+    switchState(true);
+    delay(1500);
+    switchState(false);
+    delay(1500);
+  }
 
    // Test Epd class
    display.init(false);
-   //display.setFont(&Ubuntu_M8pt8b);
-   
-   printf("display.colors_supported:%d\n", display.colors_supported);  
-   display.setRotation(2);
-   display.update();
+   display.setRotation(display_rotation);
+   //display.update();
    display.setFont(&Ubuntu_M8pt8b);
    display.setTextColor(EPD_BLACK);
    drawUX();
    
-   // Instantiate touch. Important pass here the 3 required variables including display width and height
+  // Instantiate touch. Important pass here the 3 required variables including display width and height
    ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
    ts.setRotation(display.getRotation());
    ts.registerTouchHandler(touchEvent);
