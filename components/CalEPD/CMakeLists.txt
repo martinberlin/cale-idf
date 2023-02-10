@@ -37,8 +37,8 @@ set(srcs
 
     # 7 colors ACEP
     "models/color/gdey073d46.cpp"
-    "models/color/wave4i7Color.cpp"
-    "models/color/wave5i7Color.cpp"
+    #"models/color/wave4i7Color.cpp"
+    #"models/color/wave5i7Color.cpp"
 
     # Plasticlogic.com Flex epaper models:
     #"models/plasticlogic/epdspi2cs.cpp"

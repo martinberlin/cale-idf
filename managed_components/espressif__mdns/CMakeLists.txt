@@ -6,7 +6,7 @@ endif()
 
 idf_build_get_property(target IDF_TARGET)
 if(${target} STREQUAL "linux")
-    set(dependencies esp_system_protocols_linux)
+    set(dependencies esp_event esp_netif_linux esp_timer_linux esp_system)
     set(srcs "mdns.c" ${MDNS_NETWORKING})
 else()
     set(dependencies lwip console esp_netif)
@@ -21,6 +21,11 @@ idf_component_register(
         REQUIRES ${dependencies}
         PRIV_REQUIRES ${private_dependencies})
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-format")
+
+if(${target} STREQUAL "linux")
+    target_link_libraries(${COMPONENT_LIB} PRIVATE "-lbsd")
+endif()
+
 
 if(CONFIG_ETH_ENABLED)
     idf_component_optional_requires(PRIVATE esp_eth)

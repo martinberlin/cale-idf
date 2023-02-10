@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 /*
  * MDNS Server Networking
@@ -16,7 +21,7 @@
 #include "mdns_networking.h"
 #include "esp_netif_net_stack.h"
 
-extern mdns_server_t * _mdns_server;
+extern mdns_server_t *_mdns_server;
 
 /*
  * MDNS Server Networking
@@ -24,7 +29,7 @@ extern mdns_server_t * _mdns_server;
  */
 static const char *TAG = "MDNS_Networking";
 
-static struct udp_pcb * _pcb_main = NULL;
+static struct udp_pcb *_pcb_main = NULL;
 
 static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip_addr_t *raddr, uint16_t rport);
 
@@ -33,7 +38,7 @@ static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip
  */
 static esp_err_t _udp_pcb_main_init(void)
 {
-    if(_pcb_main) {
+    if (_pcb_main) {
         return ESP_OK;
     }
     _pcb_main = udp_new();
@@ -57,7 +62,7 @@ static esp_err_t _udp_pcb_main_init(void)
  */
 static void _udp_pcb_main_deinit(void)
 {
-    if(_pcb_main){
+    if (_pcb_main) {
         udp_recv(_pcb_main, NULL, NULL);
         udp_disconnect(_pcb_main);
         udp_remove(_pcb_main);
@@ -70,7 +75,7 @@ static void _udp_pcb_main_deinit(void)
  */
 static esp_err_t _udp_join_group(mdns_if_t if_inx, mdns_ip_protocol_t ip_protocol, bool join)
 {
-    struct netif * netif = NULL;
+    struct netif *netif = NULL;
     esp_netif_t *tcpip_if = _mdns_get_esp_netif(if_inx);
 
     if (!esp_netif_is_netif_up(tcpip_if)) {
@@ -85,7 +90,7 @@ static esp_err_t _udp_join_group(mdns_if_t if_inx, mdns_ip_protocol_t ip_protoco
         ip4_addr_t multicast_addr;
         IP4_ADDR(&multicast_addr, 224, 0, 0, 251);
 
-        if(join){
+        if (join) {
             if (igmp_joingroup_netif(netif, &multicast_addr)) {
                 return ESP_ERR_INVALID_STATE;
             }
@@ -99,7 +104,7 @@ static esp_err_t _udp_join_group(mdns_if_t if_inx, mdns_ip_protocol_t ip_protoco
     else {
         ip_addr_t multicast_addr = IPADDR6_INIT(0x000002ff, 0, 0, 0xfb000000);
 
-        if(join){
+        if (join) {
             if (mld6_joingroup_netif(netif, &(multicast_addr.u_addr.ip6))) {
                 return ESP_ERR_INVALID_STATE;
             }
@@ -122,11 +127,11 @@ static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip
 
     uint8_t i;
     while (pb != NULL) {
-        struct pbuf * this_pb = pb;
+        struct pbuf *this_pb = pb;
         pb = pb->next;
         this_pb->next = NULL;
 
-        mdns_rx_packet_t * packet = (mdns_rx_packet_t *)malloc(sizeof(mdns_rx_packet_t));
+        mdns_rx_packet_t *packet = (mdns_rx_packet_t *)malloc(sizeof(mdns_rx_packet_t));
         if (!packet) {
             HOOK_MALLOC_FAILED;
             //missed packet - no memory
@@ -148,23 +153,23 @@ static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip
 
         if (packet->src.type == IPADDR_TYPE_V4) {
             packet->ip_protocol = MDNS_IP_PROTOCOL_V4;
-            struct ip_hdr * iphdr = (struct ip_hdr *)(((uint8_t *)(packet->pb->payload)) - UDP_HLEN - IP_HLEN);
+            struct ip_hdr *iphdr = (struct ip_hdr *)(((uint8_t *)(packet->pb->payload)) - UDP_HLEN - IP_HLEN);
             packet->dest.u_addr.ip4.addr = iphdr->dest.addr;
             packet->multicast = ip4_addr_ismulticast(&(packet->dest.u_addr.ip4));
         }
 #if CONFIG_LWIP_IPV6
         else {
             packet->ip_protocol = MDNS_IP_PROTOCOL_V6;
-            struct ip6_hdr * ip6hdr = (struct ip6_hdr *)(((uint8_t *)(packet->pb->payload)) - UDP_HLEN - IP6_HLEN);
+            struct ip6_hdr *ip6hdr = (struct ip6_hdr *)(((uint8_t *)(packet->pb->payload)) - UDP_HLEN - IP6_HLEN);
             memcpy(&packet->dest.u_addr.ip6.addr, (uint8_t *)ip6hdr->dest.addr, 16);
             packet->multicast = ip6_addr_ismulticast(&(packet->dest.u_addr.ip6));
         }
 #endif
 
         //lwip does not return the proper pcb if you have more than one for the same multicast address (but different interfaces)
-        struct netif * netif = NULL;
-        struct udp_pcb * pcb = NULL;
-        for (i=0; i<MDNS_MAX_INTERFACES; i++) {
+        struct netif *netif = NULL;
+        struct udp_pcb *pcb = NULL;
+        for (i = 0; i < MDNS_MAX_INTERFACES; i++) {
             pcb = _mdns_server->interfaces[i].pcbs[packet->ip_protocol].pcb;
             netif = esp_netif_get_netif_impl(_mdns_get_esp_netif(i));
             if (pcb && netif && netif == ip_current_input_netif ()) {
@@ -185,7 +190,7 @@ static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip
         }
 
         if (!pcb || !_mdns_server || !_mdns_server->action_queue
-          || _mdns_send_rx_action(packet) != ESP_OK) {
+                || _mdns_send_rx_action(packet) != ESP_OK) {
             pbuf_free(this_pb);
             free(packet);
         }
@@ -196,11 +201,12 @@ static void _udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *pb, const ip
 /**
  * @brief  Check if any of the interfaces is up
  */
-static bool _udp_pcb_is_in_use(void){
+static bool _udp_pcb_is_in_use(void)
+{
     int i, p;
-    for (i=0; i<MDNS_MAX_INTERFACES; i++) {
-        for (p=0; p<MDNS_IP_PROTOCOL_MAX; p++) {
-            if(_mdns_server->interfaces[i].pcbs[p].pcb){
+    for (i = 0; i < MDNS_MAX_INTERFACES; i++) {
+        for (p = 0; p < MDNS_IP_PROTOCOL_MAX; p++) {
+            if (_mdns_server->interfaces[i].pcbs[p].pcb) {
                 return true;
             }
         }
@@ -216,7 +222,7 @@ static void _udp_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
     if (!_mdns_server) {
         return;
     }
-    mdns_pcb_t * _pcb = &_mdns_server->interfaces[tcpip_if].pcbs[ip_protocol];
+    mdns_pcb_t *_pcb = &_mdns_server->interfaces[tcpip_if].pcbs[ip_protocol];
     if (_pcb->pcb) {
         free(_pcb->probe_services);
         _pcb->state = PCB_OFF;
@@ -227,7 +233,7 @@ static void _udp_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
         _pcb->probe_running = false;
         _pcb->failed_probes = 0;
         _udp_join_group(tcpip_if, ip_protocol, false);
-        if(!_udp_pcb_is_in_use()) {
+        if (!_udp_pcb_is_in_use()) {
             _udp_pcb_main_deinit();
         }
     }
@@ -243,12 +249,12 @@ static esp_err_t _udp_pcb_init(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protoco
     }
 
     esp_err_t err = _udp_join_group(tcpip_if, ip_protocol, true);
-    if(err){
+    if (err) {
         return err;
     }
 
     err = _udp_pcb_main_init();
-    if(err){
+    if (err) {
         return err;
     }
 
@@ -272,7 +278,7 @@ typedef struct {
  */
 static err_t _mdns_pcb_init_api(struct tcpip_api_call_data *api_call_msg)
 {
-    mdns_api_call_t * msg = (mdns_api_call_t *)api_call_msg;
+    mdns_api_call_t *msg = (mdns_api_call_t *)api_call_msg;
     msg->err = _udp_pcb_init(msg->tcpip_if, msg->ip_protocol);
     return msg->err;
 }
@@ -282,7 +288,7 @@ static err_t _mdns_pcb_init_api(struct tcpip_api_call_data *api_call_msg)
  */
 static err_t _mdns_pcb_deinit_api(struct tcpip_api_call_data *api_call_msg)
 {
-    mdns_api_call_t * msg = (mdns_api_call_t *)api_call_msg;
+    mdns_api_call_t *msg = (mdns_api_call_t *)api_call_msg;
     _udp_pcb_deinit(msg->tcpip_if, msg->ip_protocol);
     msg->err = ESP_OK;
     return ESP_OK;
@@ -315,9 +321,9 @@ esp_err_t _mdns_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
 
 static err_t _mdns_udp_pcb_write_api(struct tcpip_api_call_data *api_call_msg)
 {
-    void * nif = NULL;
-    mdns_api_call_t * msg = (mdns_api_call_t *)api_call_msg;
-    mdns_pcb_t * _pcb = &_mdns_server->interfaces[msg->tcpip_if].pcbs[msg->ip_protocol];
+    void *nif = NULL;
+    mdns_api_call_t *msg = (mdns_api_call_t *)api_call_msg;
+    mdns_pcb_t *_pcb = &_mdns_server->interfaces[msg->tcpip_if].pcbs[msg->ip_protocol];
     nif = esp_netif_get_netif_impl(_mdns_get_esp_netif(msg->tcpip_if));
     if (!nif) {
         pbuf_free(msg->pbt);
@@ -330,9 +336,9 @@ static err_t _mdns_udp_pcb_write_api(struct tcpip_api_call_data *api_call_msg)
     return err;
 }
 
-size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t * data, size_t len)
+size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t *data, size_t len)
 {
-    struct pbuf* pbt = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
+    struct pbuf *pbt = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
     if (pbt == NULL) {
         return 0;
     }
@@ -361,7 +367,7 @@ size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, c
     return len;
 }
 
-void* _mdns_get_packet_data(mdns_rx_packet_t *packet)
+void *_mdns_get_packet_data(mdns_rx_packet_t *packet)
 {
     return packet->pb->payload;
 }

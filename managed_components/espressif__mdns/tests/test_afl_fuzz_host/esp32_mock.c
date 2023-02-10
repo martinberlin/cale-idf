@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Unlicense OR CC0-1.0
+ */
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
@@ -5,22 +10,22 @@
 #include <unistd.h>
 #include "esp32_mock.h"
 
-void*     g_queue;
+void     *g_queue;
 int       g_queue_send_shall_fail = 0;
 int       g_size = 0;
 
-const char * WIFI_EVENT = "wifi_event";
-const char * ETH_EVENT = "eth_event";
+const char *WIFI_EVENT = "wifi_event";
+const char *ETH_EVENT = "eth_event";
 
-esp_err_t esp_event_handler_register(const char * event_base,
-                                        int32_t event_id,
-                                        void* event_handler,
-                                        void* event_handler_arg)
+esp_err_t esp_event_handler_register(const char *event_base,
+                                     int32_t event_id,
+                                     void *event_handler,
+                                     void *event_handler_arg)
 {
     return ESP_OK;
 }
 
-esp_err_t esp_event_handler_unregister(const char * event_base, int32_t event_id, void* event_handler)
+esp_err_t esp_event_handler_unregister(const char *event_base, int32_t event_id, void *event_handler)
 {
     return ESP_OK;
 }
@@ -40,8 +45,8 @@ esp_err_t esp_timer_start_periodic(esp_timer_handle_t timer, uint64_t period)
     return ESP_OK;
 }
 
-esp_err_t esp_timer_create(const esp_timer_create_args_t* create_args,
-                           esp_timer_handle_t* out_handle)
+esp_err_t esp_timer_create(const esp_timer_create_args_t *create_args,
+                           esp_timer_handle_t *out_handle)
 {
     return ESP_OK;
 }
@@ -53,12 +58,12 @@ uint32_t xTaskGetTickCount(void)
 }
 
 /// Queue mock
- QueueHandle_t xQueueCreate( uint32_t uxQueueLength, uint32_t uxItemSize )
- {
-     g_size = uxItemSize;
-     g_queue = malloc((uxQueueLength)*(uxItemSize));
-     return g_queue;
- }
+QueueHandle_t xQueueCreate( uint32_t uxQueueLength, uint32_t uxItemSize )
+{
+    g_size = uxItemSize;
+    g_queue = malloc((uxQueueLength) * (uxItemSize));
+    return g_queue;
+}
 
 
 void vQueueDelete( QueueHandle_t xQueue )
@@ -66,14 +71,11 @@ void vQueueDelete( QueueHandle_t xQueue )
     free(xQueue);
 }
 
-uint32_t xQueueSend(QueueHandle_t xQueue, const void * pvItemToQueue, TickType_t xTicksToWait)
+uint32_t xQueueSend(QueueHandle_t xQueue, const void *pvItemToQueue, TickType_t xTicksToWait)
 {
-    if (g_queue_send_shall_fail)
-    {
+    if (g_queue_send_shall_fail) {
         return pdFALSE;
-    }
-    else
-    {
+    } else {
         memcpy(xQueue, pvItemToQueue, g_size);
         return pdPASS;
     }
@@ -105,7 +107,7 @@ void xTaskNotifyGive(TaskHandle_t task)
     return;
 }
 
-BaseType_t xTaskNotifyWait(uint32_t bits_entry_clear, uint32_t bits_exit_clear, uint32_t * value, TickType_t wait_time)
+BaseType_t xTaskNotifyWait(uint32_t bits_entry_clear, uint32_t bits_exit_clear, uint32_t *value, TickType_t wait_time)
 {
     return pdTRUE;
 }

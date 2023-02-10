@@ -18,73 +18,73 @@
 // Global stuctures containing packet payload, search
 mdns_rx_packet_t g_packet;
 struct pbuf mypbuf;
-mdns_search_once_t * search = NULL;
+mdns_search_once_t *search = NULL;
 
 //
 // Dependency injected test functions
-void mdns_test_execute_action(void * action);
-mdns_srv_item_t * mdns_test_mdns_get_service_item(const char * service, const char * proto);
-mdns_search_once_t * mdns_test_search_init(const char * name, const char * service, const char * proto, uint16_t type, uint32_t timeout, uint8_t max_results);
-esp_err_t mdns_test_send_search_action(mdns_action_type_t type, mdns_search_once_t * search);
-void mdns_test_search_free(mdns_search_once_t * search);
+void mdns_test_execute_action(void *action);
+mdns_srv_item_t *mdns_test_mdns_get_service_item(const char *service, const char *proto);
+mdns_search_once_t *mdns_test_search_init(const char *name, const char *service, const char *proto, uint16_t type, uint32_t timeout, uint8_t max_results);
+esp_err_t mdns_test_send_search_action(mdns_action_type_t type, mdns_search_once_t *search);
+void mdns_test_search_free(mdns_search_once_t *search);
 void mdns_test_init_di(void);
-extern mdns_server_t * _mdns_server;
+extern mdns_server_t *_mdns_server;
 
 //
 // mdns function wrappers for mdns setup in test mode
-static int mdns_test_hostname_set(const char * mdns_hostname)
+static int mdns_test_hostname_set(const char *mdns_hostname)
 {
-    for (int i=0; i<MDNS_MAX_INTERFACES; i++) {
+    for (int i = 0; i < MDNS_MAX_INTERFACES; i++) {
         _mdns_server->interfaces[i].pcbs[MDNS_IP_PROTOCOL_V4].state = PCB_RUNNING;    // mark the PCB running to exercise mdns in fully operational mode
         _mdns_server->interfaces[i].pcbs[MDNS_IP_PROTOCOL_V6].state = PCB_RUNNING;
     }
     int ret = mdns_hostname_set(mdns_hostname);
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
     return ret;
 }
 
-static int mdns_test_add_delegated_host(const char * mdns_hostname)
+static int mdns_test_add_delegated_host(const char *mdns_hostname)
 {
     mdns_ip_addr_t addr = { .addr = { .u_addr = ESP_IPADDR_TYPE_V4 } };
     addr.addr.u_addr.ip4.addr = 0x11111111;
     int ret = mdns_delegate_hostname_add(mdns_hostname, &addr);
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
     return ret;
 }
 
 
-static int mdns_test_service_instance_name_set(const char * service, const char * proto, const char * instance)
+static int mdns_test_service_instance_name_set(const char *service, const char *proto, const char *instance)
 {
     int ret = mdns_service_instance_name_set(service, proto, instance);
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
     return ret;
 }
 
-static int mdns_test_service_txt_set(const char * service, const char * proto,  uint8_t num_items, mdns_txt_item_t txt[])
+static int mdns_test_service_txt_set(const char *service, const char *proto,  uint8_t num_items, mdns_txt_item_t txt[])
 {
     int ret = mdns_service_txt_set(service, proto, txt, num_items);
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
     return ret;
 }
 
-static int mdns_test_sub_service_add(const char * sub_name, const char * service_name, const char * proto, uint32_t port)
+static int mdns_test_sub_service_add(const char *sub_name, const char *service_name, const char *proto, uint32_t port)
 {
     if (mdns_service_add(NULL, service_name, proto, port, NULL, 0)) {
         // This is expected failure as the service thread is not running
     }
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
 
-    if (mdns_test_mdns_get_service_item(service_name, proto)==NULL) {
+    if (mdns_test_mdns_get_service_item(service_name, proto) == NULL) {
         return ESP_FAIL;
     }
     int ret = mdns_service_subtype_add_for_host(NULL, service_name, proto, NULL, sub_name);
@@ -94,22 +94,22 @@ static int mdns_test_sub_service_add(const char * sub_name, const char * service
     return ret;
 }
 
-static int mdns_test_service_add(const char * service_name, const char * proto, uint32_t port)
+static int mdns_test_service_add(const char *service_name, const char *proto, uint32_t port)
 {
     if (mdns_service_add(NULL, service_name, proto, port, NULL, 0)) {
         // This is expected failure as the service thread is not running
     }
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
 
-    if (mdns_test_mdns_get_service_item(service_name, proto)==NULL) {
+    if (mdns_test_mdns_get_service_item(service_name, proto) == NULL) {
         return ESP_FAIL;
     }
     return ESP_OK;
 }
 
-static mdns_result_t* mdns_test_query(const char * name, const char * service, const char * proto, uint16_t type)
+static mdns_result_t *mdns_test_query(const char *name, const char *service, const char *proto, uint16_t type)
 {
     search = mdns_test_search_init(name, service, proto, type, 3000, 20);
     if (!search) {
@@ -121,7 +121,7 @@ static mdns_result_t* mdns_test_query(const char * name, const char * service, c
         abort();
     }
 
-    mdns_action_t * a = NULL;
+    mdns_action_t *a = NULL;
     GetLastItem(&a);
     mdns_test_execute_action(a);
     return NULL;
@@ -135,27 +135,27 @@ static void mdns_test_query_free(void)
 //
 // function "under test" where afl-mangled packets passed
 //
-void mdns_parse_packet(mdns_rx_packet_t * packet);
+void mdns_parse_packet(mdns_rx_packet_t *packet);
 
 //
 // Test starts here
 //
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     int i;
-    const char * mdns_hostname = "minifritz";
-    const char * mdns_instance = "Hristo's Time Capsule";
+    const char *mdns_hostname = "minifritz";
+    const char *mdns_instance = "Hristo's Time Capsule";
     mdns_txt_item_t arduTxtData[4] = {
-        {"board","esp32"},
-        {"tcp_check","no"},
-        {"ssh_upload","no"},
-        {"auth_upload","no"}
+        {"board", "esp32"},
+        {"tcp_check", "no"},
+        {"ssh_upload", "no"},
+        {"auth_upload", "no"}
     };
 
     const uint8_t mac[6] = {0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x32};
 
     uint8_t buf[1460];
-    char winstance[21+strlen(mdns_hostname)];
+    char winstance[21 + strlen(mdns_hostname)];
 
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", mdns_hostname, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
@@ -208,7 +208,7 @@ int main(int argc, char** argv)
     }
 
     if (
-           mdns_test_service_add("_afpovertcp", "_tcp", 548)
+        mdns_test_service_add("_afpovertcp", "_tcp", 548)
         || mdns_test_service_add("_rfb", "_tcp", 885)
         || mdns_test_service_add("_smb", "_tcp", 885)
         || mdns_test_service_add("_adisk", "_tcp", 885)
@@ -224,12 +224,11 @@ int main(int argc, char** argv)
         || mdns_test_service_add("_ipps", "_tcp", 885)
         || mdns_test_service_add("_pdl-datastream", "_tcp", 885)
         || mdns_test_service_add("_ptp", "_tcp", 885)
-        || mdns_test_service_add("_sleep-proxy", "_udp", 885))
-    {
+        || mdns_test_service_add("_sleep-proxy", "_udp", 885)) {
         abort();
     }
 #endif
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     FILE *file;
     size_t nread;
 
@@ -237,13 +236,10 @@ int main(int argc, char** argv)
     size_t len = 1460;
     memset(buf, 0, 1460);
 
-    if (argc != 2)
-    {
+    if (argc != 2) {
         printf("Non-instrumentation mode: please supply a file name created by AFL to reproduce crash\n");
         return 1;
-    }
-    else
-    {
+    } else {
         //
         // Note: parameter1 is a file (mangled packet) which caused the crash
         file = fopen(argv[1], "r");
@@ -252,7 +248,7 @@ int main(int argc, char** argv)
         fclose(file);
     }
 
-    for (i=0; i<1; i++) {
+    for (i = 0; i < 1; i++) {
 #else
     while (__AFL_LOOP(1000)) {
         memset(buf, 0, 1460);

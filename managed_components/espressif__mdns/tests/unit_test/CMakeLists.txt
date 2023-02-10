@@ -1,2 +1,7 @@
-idf_component_register(SRC_DIRS "."
-                    PRIV_REQUIRES cmock test_utils mdns)
+# This is the project CMakeLists.txt file for the test subproject
+cmake_minimum_required(VERSION 3.16)
+
+set(EXTRA_COMPONENT_DIRS ../.. "$ENV{IDF_PATH}/tools/unit-test-app/components")
+
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(mdns_test)

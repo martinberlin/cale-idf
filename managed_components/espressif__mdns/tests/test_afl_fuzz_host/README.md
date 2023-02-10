@@ -39,7 +39,7 @@ The rest of the document will refer to that folder as ```PATH_TO_AFL```.
     ```
 
 - On Ubuntu you need the following packages:
-    
+
     ```bash
     sudo apt-get install make clang-4.0(or <=4.0) llvm-4.0(or <=4.0) libbsd-dev
     ```

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="zh-CN" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mDNS 服务 - ESP32 -  &mdash; ESP-IDF 编程指南 latest 文档</title>
@@ -16,7 +16,6 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/clipboard.min.js"></script>
         <script src="_static/copybutton.js"></script>
@@ -113,7 +112,7 @@
       <li><a href="#" class="icon icon-home"></a> &raquo;</li>
       <li>mDNS 服务</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/espressif/esp-protocols/blob/bbb4b7e/docs/zh_CN/index.rst" class="fa fa-github"> 在 GitHub 上修改</a>
+              <a href="https://github.com/espressif/esp-protocols/blob/de1480a/docs/zh_CN/index.rst" class="fa fa-github"> 在 GitHub 上修改</a>
       </li>
   </ul>
   <hr/>
@@ -122,14 +121,14 @@
            <div itemprop="articleBody">
              
   <section id="mdns">
-<h1>mDNS 服务<a class="headerlink" href="#mdns" title="此标题的永久链接"></a></h1>
+<h1>mDNS 服务<a class="headerlink" href="#mdns" title="永久链接至标题"></a></h1>
 <p><a class="reference external" href="../../../en/latest/esp32/index.html">[English]</a></p>
 <section id="id1">
-<h2>概述<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h2>
+<h2>概述<a class="headerlink" href="#id1" title="永久链接至标题"></a></h2>
 <p>mDNS 是一种组播 UDP 服务，用来提供本地网络服务和主机发现。</p>
 <p>绝大多数的操作系统默认都会安装 mDNS 服务，或者提供单独的安装包。<code class="docutils literal notranslate"><span class="pre">Mac</span> <span class="pre">OS</span></code> 默认会安装名为 <code class="docutils literal notranslate"><span class="pre">Bonjour</span></code> 的服务（该服务基于 mDNS），此外 Apple 还发布了适用于 Windows 系统的安装程序，可以在 <a class="reference external" href="https://support.apple.com/downloads/bonjour%2520for%2520windows">官方支持</a> 找到。在 <code class="docutils literal notranslate"><span class="pre">Linux</span></code> 上，mDNS 服务由 <a class="reference external" href="https://github.com/lathiat/avahi">avahi</a> 提供，通常也会被默认安装。</p>
 <section id="id3">
-<h3>mDNS 属性<a class="headerlink" href="#id3" title="此标题的永久链接"></a></h3>
+<h3>mDNS 属性<a class="headerlink" href="#id3" title="永久链接至标题"></a></h3>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hostname</span></code>：设备会去响应的主机名，如果没有设置，会根据设备的网络接口名定义 <code class="docutils literal notranslate"><span class="pre">hostname</span></code> 。例如，<code class="docutils literal notranslate"><span class="pre">my-esp32</span></code> 会被解析为 <code class="docutils literal notranslate"><span class="pre">my-esp32.local</span></code>。</p></li>
@@ -137,25 +136,25 @@
 </ul>
 </div></blockquote>
 <p>以下为 STA 接口启动 mDNS 服务并设置 <code class="docutils literal notranslate"><span class="pre">hostname</span></code> 和 <code class="docutils literal notranslate"><span class="pre">default_instance</span></code> 的示例方法：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">start_mdns_service</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// 初始化 mDNS 服务</span>
-    <span class="n">esp_err_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">mdns_init</span><span class="p">();</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;MDNS Init failed: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">start_mdns_service</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 初始化 mDNS 服务</span>
+<span class="w">    </span><span class="n">esp_err_t</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mdns_init</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;MDNS Init failed: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">err</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-    <span class="c1">// 设置 hostname</span>
-    <span class="n">mdns_hostname_set</span><span class="p">(</span><span class="s">&quot;my-esp32&quot;</span><span class="p">);</span>
-    <span class="c1">// 设置默认实例</span>
-    <span class="n">mdns_instance_name_set</span><span class="p">(</span><span class="s">&quot;Jhon&#39;s ESP32 Thing&quot;</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="c1">// 设置 hostname</span>
+<span class="w">    </span><span class="n">mdns_hostname_set</span><span class="p">(</span><span class="s">&quot;my-esp32&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 设置默认实例</span>
+<span class="w">    </span><span class="n">mdns_instance_name_set</span><span class="p">(</span><span class="s">&quot;Jhon&#39;s ESP32 Thing&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
-<h3>mDNS 服务<a class="headerlink" href="#id4" title="此标题的永久链接"></a></h3>
+<h3>mDNS 服务<a class="headerlink" href="#id4" title="永久链接至标题"></a></h3>
 <p>mDNS 可以广播设备能够提供的网络服务的相关信息，每个服务会由以下属性构成。</p>
 <blockquote>
 <div><ul class="simple">
@@ -167,154 +166,154 @@
 </ul>
 </div></blockquote>
 <p>添加一些服务和不同属性的示例方法:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">add_mdns_services</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// 添加服务</span>
-    <span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;_http&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;_arduino&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">,</span> <span class="mi">3232</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;_myservice&quot;</span><span class="p">,</span> <span class="s">&quot;_udp&quot;</span><span class="p">,</span> <span class="mi">1234</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">add_mdns_services</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 添加服务</span>
+<span class="w">    </span><span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_http&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_arduino&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3232</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">mdns_service_add</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_myservice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_udp&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1234</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
 
-    <span class="c1">// 注意：必须先添加服务，然后才能设置其属性</span>
-    <span class="c1">// web 服务器使用自定义的实例名</span>
-    <span class="n">mdns_service_instance_name_set</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">,</span> <span class="s">&quot;Jhon&#39;s ESP32 Web Server&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// 注意：必须先添加服务，然后才能设置其属性</span>
+<span class="w">    </span><span class="c1">// web 服务器使用自定义的实例名</span>
+<span class="w">    </span><span class="n">mdns_service_instance_name_set</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Jhon&#39;s ESP32 Web Server&quot;</span><span class="p">);</span><span class="w"></span>
 
-    <span class="n">mdns_txt_item_t</span> <span class="n">serviceTxtData</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="p">{</span><span class="s">&quot;board&quot;</span><span class="p">,</span><span class="s">&quot;esp32&quot;</span><span class="p">},</span>
-        <span class="p">{</span><span class="s">&quot;u&quot;</span><span class="p">,</span><span class="s">&quot;user&quot;</span><span class="p">},</span>
-        <span class="p">{</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="s">&quot;password&quot;</span><span class="p">}</span>
-    <span class="p">};</span>
-    <span class="c1">// 设置服务的文本数据（会释放并替换当前数据）</span>
-    <span class="n">mdns_service_txt_set</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">,</span> <span class="n">serviceTxtData</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="w">    </span><span class="n">mdns_txt_item_t</span><span class="w"> </span><span class="n">serviceTxtData</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;board&quot;</span><span class="p">,</span><span class="s">&quot;esp32&quot;</span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;u&quot;</span><span class="p">,</span><span class="s">&quot;user&quot;</span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="s">&quot;password&quot;</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">};</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 设置服务的文本数据（会释放并替换当前数据）</span>
+<span class="w">    </span><span class="n">mdns_service_txt_set</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">serviceTxtData</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span><span class="w"></span>
 
-    <span class="c1">// 修改服务端口号</span>
-    <span class="n">mdns_service_port_set</span><span class="p">(</span><span class="s">&quot;_myservice&quot;</span><span class="p">,</span> <span class="s">&quot;_udp&quot;</span><span class="p">,</span> <span class="mi">4321</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="c1">// 修改服务端口号</span>
+<span class="w">    </span><span class="n">mdns_service_port_set</span><span class="p">(</span><span class="s">&quot;_myservice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_udp&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4321</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3>mDNS 查询<a class="headerlink" href="#id6" title="此标题的永久链接"></a></h3>
+<h3>mDNS 查询<a class="headerlink" href="#id6" title="永久链接至标题"></a></h3>
 <p>mDNS 提供查询服务和解析主机 IP/IPv6 地址的方法。</p>
 <p>服务查询的结果会作为 <code class="docutils literal notranslate"><span class="pre">mdns_result_t</span></code> 类型对象的链表返回。</p>
 <p>解析主机 IP 地址的示例方法:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">resolve_mdns_host</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">host_name</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Query A: %s.local&quot;</span><span class="p">,</span> <span class="n">host_name</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">resolve_mdns_host</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">host_name</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Query A: %s.local&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">host_name</span><span class="p">);</span><span class="w"></span>
 
-    <span class="k">struct</span> <span class="n">ip4_addr</span> <span class="n">addr</span><span class="p">;</span>
-    <span class="n">addr</span><span class="p">.</span><span class="n">addr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ip4_addr</span><span class="w"> </span><span class="n">addr</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">addr</span><span class="p">.</span><span class="n">addr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
 
-    <span class="n">esp_err_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">mdns_query_a</span><span class="p">(</span><span class="n">host_name</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span>  <span class="o">&amp;</span><span class="n">addr</span><span class="p">);</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">err</span><span class="p">){</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="n">ESP_ERR_NOT_FOUND</span><span class="p">){</span>
-            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Host was not found!&quot;</span><span class="p">);</span>
-            <span class="k">return</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Query Failed&quot;</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
+<span class="w">    </span><span class="n">esp_err_t</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mdns_query_a</span><span class="p">(</span><span class="n">host_name</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w">  </span><span class="o">&amp;</span><span class="n">addr</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">err</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ESP_ERR_NOT_FOUND</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Host was not found!&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Query Failed&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-    <span class="n">printf</span><span class="p">(</span><span class="n">IPSTR</span><span class="p">,</span> <span class="n">IP2STR</span><span class="p">(</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">));</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="n">IPSTR</span><span class="p">,</span><span class="w"> </span><span class="n">IP2STR</span><span class="p">(</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">));</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>解析本地服务的示例方法:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">if_str</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;STA&quot;</span><span class="p">,</span> <span class="s">&quot;AP&quot;</span><span class="p">,</span> <span class="s">&quot;ETH&quot;</span><span class="p">,</span> <span class="s">&quot;MAX&quot;</span><span class="p">};</span>
-<span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">ip_protocol_str</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;V4&quot;</span><span class="p">,</span> <span class="s">&quot;V6&quot;</span><span class="p">,</span> <span class="s">&quot;MAX&quot;</span><span class="p">};</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">if_str</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;STA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;AP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ETH&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;MAX&quot;</span><span class="p">};</span><span class="w"></span>
+<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ip_protocol_str</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;V4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;V6&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;MAX&quot;</span><span class="p">};</span><span class="w"></span>
 
-<span class="kt">void</span> <span class="nf">mdns_print_results</span><span class="p">(</span><span class="n">mdns_result_t</span> <span class="o">*</span> <span class="n">results</span><span class="p">){</span>
-    <span class="n">mdns_result_t</span> <span class="o">*</span> <span class="n">r</span> <span class="o">=</span> <span class="n">results</span><span class="p">;</span>
-    <span class="n">mdns_ip_addr_t</span> <span class="o">*</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">t</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="n">r</span><span class="p">){</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d: Interface: %s, Type: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="o">++</span><span class="p">,</span> <span class="n">if_str</span><span class="p">[</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">tcpip_if</span><span class="p">],</span> <span class="n">ip_protocol_str</span><span class="p">[</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">ip_protocol</span><span class="p">]);</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">instance_name</span><span class="p">){</span>
-            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;  PTR : %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">instance_name</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">hostname</span><span class="p">){</span>
-            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;  SRV : %s.local:%u</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">hostname</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">port</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">){</span>
-            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;  TXT : [%u] &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">);</span>
-            <span class="k">for</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">t</span><span class="o">&lt;</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">;</span> <span class="n">t</span><span class="o">++</span><span class="p">){</span>
-                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s=%s; &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">txt</span><span class="p">[</span><span class="n">t</span><span class="p">].</span><span class="n">key</span><span class="p">,</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">txt</span><span class="p">[</span><span class="n">t</span><span class="p">].</span><span class="n">value</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">;</span>
-        <span class="k">while</span><span class="p">(</span><span class="n">a</span><span class="p">){</span>
-            <span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">IPADDR_TYPE_V6</span><span class="p">){</span>
-                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;  AAAA: &quot;</span> <span class="n">IPV6STR</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IPV62STR</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">u_addr</span><span class="p">.</span><span class="n">ip6</span><span class="p">));</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;  A   : &quot;</span> <span class="n">IPSTR</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">IP2STR</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">u_addr</span><span class="p">.</span><span class="n">ip4</span><span class="p">)));</span>
-            <span class="p">}</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-    <span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">mdns_print_results</span><span class="p">(</span><span class="n">mdns_result_t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">results</span><span class="p">){</span><span class="w"></span>
+<span class="w">    </span><span class="n">mdns_result_t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">results</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">mdns_ip_addr_t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">r</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d: Interface: %s, Type: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">,</span><span class="w"> </span><span class="n">if_str</span><span class="p">[</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">tcpip_if</span><span class="p">],</span><span class="w"> </span><span class="n">ip_protocol_str</span><span class="p">[</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">ip_protocol</span><span class="p">]);</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">instance_name</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;  PTR : %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">instance_name</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">hostname</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;  SRV : %s.local:%u</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">hostname</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">port</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;  TXT : [%u] &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="o">&lt;</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt_count</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="o">++</span><span class="p">){</span><span class="w"></span>
+<span class="w">                </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s=%s; &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt</span><span class="p">[</span><span class="n">t</span><span class="p">].</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">txt</span><span class="p">[</span><span class="n">t</span><span class="p">].</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">a</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">IPADDR_TYPE_V6</span><span class="p">){</span><span class="w"></span>
+<span class="w">                </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;  AAAA: &quot;</span><span class="w"> </span><span class="n">IPV6STR</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">IPV62STR</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">u_addr</span><span class="p">.</span><span class="n">ip6</span><span class="p">));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;  A   : &quot;</span><span class="w"> </span><span class="n">IPSTR</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">IP2STR</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">.</span><span class="n">u_addr</span><span class="p">.</span><span class="n">ip4</span><span class="p">)));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-<span class="p">}</span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="kt">void</span> <span class="nf">find_mdns_service</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">service_name</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">proto</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">&quot;Query PTR: %s.%s.local&quot;</span><span class="p">,</span> <span class="n">service_name</span><span class="p">,</span> <span class="n">proto</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">find_mdns_service</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">service_name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">proto</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Query PTR: %s.%s.local&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">service_name</span><span class="p">,</span><span class="w"> </span><span class="n">proto</span><span class="p">);</span><span class="w"></span>
 
-    <span class="n">mdns_result_t</span> <span class="o">*</span> <span class="n">results</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-    <span class="n">esp_err_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">mdns_query_ptr</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="mi">3000</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span>  <span class="o">&amp;</span><span class="n">results</span><span class="p">);</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">err</span><span class="p">){</span>
-        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">&quot;Query Failed&quot;</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">results</span><span class="p">){</span>
-        <span class="n">ESP_LOGW</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">&quot;No results found!&quot;</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
+<span class="w">    </span><span class="n">mdns_result_t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">esp_err_t</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mdns_query_ptr</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span><span class="w"> </span><span class="n">proto</span><span class="p">,</span><span class="w"> </span><span class="mi">3000</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w">  </span><span class="o">&amp;</span><span class="n">results</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">err</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Query Failed&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">results</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="n">ESP_LOGW</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No results found!&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-    <span class="n">mdns_print_results</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
-    <span class="n">mdns_query_results_free</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="n">mdns_print_results</span><span class="p">(</span><span class="n">results</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">mdns_query_results_free</span><span class="p">(</span><span class="n">results</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>使用上述方法的示例:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">my_app_some_method</span><span class="p">(){</span>
-    <span class="c1">// 搜索 esp32-mdns.local</span>
-    <span class="n">resolve_mdns_host</span><span class="p">(</span><span class="s">&quot;esp32-mdns&quot;</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">my_app_some_method</span><span class="p">(){</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 搜索 esp32-mdns.local</span>
+<span class="w">    </span><span class="n">resolve_mdns_host</span><span class="p">(</span><span class="s">&quot;esp32-mdns&quot;</span><span class="p">);</span><span class="w"></span>
 
-    <span class="c1">// 搜索 HTTP 服务器</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span>
-    <span class="c1">// 或者搜索文件服务器</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_smb&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span> <span class="c1">// Windows 系统的共享服务</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_afpovertcp&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span> <span class="c1">// Apple AFP 文件共享服务</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_nfs&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span> <span class="c1">// NFS 服务器</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_ftp&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span> <span class="c1">// FTP 服务器</span>
-    <span class="c1">// 或者网络打印机</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_printer&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span>
-    <span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_ipp&quot;</span><span class="p">,</span> <span class="s">&quot;_tcp&quot;</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="c1">// 搜索 HTTP 服务器</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_http&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 或者搜索文件服务器</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_smb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Windows 系统的共享服务</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_afpovertcp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Apple AFP 文件共享服务</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_nfs&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// NFS 服务器</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_ftp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// FTP 服务器</span>
+<span class="w">    </span><span class="c1">// 或者网络打印机</span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_printer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">find_mdns_service</span><span class="p">(</span><span class="s">&quot;_ipp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_tcp&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="id7">
-<h2>应用示例<a class="headerlink" href="#id7" title="此标题的永久链接"></a></h2>
-<p>有关 mDNS 服务器和查询器的应用示例请参考 <a class="reference external" href="https://github.com/espressif/esp-protocols/tree/bbb4b7e/examples/../examples"></a>。</p>
+<h2>应用示例<a class="headerlink" href="#id7" title="永久链接至标题"></a></h2>
+<p>有关 mDNS 服务器和查询器的应用示例请参考 <a class="reference external" href="https://github.com/espressif/esp-protocols/tree/de1480a/examples/../examples"></a>。</p>
 </section>
 <section id="api">
-<h2>API 参考<a class="headerlink" href="#api" title="此标题的永久链接"></a></h2>
+<h2>API 参考<a class="headerlink" href="#api" title="永久链接至标题"></a></h2>
 <section id="header-file">
-<h3>Header File<a class="headerlink" href="#header-file" title="此标题的永久链接"></a></h3>
+<h3>Header File<a class="headerlink" href="#header-file" title="永久链接至标题"></a></h3>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/espressif/esp-protocols/blob/bbb4b7e/include/mdns.h">include/mdns.h</a></p></li>
+<li><p><a class="reference external" href="https://github.com/espressif/esp-protocols/blob/de1480a/include/mdns.h">include/mdns.h</a></p></li>
 </ul>
 </section>
 <section id="functions">
-<h3>Functions<a class="headerlink" href="#functions" title="此标题的永久链接"></a></h3>
+<h3>Functions<a class="headerlink" href="#functions" title="永久链接至标题"></a></h3>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv49mdns_initv">
 <span id="_CPPv39mdns_initv"></span><span id="_CPPv29mdns_initv"></span><span id="mdns_init__void"></span><span class="target" id="mdns_8h_1ad323a4dfba3545c43ebda0f3f7c515e0"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_init</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49mdns_initv" title="永久链接至目标"></a><br /></dt>
 <dd><p>Initialize mDNS on given interface. </p>
 <dl class="field-list simple">
-<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dt class="field-odd">返回</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p>ESP_OK on success</p></li>
 <li><p>ESP_ERR_INVALID_STATE when failed to register event handler</p></li>
@@ -337,10 +336,10 @@
 <span id="_CPPv317mdns_hostname_setPKc"></span><span id="_CPPv217mdns_hostname_setPKc"></span><span id="mdns_hostname_set__cCP"></span><span class="target" id="mdns_8h_1ac64252305d70be97d202f2edd5f44ccc"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_hostname_set</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417mdns_hostname_setPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set the hostname for mDNS server required if you want to advertise services. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>hostname</strong> – Hostname to set</p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -356,13 +355,13 @@
 <span id="_CPPv326mdns_delegate_hostname_addPKcPK14mdns_ip_addr_t"></span><span id="_CPPv226mdns_delegate_hostname_addPKcPK14mdns_ip_addr_t"></span><span id="mdns_delegate_hostname_add__cCP.mdns_ip_addr_tCP"></span><span class="target" id="mdns_8h_1aa569e098f34ab80e34ac76fbdca9aea7"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_delegate_hostname_add</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv414mdns_ip_addr_t" title="mdns_ip_addr_t"><span class="n"><span class="pre">mdns_ip_addr_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">address_list</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426mdns_delegate_hostname_addPKcPK14mdns_ip_addr_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Adds a hostname and address to be delegated A/AAAA queries will be replied for the hostname and services can be added to this host. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hostname</strong> – Hostname to add </p></li>
 <li><p><strong>address_list</strong> – The IP address list of the host</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -379,10 +378,10 @@
 <span id="_CPPv329mdns_delegate_hostname_removePKc"></span><span id="_CPPv229mdns_delegate_hostname_removePKc"></span><span id="mdns_delegate_hostname_remove__cCP"></span><span class="target" id="mdns_8h_1aef8ff565fff40e32ebce1257592eb5e6"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_delegate_hostname_remove</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429mdns_delegate_hostname_removePKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove a delegated hostname All the services added to this host will also be removed. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>hostname</strong> – Hostname to remove</p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -399,10 +398,10 @@
 <span id="_CPPv320mdns_hostname_existsPKc"></span><span id="_CPPv220mdns_hostname_existsPKc"></span><span id="mdns_hostname_exists__cCP"></span><span class="target" id="mdns_8h_1ad4c1b990b7435f889b64f1d5ba29bbc8"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_hostname_exists</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420mdns_hostname_existsPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query whether a hostname has been added. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>hostname</strong> – Hostname to query</p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>true The hostname has been added.</p></li>
 <li><p>false The hostname has not been added. </p></li>
@@ -417,10 +416,10 @@
 <span id="_CPPv322mdns_instance_name_setPKc"></span><span id="_CPPv222mdns_instance_name_setPKc"></span><span id="mdns_instance_name_set__cCP"></span><span class="target" id="mdns_8h_1a1d4b64b9a4eee80a09db4ecc3ddf9d69"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_instance_name_set</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422mdns_instance_name_setPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set the default instance name for mDNS server. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>instance_name</strong> – Instance name to set</p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -440,7 +439,7 @@
 <p>The value length of txt items will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_name</strong> – instance name to set. If NULL, global instance name or hostname will be used. Note that MDNS_MULTIPLE_INSTANCE config option needs to be enabled for adding multiple instances with the same instance type. </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -450,7 +449,7 @@
 <li><p><strong>num_items</strong> – number of items in TXT data</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -471,7 +470,7 @@
 <p>The value length of txt items will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_name</strong> – instance name to set. If NULL, global instance name or hostname will be used Note that MDNS_MULTIPLE_INSTANCE config option needs to be enabled for adding multiple instances with the same instance type. </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -482,7 +481,7 @@
 <li><p><strong>num_items</strong> – number of items in TXT data</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -499,14 +498,14 @@
 <span id="_CPPv319mdns_service_existsPKcPKcPKc"></span><span id="_CPPv219mdns_service_existsPKcPKcPKc"></span><span id="mdns_service_exists__cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1ae8a4d63061c513329cfe10b60aedef79"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_exists</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419mdns_service_existsPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Check whether a service has been added. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
 <li><p><strong>hostname</strong> – service hostname. If NULL, checks for the local hostname.</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>true Correspondding service has been added.</p></li>
 <li><p>false Service not found. </p></li>
@@ -521,7 +520,7 @@
 <span id="_CPPv333mdns_service_exists_with_instancePKcPKcPKcPKc"></span><span id="_CPPv233mdns_service_exists_with_instancePKcPKcPKcPKc"></span><span id="mdns_service_exists_with_instance__cCP.cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1a1cab004cfd4250c5019fa29a66b0ebd4"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_exists_with_instance</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433mdns_service_exists_with_instancePKcPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Check whether a service has been added. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -529,7 +528,7 @@
 <li><p><strong>hostname</strong> – service hostname. If NULL, checks for the local hostname.</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>true Correspondding service has been added.</p></li>
 <li><p>false Service not found. </p></li>
@@ -544,13 +543,13 @@
 <span id="_CPPv319mdns_service_removePKcPKc"></span><span id="_CPPv219mdns_service_removePKcPKc"></span><span id="mdns_service_remove__cCP.cCP"></span><span class="target" id="mdns_8h_1a7f8ebdf3f99864b614f0a745965f7261"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_remove</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419mdns_service_removePKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove service from mDNS server. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp)</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -567,7 +566,7 @@
 <span id="_CPPv328mdns_service_remove_for_hostPKcPKcPKcPKc"></span><span id="_CPPv228mdns_service_remove_for_hostPKcPKcPKcPKc"></span><span id="mdns_service_remove_for_host__cCP.cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1ae7a3ba6e1bc137e4dc8f659eaa0647dd"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_remove_for_host</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428mdns_service_remove_for_hostPKcPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove service from mDNS server with hostname. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -575,7 +574,7 @@
 <li><p><strong>hostname</strong> – service hostname. If NULL, local hostname will be used.</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -592,14 +591,14 @@
 <span id="_CPPv330mdns_service_instance_name_setPKcPKcPKc"></span><span id="_CPPv230mdns_service_instance_name_setPKcPKcPKc"></span><span id="mdns_service_instance_name_set__cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1ab10c7a6fd81148a1f115d6e1a8045950"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_instance_name_set</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430mdns_service_instance_name_setPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set instance name for service. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
 <li><p><strong>instance_name</strong> – instance name to set</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -616,7 +615,7 @@
 <span id="_CPPv339mdns_service_instance_name_set_for_hostPKcPKcPKcPKcPKc"></span><span id="_CPPv239mdns_service_instance_name_set_for_hostPKcPKcPKcPKcPKc"></span><span id="mdns_service_instance_name_set_for_host__cCP.cCP.cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1aafba1b5e4b768b6f0b3a6b9129d0391e"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_instance_name_set_for_host</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_old</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439mdns_service_instance_name_set_for_hostPKcPKcPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set instance name for service with hostname. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_old</strong> – original instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -625,7 +624,7 @@
 <li><p><strong>instance_name</strong> – instance name to set</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -642,14 +641,14 @@
 <span id="_CPPv321mdns_service_port_setPKcPKc8uint16_t"></span><span id="_CPPv221mdns_service_port_setPKcPKc8uint16_t"></span><span id="mdns_service_port_set__cCP.cCP.uint16_t"></span><span class="target" id="mdns_8h_1a76f4ca1857edb589be79074b01b5b769"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_port_set</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">port</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421mdns_service_port_setPKcPKc8uint16_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set service port. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
 <li><p><strong>port</strong> – service port</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -666,7 +665,7 @@
 <span id="_CPPv330mdns_service_port_set_for_hostPKcPKcPKcPKc8uint16_t"></span><span id="_CPPv230mdns_service_port_set_for_hostPKcPKcPKcPKc8uint16_t"></span><span id="mdns_service_port_set_for_host__cCP.cCP.cCP.cCP.uint16_t"></span><span class="target" id="mdns_8h_1ab12923354695dde222e987edd61e6c06"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_port_set_for_host</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">port</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430mdns_service_port_set_for_hostPKcPKcPKcPKc8uint16_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set service port with hostname. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -675,7 +674,7 @@
 <li><p><strong>port</strong> – service port</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -696,7 +695,7 @@
 <p>The value length of txt items will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
@@ -704,7 +703,7 @@
 <li><p><strong>num_items</strong> – number of items in TXT data</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -725,7 +724,7 @@
 <p>The value length of txt items will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -735,7 +734,7 @@
 <li><p><strong>num_items</strong> – number of items in TXT data</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -756,7 +755,7 @@
 <p>The value length will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
@@ -764,7 +763,7 @@
 <li><p><strong>value</strong> – the new value of the key</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -781,7 +780,7 @@
 <span id="_CPPv349mdns_service_txt_item_set_with_explicit_value_lenPKcPKcPKcPKc7uint8_t"></span><span id="_CPPv249mdns_service_txt_item_set_with_explicit_value_lenPKcPKcPKcPKc7uint8_t"></span><span id="mdns_service_txt_item_set_with_explicit_value_len__cCP.cCP.cCP.cCP.uint8_t"></span><span class="target" id="mdns_8h_1a64bea09792df133c09f11cf51f6dcefc"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_txt_item_set_with_explicit_value_len</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">key</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">value</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">value_len</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv449mdns_service_txt_item_set_with_explicit_value_lenPKcPKcPKcPKc7uint8_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set/Add TXT item for service TXT record. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
@@ -790,7 +789,7 @@
 <li><p><strong>value_len</strong> – the length of the value</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -811,7 +810,7 @@
 <p>The value length will be automatically decided by strlen</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -821,7 +820,7 @@
 <li><p><strong>value</strong> – the new value of the key</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -838,7 +837,7 @@
 <span id="_CPPv358mdns_service_txt_item_set_for_host_with_explicit_value_lenPKcPKcPKcPKcPKcPKc7uint8_t"></span><span id="_CPPv258mdns_service_txt_item_set_for_host_with_explicit_value_lenPKcPKcPKcPKcPKcPKc7uint8_t"></span><span id="mdns_service_txt_item_set_for_host_with_explicit_value_len__cCP.cCP.cCP.cCP.cCP.cCP.uint8_t"></span><span class="target" id="mdns_8h_1a2c69fcca4875c15f4e978402e2799644"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_txt_item_set_for_host_with_explicit_value_len</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">key</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">value</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">value_len</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv458mdns_service_txt_item_set_for_host_with_explicit_value_lenPKcPKcPKcPKcPKcPKc7uint8_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Set/Add TXT item for service TXT record with hostname and txt value length. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -849,7 +848,7 @@
 <li><p><strong>value_len</strong> – the length of the value</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -866,14 +865,14 @@
 <span id="_CPPv328mdns_service_txt_item_removePKcPKcPKc"></span><span id="_CPPv228mdns_service_txt_item_removePKcPKcPKc"></span><span id="mdns_service_txt_item_remove__cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1a78211b1c712153774252cdd4f4d3fbe0"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_txt_item_remove</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">key</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428mdns_service_txt_item_removePKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove TXT item for service TXT record. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp) </p></li>
 <li><p><strong>key</strong> – the key that you want to remove</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -890,7 +889,7 @@
 <span id="_CPPv337mdns_service_txt_item_remove_for_hostPKcPKcPKcPKcPKc"></span><span id="_CPPv237mdns_service_txt_item_remove_for_hostPKcPKcPKcPKcPKc"></span><span id="mdns_service_txt_item_remove_for_host__cCP.cCP.cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1a24d59204b8eee8f653d79c3fc8198464"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_txt_item_remove_for_host</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">key</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437mdns_service_txt_item_remove_for_hostPKcPKcPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove TXT item for service TXT record with hostname. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance</strong> – instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -899,7 +898,7 @@
 <li><p><strong>key</strong> – the key that you want to remove</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -916,7 +915,7 @@
 <span id="_CPPv333mdns_service_subtype_add_for_hostPKcPKcPKcPKcPKc"></span><span id="_CPPv233mdns_service_subtype_add_for_hostPKcPKcPKcPKcPKc"></span><span id="mdns_service_subtype_add_for_host__cCP.cCP.cCP.cCP.cCP"></span><span class="target" id="mdns_8h_1a1bc06bea17cf6beabd45649bc1cef73c"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_subtype_add_for_host</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hostname</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">subtype</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433mdns_service_subtype_add_for_hostPKcPKcPKcPKcPKc" title="永久链接至目标"></a><br /></dt>
 <dd><p>Add subtype for service. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_name</strong> – instance name. If NULL, will find the first service with the same service type and protocol. </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _ftp, etc) </p></li>
@@ -925,7 +924,7 @@
 <li><p><strong>subtype</strong> – The subtype to add.</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error</p></li>
@@ -942,7 +941,7 @@
 <span id="_CPPv323mdns_service_remove_allv"></span><span id="_CPPv223mdns_service_remove_allv"></span><span id="mdns_service_remove_all__void"></span><span class="target" id="mdns_8h_1a16908d4bdd7a28d063bcaabffde74cec"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_service_remove_all</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423mdns_service_remove_allv" title="永久链接至目标"></a><br /></dt>
 <dd><p>Remove and free all services from mDNS server. </p>
 <dl class="field-list simple">
-<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dt class="field-odd">返回</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_ARG Parameter error </p></li>
@@ -957,10 +956,10 @@
 <span id="_CPPv323mdns_query_async_deleteP18mdns_search_once_t"></span><span id="_CPPv223mdns_query_async_deleteP18mdns_search_once_t"></span><span id="mdns_query_async_delete__mdns_search_once_tP"></span><span class="target" id="mdns_8h_1af6d064e86da56a713e38c51b0c86d2b6"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_async_delete</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv418mdns_search_once_t" title="mdns_search_once_t"><span class="n"><span class="pre">mdns_search_once_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">search</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423mdns_query_async_deleteP18mdns_search_once_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Deletes the finished query. Call this only after the search has ended! </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>search</strong> – pointer to search object</p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE search has not finished</p></li>
@@ -976,7 +975,7 @@
 <span id="_CPPv328mdns_query_async_get_resultsP18mdns_search_once_t8uint32_tPP13mdns_result_tP7uint8_t"></span><span id="_CPPv228mdns_query_async_get_resultsP18mdns_search_once_t8uint32_tPP13mdns_result_tP7uint8_t"></span><span id="mdns_query_async_get_results__mdns_search_once_tP.uint32_t.mdns_result_tPP.uint8_tP"></span><span class="target" id="mdns_8h_1a4951d52996e21620767a272cd851e678"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_async_get_results</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv418mdns_search_once_t" title="mdns_search_once_t"><span class="n"><span class="pre">mdns_search_once_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">search</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">results</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">num_results</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428mdns_query_async_get_resultsP18mdns_search_once_t8uint32_tPP13mdns_result_tP7uint8_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Get results from search pointer. Results available as a pointer to the output parameter. Pointer to search object has to be deleted via <code class="docutils literal notranslate"><span class="pre">mdns_query_async_delete</span></code> once the query has finished. The results although have to be freed manually. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>search</strong> – pointer to search object </p></li>
 <li><p><strong>timeout</strong> – time in milliseconds to wait for answers </p></li>
@@ -984,7 +983,7 @@
 <li><p><strong>num_results</strong> – pointer to the number of the actual result items (set to NULL to ignore this return value)</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p>True if search has finished before or at timeout False if search timeout is over </p>
 </dd>
 </dl>
@@ -995,7 +994,7 @@
 <span id="_CPPv320mdns_query_async_newPKcPKcPKc8uint16_t8uint32_t6size_t19mdns_query_notify_t"></span><span id="_CPPv220mdns_query_async_newPKcPKcPKc8uint16_t8uint32_t6size_t19mdns_query_notify_t"></span><span id="mdns_query_async_new__cCP.cCP.cCP.uint16_t.uint32_t.s.mdns_query_notify_t"></span><span class="target" id="mdns_8h_1a90a1cb33ad28636a27cb6926abff2171"></span><a class="reference internal" href="#_CPPv418mdns_search_once_t" title="mdns_search_once_t"><span class="n"><span class="pre">mdns_search_once_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_async_new</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">name</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">type</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max_results</span></span>, <a class="reference internal" href="#_CPPv419mdns_query_notify_t" title="mdns_query_notify_t"><span class="n"><span class="pre">mdns_query_notify_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">notifier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420mdns_query_async_newPKcPKcPKc8uint16_t8uint32_t6size_t19mdns_query_notify_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query mDNS for host or service asynchronousely. Search has to be tested for progress and deleted manually! </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> – service instance or host name (NULL for PTR queries) </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) (NULL for host queries) </p></li>
@@ -1006,7 +1005,7 @@
 <li><p><strong>notifier</strong> – Notification function to be called when the result is ready, can be NULL</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p>mdns_search_once_s pointer to new search object if query initiated successfully. NULL otherwise. </p>
 </dd>
 </dl>
@@ -1017,7 +1016,7 @@
 <span id="_CPPv318mdns_query_genericPKcPKcPKc8uint16_t30mdns_query_transmission_type_t8uint32_t6size_tPP13mdns_result_t"></span><span id="_CPPv218mdns_query_genericPKcPKcPKc8uint16_t30mdns_query_transmission_type_t8uint32_t6size_tPP13mdns_result_t"></span><span id="mdns_query_generic__cCP.cCP.cCP.uint16_t.mdns_query_transmission_type_t.uint32_t.s.mdns_result_tPP"></span><span class="target" id="mdns_8h_1ac9a14428f6d3428445ae1888b67c68d7"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_generic</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">name</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">type</span></span>, <a class="reference internal" href="#_CPPv430mdns_query_transmission_type_t" title="mdns_query_transmission_type_t"><span class="n"><span class="pre">mdns_query_transmission_type_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">transmission_type</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max_results</span></span>, <a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">results</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418mdns_query_genericPKcPKcPKc8uint16_t30mdns_query_transmission_type_t8uint32_t6size_tPP13mdns_result_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Generic mDNS query All following query methods are derived from this one. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> – service instance or host name (NULL for PTR queries) </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) (NULL for host queries) </p></li>
@@ -1029,7 +1028,7 @@
 <li><p><strong>results</strong> – pointer to the results of the query results must be freed using mdns_query_results_free below</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1047,7 +1046,7 @@
 <dd><p>Query mDNS for host or service. </p>
 <p>Note that querying PTR types sends Multicast query, all other types send Unicast queries</p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> – service instance or host name (NULL for PTR queries) </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) (NULL for host queries) </p></li>
@@ -1058,7 +1057,7 @@
 <li><p><strong>results</strong> – pointer to the results of the query results must be freed using mdns_query_results_free below</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1075,7 +1074,7 @@
 <span id="_CPPv323mdns_query_results_freeP13mdns_result_t"></span><span id="_CPPv223mdns_query_results_freeP13mdns_result_t"></span><span id="mdns_query_results_free__mdns_result_tP"></span><span class="target" id="mdns_8h_1ad7a11c09688e313da1d3eccd03cfd99e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_results_free</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">results</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423mdns_query_results_freeP13mdns_result_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Free query results. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>results</strong> – linked list of results to be freed </p>
 </dd>
 </dl>
@@ -1086,7 +1085,7 @@
 <span id="_CPPv314mdns_query_ptrPKcPKc8uint32_t6size_tPP13mdns_result_t"></span><span id="_CPPv214mdns_query_ptrPKcPKc8uint32_t6size_tPP13mdns_result_t"></span><span id="mdns_query_ptr__cCP.cCP.uint32_t.s.mdns_result_tPP"></span><span class="target" id="mdns_8h_1a6ff4f04336fc1001383370ddbdaf3bca"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_ptr</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max_results</span></span>, <a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">results</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414mdns_query_ptrPKcPKc8uint32_t6size_tPP13mdns_result_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query mDNS for service. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) </p></li>
 <li><p><strong>proto</strong> – service protocol (_tcp, _udp, etc.) </p></li>
@@ -1095,7 +1094,7 @@
 <li><p><strong>results</strong> – pointer to the results of the query</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1112,7 +1111,7 @@
 <span id="_CPPv314mdns_query_srvPKcPKcPKc8uint32_tPP13mdns_result_t"></span><span id="_CPPv214mdns_query_srvPKcPKcPKc8uint32_tPP13mdns_result_t"></span><span id="mdns_query_srv__cCP.cCP.cCP.uint32_t.mdns_result_tPP"></span><span class="target" id="mdns_8h_1a7650de908662e5b763187120593cc3c0"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_srv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414mdns_query_srvPKcPKcPKc8uint32_tPP13mdns_result_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query mDNS for SRV record. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_name</strong> – service instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) </p></li>
@@ -1121,7 +1120,7 @@
 <li><p><strong>result</strong> – pointer to the result of the query</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1138,7 +1137,7 @@
 <span id="_CPPv314mdns_query_txtPKcPKcPKc8uint32_tPP13mdns_result_t"></span><span id="_CPPv214mdns_query_txtPKcPKcPKc8uint32_tPP13mdns_result_t"></span><span id="mdns_query_txt__cCP.cCP.cCP.uint32_t.mdns_result_tPP"></span><span class="target" id="mdns_8h_1a7b3559ac8131c14a4eca73a781d22178"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_txt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">instance_name</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">service_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">proto</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <a class="reference internal" href="#_CPPv413mdns_result_t" title="mdns_result_t"><span class="n"><span class="pre">mdns_result_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414mdns_query_txtPKcPKcPKc8uint32_tPP13mdns_result_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query mDNS for TXT record. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instance_name</strong> – service instance name </p></li>
 <li><p><strong>service_type</strong> – service type (_http, _arduino, _ftp etc.) </p></li>
@@ -1147,7 +1146,7 @@
 <li><p><strong>result</strong> – pointer to the result of the query</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1164,14 +1163,14 @@
 <span id="_CPPv312mdns_query_aPKc8uint32_tP14esp_ip4_addr_t"></span><span id="_CPPv212mdns_query_aPKc8uint32_tP14esp_ip4_addr_t"></span><span id="mdns_query_a__cCP.uint32_t.esp_ip4_addr_tP"></span><span class="target" id="mdns_8h_1a1c7ccc14c3a0a6cf29af3fe33345ad78"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_query_a</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_name</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span>, <span class="n"><span class="pre">esp_ip4_addr_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">addr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412mdns_query_aPKc8uint32_tP14esp_ip4_addr_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Query mDNS for A record. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>host_name</strong> – host name to look for </p></li>
 <li><p><strong>timeout</strong> – time in milliseconds to wait for answer. </p></li>
 <li><p><strong>addr</strong> – pointer to the resulting IP4 address</p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1188,10 +1187,10 @@
 <span id="_CPPv319mdns_register_netifP11esp_netif_t"></span><span id="_CPPv219mdns_register_netifP11esp_netif_t"></span><span id="mdns_register_netif__esp_netif_tP"></span><span class="target" id="mdns_8h_1ae4512122be1ad7c7f87536b944c43b78"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_register_netif</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">esp_netif_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">esp_netif</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419mdns_register_netifP11esp_netif_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Register custom esp_netif with mDNS functionality mDNS service runs by default on preconfigured interfaces (STA, AP, ETH). This API enables running the service on any customized interface, either using standard WiFi or Ethernet driver or any kind of user defined driver. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>esp_netif</strong> – Pointer to esp-netif interface </p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running or this netif is already registered</p></li>
@@ -1207,10 +1206,10 @@
 <span id="_CPPv321mdns_unregister_netifP11esp_netif_t"></span><span id="_CPPv221mdns_unregister_netifP11esp_netif_t"></span><span id="mdns_unregister_netif__esp_netif_tP"></span><span class="target" id="mdns_8h_1af9bda443a1b8b50ed5ebbc6f5f58e62f"></span><span class="n"><span class="pre">esp_err_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_unregister_netif</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">esp_netif_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">esp_netif</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421mdns_unregister_netifP11esp_netif_t" title="永久链接至目标"></a><br /></dt>
 <dd><p>Unregister esp-netif already registered in mDNS service. </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><p><strong>esp_netif</strong> – Pointer to esp-netif interface </p>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running</p></li>
@@ -1232,13 +1231,13 @@
 </ul>
 </p>
 <dl class="field-list simple">
-<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dt class="field-odd">参数</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>esp_netif</strong> – Pointer to esp-netif interface </p></li>
 <li><p><strong>event_action</strong> – Disable/Enable/Announce on this interface over IPv4/IPv6 protocol. Actions enumerated in mdns_event_actions_t type. </p></li>
 </ul>
 </dd>
-<dt class="field-even">返回<span class="colon">:</span></dt>
+<dt class="field-even">返回</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>ESP_OK success</p></li>
 <li><p>ESP_ERR_INVALID_STATE mDNS is not running or this netif is not registered</p></li>
@@ -1251,7 +1250,7 @@
 
 </section>
 <section id="structures">
-<h3>Structures<a class="headerlink" href="#structures" title="此标题的永久链接"></a></h3>
+<h3>Structures<a class="headerlink" href="#structures" title="永久链接至标题"></a></h3>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv415mdns_txt_item_t">
 <span id="_CPPv315mdns_txt_item_t"></span><span id="_CPPv215mdns_txt_item_t"></span><span id="mdns_txt_item_t"></span><span class="target" id="structmdns__txt__item__t"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_txt_item_t</span></span></span><a class="headerlink" href="#_CPPv415mdns_txt_item_t" title="永久链接至目标"></a><br /></dt>
@@ -1383,7 +1382,7 @@
 
 </section>
 <section id="macros">
-<h3>Macros<a class="headerlink" href="#macros" title="此标题的永久链接"></a></h3>
+<h3>Macros<a class="headerlink" href="#macros" title="永久链接至标题"></a></h3>
 <dl class="cpp macro">
 <dt class="sig sig-object cpp" id="c.MDNS_TYPE_A">
 <span class="target" id="mdns_8h_1aadb9a175b672893b350f1e7032009e00"></span><span class="sig-name descname"><span class="n"><span class="pre">MDNS_TYPE_A</span></span></span><a class="headerlink" href="#c.MDNS_TYPE_A" title="永久链接至目标"></a><br /></dt>
@@ -1426,7 +1425,7 @@
 
 </section>
 <section id="type-definitions">
-<h3>Type Definitions<a class="headerlink" href="#type-definitions" title="此标题的永久链接"></a></h3>
+<h3>Type Definitions<a class="headerlink" href="#type-definitions" title="永久链接至标题"></a></h3>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv418mdns_search_once_t">
 <span id="_CPPv318mdns_search_once_t"></span><span id="_CPPv218mdns_search_once_t"></span><span id="mdns_search_once_t"></span><span class="target" id="mdns_8h_1a8815240672c5880e798ca6655309c589"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">mdns_search_once_s</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_search_once_t</span></span></span><a class="headerlink" href="#_CPPv418mdns_search_once_t" title="永久链接至目标"></a><br /></dt>
@@ -1452,7 +1451,7 @@
 
 </section>
 <section id="enumerations">
-<h3>Enumerations<a class="headerlink" href="#enumerations" title="此标题的永久链接"></a></h3>
+<h3>Enumerations<a class="headerlink" href="#enumerations" title="永久链接至标题"></a></h3>
 <dl class="cpp enum">
 <dt class="sig sig-object cpp" id="_CPPv420mdns_event_actions_t">
 <span id="_CPPv320mdns_event_actions_t"></span><span id="_CPPv220mdns_event_actions_t"></span><span class="target" id="mdns_8h_1a14279e8f2e7c65c12320222a55f09fdf"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdns_event_actions_t</span></span></span><a class="headerlink" href="#_CPPv420mdns_event_actions_t" title="永久链接至目标"></a><br /></dt>
@@ -1485,6 +1484,16 @@
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N20mdns_event_actions_t22MDNS_EVENT_DISABLE_IP6E">
 <span id="_CPPv3N20mdns_event_actions_t22MDNS_EVENT_DISABLE_IP6E"></span><span id="_CPPv2N20mdns_event_actions_t22MDNS_EVENT_DISABLE_IP6E"></span><span class="target" id="mdns_8h_1a14279e8f2e7c65c12320222a55f09fdfa5406bf4e980611d0fe5b8d27fc79554a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MDNS_EVENT_DISABLE_IP6</span></span></span><a class="headerlink" href="#_CPPv4N20mdns_event_actions_t22MDNS_EVENT_DISABLE_IP6E" title="永久链接至目标"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N20mdns_event_actions_t29MDNS_EVENT_IP4_REVERSE_LOOKUPE">
+<span id="_CPPv3N20mdns_event_actions_t29MDNS_EVENT_IP4_REVERSE_LOOKUPE"></span><span id="_CPPv2N20mdns_event_actions_t29MDNS_EVENT_IP4_REVERSE_LOOKUPE"></span><span class="target" id="mdns_8h_1a14279e8f2e7c65c12320222a55f09fdfacdd7f535f9cd3873a07715b39d967842"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MDNS_EVENT_IP4_REVERSE_LOOKUP</span></span></span><a class="headerlink" href="#_CPPv4N20mdns_event_actions_t29MDNS_EVENT_IP4_REVERSE_LOOKUPE" title="永久链接至目标"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N20mdns_event_actions_t29MDNS_EVENT_IP6_REVERSE_LOOKUPE">
+<span id="_CPPv3N20mdns_event_actions_t29MDNS_EVENT_IP6_REVERSE_LOOKUPE"></span><span id="_CPPv2N20mdns_event_actions_t29MDNS_EVENT_IP6_REVERSE_LOOKUPE"></span><span class="target" id="mdns_8h_1a14279e8f2e7c65c12320222a55f09fdfa09accfff1b78150b88fcab24f2413e76"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MDNS_EVENT_IP6_REVERSE_LOOKUP</span></span></span><a class="headerlink" href="#_CPPv4N20mdns_event_actions_t29MDNS_EVENT_IP6_REVERSE_LOOKUPE" title="永久链接至目标"></a><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1540,7 +1549,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; 版权所有 2016 - 2022 乐鑫信息科技（上海）股份有限公司.</p>
+    <p>&#169; 版权所有 2016 - 2023 乐鑫信息科技（上海）股份有限公司.</p>
   </div>
 
   <ul class="footer">
@@ -1577,7 +1586,7 @@ window.onload =(function() {
     mySpan.value = 'latest';
     mySpan.setAttribute('disabled', true);
     myAnchor.parentNode.replaceChild(mySpan, myAnchor);
- 
+
     var myAnchor = document.getElementById('target-select');
     var mySpan = document.createElement('input');
     mySpan.setAttribute('type', 'text');

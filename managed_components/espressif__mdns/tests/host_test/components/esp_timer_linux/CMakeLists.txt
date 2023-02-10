@@ -1,6 +1,6 @@
 idf_component_register(SRCS esp_timer_linux.c timer_task.cpp
                        INCLUDE_DIRS include
-                       REQUIRES esp_system_protocols_linux freertos_linux)
+                       REQUIRES esp_event)
 
 set_target_properties(${COMPONENT_LIB} PROPERTIES
     CXX_STANDARD 17

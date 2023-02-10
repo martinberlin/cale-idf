@@ -15,7 +15,7 @@ window.onload =(function() {
     mySpan.value = 'latest';
     mySpan.setAttribute('disabled', true);
     myAnchor.parentNode.replaceChild(mySpan, myAnchor);
- 
+
     var myAnchor = document.getElementById('target-select');
     var mySpan = document.createElement('input');
     mySpan.setAttribute('type', 'text');

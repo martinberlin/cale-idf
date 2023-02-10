@@ -1,6 +1,5 @@
 idf_component_register(SRCS freertos_linux.c queue_unique_ptr.cpp
-                       INCLUDE_DIRS include
-                       REQUIRES esp_system_protocols_linux)
+                       INCLUDE_DIRS include)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

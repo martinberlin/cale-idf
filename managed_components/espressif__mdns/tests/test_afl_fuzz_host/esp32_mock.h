@@ -40,8 +40,8 @@
 
 #define pdTRUE                      true
 #define pdFALSE                     false
-#define pdPASS			( pdTRUE )
-#define pdFAIL			( pdFALSE )
+#define pdPASS          ( pdTRUE )
+#define pdFAIL          ( pdFALSE )
 
 #define portMAX_DELAY               0xFFFFFFFF
 #define portTICK_PERIOD_MS          1
@@ -55,7 +55,6 @@
 #define INC_TASK_H
 
 #define pdMS_TO_TICKS(a) a
-#define portTICK_PERIOD_MS 10
 #define xSemaphoreTake(s,d)        true
 #define xTaskDelete(a)
 #define vTaskDelete(a)             free(a)
@@ -80,45 +79,41 @@
 
 typedef int32_t esp_err_t;
 
-typedef void * SemaphoreHandle_t;
-typedef void * QueueHandle_t;
-typedef void * TaskHandle_t;
+typedef void *SemaphoreHandle_t;
+typedef void *QueueHandle_t;
+typedef void *TaskHandle_t;
 typedef int    BaseType_t;
 typedef uint32_t TickType_t;
 
-
-extern const char * WIFI_EVENT;
-extern const char * IP_EVENT;
-extern const char * ETH_EVENT;
 
 struct udp_pcb {
     uint8_t dummy;
 };
 
 struct ip4_addr {
-  uint32_t addr;
+    uint32_t addr;
 };
 typedef struct ip4_addr ip4_addr_t;
 
 struct ip6_addr {
-  uint32_t addr[4];
+    uint32_t addr[4];
 };
 typedef struct ip6_addr ip6_addr_t;
 
-typedef void* system_event_t;
+typedef void *system_event_t;
 
 struct pbuf {
-  struct pbuf *next;
-  void *payload;
-  uint16_t tot_len;
-  uint16_t  len;
-  uint8_t  /*pbuf_type*/ type;
-  uint8_t  flags;
-  uint16_t  ref;
+    struct pbuf *next;
+    void *payload;
+    uint16_t tot_len;
+    uint16_t  len;
+    uint8_t  /*pbuf_type*/ type;
+    uint8_t  flags;
+    uint16_t  ref;
 };
 
 uint32_t xTaskGetTickCount(void);
-typedef void (*esp_timer_cb_t)(void* arg);
+typedef void (*esp_timer_cb_t)(void *arg);
 
 // Queue mock
 QueueHandle_t xQueueCreate( uint32_t uxQueueLength,
@@ -126,7 +121,7 @@ QueueHandle_t xQueueCreate( uint32_t uxQueueLength,
 
 void vQueueDelete( QueueHandle_t xQueue );
 
-uint32_t xQueueSend(QueueHandle_t xQueue, const void * pvItemToQueue, TickType_t xTicksToWait);
+uint32_t xQueueSend(QueueHandle_t xQueue, const void *pvItemToQueue, TickType_t xTicksToWait);
 
 uint32_t xQueueReceive(QueueHandle_t xQueue, void *pvBuffer, TickType_t xTicksToWait);
 
@@ -134,9 +129,9 @@ void GetLastItem(void *pvBuffer);
 
 void ForceTaskDelete(void);
 
-esp_err_t esp_event_handler_register(const char * event_base, int32_t event_id, void* event_handler, void* event_handler_arg);
+esp_err_t esp_event_handler_register(const char *event_base, int32_t event_id, void *event_handler, void *event_handler_arg);
 
-esp_err_t esp_event_handler_unregister(const char * event_base, int32_t event_id, void* event_handler);
+esp_err_t esp_event_handler_unregister(const char *event_base, int32_t event_id, void *event_handler);
 
 
 TaskHandle_t xTaskGetCurrentTaskHandle(void);

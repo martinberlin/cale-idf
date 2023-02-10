@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef ESP_MDNS_NETWORKING_H_
 #define ESP_MDNS_NETWORKING_H_
 
@@ -12,7 +17,7 @@
 /**
  * @brief  Queue RX packet action
  */
-esp_err_t _mdns_send_rx_action(mdns_rx_packet_t * packet);
+esp_err_t _mdns_send_rx_action(mdns_rx_packet_t *packet);
 
 /**
  * @brief  Start PCB
@@ -33,12 +38,12 @@ esp_err_t _mdns_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol);
  *
  * @return length of sent packet or 0 on error
  */
-size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t * data, size_t len);
+size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t *data, size_t len);
 
 /**
  * @brief  Gets data pointer to the mDNS packet
  */
-void* _mdns_get_packet_data(mdns_rx_packet_t *packet);
+void *_mdns_get_packet_data(mdns_rx_packet_t *packet);
 
 /**
  * @brief  Gets data length of c

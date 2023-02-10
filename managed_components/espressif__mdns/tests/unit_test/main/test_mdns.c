@@ -1,8 +1,16 @@
-#include "test_utils.h"
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Unlicense OR CC0-1.0
+ */
+
 #include "mdns.h"
 #include "esp_event.h"
 #include "unity.h"
+#include "test_utils.h"
 
+#include "unity_fixture.h"
+#include "memory_checks.h"
 
 #define MDNS_HOSTNAME "test-hostname"
 #define MDNS_DELEGATE_HOSTNAME "delegate-hostname"
@@ -11,6 +19,18 @@
 #define MDNS_SERVICE_PROTO "_tcp"
 #define MDNS_SERVICE_PORT   80
 
+TEST_GROUP(mdns);
+
+TEST_SETUP(mdns)
+{
+    test_utils_record_free_mem();
+    TEST_ESP_OK(test_utils_set_leak_level(0, ESP_LEAK_TYPE_CRITICAL, ESP_COMP_LEAK_GENERAL));
+}
+
+TEST_TEAR_DOWN(mdns)
+{
+    test_utils_finish_and_evaluate_leaks(32, 64);
+}
 
 static void yield_to_all_priorities(void)
 {
@@ -22,7 +42,7 @@ static void yield_to_all_priorities(void)
 }
 
 
-TEST_CASE("mdns api to fail in invalid state", "[mdns][leaks=64]")
+TEST(mdns, api_fails_with_invalid_state)
 {
     TEST_ASSERT_NOT_EQUAL(ESP_OK, mdns_init() );
     TEST_ASSERT_NOT_EQUAL(ESP_OK, mdns_hostname_set(MDNS_HOSTNAME) );
@@ -30,7 +50,7 @@ TEST_CASE("mdns api to fail in invalid state", "[mdns][leaks=64]")
     TEST_ASSERT_NOT_EQUAL(ESP_OK, mdns_service_add(MDNS_INSTANCE, MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_SERVICE_PORT, NULL, 0) );
 }
 
-TEST_CASE("mdns init and deinit", "[mdns][leaks=64]")
+TEST(mdns, init_deinit)
 {
     test_case_uses_tcpip();
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_loop_create_default());
@@ -40,7 +60,7 @@ TEST_CASE("mdns init and deinit", "[mdns][leaks=64]")
     esp_event_loop_delete_default();
 }
 
-TEST_CASE("mdns api return expected err-code and do not leak memory", "[mdns][leaks=64]")
+TEST(mdns, api_fails_with_expected_err)
 {
     mdns_txt_item_t serviceTxtData[CONFIG_MDNS_MAX_SERVICES] = { {NULL, NULL},
     };
@@ -48,7 +68,7 @@ TEST_CASE("mdns api return expected err-code and do not leak memory", "[mdns][le
     addr.addr.type = ESP_IPADDR_TYPE_V4;
     addr.addr.u_addr.ip4.addr = esp_ip4addr_aton("127.0.0.1");
     addr.next = NULL;
-    for (int i=0; i<CONFIG_MDNS_MAX_SERVICES; ++i) {
+    for (int i = 0; i < CONFIG_MDNS_MAX_SERVICES; ++i) {
         serviceTxtData[i].key = "Key";
         serviceTxtData[i].value = "Value";
     }
@@ -64,7 +84,7 @@ TEST_CASE("mdns api return expected err-code and do not leak memory", "[mdns][le
     TEST_ASSERT_EQUAL(ESP_OK, mdns_service_add(MDNS_INSTANCE, MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_SERVICE_PORT, serviceTxtData, CONFIG_MDNS_MAX_SERVICES) );
     TEST_ASSERT_FALSE(mdns_service_exists(MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_DELEGATE_HOSTNAME) );
     TEST_ASSERT_EQUAL(ESP_OK, mdns_service_add_for_host(MDNS_INSTANCE, MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_DELEGATE_HOSTNAME,
-                                                        MDNS_SERVICE_PORT, serviceTxtData, CONFIG_MDNS_MAX_SERVICES) );
+                      MDNS_SERVICE_PORT, serviceTxtData, CONFIG_MDNS_MAX_SERVICES) );
     TEST_ASSERT_TRUE(mdns_service_exists(MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_DELEGATE_HOSTNAME) );
     TEST_ASSERT_EQUAL(ESP_OK, mdns_service_txt_set(MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, serviceTxtData, CONFIG_MDNS_MAX_SERVICES) );
     TEST_ASSERT_EQUAL(ESP_OK, mdns_service_txt_item_set(MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, "key1", "value1") );
@@ -86,15 +106,23 @@ TEST_CASE("mdns api return expected err-code and do not leak memory", "[mdns][le
     esp_event_loop_delete_default();
 }
 
-TEST_CASE("mdns query api return expected err-code and do not leak memory", "[leaks=64]")
+TEST(mdns, query_api_fails_with_expected_err)
 {
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_ip6_addr_t addr6;
     esp_ip4_addr_t addr4;
     test_case_uses_tcpip();
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_loop_create_default());
 
     TEST_ASSERT_EQUAL(ESP_OK, mdns_init() );
+    // check it is not possible to register a service or set an instance without configuring the hostname
+    TEST_ASSERT_EQUAL(ESP_ERR_INVALID_ARG, mdns_service_add(MDNS_INSTANCE, MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_SERVICE_PORT, NULL, 0));
+    TEST_ASSERT_EQUAL(ESP_ERR_INVALID_ARG, mdns_instance_name_set(MDNS_INSTANCE));
+    TEST_ASSERT_EQUAL(ESP_OK, mdns_hostname_set(MDNS_HOSTNAME));
+    // hostname is set, now adding a service and instance should succeed
+    TEST_ASSERT_EQUAL(ESP_OK, mdns_service_add(MDNS_INSTANCE, MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, MDNS_SERVICE_PORT, NULL, 0));
+    TEST_ASSERT_EQUAL(ESP_OK, mdns_instance_name_set(MDNS_INSTANCE));
+
     TEST_ASSERT_EQUAL(ESP_OK, mdns_query_ptr(MDNS_SERVICE_NAME, MDNS_SERVICE_PROTO, 10, CONFIG_MDNS_MAX_SERVICES,  &results) );
     mdns_query_results_free(results);
 
@@ -112,4 +140,17 @@ TEST_CASE("mdns query api return expected err-code and do not leak memory", "[le
 
     mdns_free();
     esp_event_loop_delete_default();
+}
+
+TEST_GROUP_RUNNER(mdns)
+{
+    RUN_TEST_CASE(mdns, api_fails_with_invalid_state)
+    RUN_TEST_CASE(mdns, api_fails_with_expected_err)
+    RUN_TEST_CASE(mdns, query_api_fails_with_expected_err)
+    RUN_TEST_CASE(mdns, init_deinit)
+}
+
+void app_main(void)
+{
+    UNITY_MAIN(mdns);
 }

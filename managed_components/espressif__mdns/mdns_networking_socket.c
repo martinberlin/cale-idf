@@ -27,7 +27,7 @@
 #include <net/if.h>
 #endif
 
-extern mdns_server_t * _mdns_server;
+extern mdns_server_t *_mdns_server;
 
 static const char *TAG = "MDNS_Networking";
 static bool s_run_sock_recv_task = false;
@@ -37,8 +37,8 @@ static int join_mdns_multicast_group(int sock, esp_netif_t *netif, mdns_ip_proto
 #if defined(CONFIG_IDF_TARGET_LINUX)
 // Need to define packet buffer struct on linux
 struct pbuf  {
-    struct pbuf * next;
-    void * payload;
+    struct pbuf *next;
+    void *payload;
     size_t tot_len;
     size_t len;
 };
@@ -52,17 +52,17 @@ static void delete_socket(int sock)
     close(sock);
 }
 
-static struct udp_pcb* sock_to_pcb(int sock)
+static struct udp_pcb *sock_to_pcb(int sock)
 {
     if (sock < 0) {
         return NULL;
     }
     // Note: sock=0 is a valid descriptor, so save it as +1 ("1" is a valid pointer)
     intptr_t sock_plus_one = sock + 1;
-    return (struct udp_pcb*)sock_plus_one;
+    return (struct udp_pcb *)sock_plus_one;
 }
 
-static int pcb_to_sock(struct udp_pcb* pcb)
+static int pcb_to_sock(struct udp_pcb *pcb)
 {
     if (pcb == NULL) {
         return -1;
@@ -71,7 +71,7 @@ static int pcb_to_sock(struct udp_pcb* pcb)
     return sock_plus_one - 1;
 }
 
-void* _mdns_get_packet_data(mdns_rx_packet_t *packet)
+void *_mdns_get_packet_data(mdns_rx_packet_t *packet)
 {
     return packet->pb->payload;
 }
@@ -90,10 +90,10 @@ void _mdns_packet_free(mdns_rx_packet_t *packet)
 
 esp_err_t _mdns_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
 {
-    struct udp_pcb * pcb = _mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb;
+    struct udp_pcb *pcb = _mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb;
     _mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb = NULL;
     if (_mdns_server->interfaces[tcpip_if].pcbs[MDNS_IP_PROTOCOL_V4].pcb == NULL &&
-        _mdns_server->interfaces[tcpip_if].pcbs[MDNS_IP_PROTOCOL_V6].pcb == NULL) {
+            _mdns_server->interfaces[tcpip_if].pcbs[MDNS_IP_PROTOCOL_V6].pcb == NULL) {
         // if the interface for both protocol uninitialized, close the interface socket
         int sock = pcb_to_sock(pcb);
         if (sock >= 0) {
@@ -101,11 +101,13 @@ esp_err_t _mdns_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
         }
     }
 
-    for (int i=0; i<MDNS_MAX_INTERFACES; i++) {
-        for (int j=0; j<MDNS_IP_PROTOCOL_MAX; j++) {
+    for (int i = 0; i < MDNS_MAX_INTERFACES; i++) {
+        for (int j = 0; j < MDNS_IP_PROTOCOL_MAX; j++) {
             if (_mdns_server->interfaces[i].pcbs[j].pcb)
                 // If any of the interfaces/protocol initialized
+            {
                 return ESP_OK;
+            }
         }
     }
 
@@ -117,15 +119,15 @@ esp_err_t _mdns_pcb_deinit(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
 
 #if defined(CONFIG_IDF_TARGET_LINUX)
 #ifdef CONFIG_LWIP_IPV6
-static char* inet6_ntoa_r(struct in6_addr addr, char* ptr, size_t size)
+static char *inet6_ntoa_r(struct in6_addr addr, char *ptr, size_t size)
 {
     inet_ntop(AF_INET6, &(addr.s6_addr32[0]), ptr, size);
     return ptr;
 }
 #endif // CONFIG_LWIP_IPV6
-static char* inet_ntoa_r(struct in_addr addr, char* ptr, size_t size)
+static char *inet_ntoa_r(struct in_addr addr, char *ptr, size_t size)
 {
-    char * res = inet_ntoa(addr);
+    char *res = inet_ntoa(addr);
     if (res && strlen(res) < size) {
         strcpy(ptr, res);
     }
@@ -133,7 +135,7 @@ static char* inet_ntoa_r(struct in_addr addr, char* ptr, size_t size)
 }
 #endif // CONFIG_IDF_TARGET_LINUX
 
-static inline char* get_string_address(struct sockaddr_storage *source_addr)
+static inline char *get_string_address(struct sockaddr_storage *source_addr)
 {
     static char address_str[40]; // 40=(8*4+7+term) is the max size of ascii IPv6 addr "XXXX:XX...XX:XXXX"
     char *res = NULL;
@@ -175,7 +177,7 @@ static inline size_t espaddr_to_inet(const esp_ip_addr_t *addr, const uint16_t p
         in_addr->s2_len = sizeof(struct sockaddr_in6);
 #endif
         ss_addr_len = sizeof(struct sockaddr_in6);
-        struct sockaddr_in6 * in_addr_ip6 = (struct sockaddr_in6 *)in_addr;
+        struct sockaddr_in6 *in_addr_ip6 = (struct sockaddr_in6 *)in_addr;
         uint32_t *u32_addr = in_addr_ip6->sin6_addr.s6_addr32;
         in_addr_ip6->sin6_port = port;
         u32_addr[0] = addr->u_addr.ip6.addr[0];
@@ -187,7 +189,7 @@ static inline size_t espaddr_to_inet(const esp_ip_addr_t *addr, const uint16_t p
     return ss_addr_len;
 }
 
-size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t * data, size_t len)
+size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, const esp_ip_addr_t *ip, uint16_t port, uint8_t *data, size_t len)
 {
     int sock = pcb_to_sock(_mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb);
     if (sock < 0) {
@@ -210,7 +212,7 @@ size_t _mdns_udp_pcb_write(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol, c
 static inline void inet_to_espaddr(const struct sockaddr_storage *in_addr, esp_ip_addr_t *addr, uint16_t *port)
 {
     if (in_addr->ss_family == PF_INET) {
-        struct sockaddr_in * in_addr_ip4 = (struct sockaddr_in *)in_addr;
+        struct sockaddr_in *in_addr_ip4 = (struct sockaddr_in *)in_addr;
         memset(addr, 0, sizeof(esp_ip_addr_t));
         *port = in_addr_ip4->sin_port;
         addr->u_addr.ip4.addr = in_addr_ip4->sin_addr.s_addr;
@@ -218,7 +220,7 @@ static inline void inet_to_espaddr(const struct sockaddr_storage *in_addr, esp_i
     }
 #if CONFIG_LWIP_IPV6
     else if (in_addr->ss_family == PF_INET6) {
-        struct sockaddr_in6 * in_addr_ip6 = (struct sockaddr_in6 *)in_addr;
+        struct sockaddr_in6 *in_addr_ip6 = (struct sockaddr_in6 *)in_addr;
         memset(addr, 0, sizeof(esp_ip_addr_t));
         *port = in_addr_ip6->sin6_port;
         uint32_t *u32_addr = in_addr_ip6->sin6_addr.s6_addr32;
@@ -237,7 +239,7 @@ static inline void inet_to_espaddr(const struct sockaddr_storage *in_addr, esp_i
 #endif // CONFIG_LWIP_IPV6
 }
 
-void sock_recv_task(void* arg)
+void sock_recv_task(void *arg)
 {
     while (s_run_sock_recv_task) {
         struct timeval tv = {
@@ -247,8 +249,8 @@ void sock_recv_task(void* arg)
         fd_set rfds;
         FD_ZERO(&rfds);
         int max_sock = -1;
-        for (int i=0; i<MDNS_MAX_INTERFACES; i++) {
-            for (int j=0; j<MDNS_IP_PROTOCOL_MAX; j++) {
+        for (int i = 0; i < MDNS_MAX_INTERFACES; i++) {
+            for (int j = 0; j < MDNS_IP_PROTOCOL_MAX; j++) {
                 int sock = pcb_to_sock(_mdns_server->interfaces[i].pcbs[j].pcb);
                 if (sock >= 0) {
                     FD_SET(sock, &rfds);
@@ -267,7 +269,7 @@ void sock_recv_task(void* arg)
             ESP_LOGE(TAG, "Select failed. errno=%d: %s", errno, strerror(errno));
             break;
         } else if (s > 0) {
-            for (int tcpip_if=0; tcpip_if<MDNS_MAX_INTERFACES; tcpip_if++) {
+            for (int tcpip_if = 0; tcpip_if < MDNS_MAX_INTERFACES; tcpip_if++) {
                 // Both protocols share once socket
                 int sock = pcb_to_sock(_mdns_server->interfaces[tcpip_if].pcbs[MDNS_IP_PROTOCOL_V4].pcb);
                 if (sock < 0) {
@@ -320,7 +322,7 @@ void sock_recv_task(void* arg)
                     packet->multicast = 1;
                     packet->dest.type = packet->src.type;
                     packet->ip_protocol =
-                            packet->src.type == ESP_IPADDR_TYPE_V4 ? MDNS_IP_PROTOCOL_V4 : MDNS_IP_PROTOCOL_V6;
+                        packet->src.type == ESP_IPADDR_TYPE_V4 ? MDNS_IP_PROTOCOL_V4 : MDNS_IP_PROTOCOL_V6;
                     if (!_mdns_server || !_mdns_server->action_queue || _mdns_send_rx_action(packet) != ESP_OK) {
                         ESP_LOGE(TAG, "_mdns_send_rx_action failed!");
                         free(packet->pb->payload);
@@ -338,19 +340,19 @@ static void mdns_networking_init(void)
 {
     if (s_run_sock_recv_task == false) {
         s_run_sock_recv_task = true;
-        xTaskCreate( sock_recv_task, "mdns recv task", 3*1024, NULL, 5, NULL );
+        xTaskCreate( sock_recv_task, "mdns recv task", 3 * 1024, NULL, 5, NULL );
     }
 }
 
-static struct udp_pcb* create_pcb(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
+static struct udp_pcb *create_pcb(mdns_if_t tcpip_if, mdns_ip_protocol_t ip_protocol)
 {
     if (_mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb) {
         return _mdns_server->interfaces[tcpip_if].pcbs[ip_protocol].pcb;
     }
-    mdns_ip_protocol_t other_ip_proto = ip_protocol==MDNS_IP_PROTOCOL_V4?MDNS_IP_PROTOCOL_V6:MDNS_IP_PROTOCOL_V4;
+    mdns_ip_protocol_t other_ip_proto = ip_protocol == MDNS_IP_PROTOCOL_V4 ? MDNS_IP_PROTOCOL_V6 : MDNS_IP_PROTOCOL_V4;
     esp_netif_t *netif = _mdns_get_esp_netif(tcpip_if);
     if (_mdns_server->interfaces[tcpip_if].pcbs[other_ip_proto].pcb) {
-        struct udp_pcb* other_pcb = _mdns_server->interfaces[tcpip_if].pcbs[other_ip_proto].pcb;
+        struct udp_pcb *other_pcb = _mdns_server->interfaces[tcpip_if].pcbs[other_ip_proto].pcb;
         int err = join_mdns_multicast_group(pcb_to_sock(other_pcb), netif, ip_protocol);
         if (err < 0) {
             ESP_LOGE(TAG, "Failed to add ipv6 multicast group for protocol %d", ip_protocol);
@@ -420,7 +422,7 @@ static int create_socket(esp_netif_t *netif)
 #endif // CONFIG_LWIP_IPV6
     struct ifreq ifr;
     esp_netif_get_netif_impl_name(netif, ifr.ifr_name);
-    int ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,  (void*)&ifr, sizeof(struct ifreq));
+    int ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,  (void *)&ifr, sizeof(struct ifreq));
     if (ret < 0) {
         ESP_LOGE(TAG, "\"%s\" Unable to bind socket to specified interface. errno=%d: %s", esp_netif_get_desc(netif), errno, strerror(errno));
         goto err;
@@ -477,7 +479,7 @@ static int socket_add_ipv4_multicast_group(int sock, esp_netif_t *netif)
         goto err;
     }
 
- err:
+err:
     return err;
 }
 

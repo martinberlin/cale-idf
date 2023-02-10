@@ -35,7 +35,7 @@ static void get_string(char *line, size_t size)
 /** Generate host name based on sdkconfig, optionally adding a portion of MAC address to it.
  *  @return host name string allocated from the heap
  */
-static char* generate_hostname(void)
+static char *generate_hostname(void)
 {
 #ifndef CONFIG_TEST_MDNS_ADD_MAC_TO_HOSTNAME
     return strdup(CONFIG_TEST_MDNS_HOSTNAME);
@@ -52,7 +52,7 @@ static char* generate_hostname(void)
 
 static void initialise_mdns(void)
 {
-    char * hostname = generate_hostname();
+    char *hostname = generate_hostname();
 
     //initialize mDNS
     ESP_ERROR_CHECK( mdns_init() );

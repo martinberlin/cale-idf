@@ -1,5 +1,7 @@
 # mDNS Service
 
+[![Component Registry](https://components.espressif.com/components/espressif/mdns/badge.svg)](https://components.espressif.com/components/espressif/mdns)
+
 mDNS is a multicast UDP service that is used to provide local network service and host discovery.
 
 ## Examples

@@ -64,17 +64,6 @@ menu "mDNS"
             Configures timeout for adding a new mDNS service. Adding a service
             fails if could not be completed within this time.
 
-    config MDNS_STRICT_MODE
-        bool "mDNS strict mode"
-        default "n"
-        help
-            Configures strict mode. Set this to 1 for the mDNS library to strictly follow the RFC6762:
-            Currently the only strict feature: Do not repeat original questions in response packets
-            (defined in RFC6762 sec. 6).
-            Default configuration is 0, i.e. non-strict mode, since some implementations,
-            such as lwIP mDNS resolver (used by standard POSIX API like getaddrinfo, gethostbyname)
-            could not correctly resolve advertised names.
-
     config MDNS_TIMER_PERIOD_MS
         int "mDNS timer period (ms)"
         range 10 10000
@@ -91,6 +80,27 @@ menu "mDNS"
             in UDP multicast mode.
             This option creates a new thread to serve receiving packets (TODO).
             This option uses additional N sockets, where N is number of interfaces.
+
+    config MDNS_SKIP_SUPPRESSING_OWN_QUERIES
+        bool "Skip suppressing our own packets"
+        default n
+        help
+            Enable only if the querier and the responder share the same IP address.
+            This usually happens in test mode, where we may run multiple instances of
+            responders/queriers on the same interface.
+
+    config MDNS_ENABLE_DEBUG_PRINTS
+        bool "Enable debug prints of mDNS packets"
+        default n
+        help
+            Enable for the library to log received and sent mDNS packets to stdout.
+
+    config MDNS_RESPOND_REVERSE_QUERIES
+        bool "Enable responding to IPv4 reverse queries"
+        default n
+        help
+            Enables support for IPv4 reverse lookup. If enabled, the mDNS library
+            response to PTR queries of "A.B.C.D.in-addr.arpa" type.
 
     config MDNS_MULTIPLE_INSTANCE
         bool "Multiple instances under the same service type"

@@ -1,7 +1,10 @@
 # Setup dummy network interfaces
+
+Note: Set two addresses so we could use one as source and another as destination
 ```
 sudo ip link add eth2 type dummy
 sudo ip addr add 192.168.1.200/24 dev eth2
+sudo ip addr add 192.168.1.201/24 dev eth2
 sudo ip link set eth2 up
 sudo ifconfig eth2 multicast
 ```
@@ -10,6 +13,11 @@ sudo ifconfig eth2 multicast
 
 ```
 dig +short -b 192.168.1.200 -p 5353 @224.0.0.251 myesp.local
+```
+
+or a reverse query:
+```
+dig +short -b 192.168.2.200 -p 5353 @224.0.0.251 -x 192.168.1.200
 ```
 
 # Run avahi to browse services

@@ -8,4 +8,4 @@ set(EXTRA_COMPONENT_DIRS ../../ ../../../../common_components/protocol_examples_
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
-project(mdns)
+project(mdns_test_app)

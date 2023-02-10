@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "esp_netif.h"
 
-static const char * TAG = "MDNS_TEST_APP";
+static const char *TAG = "MDNS_TEST_APP";
 static const int RETRY_COUNT = 10;
 
 static void mdns_print_results(mdns_result_t *results)
@@ -48,7 +48,7 @@ static void mdns_print_results(mdns_result_t *results)
 static bool check_and_print_result(mdns_search_once_t *search)
 {
     // Check if any result is available
-    mdns_result_t * result = NULL;
+    mdns_result_t *result = NULL;
     if (!mdns_query_async_get_results(search, 0, &result, NULL)) {
         return false;
     }
@@ -58,9 +58,9 @@ static bool check_and_print_result(mdns_search_once_t *search)
     }
 
     // If yes, print the result
-    mdns_ip_addr_t * a = result->addr;
+    mdns_ip_addr_t *a = result->addr;
     while (a) {
-        if(a->addr.type == ESP_IPADDR_TYPE_V6){
+        if (a->addr.type == ESP_IPADDR_TYPE_V6) {
             printf("Async query resolved to AAAA:" IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
         } else {
             printf("Async query resolved to A:" IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
@@ -72,7 +72,7 @@ static bool check_and_print_result(mdns_search_once_t *search)
     return true;
 }
 
-static bool query_mdns_hosts_async(const char * host_name)
+static bool query_mdns_hosts_async(const char *host_name)
 {
     ESP_LOGI(TAG, "Query both A and AAA: %s.local", host_name);
     bool res = false;
@@ -97,7 +97,7 @@ static bool query_mdns_hosts_async(const char * host_name)
     return res;
 }
 
-static esp_err_t query_mdns_host(const char * host_name)
+static esp_err_t query_mdns_host(const char *host_name)
 {
     ESP_LOGI(TAG, "Query A: %s.local", host_name);
 
@@ -105,8 +105,8 @@ static esp_err_t query_mdns_host(const char * host_name)
     addr.addr = 0;
 
     esp_err_t err = mdns_query_a(host_name, 2000,  &addr);
-    if(err){
-        if(err == ESP_ERR_NOT_FOUND){
+    if (err) {
+        if (err == ESP_ERR_NOT_FOUND) {
             ESP_LOGW(TAG, "%s: Host was not found!", esp_err_to_name(err));
         }
         ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
@@ -117,17 +117,17 @@ static esp_err_t query_mdns_host(const char * host_name)
     return ESP_OK;
 }
 
-static esp_err_t query_mdns_service(const char * instance, const char * service_name, const char * proto)
+static esp_err_t query_mdns_service(const char *instance, const char *service_name, const char *proto)
 {
     ESP_LOGI(TAG, "Query SRV: %s.%s.local", service_name, proto);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query_srv(instance, service_name, proto, 3000,  &results);
-    if(err){
+    if (err) {
         ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
         return err;
     }
-    if(!results){
+    if (!results) {
         ESP_LOGW(TAG, "No results found!");
     }
 
@@ -136,15 +136,16 @@ static esp_err_t query_mdns_service(const char * instance, const char * service_
     return ESP_OK;
 }
 
-void query_mdns_service_sub_type(const char * subtype, const char * service_name, const char * proto) {
+void query_mdns_service_sub_type(const char *subtype, const char *service_name, const char *proto)
+{
     ESP_LOGI(TAG, "Query PTR: %s.%s.local", service_name, proto);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query_ptr(service_name, proto, 3000, 20,  &results);
-    if(err){
+    if (err) {
         ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
     }
-    if(!results){
+    if (!results) {
         ESP_LOGW(TAG, "No results found!");
     }
 

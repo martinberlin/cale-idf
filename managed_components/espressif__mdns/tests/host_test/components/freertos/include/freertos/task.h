@@ -18,15 +18,15 @@ TaskHandle_t xTaskGetCurrentTaskHandle(void);
 
 BaseType_t xTaskNotifyWait(uint32_t bits_entry_clear, uint32_t bits_exit_clear, uint32_t *value, TickType_t wait_time );
 
-BaseType_t xTaskCreatePinnedToCore(	TaskFunction_t pvTaskCode,
-                                       const char * const pcName,
-                                       const uint32_t usStackDepth,
-                                       void * const pvParameters,
-                                       UBaseType_t uxPriority,
-                                       TaskHandle_t * const pvCreatedTask,
-                                       const BaseType_t xCoreID);
+BaseType_t xTaskCreatePinnedToCore( TaskFunction_t pvTaskCode,
+                                    const char *const pcName,
+                                    const uint32_t usStackDepth,
+                                    void *const pvParameters,
+                                    UBaseType_t uxPriority,
+                                    TaskHandle_t *const pvCreatedTask,
+                                    const BaseType_t xCoreID);
 
-void xTaskCreate(TaskFunction_t pvTaskCode, const char * const pcName, const uint32_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, TaskHandle_t * const pvCreatedTask);
+void xTaskCreate(TaskFunction_t pvTaskCode, const char *const pcName, const uint32_t usStackDepth, void *const pvParameters, UBaseType_t uxPriority, TaskHandle_t *const pvCreatedTask);
 
 TickType_t xTaskGetTickCount( void );
 
@@ -45,6 +45,6 @@ void vTaskDelete(TaskHandle_t *task);
 QueueHandle_t xQueueCreate( uint32_t uxQueueLength,
                             uint32_t uxItemSize );
 
-uint32_t xQueueSend(QueueHandle_t xQueue, const void * pvItemToQueue, TickType_t xTicksToWait);
+uint32_t xQueueSend(QueueHandle_t xQueue, const void *pvItemToQueue, TickType_t xTicksToWait);
 
 uint32_t xQueueReceive(QueueHandle_t xQueue, void *pvBuffer, TickType_t xTicksToWait);

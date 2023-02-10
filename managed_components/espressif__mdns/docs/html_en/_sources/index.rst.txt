@@ -201,5 +201,3 @@ API Reference
 -------------
 
 .. include-build-file:: inc/mdns.inc
-
-

@@ -9,12 +9,12 @@
 #include "argtable3/argtable3.h"
 #include "mdns.h"
 
-static const char * ip_protocol_str[] = {"V4", "V6", "MAX"};
+static const char *ip_protocol_str[] = {"V4", "V6", "MAX"};
 
-static void mdns_print_results(mdns_result_t * results)
+static void mdns_print_results(mdns_result_t *results)
 {
-    mdns_result_t * r = results;
-    mdns_ip_addr_t * a = NULL;
+    mdns_result_t *r = results;
+    mdns_ip_addr_t *a = NULL;
     int i = 1;
     while (r) {
         printf("%d: Interface: %s, Type: %s\n", i++, esp_netif_get_ifkey(r->esp_netif), ip_protocol_str[r->ip_protocol]);
@@ -26,7 +26,7 @@ static void mdns_print_results(mdns_result_t * results)
         }
         if (r->txt_count) {
             printf("  TXT : [%u] ", r->txt_count);
-            for (size_t t=0; t<r->txt_count; t++) {
+            for (size_t t = 0; t < r->txt_count; t++) {
                 printf("%s=%s; ", r->txt[t].key, r->txt[t].value);
             }
             printf("\n");
@@ -50,15 +50,15 @@ static struct {
     struct arg_end *end;
 } mdns_query_a_args;
 
-static int cmd_mdns_query_a(int argc, char** argv)
+static int cmd_mdns_query_a(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_a_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_a_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_a_args.end, argv[0]);
         return 1;
     }
 
-    const char * hostname = mdns_query_a_args.hostname->sval[0];
+    const char *hostname = mdns_query_a_args.hostname->sval[0];
     int timeout = mdns_query_a_args.timeout->ival[0];
 
     if (!hostname || !hostname[0]) {
@@ -108,15 +108,15 @@ static void register_mdns_query_a(void)
 }
 
 #if CONFIG_LWIP_IPV6
-static int cmd_mdns_query_aaaa(int argc, char** argv)
+static int cmd_mdns_query_aaaa(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_a_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_a_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_a_args.end, argv[0]);
         return 1;
     }
 
-    const char * hostname = mdns_query_a_args.hostname->sval[0];
+    const char *hostname = mdns_query_a_args.hostname->sval[0];
     int timeout = mdns_query_a_args.timeout->ival[0];
 
     if (!hostname || !hostname[0]) {
@@ -174,17 +174,17 @@ static struct {
     struct arg_end *end;
 } mdns_query_srv_args;
 
-static int cmd_mdns_query_srv(int argc, char** argv)
+static int cmd_mdns_query_srv(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_srv_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_srv_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_srv_args.end, argv[0]);
         return 1;
     }
 
-    const char * instance = mdns_query_srv_args.instance->sval[0];
-    const char * service = mdns_query_srv_args.service->sval[0];
-    const char * proto = mdns_query_srv_args.proto->sval[0];
+    const char *instance = mdns_query_srv_args.instance->sval[0];
+    const char *service = mdns_query_srv_args.service->sval[0];
+    const char *proto = mdns_query_srv_args.proto->sval[0];
     int timeout = mdns_query_srv_args.timeout->ival[0];
 
     if (timeout <= 0) {
@@ -193,7 +193,7 @@ static int cmd_mdns_query_srv(int argc, char** argv)
 
     printf("Query SRV: %s.%s.%s.local, Timeout: %d\n", instance, service, proto, timeout);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query_srv(instance, service, proto, timeout,  &results);
     if (err) {
         printf("ERROR: Query Failed\n");
@@ -235,17 +235,17 @@ static struct {
     struct arg_end *end;
 } mdns_query_txt_args;
 
-static int cmd_mdns_query_txt(int argc, char** argv)
+static int cmd_mdns_query_txt(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_txt_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_txt_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_txt_args.end, argv[0]);
         return 1;
     }
 
-    const char * instance = mdns_query_txt_args.instance->sval[0];
-    const char * service = mdns_query_txt_args.service->sval[0];
-    const char * proto = mdns_query_txt_args.proto->sval[0];
+    const char *instance = mdns_query_txt_args.instance->sval[0];
+    const char *service = mdns_query_txt_args.service->sval[0];
+    const char *proto = mdns_query_txt_args.proto->sval[0];
     int timeout = mdns_query_txt_args.timeout->ival[0];
 
     printf("Query TXT: %s.%s.%s.local, Timeout: %d\n", instance, service, proto, timeout);
@@ -254,7 +254,7 @@ static int cmd_mdns_query_txt(int argc, char** argv)
         timeout = 5000;
     }
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query_txt(instance, service, proto, timeout,  &results);
     if (err) {
         printf("ERROR: Query Failed\n");
@@ -297,16 +297,16 @@ static struct {
     struct arg_end *end;
 } mdns_query_ptr_args;
 
-static int cmd_mdns_query_ptr(int argc, char** argv)
+static int cmd_mdns_query_ptr(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_ptr_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_ptr_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_ptr_args.end, argv[0]);
         return 1;
     }
 
-    const char * service = mdns_query_ptr_args.service->sval[0];
-    const char * proto = mdns_query_ptr_args.proto->sval[0];
+    const char *service = mdns_query_ptr_args.service->sval[0];
+    const char *proto = mdns_query_ptr_args.proto->sval[0];
     int timeout = mdns_query_ptr_args.timeout->ival[0];
     int max_results = mdns_query_ptr_args.max_results->ival[0];
 
@@ -320,7 +320,7 @@ static int cmd_mdns_query_ptr(int argc, char** argv)
 
     printf("Query PTR: %s.%s.local, Timeout: %d, Max Results: %d\n", service, proto, timeout, max_results);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query_ptr(service, proto, timeout, max_results,  &results);
     if (err) {
         printf("ERROR: Query Failed\n");
@@ -362,15 +362,15 @@ static struct {
     struct arg_end *end;
 } mdns_query_ip_args;
 
-static int cmd_mdns_query_ip(int argc, char** argv)
+static int cmd_mdns_query_ip(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_ip_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_ip_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_ip_args.end, argv[0]);
         return 1;
     }
 
-    const char * hostname = mdns_query_ip_args.hostname->sval[0];
+    const char *hostname = mdns_query_ip_args.hostname->sval[0];
     int timeout = mdns_query_ip_args.timeout->ival[0];
     int max_results = mdns_query_ip_args.max_results->ival[0];
 
@@ -389,7 +389,7 @@ static int cmd_mdns_query_ip(int argc, char** argv)
 
     printf("Query IP: %s.local, Timeout: %d, Max Results: %d\n", hostname, timeout, max_results);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query(hostname, NULL, NULL, MDNS_TYPE_ANY, timeout, max_results, &results);
     if (err) {
         printf("ERROR: Query Failed\n");
@@ -432,17 +432,17 @@ static struct {
     struct arg_end *end;
 } mdns_query_svc_args;
 
-static int cmd_mdns_query_svc(int argc, char** argv)
+static int cmd_mdns_query_svc(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_query_svc_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_query_svc_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_query_svc_args.end, argv[0]);
         return 1;
     }
 
-    const char * instance = mdns_query_svc_args.instance->sval[0];
-    const char * service = mdns_query_svc_args.service->sval[0];
-    const char * proto = mdns_query_svc_args.proto->sval[0];
+    const char *instance = mdns_query_svc_args.instance->sval[0];
+    const char *service = mdns_query_svc_args.service->sval[0];
+    const char *proto = mdns_query_svc_args.proto->sval[0];
     int timeout = mdns_query_svc_args.timeout->ival[0];
     int max_results = mdns_query_svc_args.max_results->ival[0];
 
@@ -456,7 +456,7 @@ static int cmd_mdns_query_svc(int argc, char** argv)
 
     printf("Query SVC: %s.%s.%s.local, Timeout: %d, Max Results: %d\n", instance, service, proto, timeout, max_results);
 
-    mdns_result_t * results = NULL;
+    mdns_result_t *results = NULL;
     esp_err_t err = mdns_query(instance, service, proto, MDNS_TYPE_ANY, timeout, max_results,  &results);
     if (err) {
         printf("ERROR: Query Failed\n");
@@ -498,9 +498,9 @@ static struct {
     struct arg_end *end;
 } mdns_init_args;
 
-static int cmd_mdns_init(int argc, char** argv)
+static int cmd_mdns_init(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_init_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_init_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_init_args.end, argv[0]);
         return 1;
@@ -538,7 +538,7 @@ static void register_mdns_init(void)
     ESP_ERROR_CHECK( esp_console_cmd_register(&cmd_init) );
 }
 
-static int cmd_mdns_free(int argc, char** argv)
+static int cmd_mdns_free(int argc, char **argv)
 {
     mdns_free();
     return 0;
@@ -562,9 +562,9 @@ static struct {
     struct arg_end *end;
 } mdns_set_hostname_args;
 
-static int cmd_mdns_set_hostname(int argc, char** argv)
+static int cmd_mdns_set_hostname(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_set_hostname_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_set_hostname_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_set_hostname_args.end, argv[0]);
         return 1;
@@ -600,9 +600,9 @@ static struct {
     struct arg_end *end;
 } mdns_set_instance_args;
 
-static int cmd_mdns_set_instance(int argc, char** argv)
+static int cmd_mdns_set_instance(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_set_instance_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_set_instance_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_set_instance_args.end, argv[0]);
         return 1;
@@ -633,11 +633,11 @@ static void register_mdns_set_instance(void)
     ESP_ERROR_CHECK( esp_console_cmd_register(&cmd_set_instance) );
 }
 
-static mdns_txt_item_t * _convert_items(const char **values, int count)
+static mdns_txt_item_t *_convert_items(const char **values, int count)
 {
-    int i=0,e;
-    const char * value = NULL;
-    mdns_txt_item_t * items = (mdns_txt_item_t*) malloc(sizeof(mdns_txt_item_t) * count);
+    int i = 0, e;
+    const char *value = NULL;
+    mdns_txt_item_t *items = (mdns_txt_item_t *) malloc(sizeof(mdns_txt_item_t) * count);
     if (!items) {
         printf("ERROR: No Memory!\n");
         goto fail;
@@ -645,21 +645,21 @@ static mdns_txt_item_t * _convert_items(const char **values, int count)
     }
     memset(items, 0, sizeof(mdns_txt_item_t) * count);
 
-    for (i=0; i<count; i++) {
+    for (i = 0; i < count; i++) {
         value = values[i];
-        char * esign = strchr(value, '=');
+        char *esign = strchr(value, '=');
         if (!esign) {
             printf("ERROR: Equal sign not found in '%s'!\n", value);
             goto fail;
         }
         int var_len = esign - value;
         int val_len = strlen(value) - var_len - 1;
-        char * var = (char*)malloc(var_len+1);
+        char *var = (char *)malloc(var_len + 1);
         if (var == NULL) {
             printf("ERROR: No Memory!\n");
             goto fail;
         }
-        char * val = (char*)malloc(val_len+1);
+        char *val = (char *)malloc(val_len + 1);
         if (val == NULL) {
             printf("ERROR: No Memory!\n");
             free(var);
@@ -667,7 +667,7 @@ static mdns_txt_item_t * _convert_items(const char **values, int count)
         }
         memcpy(var, value, var_len);
         var[var_len] = 0;
-        memcpy(val, esign+1, val_len);
+        memcpy(val, esign + 1, val_len);
         val[val_len] = 0;
 
         items[i].key = var;
@@ -677,7 +677,7 @@ static mdns_txt_item_t * _convert_items(const char **values, int count)
     return items;
 
 fail:
-    for (e=0;e<i;e++) {
+    for (e = 0; e < i; e++) {
         free((char *)items[e].key);
         free((char *)items[e].value);
     }
@@ -694,9 +694,9 @@ static struct {
     struct arg_end *end;
 } mdns_add_args;
 
-static int cmd_mdns_service_add(int argc, char** argv)
+static int cmd_mdns_service_add(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_add_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_add_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_add_args.end, argv[0]);
         return 1;
@@ -706,12 +706,12 @@ static int cmd_mdns_service_add(int argc, char** argv)
         printf("ERROR: Bad arguments!\n");
         return 1;
     }
-    const char * instance = NULL;
+    const char *instance = NULL;
     if (mdns_add_args.instance->sval[0] && mdns_add_args.instance->sval[0][0]) {
         instance = mdns_add_args.instance->sval[0];
         printf("MDNS: Service Instance: %s\n", instance);
     }
-    mdns_txt_item_t * items = NULL;
+    mdns_txt_item_t *items = NULL;
     if (mdns_add_args.txt->count) {
         items = _convert_items(mdns_add_args.txt->sval, mdns_add_args.txt->count);
         if (!items) {
@@ -752,9 +752,9 @@ static struct {
     struct arg_end *end;
 } mdns_remove_args;
 
-static int cmd_mdns_service_remove(int argc, char** argv)
+static int cmd_mdns_service_remove(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_remove_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_remove_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_remove_args.end, argv[0]);
         return 1;
@@ -793,9 +793,9 @@ static struct {
     struct arg_end *end;
 } mdns_service_instance_set_args;
 
-static int cmd_mdns_service_instance_set(int argc, char** argv)
+static int cmd_mdns_service_instance_set(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_service_instance_set_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_service_instance_set_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_service_instance_set_args.end, argv[0]);
         return 1;
@@ -835,8 +835,9 @@ static struct {
     struct arg_end *end;
 } mdns_service_port_set_args;
 
-static int cmd_mdns_service_port_set(int argc, char** argv) {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_service_port_set_args);
+static int cmd_mdns_service_port_set(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_service_port_set_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_service_port_set_args.end, argv[0]);
         return 1;
@@ -876,10 +877,10 @@ static struct {
     struct arg_end *end;
 } mdns_txt_replace_args;
 
-static int cmd_mdns_service_txt_replace(int argc, char** argv)
+static int cmd_mdns_service_txt_replace(int argc, char **argv)
 {
-    mdns_txt_item_t * items = NULL;
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_txt_replace_args);
+    mdns_txt_item_t *items = NULL;
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_txt_replace_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_txt_replace_args.end, argv[0]);
         return 1;
@@ -929,9 +930,9 @@ static struct {
     struct arg_end *end;
 } mdns_txt_set_args;
 
-static int cmd_mdns_service_txt_set(int argc, char** argv)
+static int cmd_mdns_service_txt_set(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_txt_set_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_txt_set_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_txt_set_args.end, argv[0]);
         return 1;
@@ -972,9 +973,9 @@ static struct {
     struct arg_end *end;
 } mdns_txt_remove_args;
 
-static int cmd_mdns_service_txt_remove(int argc, char** argv)
+static int cmd_mdns_service_txt_remove(int argc, char **argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &mdns_txt_remove_args);
+    int nerrors = arg_parse(argc, argv, (void **) &mdns_txt_remove_args);
     if (nerrors != 0) {
         arg_print_errors(stderr, mdns_txt_remove_args.end, argv[0]);
         return 1;
@@ -1007,7 +1008,7 @@ static void register_mdns_service_txt_remove(void)
     ESP_ERROR_CHECK( esp_console_cmd_register(&cmd_txt_remove) );
 }
 
-static int cmd_mdns_service_remove_all(int argc, char** argv)
+static int cmd_mdns_service_remove_all(int argc, char **argv)
 {
     mdns_service_remove_all();
     return 0;
