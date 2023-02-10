@@ -42,8 +42,12 @@ nvs_handle_t nvs_h;
 // Only debugging:
 //#define DEBUG_COUNT_TOUCH
 
-// Relay ON (high) / OFF
-#define GPIO_RELAY 25
+// Relay Latch IOs ON / OFF (On HIGH the transistor connects GND)
+#define GPIO_RELAY_ON 1
+#define GPIO_RELAY_OFF 3
+// Pulse to move the switch in millis
+const uint16_t signal_ms = 50;
+
 // FONT used for title / message body - Only after display library
 //Converting fonts with ümlauts: ./fontconvert *.ttf 18 32 252
 #include <Fonts/ubuntu/Ubuntu_M8pt8b.h>
@@ -53,6 +57,8 @@ extern "C"
 {
    void app_main();
 }
+
+void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
 // Some GFX constants
 uint16_t blockWidth = 42;
@@ -101,8 +107,19 @@ void draw_centered_text(const GFXfont *font, char * text, int16_t x, int16_t y, 
     display.print(text);
 }
 
+void switchState(bool state) {
+  if (state) {
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 1); // OFF
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_ON, 0); // OFF release
+  } else {
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 1); // OFF
+    delay(signal_ms);
+    gpio_set_level((gpio_num_t)GPIO_RELAY_OFF, 0); // OFF release
+  }
+}
 
-void drawUXandSwitch(){
+void drawUX(){
   uint16_t dw = display.width();
   uint16_t dh = display.height();
   uint8_t  sw = 20;
@@ -115,10 +132,12 @@ void drawUXandSwitch(){
   // OFF position
   if (!switch_state) {
     display.fillRoundRect(dw/2-keyw/2, dh/2, keyw, keyh, 5, EPD_BLACK);
-    gpio_set_level((gpio_num_t)GPIO_RELAY, 0); // OFF
+    switchState(false);
+    printf("Draw OFF\n\n");
   } else {
     display.fillRoundRect(dw/2-keyw/2, dh/2-keyh, keyw, keyh, 5, EPD_BLACK);
-    gpio_set_level((gpio_num_t)GPIO_RELAY, 1); // ON
+    switchState(true);
+    printf("Draw ON\n\n");
   }
   
   char * label = (switch_state) ? (char *)"ON" : (char *)"OFF";
@@ -147,7 +166,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
         } else {
           switch_state = false;
         }
-        drawUXandSwitch();
+        drawUX();
         ESP_LOGI(TAG, "%d for %s-%s",
                 (int)val.val.i, device_name, param_name);
 
@@ -249,7 +268,7 @@ void touchEvent(TPoint p, TEvent e)
     return;
 
   switch_state = !switch_state;
-  drawUXandSwitch();
+  drawUX();
   //printf("state:%d\n", (int)switch_state);
 }
 
@@ -302,8 +321,9 @@ void app_main(void)
     esp_rmaker_node_add_device(node, epaper_device);
 
    //Initialize GPIOs direction & initial states
-    gpio_set_direction((gpio_num_t)GPIO_RELAY, GPIO_MODE_OUTPUT);
-    gpio_set_level((gpio_num_t)GPIO_RELAY, 0); // OFF
+    gpio_set_direction((gpio_num_t)GPIO_RELAY_ON, GPIO_MODE_OUTPUT);
+    gpio_set_direction((gpio_num_t)GPIO_RELAY_OFF, GPIO_MODE_OUTPUT);
+    switchState(false); // OFF at the beginning
 
     /* Enable timezone service which will be require for setting appropriate timezone
       * from the phone apps for scheduling to work correctly.
@@ -328,16 +348,12 @@ void app_main(void)
           abort();
       }
       
-   // Test Epd class
+   // Initialize epaper class
    display.init(false);
-   //display.setFont(&Ubuntu_M8pt8b);
-   
-   printf("display.colors_supported:%d\n", display.colors_supported);  
-   display.setRotation(2);
-   display.update();
+   display.setRotation(display_rotation);
    display.setFont(&Ubuntu_M8pt8b);
    display.setTextColor(EPD_BLACK);
-   drawUXandSwitch();
+   drawUX();
    
    // Instantiate touch. Important pass here the 3 required variables including display width and height
    ts.begin(FT6X36_DEFAULT_THRESHOLD, display.width(), display.height());
