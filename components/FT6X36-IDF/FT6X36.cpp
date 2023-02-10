@@ -281,10 +281,8 @@ bool FT6X36::readData(void)
 		break;
   }
 
-	printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	if (CONFIG_FT6X36_DEBUG) {
-	  //printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
-	  //printf("X1:%d Y1:%d EVENT:%d\n", _touchX[1], _touchY[1], _touchEvent[1]);
+		printf("X0:%d Y0:%d EVENT:%d\n", _touchX[0], _touchY[0], _touchEvent[0]);
 	}
 	return true;
 }
