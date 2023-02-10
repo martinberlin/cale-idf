@@ -20,9 +20,9 @@ idf_component_register(
     #SRCS "demos/demo-touch.cpp"
     #SRCS "demos/demo-touch-epd-implemented.cpp"
     #SRCS "demos/demo-touch-keyboard.cpp"
-    #SRCS "demos/on-off-switch.cpp"
-    SRCS "demos/i2c-scan.cpp"
-    
+    SRCS "demos/on-off-switch.cpp"
+    #SRCS "demos/i2c-scan.cpp"
+
     # Generic demos for any displays
     #SRCS "demos/demo-sleep-clock.cpp"
     # SRCS "demo-sleep-clock-v2.cpp"
