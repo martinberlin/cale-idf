@@ -8,7 +8,7 @@ set(srcs
     # With touch integrated
     "models/goodisplay/touch/gdey027T91T.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
-    "models/wave12i48.cpp"
+    #"models/wave12i48.cpp"
     "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
     "models/gdew075T7Grays.cpp"
@@ -36,7 +36,7 @@ set(srcs
     "models/color/gdeh042Z96.cpp"
     "models/color/gdeh042Z21.cpp"
     "models/color/gdeq042Z21.cpp"
-    "models/color/wave12i48BR.cpp"
+    #"models/color/wave12i48BR.cpp"
 
     # 7 colors ACEP
     "models/color/gdey073d46.cpp"
@@ -66,7 +66,7 @@ set(srcs
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    "epd4spi.cpp"
+    #"epd4spi.cpp"
     )
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
