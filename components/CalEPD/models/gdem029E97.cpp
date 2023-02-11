@@ -72,22 +72,25 @@ void Gdem029E97::update()
   uint8_t x1buf[xLineBytes];
   uint32_t i = 0;
 
-    _wakeUp();
+  _wakeUp();
 
-    IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for (uint16_t y = GDEM029E97_HEIGHT; y > 0; y--) {
-      for (uint16_t x = 0; x < xLineBytes; x++)
-      {
-        uint16_t idx = y * xLineBytes + x;
-        uint8_t data = i < sizeof(_mono_buffer) ? _mono_buffer[idx] : 0x00;
-        x1buf[x] = data; // ~ is invert
+  IO.cmd(0x24); // write RAM1 for black(0)/white (1)
+  for (int y = GDEM029E97_HEIGHT-1; y >= 0; y--) {
+    for (uint16_t x = 0; x < xLineBytes; x++)
+    {
+      uint16_t idx = y * xLineBytes + x;
+      // No need to safeward this if GDEM029E97_HEIGHT & xLineBytes are well calculated
+      //uint8_t data = i < sizeof(_mono_buffer) ? _mono_buffer[idx] : 0x00;
+      x1buf[x] = _mono_buffer[idx];
 
-        if (x==xLineBytes-1) { // Flush the X line buffer to SPI
-              IO.data(x1buf,sizeof(x1buf));
-            }
-        ++i;
-      }
+      if (x==xLineBytes-1) { // Flush the X line buffer to SPI
+            IO.data(x1buf,sizeof(x1buf));
+          }
+      ++i;
     }
+  }  
+  // This 2 should match or we are doing something wrong
+  printf("Buffer size: %d sent: %d\n ", (int)GDEM029E97_BUFFER_SIZE, (int)i );
   uint64_t endTime = esp_timer_get_time();
   IO.cmd(0x20);        // Update sequence
 
@@ -174,8 +177,12 @@ void Gdem029E97::_waitBusy(const char* message){
 }
 
 void Gdem029E97::_sleep(){
-  IO.cmd(0x10); // deep sleep
-  IO.data(0x01);
+  IO.cmd(0x22); //POWER OFF
+	IO.data(0xC3);   
+	IO.cmd(0x20);  
+	
+  IO.cmd(0x10); //enter deep sleep
+  IO.data(0x01); 
 }
 
 void Gdem029E97::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -276,8 +283,8 @@ void Gdem029E97::_wakeUp(){
   IO.cmd(0x32); // Send LUTs
   IO.data(LUT_DATA, 70);
 
-	IO.cmd(0x3A);     //Dummy Line 	 
-	IO.data(LUT_DATA[74]);    
+	//IO.cmd(0x3A);     //Dummy Line 	 
+	//IO.data(LUT_DATA[74]);  
 	IO.cmd(0x3B);     //Gate time 
 	IO.data(LUT_DATA[75]);
   _waitBusy("wakeup CMDs");
