@@ -16,6 +16,7 @@ set(srcs
     "models/gdew0583t7.cpp"
     "models/gdew042t2.cpp"
     "models/gdew042t2Grays.cpp"
+    "models/gdem029E97.cpp"
     "models/gdew027w3.cpp"
     "models/wave12i48.cpp"
     # Touch model, please also enable FT6X36-IDF in the REQUIRE section
