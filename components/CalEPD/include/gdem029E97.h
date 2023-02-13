@@ -17,7 +17,7 @@
 #include <esp_timer.h>
 
 // All comments below are from J-M Zingg (Ref. EPD)
-// The physical number of pixels (for controller parameter)
+// The physical number of pixels (for controller parameter) not using this here so will probably fly away
 #define GDEM029E97_X_PIXELS 128
 #define GDEM029E97_Y_PIXELS 296
 
@@ -50,6 +50,7 @@ class Gdem029E97 : public Epd
   
   private:
     EpdSpi& IO;
+    int partials = 0;
     uint8_t _mono_buffer[GDEM029E97_BUFFER_SIZE];
     uint8_t _buffer1[GDEM029E97_BUFFER_SIZE];
     uint8_t _buffer2[GDEM029E97_BUFFER_SIZE];
@@ -57,6 +58,7 @@ class Gdem029E97 : public Epd
     bool debug_enabled = false;
     
     void _wakeUp();
+    void _wakeUpPartial();
     void _sleep();
 
     void _waitBusy(const char* message);

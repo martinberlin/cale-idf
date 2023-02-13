@@ -27,7 +27,26 @@ const unsigned char LUT_DATA[]= {
 0x00,0x00,0x00,0x00,0x00,                       // TP6 A~D RP6
 
 0x15,0x41,0xA8,0x32,0x30,0x0A,
-};	
+};
+
+const unsigned char LUT_DATA_part[]={  //20 bytes
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,             //LUT0: BB:     VS 0 ~7
+0x80,0x00,0x00,0x00,0x00,0x00,0x00,             //LUT1: BW:     VS 0 ~7
+0x40,0x00,0x00,0x00,0x00,0x00,0x00,             //LUT2: WB:     VS 0 ~7
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,             //LUT3: WW:     VS 0 ~7
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,             //LUT4: VCOM:   VS 0 ~7
+
+0x0A,0x00,0x00,0x00,0x00,                       // TP0 A~D RP0
+0x00,0x00,0x00,0x00,0x00,                       // TP1 A~D RP1
+0x00,0x00,0x00,0x00,0x00,                       // TP2 A~D RP2
+0x00,0x00,0x00,0x00,0x00,                       // TP3 A~D RP3
+0x00,0x00,0x00,0x00,0x00,                       // TP4 A~D RP4
+0x00,0x00,0x00,0x00,0x00,                       // TP5 A~D RP5
+0x00,0x00,0x00,0x00,0x00,                       // TP6 A~D RP6
+
+0x15,0x41,0xA8,0x32,0x30,0x0A,
+};				
+
 
 // Constructor GDEY0213B74
 Gdem029E97::Gdem029E97(EpdSpi& dio): 
@@ -105,11 +124,16 @@ void Gdem029E97::update()
 
 void Gdem029E97::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  //ESP_LOGE("PARTIAL", "update is not implemented x:%d y:%d\n", (int)x, (int)y);
   if (!_using_partial_mode) {
     _using_partial_mode = true;
-    _wakeUp();
+    _wakeUpPartial();
+    IO.cmd(0x26); // RAM2 clean it up at the start
+    for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
+    {
+      IO.data(0xFF);
+    }
   }
+  
   if (using_rotation) _rotate(x, y, w, h);
   if (x >= GDEM029E97_WIDTH) return;
   if (y >= GDEM029E97_HEIGHT) return;
@@ -118,20 +142,15 @@ void Gdem029E97::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   uint16_t xs_d8 = x / 8;
   uint16_t xe_d8 = xe / 8;
 
-  IO.cmd(0x12); //SWRESET
-  _waitBusy("SWRESET");
+  partials++;
+  ESP_LOGI("PARTIAL", "partial %d x:%d y:%d\n", partials, (int)x, (int)y);
 
   _setRamDataEntryMode(0x03);
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
   _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  _waitBusy("updateWindow I");
-
-  IO.cmd(0x22);
-  IO.data(0xFF); 
   
   IO.cmd(0x24); // BW RAM
   //printf("Loop from ys:%d to ye:%d\n", y, ye);
-
   for (int16_t y1 = y; y1 <= ye; y1++)
   {
     for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
@@ -141,22 +160,11 @@ void Gdem029E97::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
       IO.data(data);
     }
   }
-
-  // If I don't do this then the 2nd partial comes out gray:
-  IO.cmd(0x26); // RAM2
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEM029E97_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-      IO.data(~data);
-    }
-  }
-  
+  IO.cmd(0x22);
+  IO.data(0x0C); // 0xFC in GxEPD class
   IO.cmd(0x20);
-  _waitBusy("update partial");
-  //_sleep();
+  //vTaskDelay(pdMS_TO_TICKS(GDEM029E97_PU_DELAY));
+  _waitBusy("partial");
 }
 
 void Gdem029E97::_waitBusy(const char* message){
@@ -234,7 +242,6 @@ void Gdem029E97::drawPixel(int16_t x, int16_t y, uint16_t color) {
     }
 }
 
-// _InitDisplay generalizing names here
 void Gdem029E97::_wakeUp(){
   IO.reset(10);
   _waitBusy("RST reset");
@@ -288,6 +295,30 @@ void Gdem029E97::_wakeUp(){
 	IO.cmd(0x3B);     //Gate time 
 	IO.data(LUT_DATA[75]);
   _waitBusy("wakeup CMDs");
+}
+
+void Gdem029E97::_wakeUpPartial(){
+  IO.cmd(0x12);  //SWRESET
+  _waitBusy("SWRESET");
+
+  IO.cmd(0x32); // Send LUTs
+  IO.data(LUT_DATA_part, 70);
+
+  IO.cmd(0x37); 
+  IO.data(0x00);  
+  IO.data(0x00);  
+  IO.data(0x00);  
+  IO.data(0x00);  
+  IO.data(0x40);  
+  IO.data(0x00);  
+  IO.data(0x00);   
+	
+  IO.cmd(0x3C); //BorderWavefrom
+	IO.data(0x01);
+IO.cmd(0x22); 
+  IO.data(0xC0); 
+  IO.cmd(0x20); 
+   _waitBusy("Power on");
 }
 
 void Gdem029E97::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
