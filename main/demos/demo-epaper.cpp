@@ -10,9 +10,11 @@
 //#include <gdew0213i5f.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
+//#include "gdem029E97.h"
+
 // New GOODISPLAY models
-#include "goodisplay/gdey0213b74.h"
-//#include "goodisplay/gdey0154d67.h"
+
+#include "goodisplay/gdey029T94.h"
 // Color
 //#include <gdew0583z21.h>
 //#include <gdeh042Z96.h>
@@ -25,9 +27,10 @@ Wave12I48 display(io); */
 
 // Single SPI EPD
 EpdSpi io;
+Gdey029T94 display(io);
 //Gdew075T7 display(io);
 //Gdep015OC1 display(io);
-gdey0213b74 display(io);
+//Gdem029E97 display(io);
 //gdey0154d67 display(io);
 
 // Enable on HIGH 5V boost converter
@@ -147,39 +150,28 @@ void app_main(void)
 
    // Test Epd class
    display.init(false);
-   display.setFont(&Ubuntu_M12pt8b);
+   /* display.setFont(&Ubuntu_M12pt8b);
    display.setMonoMode(true);
    display.update();
+   printf("EPD width: %d height: %d\n\n", display.width(), display.height());
+   display.setRotation(1); */
 
-   display.setMonoMode(false); // 4 grays slower update
-   uint8_t xCircle = display.width()/2;
+   // Partial update test. Loading bar:
+   /* auto boxw = 10;
+   auto boxh = 10;
+   for (int a = 1; a<92 ; a+=10) {
+   display.fillRect(a, 10, boxw, boxh, EPD_BLACK);
+   display.updateWindow(a,10, boxw, boxh);
+   delay(1500);
+   } */
 
-   display.fillScreen(EPD_WHITE);
-   display.fillCircle(xCircle,31, 30, EPD_DARKGREY);
-   display.fillCircle(xCircle,81, 30, EPD_LIGHTGREY);
-   display.fillCircle(xCircle,121, 30, EPD_BLACK);
-   display.fillCircle(xCircle,171, 30, EPD_WHITE);
-   display.setCursor(4, 140);
-   display.setTextColor(EPD_LIGHTGREY);
-   display.println("4 GRAY");
-   display.setTextColor(EPD_BLACK);
-   display.println("4 gray");
+   delay(1000);
+   display.setMonoMode(false);
+   display.fillCircle(display.width()/2,display.height()/2,50, EPD_DARKGREY);
    display.update();
 
-   display.setMonoMode(true); // Monochrome fast mode
-   //display.setMonoMode(true); // false = 4 gray mode without partial update
-   // Partial update test
-   
-   display.setRotation(0);
-   draw_content(display.getRotation());
-   display.spi_optimized = false;
-   display.setRotation(1);
-   draw_content(display.getRotation()); 
-
-  /*  display.setRotation(2);
-   draw_content(display.getRotation());
-   display.setRotation(3);
-   draw_content(display.getRotation()); */
-
+   delay(35000);
+   display.fillScreen(EPD_WHITE);
+   display.update();
    printf("display: We are done with the demo");
 }

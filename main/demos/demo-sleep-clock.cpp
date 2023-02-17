@@ -450,9 +450,6 @@ void app_main(void)
 {
     uint64_t startTime = esp_timer_get_time();
     
-    printf("ESP32 deepsleep clock\n");
-    printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
-
     // Turn off neopixel to keep consumption to the minimum
     gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);
     gpio_set_pull_mode((gpio_num_t)DOTSTAR_CLK, GPIO_PULLDOWN_ONLY);
