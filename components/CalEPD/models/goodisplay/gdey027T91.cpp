@@ -10,7 +10,7 @@
 
 const epd_lut_159 Gdey027T91::lut_4_grays={
 0x32, {
-  0x40,	0x48,	0x80,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+0x40,	0x48,	0x80,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 0x8,	0x48,	0x10,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 0x2,	0x48,	0x4,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 0x20,	0x48,	0x1,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
@@ -27,9 +27,9 @@ const epd_lut_159 Gdey027T91::lut_4_grays={
 0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
 0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
 0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,					
-0x22,	0x22,	0x22,	0x22,	0x22,	0x22,	0x0,	0x0,	0x0,			
+0x22,	0x22,	0x22,	0x22,	0x22,	0x22,	0x0,	0x0,	0x0,	 // -> till here	
 0x22,	0x17,	0x41,	0x0,	0x32,	0x1C
-},159};
+},153};  // There are 159 but sends max 153 items
 
 DRAM_ATTR const epd_init_3 Gdey027T91::GDOControl={
 0x01,{(GDEY027T91_HEIGHT - 1) % 256, (GDEY027T91_HEIGHT - 1) / 256, 0x00},3
@@ -102,28 +102,35 @@ void Gdey027T91::fillScreen(uint16_t color)
 
 // Now redefined as 4 gray mode
 void Gdey027T91::_wakeUp(){
-  ESP_LOGE("Gdey027T91", "4 Gray not working as expected");
-
   IO.reset(10);
-  IO.cmd(0x12);  //SWRESET
-  _waitBusy("SWRESET");
-  
-  // <wake> Needed?
-  IO.cmd(0x18);
-  IO.data(0x80);
-  IO.cmd(0x22);   //Load Temperature and waveform setting.
-  IO.data(0XB1);
-  IO.cmd(0x20);
-  _waitBusy("Load temp.");
-  IO.cmd(0x1A); // Write to temperature register
-  IO.data(0x64);    
-  IO.data(0x00);  
-            
-  IO.cmd(0x22); // Load temperature value
-  IO.data(0x91);    
-  IO.cmd(0x20); 
-  _waitBusy("_wake");
-  // </wake>
+  IO.cmd(0x12); // SWRESET
+  _waitBusy("SW reset");
+
+  IO.cmd(0x74); //set analog block control       
+	IO.data(0x54);
+	IO.cmd(0x7E); //set digital block control          
+	IO.data(0x3B);
+
+	IO.cmd(0x01); //Driver output control      
+	IO.data(0x07);
+	IO.data(0x01);
+	IO.data(0x00);
+
+	IO.cmd(0x11); //data entry mode       
+	IO.data(0x01);
+
+	IO.cmd(0x44); //set Ram-X address start/end position   
+	IO.data(0x00);
+	IO.data(0x15);    //0x15-->(21+1)*8=176
+
+	IO.cmd(0x45); //set Ram-Y address start/end position          
+	IO.data(0x07);   //0x0107-->(263+1)=264
+	IO.data(0x01);
+	IO.data(0x00);
+	IO.data(0x00); 
+
+	IO.cmd(0x3C); //BorderWavefrom
+	IO.data(0x00);
 
 	IO.cmd(0x2C);     //VCOM Voltage
 	IO.data(lut_4_grays.data[158]);    //0x1C
@@ -141,9 +148,14 @@ void Gdey027T91::_wakeUp(){
 
   // LUT init table for 4 gray. Check if it's needed!
   IO.cmd(lut_4_grays.cmd);     // boost
-  for (int i=0; i<lut_4_grays.databytes; ++i) {
-      IO.data(lut_4_grays.data[i]);
-  }
+  IO.data(lut_4_grays.data, lut_4_grays.databytes);
+
+  IO.cmd(0x4E);   // set RAM x address count to 0;
+	IO.data(0x00);
+	IO.cmd(0x4F);   // set RAM y address count to 0X199;    
+	IO.data(0x07);
+	IO.data(0x01);
+  _waitBusy("4gray");
 }
 
 void Gdey027T91::_wakeUp(uint8_t em) {
@@ -172,9 +184,10 @@ void Gdey027T91::update()
   uint64_t startTime = esp_timer_get_time();
   uint8_t xLineBytes = GDEY027T91_WIDTH / 8;
   uint8_t x1buf[xLineBytes];
+  uint8_t twentytwo = 0xC4;
   if (_mono_mode) {
     _wakeUp(0x01);
-    _PowerOn();
+    //_PowerOn();
     IO.cmd(0x24);        // send framebuffer
     
     if (spi_optimized) {
@@ -209,38 +222,42 @@ void Gdey027T91::update()
     }
 
   } else {
-    // 4 gray mode!
+    // 4 gray mode
     _wakeUp();
-    printf("buffer size: %d", sizeof(_buffer1));
-
+    
     IO.cmd(0x24); // RAM1
     for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--)
       {
         for (uint16_t x = 0; x < xLineBytes; x++)
         {
           uint16_t idx = y * xLineBytes + x;  
-          x1buf[x] = (idx < sizeof(_buffer1)) ? ~ _buffer1[idx] : 0xFF;
+          x1buf[x] = _buffer1[idx];
         }
         // Flush the X line buffer to SPI
         IO.data(x1buf, sizeof(x1buf));
       }
+    //printf("buff size:%d 0x24 RAM1 sent:%d\n\n", (int)GDEY027T91_BUFFER_SIZE, cb);
+
     IO.cmd(0x26); // RAM2
     for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--)
       {
         for (uint16_t x = 0; x < xLineBytes; x++)
         {
           uint16_t idx = y * xLineBytes + x;  
-          x1buf[x] = (idx < sizeof(_buffer2)) ? ~ _buffer2[idx] : 0xFF;
+          x1buf[x] = _buffer2[idx];
         }
         // Flush the X line buffer to SPI
         IO.data(x1buf, sizeof(x1buf));
       }
+
+      twentytwo = 0xC7; // 0x22 SPI CMD
   }
+
   uint64_t endTime = esp_timer_get_time();
-  IO.cmd(0x22);
-  IO.data(0xc4);
-  // NOTE: Using F7 as in the GD example the display turns black into gray at the end. With C4 is fine
-  IO.cmd(0x20);
+  IO.cmd(0x22); // Display Update Control
+  IO.data(twentytwo);
+  IO.cmd(0x20); // Update sequence
+
   _waitBusy("_Update_Full", 1200);
   uint64_t powerOnTime = esp_timer_get_time();
 
@@ -455,27 +472,27 @@ void Gdey027T91::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
   color >>= 6; // Color is from 0 (black) to 255 (white)
       
-      switch (color)
-      {
+    switch (color)
+    {
       case 1:
-        // Dark gray: Correct
-        _buffer1[i] = _buffer1[i] | mask;
-        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
-        break;
-      case 2:
-        // Light gray: Correct
+        // Dark gray
         _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
         _buffer2[i] = _buffer2[i] | mask;
         break;
-      case 3:
-        // WHITE
+      case 2:
+        // Light gray
         _buffer1[i] = _buffer1[i] | mask;
-        _buffer2[i] = _buffer2[i] | mask;
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      case 3:
+        // White
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
         break;
       default:
         // Black
-        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
-        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] | mask;
         break;
       }
  }
