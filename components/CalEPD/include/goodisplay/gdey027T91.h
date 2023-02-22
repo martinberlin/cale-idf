@@ -12,7 +12,7 @@
 #include <epd.h>
 #include <Adafruit_GFX.h>
 #include <epdspi.h>
-#include <gdew_colors.h>
+#include <gdew_4grays.h>
 #include <esp_timer.h>
 
 // Controller: SSD1680 (Solomon)
