@@ -17,30 +17,7 @@ Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://c
 
 In the repository [cale-platformio](https://github.com/martinberlin/cale-platformio) you can have a quick start skeleton to use CalEPD and Adafruit-GFX components, along with optional FocalTech touch I2C. Please be aware that there are some corrections to do by hand until we figure out what is the best way to do it. Read those in the WiKi and please give a **★ to the cale-platformio** repository if you find it useful
 
-### Important updates coming
-
-We recently received a new batch of [epapers from Good-Display](https://www.good-display.com) and you can track our progress checking the [Issues tagged with GOODISPLAY](https://github.com/martinberlin/cale-idf/issues?q=is%3Aissue+is%3Aopen+label%3AGOODISPLAY)
-
-We are thankful for that since our mission is to offer developers a stable and modern ESP-IDF component. Enabling them to develop Firmware using epaper displays in the latest Espressif System on a Chip MCUs like ESP32S3, C3, and the new ones supporting WiFi 5 GHz as C5. 
-
-This new epaper models are merged now in **develop**. Please use that branch to test them.
-Note that we started adding this new models under goodisplay directory. To include them use this from your CPP file:
-
-```C
-#include "goodisplay/gdey027T91.h"
-// After that check WiKi for examples
-EpdSpi io;
-Gdey027T91 display(io);
-```
-
-This will take some more days since Espressif still didn't released officially ESP-IDF version 5, most developers still use stable 4.4 version. We respectfully ask you to switch to this branch to try this new models and also help us correct latest details before merging.
-The new models added will support also 4 Gray mode whenever possible, being this the first component supporting this update mode, since is not fully supported in other known libraries as GxEPD. After this merge we will come back to the touch support topic and update the component too, in order to try LVGL in epapers that support partial update correctly such as the Ultrachip (UCxxx) models
-
-_4th November 2022, Barcelona, **Fasani Corporation** headquarters_
-
-### 2022 update
-
-This year we are commited to explore the limits of using eink in ESP32. We will also try to make this compatible with Arduino-framework since we had many requests (Although not in our high-prio list) and lastly we will make this easy to handle and test for the developers using it the first time. Also in my top list is to make this work with latest Espressif workhorse, the ESP32S3, since it seems that with two LX7 cores is the fastest one so far.
+### Excluding components / parallel epapers
 
 Please note that parallel driver epdiy is not anymore a requirement and after last update **epdiy V6** is not part of this repository, only linked as a git submodule. So in case you want to use our experimental implementation in C++, please pull the git submodules:
 
@@ -82,9 +59,7 @@ Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/
 2. You will contribute adding a new epaper model that does not exist or add a new functionality to an existing one.
 3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
 
-All other users that fork this without falling in this categories and without any kind of advice to us will be blocked and will not be able to interact with the further Cale releases. 
-
-We don't like having copies of the whole repository without any reason. 
+This advice is because we don't like having copies of the whole repository without any reason. But it does not interfere in any way with the [Apache License](https://github.com/martinberlin/cale-idf/blob/master/LICENSE#L89) that clearly states that you might reproduce and distribute a copy of this component provided you agree with the terms mentioned there.
     
 ## News
 
@@ -121,14 +96,15 @@ Best settings on CALE.es website that we found to display color photos with cale
 
 ROADMAP
     
-    2022->till April performance optimization and research in parallel eink drivers
-    2021->Oct->Dec Testing other projects and small pause (Lot's of other work that are not electronics related...)
-    2021->Aug->Oct Imaging libraries: Adding JPG support and optimizing processes
-    2021-Jun->Aug Parallel interaction research: UX on epaper displays
-    2021-Mar till June Enabling touch support to enable UX design in ESP32
-    2020-Sep Optimizing instantiation and configuration
-    2020-Aug Adding color epapers 5.83 and 7.5 inches
-    2020-Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
+    2023.Still adding some Goodisplay epapers. Introduction of setMonoMode (to add 4 gray mode in certain models)
+    2022.Performance optimization and research in parallel eink drivers
+    2021.Oct→Dec Testing other projects and small pause (Lot's of other work that are not electronics related...)
+    2021.Aug→Oct Imaging libraries: Adding JPG support and optimizing processes
+    2021.Jun→Aug Parallel interaction research: UX on epaper displays
+    2021.Mar till June Enabling touch support to enable UX design in ESP32
+    2020.Sep Optimizing instantiation and configuration
+    2020.Aug Adding color epapers 5.83 and 7.5 inches
+    2020.Jul Added PlasticLogic as a new brand with 4 wire SPI (uses MISO)
 
 **CALE-IDF uses this components:**
 
