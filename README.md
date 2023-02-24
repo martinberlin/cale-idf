@@ -13,9 +13,18 @@ ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-s
 
 Cale-idf is the official ESP-IDF firmware of our Web-Service [CALE.es](https://cale.es) and also the repository where the development of [CalEPD](https://github.com/martinberlin/CalEPD) epaper component takes place. The main class extends Adafruit GFX so this library has full geometric functions and also fonts including German/Spanish/French special characters support.
 
-### VSCODE and Platformio ★
+### VSCODE and Platformio
 
 In the repository [cale-platformio](https://github.com/martinberlin/cale-platformio) you can have a quick start skeleton to use CalEPD and Adafruit-GFX components, along with optional FocalTech touch I2C. Please be aware that there are some corrections to do by hand until we figure out what is the best way to do it. Read those in the WiKi and please give a **★ to the cale-platformio** repository if you find it useful
+
+## News
+
+- **We are working in a interesting new PCB design to make a smart switch using this component. If you are interested please check our [repository Bistable-smart-Switch](https://github.com/martinberlin/bistable-smart-switch) and don't be shy, give it a ★ if you like it.**
+- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/50-idf-v5-rainmaker](tree/feature/50-idf-v5-rainmaker) **Note:** It needs an external submodule component so don't forget to run:
+
+    git submodule update --init --recursive
+
+[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 ### Excluding components / parallel epapers
 
@@ -60,15 +69,6 @@ Parallel epapers need to have an [EPDiy board](https://github.com/vroland/epdiy/
 3. You will use Cale-idf as a base to create something new. But in that case it would be better to fork the components. 
 
 This advice is because we don't like having copies of the whole repository without any reason. But it does not interfere in any way with the [Apache License](https://github.com/martinberlin/cale-idf/blob/master/LICENSE#L89) that clearly states that you might reproduce and distribute a copy of this component provided you agree with the terms mentioned there.
-    
-## News
-
-- We worked in making an example and merge request, for the EPDiy parallel epaper component, in order to add a [JPG download plus render with HTTPS support example](https://github.com/vroland/epdiy/tree/master/examples/www-image). If there is interest in having this for the Black/White and 3 color epaper models (B/R or B/Yellow) I will adapt a version in the examples. Just contact me on the email that is on my Github profile.
-- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/42-wifi-provisioning](https://github.com/martinberlin/cale-idf/tree/feature/42-wifi-provisioning) **Note:** It needs an external submodule component so don't forget to run:
-
-    git submodule update --init --recursive
-
-[For more news and announcements please check the Wiki section](https://github.com/martinberlin/cale-idf/wiki/CalEPD-news)
 
 ## Requesting for new models
 
