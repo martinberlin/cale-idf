@@ -2,10 +2,8 @@
 
 ### Requirements
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 * esp32 or esp32S2 with PSRAM (C3 also works check notes below)
-* Espressif IDF framework 4.3
+* Espressif IDF framework 4.3 to latest version
 * An SPI epaper (see wiki for supported models)
 * Please read [RainMaker WiFi provisioning in the Wiki to get more details about this branch](https://github.com/martinberlin/cale-idf/wiki/RainMaker-WiFi-provisioning)
 =======
