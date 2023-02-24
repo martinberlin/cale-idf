@@ -20,7 +20,7 @@ In the repository [cale-platformio](https://github.com/martinberlin/cale-platfor
 ## News
 
 - **We are working in a interesting new PCB design to make a smart switch using this component. If you are interested please check our [repository Bistable-smart-Switch](https://github.com/martinberlin/bistable-smart-switch) and don't be shy, give it a ★ if you like it.**
-- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/50-idf-v5-rainmaker](tree/feature/50-idf-v5-rainmaker) **Note:** It needs an external submodule component so don't forget to run:
+- A full pfleged version that supports WiFi provisioning using ESP-Rainmaker app is updated on the branch [feature/50-idf-v5-rainmaker](https://github.com/martinberlin/cale-idf/tree/feature/50-idf-v5-rainmaker) **Note:** It needs an external submodule component so don't forget to run:
 
     git submodule update --init --recursive
 
@@ -296,8 +296,9 @@ Thanks to all the developers interested to test this. Special mentions for @IoTP
 If you like this component and it made your life easier please consider becoming a sponsor where you can donate as little as 2 u$ per month. Just click on:
 ❤ Sponsor  on the top right
 
-♢ For cryptocurrency users is also possible to help this project transferring Ethereum:
-
-    0x65B7EF685E5B493603740310A84268c6D59f58B5
-
 We are thankful for the support and contributions so far!
+
+## Interesting projects using this library
+
+- [Bistable-smart-switch](https://github.com/martinberlin/bistable-smart-switch) an ESP32-C3 (or S3) smart switch for your wall
+- [Invisible computers epaper](https://www.invisible-computers.com) your Google Calendar in an epaper display, drawn using CalEPD!
