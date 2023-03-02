@@ -66,8 +66,14 @@ set(srcs
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    "epd4spi.cpp"
     )
+
+idf_build_get_property(target IDF_TARGET)
+message(STATUS "→ Building example for ${target}")
+
+if (${target} EQUAL "esp32")
+   add(srcs "epd4spi.cpp")
+endif()
 
 # If the project does not use a touch display component FT6X36-IDF can be removed or #commented
 idf_component_register(SRCS ${srcs}      

@@ -114,3 +114,40 @@ void Epd::printerf(const char *format, ...) {
 void Epd::newline() {
   write(10);
 }
+
+void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t w, uint16_t h, const char* format, ...) {
+    // Handle printf arguments
+    va_list args;
+    va_start(args, format);
+    char max_buffer[1024];
+    int size = vsnprintf(max_buffer, sizeof max_buffer, format, args);
+    va_end(args);
+    string text = "";
+    if (size < sizeof(max_buffer)) {
+      text = string(max_buffer);
+      
+    } else {
+      ESP_LOGE("draw_centered_text", "max_buffer out of range. Increase max_buffer!");
+    }
+    // Draw external boundary where text needs to be centered in the middle
+    setFont(font);
+    int16_t text_x = 0;
+    int16_t text_y = 0;
+    uint16_t text_w = 0;
+    uint16_t text_h = 0;
+
+    getTextBounds(text.c_str(), x, y, &text_x, &text_y, &text_w, &text_h);
+    //display.drawRect(text_x, text_y, text_w, text_h, EPD_BLACK); // text boundaries
+
+    if (text_w > w) {
+        printf("W: Text width out of bounds");
+    }
+    if (text_h > h) {
+        printf("W: Text height out of bounds");
+    }
+    // Calculate the middle position
+    text_x += (w-text_w)/2;
+    uint ty = (h/2)+y+(text_h/2);
+    setCursor(text_x, ty);
+    print(text);
+}
