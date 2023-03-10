@@ -72,6 +72,21 @@ void Gdeq037T31::update()
   uint8_t x1buf[xLineBytes];
   _wakeUp();
 
+  uint64_t endTime = esp_timer_get_time();
+  if (total_updates) {
+    // Old buffer update so the display can compare
+    IO.cmd(0x10);
+    for (uint16_t y = GDEQ037T31_HEIGHT; y > 0; y--)
+      {
+        for (uint16_t x = 0; x < xLineBytes; x++)
+        {
+          uint16_t idx = y * xLineBytes + x;  
+          x1buf[x] = ~_old_buffer[idx];
+        }
+        IO.data(x1buf, sizeof(x1buf));
+      }
+  }
+
   IO.cmd(0x13);
   for (uint16_t y = GDEQ037T31_HEIGHT; y > 0; y--)
     {
@@ -82,15 +97,15 @@ void Gdeq037T31::update()
       }
       IO.data(x1buf, sizeof(x1buf));
     }
-  uint64_t endTime = esp_timer_get_time();
 
   IO.cmd(0x12);
   _waitBusy("_Update_Full");
   uint64_t powerOnTime = esp_timer_get_time();
-
+  total_updates++;
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
+  memcpy(_old_buffer, _mono_buffer, GDEQ037T31_BUFFER_SIZE);
   _sleep();
 }
 

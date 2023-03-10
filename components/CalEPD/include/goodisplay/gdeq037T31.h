@@ -32,11 +32,12 @@ class Gdeq037T31 : public Epd
   public:
     Gdeq037T31(EpdSpi& IO);
     bool fast_mode = false;
-    
+
     // Counts only Ink color so BWR will have 2
     const uint8_t colors_supported = 1;
     const uint8_t partial_supported = 1;
-    uint8_t spi_optimized = false;
+    uint16_t total_updates = 0;
+    bool spi_optimized = true;
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
@@ -55,7 +56,7 @@ class Gdeq037T31 : public Epd
     EpdSpi& IO;
     bool _mono_mode = false;
     uint8_t _mono_buffer[GDEQ037T31_BUFFER_SIZE];
-
+    uint8_t _old_buffer[GDEQ037T31_BUFFER_SIZE];
     bool debug_enabled = false;
     
     void _wakeUp();
