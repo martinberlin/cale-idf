@@ -55,18 +55,16 @@ class Gdeq037T31 : public Epd
   private:
     EpdSpi& IO;
     bool _mono_mode = false;
+    bool _partial_mode = false;
+    bool debug_enabled = false;
     uint8_t _mono_buffer[GDEQ037T31_BUFFER_SIZE];
     uint8_t _old_buffer[GDEQ037T31_BUFFER_SIZE];
-    bool debug_enabled = false;
+    
     
     void _wakeUp();
     void _sleep();
     
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-    // Ram data entry mode methods
-    void _setRamDataEntryMode(uint8_t em);
-    void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
-    void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
-
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
 };

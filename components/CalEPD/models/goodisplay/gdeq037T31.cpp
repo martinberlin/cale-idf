@@ -67,6 +67,7 @@ void Gdeq037T31::_wakeUp(){
 
 void Gdeq037T31::update()
 {
+  _partial_mode = false;
   uint64_t startTime = esp_timer_get_time();
   uint8_t xLineBytes = GDEQ037T31_WIDTH / 8;
   uint8_t x1buf[xLineBytes];
@@ -109,99 +110,60 @@ void Gdeq037T31::update()
   _sleep();
 }
 
-void Gdeq037T31::_setRamDataEntryMode(uint8_t em)
+uint16_t Gdeq037T31::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
 {
-  const uint16_t xPixelsPar = GDEQ037T31_WIDTH - 1;
-  const uint16_t yPixelsPar = GDEQ037T31_HEIGHT - 1;
-  em = gx_uint16_min(em, 0x03);
-  IO.cmd(0x11);
-  IO.data(em);
-  switch (em)
-  {
-    case 0x00: // x decrease, y decrease
-      _SetRamArea(xPixelsPar / 8, 0x00, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
-      _SetRamPointer(xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256); // set ram
-      break;
-    case 0x01: // x increase, y decrease : as in demo code
-      _SetRamArea(0x00, xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
-      _SetRamPointer(0x00, yPixelsPar % 256, yPixelsPar / 256); // set ram
-      break;
-    case 0x02: // x decrease, y increase
-      _SetRamArea(xPixelsPar / 8, 0x00, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
-      _SetRamPointer(xPixelsPar / 8, 0x00, 0x00); // set ram
-      break;
-    case 0x03: // x increase, y increase : normal mode
-      _SetRamArea(0x00, xPixelsPar / 8, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
-      _SetRamPointer(0x00, 0x00, 0x00); // set ram
-      break;
-  }
+  x &= 0xFFF8;            // byte boundary
+  xe = (xe - 1) | 0x0007; // byte boundary - 1
+  IO.cmd(0x90);           // partial window
+  IO.data(x / 256);
+  IO.data(x % 256);        // x-start 
+  IO.data(xe / 256);
+  IO.data(xe % 256-1);     // x-end
+  IO.data(y / 256);
+  IO.data(y % 256);
+  IO.data(ye / 256);
+  IO.data(ye % 256-1);     // y-end
+  
+  return (7 + xe - x) / 8; // number of bytes to transfer per line
 }
 
-void Gdeq037T31::_SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
-{
-  IO.cmd(0x44);
-  IO.data(Xstart);
-  IO.data(Xend);
-  IO.cmd(0x45);
-  IO.data(Ystart);
-  IO.data(Ystart1);
-  IO.data(Yend);
-  IO.data(Yend1);
-}
-
-void Gdeq037T31::_SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1)
-{
-  IO.cmd(0x4e);
-  IO.data(addrX);
-  IO.cmd(0x4f);
-  IO.data(addrY);
-  IO.data(addrY1);
+/**
+ * @brief Partial update is NOT supported in 4 Grays mode
+ * 
+ */
+void Gdeq037T31::initPartialUpdate(){
+    printf("initPartialUpdate()\n");
+    //_wakeUp(); // Does some partial refresh but completely wrong
+    // https://github.com/GoodDisplay/E-paper-Display-Library-of-GoodDisplay/blob/main/Monochrome_E-paper-Display/3.7inch_GDEQ037T31_416x240/Display_EPD_W21.c#L76
+    // Sending that referenced commmands
+    IO.reset(10);
+    IO.cmd(0x04);
+    _waitBusy("_PowerOn");
+    // Referenced from GD
+    IO.cmd(0xE5);
+    IO.data(0x6E);
+ 
+    IO.cmd(0x50);
+    IO.data(0xD7);
 }
 
 void Gdeq037T31::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  if (!_using_partial_mode) {
-    _using_partial_mode = true;
-    _wakeUp();
+  ESP_LOGI("Gdeq037T31", "Partial update is not yet implemented\n(We miss valid example, other UC's commands seem not to work here)");
 
-    // Fix gray partial update
-    IO.cmd(0x26);
-    for (int16_t i = 0; i <= GDEQ037T31_BUFFER_SIZE; i++)
-    {
-      IO.data(0xFF);
-    }
+  if (! _partial_mode) { 
+    initPartialUpdate();
+    _partial_mode = true;
   }
   if (using_rotation) _rotate(x, y, w, h);
-  if (x >= GDEQ037T31_WIDTH) return;
-  if (y >= GDEQ037T31_HEIGHT) return;
-  uint16_t xe = gx_uint16_min(GDEQ037T31_WIDTH, x + w) - 1;
-  uint16_t ye = gx_uint16_min(GDEQ037T31_HEIGHT, y + h) - 1;
-  uint16_t xs_d8 = x / 8;
-  uint16_t xe_d8 = xe / 8;
-
-  IO.cmd(0x12); //SWRESET
-  _waitBusy("SWRESET");
-  _setRamDataEntryMode(0x03);
-  _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
-  _SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-  //_waitBusy("partialUpdate1", 100); // needed ?
-
-  IO.cmd(0x24);
-  for (int16_t y1 = y; y1 <= ye; y1++)
-  {
-    for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++)
-    {
-      uint16_t idx = y1 * (GDEQ037T31_WIDTH / 8) + x1;
-      uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-      IO.data(~data);
-    }
+  if (x >= GDEQ037T31_WIDTH) {
+    ESP_LOGE("updateWindow x", "Exceeds display width %d", GDEQ037T31_WIDTH);
+    return;
   }
-  
-
-  IO.cmd(0x22);
-  IO.data(0xFF); //0x04
-  IO.cmd(0x20);
-  _waitBusy("updateWindow");
+  if (y >= GDEQ037T31_HEIGHT) {
+    ESP_LOGE("updateWindow y", "Exceeds display height %d", GDEQ037T31_HEIGHT);
+    return;
+  }
 }
 
 void Gdeq037T31::_waitBusy(const char* message){
