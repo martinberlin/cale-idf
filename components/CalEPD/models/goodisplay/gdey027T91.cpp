@@ -102,8 +102,6 @@ void Gdey027T91::fillScreen(uint16_t color)
 
 // Now redefined as 4 gray mode
 void Gdey027T91::_wakeUp(){
-  ESP_LOGE("Gdey027T91", "4 Gray not working as expected");
-
   IO.reset(10);
   IO.cmd(0x12);  //SWRESET
   _waitBusy("SWRESET");

@@ -111,11 +111,6 @@ class Epd : public virtual Adafruit_GFX
     virtual void init(bool debug = false) = 0;
     virtual void update() = 0; 
 
-    // Partial methods are going to be implemented by each model clases
-    //virtual void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
-    // partial update of rectangle at (xs,ys) from buffer to screen at (xd,yd), does not power off
-    //virtual void updateToWindow(uint16_t xs, uint16_t ys, uint16_t xd, uint16_t yd, uint16_t w, uint16_t h, bool using_rotation = true);
-
     // This are common methods every MODELX will inherit
     // hook to Adafruit_GFX::write
     size_t write(uint8_t);
@@ -124,6 +119,8 @@ class Epd : public virtual Adafruit_GFX
     void println(const std::string& text);
     void printerf(const char *format, ...);
     void newline();
+    void draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t w, uint16_t h, const char* format, ...);
+    
   // Methods that should be accesible by inheriting this abstract class
   protected: 
     // This should be inherited from this abstract class so we don't repeat in every model

@@ -41,10 +41,11 @@ bool debugVerbose = false;
 // Important configuration. The class should match your epaper display model:
 
 // -> Needs to ↓ suit to your model
-#include <gdeh0154d67.h> 
+//#include <gdeh0154d67.h> 
+#include <heltec0151.h> 
 EpdSpi io;             //    Configure the GPIOs using: idf.py menuconfig   -> section "Display configuration"
 //Gdeh0154d67 display(io); // -> Needs to match your epaper
-Gdeh0154d67 display(io);
+Hel0151 display(io);
 
 // HTTP Request constants. Update Europe/Berlin with your timezone v
 // Time: HHmm  -> 0800 (8 AM)   Time + Day 0800Fri 17, Jul
@@ -58,7 +59,7 @@ int sleepMinutes = 3;
 // At what time your CLOCK will get in Sync with the internet time?
 // Clock syncs with internet time in this two SyncHours. Leave it on -1 to avoid internet Sync (Leave at least one set otherwise it will never get synchronized)
 uint8_t syncHour1 = -1;         // IMPORTANT: Leave it on 0 for the first run!
-uint8_t syncHour2 = 9;         // Same here, 2nd request to Sync hour 
+uint8_t syncHour2 = 6;         // Same here, 2nd request to Sync hour 
 
 // This microsCorrection represents the program time and will be discounted from deepsleep
 // Fine correction: Handle with care since this will be corrected on each sleepMinutes period
@@ -254,7 +255,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_ON_HEADER:
         ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
         break;
-
+    case HTTP_EVENT_REDIRECT:
+        ESP_LOGI(TAG, "HTTP_EVENT_REDIRECT");
+        break;
     case HTTP_EVENT_ON_DATA:
        ++countDataEventCalls;
          if (countDataEventCalls == 1)
@@ -262,7 +265,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             startTime = esp_timer_get_time();
         }
 
-        ESP_LOGI(TAG, "DATA CALLS: %d length:%d\n", countDataEventCalls, evt->data_len);
+        ESP_LOGI(TAG, "DATA CALLS: %d length:%d\n", countDataEventCalls, (int)evt->data_len);
         memcpy(output_buffer, evt->data, evt->data_len);
 
         printf("\nInternet time Syncronization: ");
@@ -299,6 +302,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED\n");
         break;
+    default:
+        break;
     }
     return ESP_OK;
 }
@@ -328,8 +333,8 @@ static void http_get(const char * requestUrl)
     {
         ESP_LOGI(TAG, "\nREQUEST URL: %s\n\nHTTP GET Status = %d, content_length = %d\n",
                  requestUrl,
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int)esp_http_client_get_status_code(client),
+                 (int)esp_http_client_get_content_length(client));
     }
     else
     {
@@ -411,7 +416,7 @@ void wifi_init_sta(void)
     sprintf(reinterpret_cast<char *>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD);
     wifi_config.sta.pmf_cfg.capable = true;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
@@ -450,8 +455,7 @@ void app_main(void)
 {
     uint64_t startTime = esp_timer_get_time();
     
-    printf("ESP32 deepsleep clock\n");
-    printf("Free heap memory: %d\n", xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
+    printf("Free heap memory: %d\n", (int)xPortGetFreeHeapSize()); // Keep this above 100Kb to have a stable Firmware (Fonts take Heap!)
 
     // Turn off neopixel to keep consumption to the minimum
     gpio_set_direction((gpio_num_t)DOTSTAR_PWR, GPIO_MODE_OUTPUT);

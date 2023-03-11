@@ -109,11 +109,11 @@ void Gdey029T94::update()
     _wakeUp();
 
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+    for (int y = GDEY029T94_HEIGHT; y >= 0; y--) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
-        uint8_t data = i < sizeof(_mono_buffer) ? _mono_buffer[idx] : 0x00;
+        uint8_t data = _mono_buffer[idx];
         x1buf[x] = data; // ~ is invert
 
         if (x==xLineBytes-1) { // Flush the X line buffer to SPI
@@ -128,7 +128,7 @@ void Gdey029T94::update()
     
     // 4 grays mode
     IO.cmd(0x24); // write RAM1 for black(0)/white (1)
-    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+    for (int y = GDEY029T94_HEIGHT; y >= 0; y--) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
@@ -143,7 +143,7 @@ void Gdey029T94::update()
     }
     i = 0;
     IO.cmd(0x26); //RAM2 buffer: SPI2
-    for (uint16_t y = GDEY029T94_HEIGHT; y > 0; y--) {
+    for (int y = GDEY029T94_HEIGHT; y >= 0; y--) {
       for (uint16_t x = 0; x < xLineBytes; x++)
       {
         uint16_t idx = y * xLineBytes + x;
