@@ -54,7 +54,8 @@ class Gdey027T91 : public Epd
     bool _initial = true;
     bool _debug_buffer = false;
     bool _mono_mode = false;
-        void _PowerOn();
+    
+    void _PowerOn();
     // Ram data entry mode methods
     void _setRamDataEntryMode(uint8_t em);
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);

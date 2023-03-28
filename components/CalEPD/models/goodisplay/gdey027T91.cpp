@@ -74,9 +74,9 @@ void Gdey027T91::fillScreen(uint16_t color)
     }
   } else {
     // 4 Grays mode
-    for (uint32_t y = 0; y < GDEY027T91_HEIGHT; y++)
+    for (uint32_t y = 0; y < height(); y++)
     {
-      for (uint32_t x = 0; x < GDEY027T91_WIDTH; x++)
+      for (uint32_t x = 0; x < width(); x++)
       {
         drawPixel(x, y, color);
         if (x % 8 == 0)
