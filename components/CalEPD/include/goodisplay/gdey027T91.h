@@ -61,8 +61,8 @@ class Gdey027T91 : public Epd
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
     
     // Default wakeUp used for 4 gray mode
+    void _wakeUp4Gray();
     void _wakeUp();
-    void _wakeUp(uint8_t em);
     
     void _sleep();
     void _waitBusy(const char* message, uint16_t busy_time);

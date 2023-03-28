@@ -45,7 +45,7 @@ Gdey027T91::Gdey027T91(EpdSpi& dio):
 }
 
 void Gdey027T91::initFullUpdate(){
-    _wakeUp(0x01);
+    _wakeUp();
     _PowerOn();
     if (debug_enabled) printf("initFullUpdate() LUT\n");
 }
@@ -74,16 +74,6 @@ void Gdey027T91::fillScreen(uint16_t color)
     }
   } else {
     // 4 Grays mode
-    // This is to make faster black & white
-    if (color == 255 || color == 0) {
-      for(uint32_t i=0;i<GDEY027T91_BUFFER_SIZE;i++)
-      {
-        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
-        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
-      }
-    return;
-     }
-   
     for (uint32_t y = 0; y < GDEY027T91_HEIGHT; y++)
     {
       for (uint32_t x = 0; x < GDEY027T91_WIDTH; x++)
@@ -101,7 +91,7 @@ void Gdey027T91::fillScreen(uint16_t color)
 }
 
 // Now redefined as 4 gray mode
-void Gdey027T91::_wakeUp(){
+void Gdey027T91::_wakeUp4Gray(){
   IO.reset(10);
   IO.cmd(0x12); // SWRESET
   _waitBusy("SW reset");
@@ -158,7 +148,7 @@ void Gdey027T91::_wakeUp(){
   _waitBusy("4gray");
 }
 
-void Gdey027T91::_wakeUp(uint8_t em) {
+void Gdey027T91::_wakeUp() {
   IO.reset(10);
   IO.cmd(0x12); // SWRESET
   // Theoretically this display could be driven without RST pin connected
@@ -186,7 +176,7 @@ void Gdey027T91::update()
   uint8_t x1buf[xLineBytes];
   uint8_t twentytwo = 0xC4;
   if (_mono_mode) {
-    _wakeUp(0x01);
+    _wakeUp();
     //_PowerOn();
     IO.cmd(0x24);        // send framebuffer
     
@@ -223,7 +213,7 @@ void Gdey027T91::update()
 
   } else {
     // 4 gray mode
-    _wakeUp();
+    _wakeUp4Gray();
     
     IO.cmd(0x24); // RAM1
     for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--)
@@ -328,7 +318,7 @@ void Gdey027T91::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
 {
   if (!_using_partial_mode) {
     _using_partial_mode = true;
-    _wakeUp(0x03);
+    _wakeUp();
     _PowerOn();
     // Fix gray partial update
     IO.cmd(0x26);
