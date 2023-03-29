@@ -19,6 +19,7 @@
 #define GDEY073D46_WIDTH 800
 #define GDEY073D46_HEIGHT 480
 #define GDEY073D46_BUFFER_SIZE (uint32_t(GDEY073D46_WIDTH) * uint32_t(GDEY073D46_HEIGHT) / 2)
+#define IS_COLOR_EPD true
 
 class gdey073d46 : public Epd7Color
 {

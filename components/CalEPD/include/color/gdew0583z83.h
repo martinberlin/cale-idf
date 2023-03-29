@@ -1,4 +1,4 @@
-// 5.83 600*448 b/w/R Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
+// 5.83 600*448 b/w/R Controller: UC8179
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,18 +19,23 @@
 #include <gdew_colors.h>
 #include <esp_timer.h>
 
-#define GDEW0583Z21_WIDTH 600
-#define GDEW0583Z21_HEIGHT 448
+#define GDEW0583Z83_WIDTH 648
+#define GDEW0583Z83_HEIGHT 480
+#define IS_COLOR_EPD true
+#define GDEW0583Z83_BUFFER_SIZE (uint32_t(GDEW0583Z83_WIDTH) * uint32_t(GDEW0583Z83_HEIGHT) / 8)
+// 8 pix definitions
+#define GDEW0583Z83_8PIX_BLACK 0x00
+#define GDEW0583Z83_8PIX_WHITE 0xFF
+#define GDEW0583Z83_8PIX_RED 0x00
+#define GDEW0583Z83_8PIX_RED_WHITE 0xFF
 
-#define GDEW0583Z21_BUFFER_SIZE (uint32_t(GDEW0583Z21_WIDTH) * uint32_t(GDEW0583Z21_HEIGHT) / 8)
+#define GDEW0583Z83_PU_DELAY 500
 
-#define GDEW0583Z21_PU_DELAY 500
-
-class Gdew0583z21 : public Epd
+class Gdew0583z83 : public Epd
 {
   public:
    
-    Gdew0583z21(EpdSpi& IO);
+    Gdew0583z83(EpdSpi& IO);
     uint8_t colors_supported = 3;
     
     void init(bool debug = false);
@@ -44,8 +49,8 @@ class Gdew0583z21 : public Epd
   private:
     EpdSpi& IO;
 
-    uint8_t _buffer[GDEW0583Z21_BUFFER_SIZE];
-    uint8_t _red_buffer[GDEW0583Z21_BUFFER_SIZE];
+    uint8_t _black_buffer[GDEW0583Z83_BUFFER_SIZE];
+    uint8_t _red_buffer[GDEW0583Z83_BUFFER_SIZE];
     bool _using_partial_mode = false;
     bool _initial = true;
     
@@ -53,11 +58,10 @@ class Gdew0583z21 : public Epd
     void _sleep();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
-    void _send8pixel(uint8_t black,uint8_t red);
+    
     // Command & data structs
    
-    static const epd_init_2 epd_wakeup_power;
-    static const epd_init_2 epd_panel_setting;
-    static const epd_init_3 epd_boost;
+    static const epd_init_4 epd_wakeup_power;
+    static const epd_init_1 epd_panel_setting;
     static const epd_init_4 epd_resolution;
 };

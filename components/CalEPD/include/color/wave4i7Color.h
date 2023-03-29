@@ -19,6 +19,7 @@
 #define WAVE4I7COLOR_WIDTH 640
 #define WAVE4I7COLOR_HEIGHT 400
 #define WAVE4I7COLOR_BUFFER_SIZE (uint32_t(WAVE4I7COLOR_WIDTH) * uint32_t(WAVE4I7COLOR_HEIGHT) / 2)
+#define IS_COLOR_EPD true
 
 class Wave4i7Color : public Epd7Color
 {
