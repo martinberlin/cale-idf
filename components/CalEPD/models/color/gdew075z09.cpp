@@ -1,5 +1,5 @@
 //Controller: IL0371 (3 colors) http://www.e-paper-display.com/download_detail/downloadsId%3d536.html
-#include "gdew075z09.h"
+#include "color/gdew075z09.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"
