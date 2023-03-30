@@ -96,12 +96,11 @@ void Dke075Z83::_wakeUp(){
     IO.data(epd_resolution.data[i]);
   }
 
-  // Commented BOOST since does not seem adequate for this model (too much RED)
-  /* 
+  // Commented BOOST since does not seem adequate for this model (too much RED) 
   IO.cmd(0x06); //BOOST makes red more red
   IO.data(0xC7);
   IO.data(0xCC); 
-  IO.data(0x28); */
+  IO.data(0x30);
 
   IO.cmd(0x15);
   IO.data(0x00);
