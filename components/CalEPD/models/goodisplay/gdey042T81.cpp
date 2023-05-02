@@ -30,71 +30,60 @@ void Gdey042T81::init(bool debug)
 
 void Gdey042T81::fillScreen(uint16_t color)
 {
-  uint8_t black = GDEY042T81_8PIX_WHITE;
-  uint8_t red = GDEY042T81_8PIX_RED_WHITE;
-  if (color == EPD_WHITE) {
-
-  } else if (color == EPD_BLACK) {
-    black = GDEY042T81_8PIX_BLACK;
-    printf("fillScreen BLACK SELECTED\n");
-  } else if (color == EPD_RED) {
-    red = GDEY042T81_8PIX_RED;
-    printf("fillScreen RED SELECTED\n");
-  } else if ((color & 0xF100) > (0xF100 / 2)) {
-    red = 0xFF;
-    printf("fillScreen RED 0xFF\n");
-  } else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) {
-    black = 0xFF;
-    printf("fillScreen BLACK 0xFF\n");
+  uint8_t fill_color = GDEY042T81_8PIX_WHITE;
+  if (color == EPD_BLACK) {
+    fill_color = GDEY042T81_8PIX_BLACK;
   }
   
   for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
   {
-    _black_buffer[x] = black;
-    _red_buffer[x] = red;
+    _black_buffer[x] = fill_color;
   }
 
-  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n",color,sizeof(_black_buffer));
+  if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n", color, sizeof(_black_buffer));
 }
 
 void Gdey042T81::_wakeUp(){
-  IO.reset(10);
+  if (fastmode == 0 && !is_powered) {
+    IO.reset(10);
     _waitBusy("epd_wakeup reset");  //waiting for the electronic paper IC to release the idle signal
-      IO.cmd(0x12);     //SWRESET
+    is_powered = true;
+    IO.cmd(0x12);     //SWRESET
     _waitBusy("epd_wakeup swreset");  //waiting for the electronic paper IC to release the idle signal
-  
-    // This commands are similar to 042Z96 also SSD controller brand
-    IO.cmd(0x21);
-    IO.data(0x40);
-    IO.data(0x00);
+  }
 
-    IO.cmd(0x3C); // board
-    IO.data(0x05);
+  // This commands are similar to 042Z96 also SSD controller brand
+  IO.cmd(0x21);
+  IO.data(0x40);
+  IO.data(0x00);
 
-    IO.cmd(0x1A); // Write to temperature register
-    IO.data(0x5A);
-    IO.cmd(0x22); // Load temperature value
-    IO.data(0x91);
-    IO.cmd(0x20);
+  IO.cmd(0x3C); // board
+  IO.data(0x05);
+
+  IO.cmd(0x1A); // Write to temperature register
+  IO.data(0x5A);
+  IO.cmd(0x22); // Load temperature value
+  IO.data(0x91);
+  IO.cmd(0x20);
   _waitBusy("epd_load temp");
 
-    IO.cmd(0x11);  // Data entry mode
-    IO.data(0x01);
+  IO.cmd(0x11);  // Data entry mode
+  IO.data(0x01);
 
-    IO.cmd(0x44);
-    IO.data(0x00); // RAM x address start at 0
-    IO.data(0x31); // RAM x address end at 31h(49+1)*8->400
-    IO.cmd(0x45);
-    IO.data(0x2B);   // RAM y address start at 12Bh
-    IO.data(0x01);
-    IO.data(0x00); // RAM y address end at 00h
-    IO.data(0x00);
+  IO.cmd(0x44);
+  IO.data(0x00); // RAM x address start at 0
+  IO.data(0x31); // RAM x address end at 31h(49+1)*8->400
+  IO.cmd(0x45);
+  IO.data(0x2B);   // RAM y address start at 12Bh
+  IO.data(0x01);
+  IO.data(0x00); // RAM y address end at 00h
+  IO.data(0x00);
 
-    IO.cmd(0x4E);
-    IO.data(0x00);
-    IO.cmd(0x4F);
-    IO.data(0x2B);
-    IO.data(0x01);
+  IO.cmd(0x4E);
+  IO.data(0x00);
+  IO.cmd(0x4F);
+  IO.data(0x2B);
+  IO.data(0x01);
 }
 
 void Gdey042T81::update()
@@ -120,33 +109,16 @@ void Gdey042T81::update()
           ++i;
         }
     }
-  
-  // RED: Write RAM for red(1)/white (0)
-  i = 0;
-  IO.cmd(0x26);
-    for(uint16_t y =  1; y <= GDEY042T81_HEIGHT; y++) {
-        for(uint16_t x = 1; x <= xLineBytes; x++) {
-          uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEY042T81_8PIX_RED_WHITE;
-          x1buf[x-1] = data;
-          if (x==xLineBytes) {
-            IO.data(x1buf,sizeof(x1buf));
-          }
-          ++i;
-        }
-    }
-
   uint64_t endTime = esp_timer_get_time();
+  
   IO.cmd(0x22);  //Display Update Control
   IO.data(0xC7);   
   IO.cmd(0x20);  //Activate Display Update Sequence
   _waitBusy("update");
-  uint64_t powerOnTime = esp_timer_get_time();
-
-  // GxEPD comment: Avoid double full refresh after deep sleep wakeup
-  // if (_initial) {  // --> Original deprecated 
+  uint64_t refreshTime= esp_timer_get_time();
   
-  printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
-  (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
+  printf("\n\nSTATS (ms)\n%llu _wakeUp+send Buffer\n%llu refreshTime\n%llu total time in millis\n",
+  (endTime-startTime)/1000, (refreshTime-endTime)/1000, (refreshTime-startTime)/1000);
 
   _sleep();
 }
@@ -168,10 +140,17 @@ void Gdey042T81::_waitBusy(const char* message){
   }
 }
 
-void Gdey042T81::_sleep(){
-  
-  IO.cmd(0x10);
-  IO.data(0x01);// power off
+// Public method
+void Gdey042T81::deepsleep() {
+  _sleep();
+}
+
+void Gdey042T81::_sleep() {
+  if (!fastmode) {
+    IO.cmd(0x10);
+    IO.data(0x01);// power off
+  }
+  is_powered = false;
 }
 
 void Gdey042T81::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -230,11 +209,9 @@ void Gdey042T81::drawPixel(int16_t x, int16_t y, uint16_t color) {
   }
 
   // This formulas are from gxEPD that apparently got the color right:
-  _black_buffer[i] = (_black_buffer[i] & (GDEY042T81_8PIX_WHITE ^ (1 << (7 - x % 8)))); // white
-  _red_buffer[i] = (_red_buffer[i] & (GDEY042T81_8PIX_RED ^ (1 << (7 - x % 8)))); // white
+  _black_buffer[i] = (_black_buffer[i] & (GDEY042T81_8PIX_WHITE ^ (1 << (7 - x % 8))));
 
-  if (color == EPD_WHITE) return;
-  else if (color == EPD_BLACK) _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
-  else if (color == EPD_RED) _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));
-
+  if (color != EPD_WHITE) {
+    _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8)));
+  }
 }

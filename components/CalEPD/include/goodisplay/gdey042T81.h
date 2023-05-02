@@ -1,4 +1,5 @@
 // 4.2 b/w GDEY042T81 https://www.good-display.com/product/386.html
+// Note from GOODISPLAY: The GDEQ042T81 is fully compatible with GDEY042T81
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,16 +24,16 @@
 
 #define GDEY042T81_8PIX_BLACK 0x00
 #define GDEY042T81_8PIX_WHITE 0xFF
-#define GDEY042T81_8PIX_RED 0xFF
-#define GDEY042T81_8PIX_RED_WHITE 0x00
 
-// Note: GDEW0213I5F is our test display that will be the default initializing this class
 class Gdey042T81 : public Epd
 {
   public:
    
     Gdey042T81(EpdSpi& IO);
-    uint8_t colors_supported = 3;
+    uint8_t colors_supported = 1;
+    
+    uint8_t fastmode = 0; // With 1 it will not go to power off
+    bool is_powered = false;
     
     // EPD tests 
     void init(bool debug = false);
@@ -40,14 +41,13 @@ class Gdey042T81 : public Epd
     
     void fillScreen(uint16_t color);
     void update();
+    void deepsleep();
 
   private:
     EpdSpi& IO;
 
     uint8_t _black_buffer[GDEY042T81_BUFFER_SIZE];
-    uint8_t _red_buffer[GDEY042T81_BUFFER_SIZE];
 
-    bool _initial = true;
     void _wakeUp();
     void _sleep();
     void _waitBusy(const char* message);

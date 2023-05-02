@@ -158,5 +158,4 @@ void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t
 
     setCursor(text_x, ty);
     print(text);
-    printf("CURSOR x:%d y:%d text_h:%d\n",text_x, ty, text_h);
 }
