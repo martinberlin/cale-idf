@@ -124,7 +124,7 @@ void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t
     va_end(args);
     string text = "";
     if (size < sizeof(max_buffer)) {
-      text = string(max_buffer);
+      text = std::string(max_buffer);
       
     } else {
       ESP_LOGE("draw_centered_text", "max_buffer out of range. Increase max_buffer!");
@@ -137,7 +137,17 @@ void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t
     uint16_t text_h = 0;
 
     getTextBounds(text.c_str(), x, y, &text_x, &text_y, &text_w, &text_h);
-    //display.drawRect(text_x, text_y, text_w, text_h, EPD_BLACK); // text boundaries
+    // Calculate the middle position
+    
+    uint ty = (h/2)+y+(text_h/2);
+    // Fix for big fonts (>100 pt)
+    if (text_h > (height()/3) ) {
+      text_x += (w-text_w)/2.2;
+      ty -= text_h*1.8;
+    } else {
+      text_x += (w-text_w)/2;
+    }
+    //drawRect(text_x, ty-text_h, text_w, text_h, 0); // text boundaries test
 
     if (text_w > w) {
         printf("W: Text width out of bounds");
@@ -145,9 +155,8 @@ void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t
     if (text_h > h) {
         printf("W: Text height out of bounds");
     }
-    // Calculate the middle position
-    text_x += (w-text_w)/2;
-    uint ty = (h/2)+y+(text_h/2);
+
     setCursor(text_x, ty);
     print(text);
+    printf("CURSOR x:%d y:%d text_h:%d\n",text_x, ty, text_h);
 }

@@ -3,3 +3,5 @@ build
 .vscode
 sdkconfig
 sdkconfig.old
+dependencies.lock
+
