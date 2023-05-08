@@ -10,7 +10,7 @@ set(srcs
     # With touch integrated
     "models/goodisplay/touch/gdey027T91T.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
-    #"models/wave12i48.cpp"
+    "models/wave12i48.cpp"
     "models/gdew075HD.cpp"
     "models/gdew075T7.cpp"
     "models/gdew075T7Grays.cpp"
@@ -71,7 +71,7 @@ set(srcs
     "epd.cpp"
     "epd7color.cpp"
     "epdspi.cpp"
-    #"epd4spi.cpp"
+    "epd4spi.cpp"
     )
 
 idf_build_get_property(target IDF_TARGET)

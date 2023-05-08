@@ -44,8 +44,6 @@ class Wave12I48 : public Epd
     // EPD tests 
     void init(bool debug = false);
     void clear();
-    void initFullUpdate();
-    void initPartialUpdate();
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation);
     void fillScreen(uint16_t color);
     void update();

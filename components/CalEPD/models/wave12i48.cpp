@@ -29,25 +29,16 @@ Wave12I48::Wave12I48(Epd4Spi& dio):
   WAVE12I48_WIDTH, WAVE12I48_HEIGHT, (int) WAVE12I48_BUFFER_SIZE);
 }
 
-void Wave12I48::initFullUpdate(){
-  printf("Not implemented for this Epd\n");
-}
-
-void Wave12I48::initPartialUpdate(){
-  printf("Not implemented for this Epd\n");
- }
-
 // Initialize the display
 void Wave12I48::init(bool debug)
 {
     debug_enabled = debug;
     if (debug_enabled) printf("Wave12I48::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug (Increasing up to 6 still works but no noticiable speed change)
-    IO.init(4, false);
+    IO.init(5, false);
 
     fillScreen(EPD_WHITE);
-    printf("\nAvailable heap after Epd init:%d\n", (int) xPortGetFreeHeapSize());
-    //clear(); // No need to do this, but will leave it in the class
+    //printf("\nAvailable heap after Epd init:%d\n", (int) xPortGetFreeHeapSize());
 }
 
 void Wave12I48::fillScreen(uint16_t color)
