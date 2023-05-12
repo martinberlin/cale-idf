@@ -25,22 +25,17 @@
  * 2. Instantiate io class, below an example for Good Display/Waveshare epapers
  * 3. Instantiate the epaper class itself. After this you can call display.METHOD from any part of your program
  */
-// 1 channel SPI epaper displays example:
-//#include <gdew075T7.h>
-//#include <gdew042t2.h>
-//#include <gdew027w3.h>
-//#include <gdeh0213b73.h>
-//#include <gdew0583z21.h>
+
 // EPD class: Select yours
-#include "color/gdey073d46.h"
+//#include "color/gdey073d46.h"
 //#include "color/wave4i7Color.h"
-//#include "color/wave5i7Color.h"
+#include "color/wave5i7Color.h"
 EpdSpi io;
 // Choose the right class for your display:
-gdey073d46 display(io);
+//gdey073d46 display(io);
 
 //Wave4i7Color display(io);
-//Wave5i7Color display(io);
+Wave5i7Color display(io);
 
 
 // Plastic Logic test: Check cale-grayscale.cpp
@@ -244,8 +239,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     rgb_palette_buffer[pn] = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
 
                     // DEBUG Colors - TODO: Double check Palette!!
-                    if (bmpDebug)
-                        printf("0x00%x%x%x : %x, %x\n", red, green, blue, whitish, colored);
+                    printf("0x%x R %x G %x B %x\n", pn, red, green, blue);
+                    
                 }
             }
             imageBytesRead += evt->data_len;
@@ -300,7 +295,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             switch (bmp.depth)
             {
             case 1:
-            case 4:
             case 8:
             {
                 while (in_bits != 0)
@@ -339,6 +333,30 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
             break;
 
+            case 4:
+            {
+                //printf("4 bit depth\n\n");
+                while (in_bits != 0)
+                {
+
+                    uint16_t pn = (in_byte >> bitshift) & bitmask;
+                    in_byte <<= bmp.depth;
+                    in_bits -= bmp.depth;
+                    color = rgb_palette_buffer[pn];
+                    if (drawX + 1 > bmp.width) {
+                            drawX = 0;
+                            rowByteCounter = 0;
+                            --drawY;
+                        }
+                    
+                    // The ultimate mission: Send the X / Y pixel to the GFX Buffer
+                    display.drawPixel(drawX, drawY, color);
+
+                    totalDrawPixels++;
+                    ++drawX;
+                }
+            }
+            break;
             case 24:
                 // index24  3 byte B,G,R counter starts on 1
                 ++index24;
@@ -582,8 +600,8 @@ void app_main(void)
     display.setRotation(CONFIG_DISPLAY_ROTATION);
     // This 7 color Acep epapers leave a ghost from last refresh if stays for some minutes
     // Let's clean the epaper to prepare it for a new image:
-    display.update();
-    vTaskDelay(2500 / portTICK_PERIOD_MS);
+    //display.update();
+    //vTaskDelay(2500 / portTICK_PERIOD_MS);
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
