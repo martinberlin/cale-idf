@@ -103,39 +103,30 @@ void Gdeh0154z90::update()
     _wakeUp();
 
     IO.cmd(0x24); // Write RAM for black(0)/white (1)
-    uint16_t i = 0;
     uint8_t xLineBytes = GDEH0154Z90_WIDTH / 8;
     uint8_t x1buf[xLineBytes];
 
-    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
-    {
-        for (uint16_t x = 1; x <= xLineBytes; x++)
+    for (uint16_t y = GDEH0154Z90_HEIGHT; y > 0; y--)
+      {
+        for (uint16_t x = 0; x < xLineBytes; x++)
         {
-            uint8_t data = i < sizeof(_black_buffer) ? _black_buffer[i] : GDEH0154Z90_8PIX_WHITE;
-            x1buf[x - 1] = data;
-            if (x == xLineBytes)
-            { // Flush the X line buffer to SPI
-                IO.data(x1buf, sizeof(x1buf));
-            }
-            ++i;
+          uint16_t idx = y * xLineBytes + x;  
+          x1buf[x] = (idx < sizeof(_black_buffer)) ? _black_buffer[idx] : 0xFF;
         }
-    }
+        // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
+      }
 
     IO.cmd(0x26); // Write RAM for red(1)/white (0)
-    i = 0;
-
-    for (uint16_t y = 1; y <= GDEH0154Z90_HEIGHT; y++)
+    for (uint16_t y = GDEH0154Z90_HEIGHT; y > 0; y--)
     {
-        for (uint16_t x = 1; x <= xLineBytes; x++)
+        for (uint16_t x = 0; x < xLineBytes; x++)
         {
-            uint8_t data = i < sizeof(_red_buffer) ? _red_buffer[i] : GDEH0154Z90_8PIX_RED_WHITE;
-            x1buf[x - 1] = data;
-            if (x == xLineBytes)
-            {
-                IO.data(x1buf, sizeof(x1buf));
-            }
-            ++i;
+            uint16_t idx = y * xLineBytes + x;  
+            x1buf[x] = (idx < sizeof(_red_buffer)) ? _red_buffer[idx] : GDEH0154Z90_8PIX_RED_WHITE;
         }
+        // Flush the X line buffer to SPI
+        IO.data(x1buf, sizeof(x1buf));
     }
 
     uint64_t endTime = esp_timer_get_time();

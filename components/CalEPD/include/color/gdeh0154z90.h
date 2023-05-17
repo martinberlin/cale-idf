@@ -32,7 +32,7 @@ public:
     uint8_t colors_supported = 2;
     uint8_t partial_update_supported = 0;
 
-    void init(bool debug);
+    void init(bool debug = false);
     void fillScreen(uint16_t color);
     void drawPixel(int16_t x, int16_t y, uint16_t color); // Override GFX own drawPixel method
 
