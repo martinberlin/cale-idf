@@ -1,6 +1,6 @@
 // GOODISPLAY product page still not online
 // Controller:        UC8253
-// GDEQ037T31_416x240
+// GDEQ037T31_416x240 fully compatible with GDEY037T03
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +45,7 @@ class Gdeq037T31 : public Epd
     void init(bool debug = false);
     void initFullUpdate();
     void initPartialUpdate();
-    void setMonoMode(bool mode); // No idea if supports 4 grays
+    void setMonoMode(bool mode); // It supports 4 grays
     void fillScreen(uint16_t color);
     void update();
     
@@ -54,16 +54,16 @@ class Gdeq037T31 : public Epd
   
   private:
     EpdSpi& IO;
-    bool _mono_mode = false;
+    bool _mono_mode = true;
     bool _partial_mode = false;
     bool debug_enabled = false;
     uint8_t _mono_buffer[GDEQ037T31_BUFFER_SIZE];
-    uint8_t _old_buffer[GDEQ037T31_BUFFER_SIZE];
-    
+    uint8_t _buffer1[GDEQ037T31_BUFFER_SIZE];   // Used also as old_buffer
+    uint8_t _buffer2[GDEQ037T31_BUFFER_SIZE];   // to avoid adding another 12K buffer
     
     void _wakeUp();
     void _sleep();
-    
+    void _writeFullLut();
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);

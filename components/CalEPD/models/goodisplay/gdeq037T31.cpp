@@ -10,6 +10,42 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+//4Gray//////////////////////////////////////////
+static const unsigned char GDEQ037T31_LUT[216]={							
+0x01,	0x05,	0x20,	0x19,	0x0A,	0x01,	0x01,	
+0x05,	0x0A,	0x01,	0x0A,	0x01,	0x01,	0x01,	
+0x05,	0x09,	0x02,	0x03,	0x04,	0x01,	0x01,	
+0x01,	0x04,	0x04,	0x02,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x05,	0x20,	0x19,	0x0A,	0x01,	0x01,	
+0x05,	0x4A,	0x01,	0x8A,	0x01,	0x01,	0x01,	
+0x05,	0x49,	0x02,	0x83,	0x84,	0x01,	0x01,	
+0x01,	0x84,	0x84,	0x82,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x05,	0x20,	0x99,	0x8A,	0x01,	0x01,	
+0x05,	0x4A,	0x01,	0x8A,	0x01,	0x01,	0x01,	
+0x05,	0x49,	0x82,	0x03,	0x04,	0x01,	0x01,	
+0x01,	0x04,	0x04,	0x02,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x85,	0x20,	0x99,	0x0A,	0x01,	0x01,	
+0x05,	0x4A,	0x01,	0x8A,	0x01,	0x01,	0x01,	
+0x05,	0x49,	0x02,	0x83,	0x04,	0x01,	0x01,	
+0x01,	0x04,	0x04,	0x02,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x85,	0xA0,	0x99,	0x0A,	0x01,	0x01,	
+0x05,	0x4A,	0x01,	0x8A,	0x01,	0x01,	0x01,	
+0x05,	0x49,	0x02,	0x43,	0x04,	0x01,	0x01,	
+0x01,	0x04,	0x04,	0x42,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x01,	0x00,	0x00,	0x00,	0x00,	0x01,	0x01,	
+0x09,	0x10,	0x3F,	0x3F,	0x00,	0x0B,		
+//Frame	VGH	VSH	VSL	VSHR	VCOM		
+};
+
 // Constructor
 Gdeq037T31::Gdeq037T31(EpdSpi& dio): 
   Adafruit_GFX(GDEQ037T31_WIDTH, GDEQ037T31_HEIGHT),
@@ -54,15 +90,96 @@ void Gdeq037T31::_wakeUp(){
   IO.cmd(0x04);
   _waitBusy("_PowerOn");
 
+  if (_mono_mode) {
   IO.cmd(0x50);
   IO.data(0x97);
-  // Marked in GOODISPLAY as EPD_init_Fast
-  if (fast_mode) {
-    IO.cmd(0xE0);
-    IO.data(0x02);
-    IO.cmd(0xE5);
-    IO.data(0x5A);
+    // Marked in GOODISPLAY as EPD_init_Fast
+    if (fast_mode) {
+      IO.cmd(0xE0);
+      IO.data(0x02);
+      IO.cmd(0xE5);
+      IO.data(0x5A);
+    }
+  } else {
+    // 4 gray mode
+    IO.cmd(0x00);//Panel Setting   
+    IO.data(0xFF);//LUT FROM MCU
+    IO.data(0x0D);
+
+    IO.cmd(0x01);// power setting   
+    IO.data(0x03);//Enable internal VSH\VSL\VGH\VGL	
+    IO.data(GDEQ037T31_LUT[211]);//VGH=20V,VGL=-20V
+    IO.data(GDEQ037T31_LUT[212]);//VSH=15V
+    IO.data(GDEQ037T31_LUT[213]);//VSL=-15V
+    IO.data(GDEQ037T31_LUT[214]);//VSHR
+
+    IO.cmd(0x06);//booster soft start 
+    IO.data(0xD7);//D7	
+    IO.data(0xD7);//D7
+    IO.data(0x27);//2F	
+
+    IO.cmd(0x30);//PLL  -Frame rate 
+    IO.data(GDEQ037T31_LUT[210]);//PLL
+    
+    IO.cmd(0x50); //CDI   
+    IO.data(0x57);	
+
+    IO.cmd(0x60); //TCON
+    IO.data(0x22);//	
+
+    IO.cmd(0x61); //Resolution	
+    IO.data(0xF0);//HRES[7:3]-240
+    IO.data(0x01);//VRES[15:8]	-320
+    IO.data(0xA0);//VRES[7:0]
+    
+    IO.cmd(0x65); //Resolution	
+    IO.data(0x00);//HRES[7:3]-240
+    IO.data(0x00);//VRES[15:8]	-320
+    IO.data(0x00);//VRES[7:0]	
+    
+    IO.cmd(0x82);//VCOM_DC   
+    IO.data(GDEQ037T31_LUT[215]);//-2.0V	
+
+    //Power Saving Register 
+    IO.cmd(0xE3);        
+    IO.data(0x88);//VCOM_W[3:0],SD_W[3:0]
+
+    //LUT SETTING
+    _writeFullLut();
   }
+}
+
+void Gdeq037T31::_writeFullLut() {
+	unsigned int i;			
+  /**
+   * @brief This is horrible like this since it's raising CS pin for EVERY byte sent
+   *        TODO: Refactor this in 4 different LUT constants and sent in a whole CS toggle
+   */
+	IO.cmd(0x20);// write VCOM register
+	for(i=0;i<42;i++)
+	{
+			IO.data(GDEQ037T31_LUT[i]);
+	}
+	IO.cmd(0x21);// write LUTWW register
+	for(i=42;i<84;i++)
+	{
+			IO.data(GDEQ037T31_LUT[i]);
+	}
+	IO.cmd(0x22);// write LUTR register
+	for(i=84;i<126;i++)
+	{
+			IO.data(GDEQ037T31_LUT[i]);
+	}
+	IO.cmd(0x23);// write LUTW register
+	for(i=126;i<168;i++)
+	{
+			IO.data(GDEQ037T31_LUT[i]);
+	}
+	IO.cmd(0x24);// write LUTB register
+	for(i=168;i<210;i++)
+	{	
+			IO.data(GDEQ037T31_LUT[i]);	
+	}
 }
 
 void Gdeq037T31::update()
@@ -74,6 +191,7 @@ void Gdeq037T31::update()
   _wakeUp();
 
   uint64_t endTime = esp_timer_get_time();
+  if (_mono_mode) {
   if (total_updates) {
     // Old buffer update so the display can compare
     IO.cmd(0x10);
@@ -82,7 +200,7 @@ void Gdeq037T31::update()
         for (uint16_t x = 0; x < xLineBytes; x++)
         {
           uint16_t idx = y * xLineBytes + x;  
-          x1buf[x] = ~_old_buffer[idx];
+          x1buf[x] = ~_buffer1[idx];
         }
         IO.data(x1buf, sizeof(x1buf));
       }
@@ -98,15 +216,40 @@ void Gdeq037T31::update()
       }
       IO.data(x1buf, sizeof(x1buf));
     }
+    total_updates++;
+    memcpy(_buffer1, _mono_buffer, GDEQ037T31_BUFFER_SIZE);
+
+    } else {
+      // 4 Gray mode
+      printf("4 Gray UPDATE\n\n");
+      IO.cmd(0x13);
+      for (int y = 0; y < GDEQ037T31_HEIGHT; y++)
+        {
+          for (int x = xLineBytes; x >= 0 ; x--)
+          {
+            uint16_t idx = y * xLineBytes + x;  
+            x1buf[x] = ~_buffer1[idx];
+          }
+          IO.data(x1buf, sizeof(x1buf));
+        }
+      IO.cmd(0x10);
+      for (int y = 0; y < GDEQ037T31_HEIGHT; y++)
+        {
+          for (int x = xLineBytes; x >= 0; x--)
+          {
+            uint16_t idx = y * xLineBytes + x;  
+            x1buf[x] = ~_buffer2[idx];
+          }
+          IO.data(x1buf, sizeof(x1buf));
+        }
+    }
 
   IO.cmd(0x12);
   _waitBusy("_Update_Full");
   uint64_t powerOnTime = esp_timer_get_time();
-  total_updates++;
+  
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
-
-  memcpy(_old_buffer, _mono_buffer, GDEQ037T31_BUFFER_SIZE);
   _sleep();
 }
 
@@ -150,7 +293,10 @@ void Gdeq037T31::initPartialUpdate(){
 void Gdeq037T31::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
   ESP_LOGI("Gdeq037T31", "Partial update is not yet implemented\n(We miss valid example, other UC's commands seem not to work here)");
-
+  if (!_mono_mode) {
+    ESP_LOGE("Gdeq037T31", "Partial update does not work in 4 gray mode");
+    return;
+  }
   if (! _partial_mode) { 
     initPartialUpdate();
     _partial_mode = true;
@@ -233,14 +379,47 @@ void Gdeq037T31::drawPixel(int16_t x, int16_t y, uint16_t color) {
       break;
   }
   uint16_t i = x / 8 + y * GDEQ037T31_WIDTH / 8;
+  uint8_t mask = 1 << (7 - x % 8);
+  
+  if (_mono_mode) {
 
-  if (color) {
-    _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    } else {
-    _mono_buffer[i] = (_mono_buffer[i] | (1 << (7 - x % 8)));
-    }
+    if (color) {
+      _mono_buffer[i] = (_mono_buffer[i] & (0xFF ^ mask));
+      } else {
+      _mono_buffer[i] = (_mono_buffer[i] | mask);
+      }
+
+  } else {
+    // 4 gray mode
+    //mask = 0x80 >> (x & 7);
+    color >>= 6; // Color is from 0 (black) to 255 (white)
+      
+    switch (color)
+      {
+      case 1:
+        // Dark gray: Correct
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      case 2:
+        // Light gray: Correct
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      case 3:
+        // Black
+        _buffer1[i] = _buffer1[i] & (0xFF ^ mask);
+        _buffer2[i] = _buffer2[i] & (0xFF ^ mask);
+        break;
+      default:
+        // WHITE
+        _buffer1[i] = _buffer1[i] | mask;
+        _buffer2[i] = _buffer2[i] | mask;
+        break;
+      }
+  }
 }
 
 void Gdeq037T31::setMonoMode(bool mode) {
-  ESP_LOGI("Gdeq037T31", "No known 4 gray mode in this display");
+  _mono_mode = mode;
 }
