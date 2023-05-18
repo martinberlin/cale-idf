@@ -251,31 +251,34 @@ void Gdew042t2Grays::fillScreen(uint16_t color)
       }
 
   } else {
-    // This is to make faster black & white
-    if (color == 255 || color == 0) {
-      for(uint32_t i=0;i<GDEW042T2_MONO_BUFFER_SIZE;i++)
-      {
-        _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
-        _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
-      }
-    return;
-     }
-   
-    for (uint32_t y = 0; y < GDEW042T2_HEIGHT; y++)
+    uint8_t b1 = 0x00;
+    uint8_t b2 = 0x00;
+    switch (color)
     {
-      for (uint32_t x = 0; x < GDEW042T2_WIDTH; x++)
-      {
-        drawPixel(x, y, color);
-        if (x % 8 == 0)
-          {
-            #if defined CONFIG_IDF_TARGET_ESP32 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
-            rtc_wdt_feed();
-            #endif
-            vTaskDelay(pdMS_TO_TICKS(2));
-          }
-      }
+      case EPD_BLACK:
+          b1 = 0xFF;
+          b2 = 0xFF;
+      break;
+      case EPD_LIGHTGREY:
+          b1 = 0xFF;
+          b2 = 0x00;
+      break;
+      case EPD_DARKGREY:
+          b1 = 0x00;
+          b2 = 0xFF;
+      break;
+      case EPD_WHITE:
+          b1 = 0x00;
+          b2 = 0x00;
+      break;
     }
 
+      for(uint32_t i=0; i<GDEW042T2_MONO_BUFFER_SIZE; i++)
+      {
+        _buffer1[i] = b1;
+        _buffer2[i] = b2;
+      }
+    return;
   }
   if (debug_enabled) printf("fillScreen(%d)\n", color);
 }

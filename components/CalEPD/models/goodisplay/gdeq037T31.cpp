@@ -75,14 +75,46 @@ void Gdeq037T31::init(bool debug)
 
 void Gdeq037T31::fillScreen(uint16_t color)
 {
-  // 0xFF = 8 pixels black, 0x00 = 8 pix. white
-  uint8_t data = (color == EPD_BLACK) ? GDEQ037T31_8PIX_BLACK : GDEQ037T31_8PIX_WHITE;
-  for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
-  {
-    _mono_buffer[x] = data;
-  }
+  if (_mono_mode) {
+    // 0xFF = 8 pixels black, 0x00 = 8 pix. white
+    uint8_t data = (color == EPD_BLACK) ? GDEQ037T31_8PIX_BLACK : GDEQ037T31_8PIX_WHITE;
+    for (uint16_t x = 0; x < sizeof(_mono_buffer); x++)
+    {
+      _mono_buffer[x] = data;
+      _buffer1[x] = data;
+    }
+  } else {
+    uint8_t b1 = 0x00;
+    uint8_t b2 = 0x00;
+    switch (color)
+    {
+      case EPD_BLACK:
+          b1 = 0xFF;
+          b2 = 0xFF;
+      break;
+      case EPD_LIGHTGREY:
+          b1 = 0xFF;
+          b2 = 0x00;
+      break;
+      case EPD_DARKGREY:
+          b1 = 0x00;
+          b2 = 0xFF;
+      break;
+      case EPD_WHITE:
+          b1 = 0x00;
+          b2 = 0x00;
+      break;
+    }
 
-  if (debug_enabled) printf("fillScreen(%d) _mono_buffer len:%d\n",color,sizeof(_mono_buffer));
+      for(uint32_t i=0; i<GDEQ037T31_BUFFER_SIZE; i++)
+      {
+        _buffer1[i] = b1;
+        _buffer2[i] = b2;
+      }
+    return;
+     }
+
+  if (debug_enabled) printf("fillScreen(%d) _mono_mode: %d len:%d\n",color,(int) _mono_mode,sizeof(_mono_buffer));
 }
 
 void Gdeq037T31::_wakeUp(){
@@ -331,10 +363,10 @@ void Gdeq037T31::_waitBusy(const char* message){
 }
 
 void Gdeq037T31::_sleep(){
-  IO.cmd(0x22); // power off display
-  IO.data(0xc3);
-  IO.cmd(0x20);
+  IO.cmd(0X02); // power off display
   _waitBusy("power_off");
+  IO.data(0X07);
+  IO.cmd(0xA5);
 }
 
 void Gdeq037T31::_rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h)
@@ -421,5 +453,11 @@ void Gdeq037T31::drawPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 void Gdeq037T31::setMonoMode(bool mode) {
+  // Not sure if this is needed
+  if (_mono_mode == true) {
+    _mono_mode = false;
+    fillScreen(EPD_WHITE); // Clean both buffers
+    _mono_mode = true;
+  }
   _mono_mode = mode;
 }
