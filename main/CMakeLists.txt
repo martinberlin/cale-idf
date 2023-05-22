@@ -1,7 +1,7 @@
 idf_component_register(
     # CALE official ESP-IDF Firmware
     
-    #SRCS "cale.cpp"
+    SRCS "cale.cpp"
     #SRCS "cale-7-color.cpp"
 
     # SRCS "demos/cale-sensor.cpp"
@@ -11,7 +11,7 @@ idf_component_register(
 
     # Generic demos for touch displays (With an added layer or Gdew027w3T that comes with touch mounted)
     #SRCS "demos/demo-epaper.cpp"
-    SRCS "demos/demo-epaper-4gray.cpp"
+    #SRCS "demos/demo-epaper-4gray.cpp"
     #SRCS "demos/demo-grays.cpp"
     
     # SMALL displays

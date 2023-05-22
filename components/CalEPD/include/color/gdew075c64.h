@@ -21,7 +21,7 @@
 
 #define GDEW075C64_WIDTH 800
 #define GDEW075C64_HEIGHT 480
-
+#define IS_COLOR_EPD true
 // EPD comment: Pixel number expressed in bytes; this is neither the buffer size nor the size of the buffer in the controller
 // We are not adding page support so here this is our Buffer size
 #define GDEW075C64_BUFFER_SIZE (uint32_t(GDEW075C64_WIDTH) * uint32_t(GDEW075C64_HEIGHT) / 8)

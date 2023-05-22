@@ -24,15 +24,23 @@
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
+#include "dke/depg1020bn.h"
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include <gdew0583z21.h>
+//#include "color/dke075z83.h" // DEPGO0750RW
+//#include <color/gdew0583z83.h>
+
 EpdSpi io;
-//Gdeh0213b73 display(io);
-Gdew0583z21 display(io);
+Depg1020bn display(io);
+//Gdew075T7 display(io);
+//Dke075Z83 display(io);
+//Gdew0583z83 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
+// Enable on HIGH for Laska ESPink
+
+#define GPIO_DISPLAY_POWER_ON GPIO_NUM_2
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
@@ -301,10 +309,14 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
                     {
                         color = EPD_WHITE;
                     }
+                    
+                    #ifdef IS_COLOR_EPD
                     else if (colored && with_color)
                     {
                         color = EPD_RED;
                     }
+                    #endif
+
                     else
                     {
                         color = EPD_BLACK;
@@ -550,13 +562,15 @@ void app_main(void)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
     
+    gpio_set_direction(GPIO_DISPLAY_POWER_ON, GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_DISPLAY_POWER_ON, 1);
     //  On  init(true) activates debug (And makes SPI communication slower too)
     display.init();
     display.setRotation(CONFIG_DISPLAY_ROTATION);
+    display.update();
+    
     // Show available Dynamic Random Access Memory available after display.init() - Both report same number
     printf("Free heap: %d (After epaper instantiation)\n", (int) xPortGetFreeHeapSize());
 
     http_post();
-
-    // Just test if Epd works: Compile the demo-epaper.cpp example modifying main/CMakeLists
 }

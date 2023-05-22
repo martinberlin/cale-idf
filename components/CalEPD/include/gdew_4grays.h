@@ -4,4 +4,3 @@
 #define EPD_DARKGREY  64
 #define EPD_LIGHTGREY 128
 #define EPD_WHITE     255
-#define EPD_RED       0xF800
