@@ -7,6 +7,7 @@ set(srcs
     "models/goodisplay/gdey027T91.cpp"
     "models/goodisplay/gdey042T81.cpp"
     "models/goodisplay/gdeq037T31.cpp"
+    "models/goodisplay/gdey075T7.cpp"
     # With touch integrated
     "models/goodisplay/touch/gdey027T91T.cpp"
 
