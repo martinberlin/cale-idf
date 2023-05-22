@@ -1,4 +1,6 @@
 // 7.5 800*480 b/w Controller: GD7965 (In Waveshare called 7.5 V2)
+// Also compatible with DKE 7.5 monochrome: https://www.dke.top/products/fast-refresh-no-flicker-880x528-big-75-inch-epaper-display-e-ink-screene-ink-display
+// Controller seems also fully compatible with UC8179C
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

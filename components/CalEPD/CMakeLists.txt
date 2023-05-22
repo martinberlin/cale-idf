@@ -9,6 +9,9 @@ set(srcs
     "models/goodisplay/gdeq037T31.cpp"
     # With touch integrated
     "models/goodisplay/touch/gdey027T91T.cpp"
+
+    # DKE epapers (New)
+    "models/dke/depg1020bn.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"
