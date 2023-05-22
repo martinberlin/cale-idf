@@ -47,8 +47,6 @@ class Depg1020bn : public Epd
     EpdSpi& IO;
 
     uint8_t _mono_buffer[DEPG1020BN_BUFFER_SIZE];
-    uint8_t _buffer1[DEPG1020BN_BUFFER_SIZE];
-    uint8_t _buffer2[DEPG1020BN_BUFFER_SIZE];
     
     bool _initial = true;
     bool _mono_mode = true;
@@ -57,7 +55,6 @@ class Depg1020bn : public Epd
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
 
-    // Default wakeUp used for 4 gray mode
     void _wakeUp();
     void _PowerOn(void);
     void _wakeUp(uint8_t em);
