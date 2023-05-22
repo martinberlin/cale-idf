@@ -190,7 +190,7 @@ void Gdey075T7::update()
   {
     for (uint16_t x = 1; x <= xLineBytes; x++)
     {
-      uint8_t data = i < sizeof(_buffer) ? _buffer[i] : 0x00;
+      uint8_t data = i < sizeof(_buffer) ? ~_buffer[i] : 0x00;
       x1buf[x - 1] = data;
       if (x == xLineBytes)
       { // Flush the X line buffer to SPI

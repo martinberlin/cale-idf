@@ -12,10 +12,13 @@
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
 //#include "gdem029E97.h"
-#include "gdew075T7.h"
+//#include "gdew075T7.h"
 // New GOODISPLAY models
 //#include "color/gdew0583z83.h"
 //#include "goodisplay/gdeq037T31.h"
+//#include "goodisplay/gdey0154d67.h"
+#include "goodisplay/gdey075T7.h"
+//#include "dke/depg1020bn.h"
 // Color
 #define IS_COLOR_EPD 0
 
@@ -27,10 +30,10 @@ Wave12I48 display(io); */
 //#include <goodisplay/gdey042T81.h>
 
 EpdSpi io;
-Gdew075T7 display(io);
-//Gdep015OC1 display(io);
-//Gdem029E97 display(io);
-//gdey0154d67 display(io);
+Gdey075T7 display(io);
+//Gdeh0213b73 display(io);
+//Depg1020bn display(io);
+//Gdey0154d67 display(io);
 
 // Enable Power on Display
 #define GPIO_DISPLAY_POWER_ON GPIO_NUM_4
@@ -65,6 +68,53 @@ void demo(uint16_t bkcolor, uint16_t fgcolor)
 
 uint16_t rectW = 0;
 
+// Thanks Konstantin!
+void draw_content_lines(uint8_t rotation){
+   // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
+    
+
+   uint16_t foregroundColor = EPD_BLACK;
+   // Make some rectangles showing the different colors or grays
+   if (display.colors_supported>1) {
+      printf("display.colors_supported:%d\n", display.colors_supported);
+      foregroundColor = 0xF700; // RED
+   }
+
+   rectW = display.width();
+   uint16_t rectH = display.height();
+   if (display.getRotation() %2 == 0) {
+     rectW = display.height();
+     rectH = display.width();
+   }
+
+   rectW = display.width()/4; // For 11 is 37.
+   display.fillScreen(EPD_WHITE);
+   display.setFont(&Ubuntu_M24pt8b);
+   uint16_t firstBlock = display.width()/12;
+   display.fillRect(    1,1,display.width(), firstBlock,foregroundColor);
+   display.fillRect(1,firstBlock,display.width(), firstBlock,EPD_WHITE);
+   display.fillRect(1,firstBlock*2,display.width(),firstBlock,foregroundColor);
+   display.fillRect(1,firstBlock*3,display.width(),firstBlock,EPD_WHITE);
+   display.fillRect(1,firstBlock*4,display.width(),firstBlock,foregroundColor);
+   display.fillRect(1,firstBlock*5,display.width(),firstBlock,EPD_WHITE);
+   display.fillRect(1,firstBlock*6,display.width(),firstBlock,foregroundColor);
+   display.fillRect(1,firstBlock*7,display.width(),firstBlock,EPD_WHITE);
+   display.fillRect(1,firstBlock*8,display.width(),firstBlock,foregroundColor);
+   display.fillRect(1,firstBlock*9,display.width(),firstBlock,EPD_WHITE);
+   
+
+   display.setFont(&Ubuntu_M24pt8b);
+   display.setTextColor(foregroundColor);
+   display.setCursor(4, 180);
+   display.println("HELLO");
+
+   display.setTextColor(foregroundColor);
+   display.println("TWITTER");
+   display.update();
+   delay(1000);
+}
+
+
 void draw_content(uint8_t rotation){
    // Sizes are calculated dividing the screen in 4 equal parts it may not be perfect for all models
     
@@ -88,9 +138,9 @@ void draw_content(uint8_t rotation){
    display.setFont(&Ubuntu_M24pt8b);
    uint16_t firstBlock = display.width()/8;
    display.fillRect(    1,1,rectW, firstBlock,foregroundColor);
-   display.fillRect(rectW,1,rectW, firstBlock,EPD_WHITE);
+   display.drawRect(rectW,1,rectW, firstBlock,foregroundColor);
    display.fillRect(rectW*2,1,rectW,firstBlock,foregroundColor);
-   display.fillRect(rectW*3,1,rectW-2,firstBlock,EPD_WHITE); 
+   display.drawRect(rectW*3,1,rectW-2,firstBlock,foregroundColor); 
 
    display.setFont(&Ubuntu_M24pt8b);
    display.setTextColor(foregroundColor);
@@ -100,24 +150,27 @@ void draw_content(uint8_t rotation){
    display.setTextColor(foregroundColor);
    display.println("TWITTER");
 
-   // Second row, comment if your epaper is too small
-   /* display.fillRect(    1,firstBlock,rectW,firstBlock,EPD_BLACK);
-   display.fillRect(rectW,firstBlock,rectW,firstBlock,EPD_RED);
-   if (display.colors_supported>1) {
-      display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_BLACK);
-   } else {
-      display.fillRect(rectW*2,firstBlock,rectW,firstBlock,EPD_WHITE);
-   } 
-   display.fillRect(rectW*3,firstBlock,rectW-2,firstBlock,EPD_RED); */
-
    display.setCursor(4, 34);
    display.setTextColor(EPD_WHITE);
    display.println("OK");
 
-   display.setFont(&Ubuntu_M100pt7b);
-   display.setCursor(1, 390);
+   //display.setFont(&Ubuntu_M100pt7b);
+   display.setCursor(1, 300);
    display.setTextColor(EPD_BLACK);
-   display.println("GOOD");
+   display.println("GOODISPLAY");
+   
+   display.setCursor(1, 400);
+   display.setTextColor(EPD_BLACK);
+   display.println("Y: 400");
+   
+   display.setCursor(1, 500);
+   display.setTextColor(EPD_BLACK);
+   display.println("Y: 500");
+
+   display.setCursor(1, 560);
+   display.setTextColor(EPD_BLACK);
+   display.println("Y: 560");
+
    display.update();
    delay(1000);
 
@@ -126,16 +179,19 @@ void draw_content(uint8_t rotation){
 void app_main(void)
 {
    // This is just in case you power your epaper VCC with a GPIO
-   gpio_set_direction(GPIO_DISPLAY_POWER_ON, GPIO_MODE_OUTPUT);
-   gpio_set_level(GPIO_DISPLAY_POWER_ON, 1);
-   delay(100);
+   //gpio_set_direction(GPIO_DISPLAY_POWER_ON, GPIO_MODE_OUTPUT);
+   //gpio_set_level(GPIO_DISPLAY_POWER_ON, 1);
+   //delay(100);
    printf("CalEPD version: %s\n", CALEPD_VERSION);
    display.init();
-   draw_content(1);
+
+   draw_content_lines(1);
 
    delay(2500);
-   display.fillScreen(EPD_WHITE);
 
+   draw_content(1);
+
+   display.fillScreen(EPD_WHITE);
    display.fillCircle(rectW, display.height()/2,90, EPD_BLACK);
    display.drawCircle(rectW*2, display.height()/2,90, EPD_BLACK);
    display.fillCircle(rectW*3, display.height()/2,90, EPD_BLACK);
