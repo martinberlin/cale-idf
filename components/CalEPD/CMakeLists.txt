@@ -1,5 +1,6 @@
 # Add only the display srcs you are going to use if you want to keep compiled srcs to a minimum:
 set(srcs 
+    "models/custom/custom042.cpp"
     # New GOODISPLAY models will be in goodisplay directory
     "models/goodisplay/gdey0213b74.cpp"
     "models/goodisplay/gdey0154d67.cpp"
