@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+
 // Constructor
 Custom042::Custom042(EpdSpi& dio): 
   Adafruit_GFX(CUSTOM042_WIDTH, CUSTOM042_HEIGHT),
@@ -35,13 +36,29 @@ void Custom042::_lut_GC()
 	IO.data(Custom042::lut_R20_GC, sizeof(Custom042::lut_R20_GC));
 	IO.cmd(0x21);							// Required * Otherwise all gray
 	IO.data(Custom042::lut_R21_GC, sizeof(Custom042::lut_R21_GC));
-	IO.cmd(0x24);							//bb b
+	IO.cmd(0x22);							//bb b
 	IO.data(Custom042::lut_R22_GC, sizeof(Custom042::lut_R22_GC));
-	IO.cmd(0x22);							//bw r
+	IO.cmd(0x23);							//bw r
   IO.data(Custom042::lut_R23_GC, sizeof(Custom042::lut_R23_GC));
 	IO.cmd(0x23);							//wb w
   IO.data(Custom042::lut_R24_GC, sizeof(Custom042::lut_R24_GC));
 }
+void Custom042::_lut_DU(){
+  IO.cmd(0x00);
+  IO.data(0x3F); //300x400 B/W mode, LUT set by register
+
+  // LUT Tables for partial update. Send them directly in 42 bytes chunks. In total 210 bytes
+  IO.cmd(0x20);							//vcom
+	IO.data(Custom042::lut_R20_DU, sizeof(Custom042::lut_R20_DU));
+	IO.cmd(0x21);							// Required * Otherwise all gray
+	IO.data(Custom042::lut_R21_DU, sizeof(Custom042::lut_R21_DU));
+	IO.cmd(0x22);							//bb b
+	IO.data(Custom042::lut_R22_DU, sizeof(Custom042::lut_R22_DU));
+	IO.cmd(0x23);							//bw r
+  IO.data(Custom042::lut_R23_DU, sizeof(Custom042::lut_R23_DU));
+	IO.cmd(0x24);							//wb w
+  IO.data(Custom042::lut_R24_DU, sizeof(Custom042::lut_R24_DU));
+ }
 
 void Custom042::_wakeUp(){
 
@@ -148,7 +165,7 @@ void Custom042::update()
   uint8_t x1buf[xLineBytes];
 
 // Note that in IC specs is 0x10 BLACK and 0x13 RED
-// BLACK: Write RAM
+// BLACK: Write RAM 2
   IO.cmd(0x13);
   for(uint16_t y =  1; y <= CUSTOM042_HEIGHT; y++) {
       for(uint16_t x = 1; x <= xLineBytes; x++) {
@@ -160,9 +177,8 @@ void Custom042::update()
       }
   }
 
-   i = 0;
-
-  // RED: Write RAM1
+  i = 0;
+ // OLD: Write RAM1
   IO.cmd(0x10);
     for(uint16_t y =  1; y <= CUSTOM042_HEIGHT; y++) {
         for(uint16_t x = 1; x <= xLineBytes; x++) {
@@ -175,13 +191,12 @@ void Custom042::update()
     }
 
   uint64_t endTime = esp_timer_get_time();
-  IO.cmd(0x12);     //DISPLAY REFRESH 
+  //IO.cmd(0x12);     //DISPLAY REFRESH 
+  IO.cmd(0x17);   // Auto sequence
+  IO.data(0xA5);
 
   _waitBusy("epaper refresh");
   uint64_t powerOnTime = esp_timer_get_time();
-
-  // GxEPD comment: Avoid double full refresh after deep sleep wakeup
-  // if (_initial) {  // --> Original deprecated 
   
   printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
   (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
@@ -209,20 +224,11 @@ void Custom042::drawPixel(int16_t x, int16_t y, uint16_t color) {
   uint16_t i = x / 8 + y * CUSTOM042_WIDTH / 8;
   
   // This formulas are from gxEPD that apparently got the color right:
-  _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8))); // white pixel
-  _red_buffer[i] = (_red_buffer[i] | (1 << (7 - x % 8)));     // white pixel
-
+ 
   if (color == EPD_WHITE) {
-    //printf("w:%x ",_black_buffer[i]);
-    return;
-  }
-  else if (color == EPD_BLACK) {
+     _black_buffer[i] = (_black_buffer[i] | (1 << (7 - x % 8))); // white pixel
+  } else if (color == EPD_BLACK) {
     _black_buffer[i] = (_black_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    //printf("B ");
-  }
-  else if (color == EPD_RED) {
-    _red_buffer[i] = (_red_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
-    //printf("R %x ",_red_buffer[i]);
   }
 }
 
@@ -231,17 +237,12 @@ void Custom042::fillScreen(uint16_t color)
 {
   // Fill screen will be inverted with the way is done NOW
   uint8_t black = CUSTOM042_8PIX_WHITE;
-  uint8_t red = CUSTOM042_8PIX_RED_WHITE;
+  
   if (color == EPD_WHITE) {
     if (debug_enabled) printf("fillScreen WHITE\n");
   } else if (color == EPD_BLACK) {
     black = CUSTOM042_8PIX_BLACK;
     if (debug_enabled) printf("fillScreen BLACK SELECTED\n");
-  } else if (color == EPD_RED) {
-    red = CUSTOM042_8PIX_RED;
-    if (debug_enabled) printf("fillScreen RED SELECTED\n");
-  } else if ((color & 0xF100) > (0xF100 / 2)) {
-    red = 0xFF;
   } else if ((((color & 0xF100) >> 11) + ((color & 0x07E0) >> 5) + (color & 0x001F)) < 3 * 255 / 2) {
     black = 0xFF;
   }
@@ -249,8 +250,85 @@ void Custom042::fillScreen(uint16_t color)
   for (uint16_t x = 0; x < sizeof(_black_buffer); x++)
   {
     _black_buffer[x] = black;
-    _red_buffer[x] = red;
   }
 
   if (debug_enabled) printf("fillScreen(%x) black/red _buffer len:%d\n",color,sizeof(_black_buffer));
+}
+
+uint16_t Custom042::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+{
+  x &= 0xFFF8;            // byte boundary
+  xe = (xe - 1) | 0x0007; // byte boundary - 1
+  IO.cmd(0x90);           // partial window
+  IO.data(x / 256);
+  IO.data(x % 256);
+  IO.data(xe / 256);
+  IO.data(xe % 256);
+  IO.data(y / 256);
+  IO.data(y % 256);
+  IO.data(ye / 256);
+  IO.data(ye % 256);
+  //IO.data(0x01);         // Not any visual difference
+  IO.data(0x00);           // Not any visual difference
+  return (7 + xe - x) / 8; // number of bytes to transfer per line
+}
+
+void Custom042::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool clean_before)
+{ 
+  _rotate(x, y, w, h);
+  if (x >= CUSTOM042_WIDTH) return;
+  if (y >= CUSTOM042_HEIGHT) return;
+  uint16_t xe = gx_uint16_min(CUSTOM042_WIDTH, x + w) - 1;
+  uint16_t ye = gx_uint16_min(CUSTOM042_HEIGHT, y + h) - 1;
+  // x &= 0xFFF8; // byte boundary, not needed here
+  uint16_t xs_bx = x / 8;
+  uint16_t xe_bx = (xe + 7) / 8;
+  // _wakeUp has to be done always, since after update() it goes to sleep
+  if (!_using_partial_mode) {
+    _wakeUp();
+    _lut_DU();
+  }
+  _using_partial_mode = true;
+  
+  //IO.cmd(0x90); // partial mode
+
+  if (clean_before) {
+    IO.cmd(0x91); // partial in
+    _setPartialRamArea(0, 0, CUSTOM042_WIDTH, CUSTOM042_HEIGHT);
+    uint16_t i = 0;
+    uint8_t xLineBytes = CUSTOM042_WIDTH/8;
+    uint8_t x1buf[xLineBytes];
+
+  // Note that in IC specs is 0x10 BLACK and 0x13 RED
+  // BLACK: Write RAM 2
+    IO.cmd(0x13);
+    for(uint16_t y =  1; y <= CUSTOM042_HEIGHT; y++) {
+        for(uint16_t x = 1; x <= xLineBytes; x++) {
+          x1buf[x-1] = _black_buffer[i];
+          if (x == xLineBytes) { // Flush the X line buffer to SPI
+            IO.data(x1buf,sizeof(x1buf));
+          }
+          ++i;
+        }
+    }
+    IO.cmd(0x92);      // partial out
+  }
+  vTaskDelay(10);
+  
+  IO.cmd(0x91); // partial in
+  _setPartialRamArea(x, y, xe, ye);
+  IO.cmd(0x13);
+  for (int16_t y1 = y; y1 <= ye; y1++)
+  {
+    for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+    {
+      uint16_t idx = y1 * (CUSTOM042_WIDTH / 8) + x1;
+      //uint8_t data = (idx < sizeof(_black_buffer)) ? _black_buffer[idx] : 0x00; // white is 0x00 in buffer
+      IO.data(_black_buffer[idx]); // white is 0xFF on device
+    }
+  }
+  IO.cmd(0x92);      // partial out
+  IO.cmd(0x12);      // display refresh
+  //IO.cmd(0x17);IO.data(0xA5); // Auto sequence
+  _waitBusy("updateWindow");
 }
