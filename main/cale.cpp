@@ -32,9 +32,9 @@
 //#include <color/gdew0583z83.h>
 
 EpdSpi io;
-Dke075Z83 display(io);
+//Depg1020bn display(io);
 //Gdew075T7 display(io);
-//Dke075Z83 display(io);
+Dke075Z83 display(io);
 //Gdew0583z83 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
