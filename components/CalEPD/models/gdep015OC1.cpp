@@ -265,7 +265,7 @@ void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
   _waitBusy("partialUpdate2", 300);
   IO.cmd(0xff);
 
-  vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_RATE_MS); 
+  vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_PERIOD_MS);
 
   // update erase buffer
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
@@ -282,7 +282,7 @@ void Gdep015OC1::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
       IO.data(~data);
     }
   }
-  vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_RATE_MS); 
+  vTaskDelay(GDEP015OC1_PU_DELAY/portTICK_PERIOD_MS);
 }
 
 void Gdep015OC1::_waitBusy(const char* message, uint16_t busy_time){
@@ -302,7 +302,7 @@ void Gdep015OC1::_waitBusy(const char* message, uint16_t busy_time){
     }
   }
   } else {
-    vTaskDelay(busy_time/portTICK_RATE_MS); 
+    vTaskDelay(busy_time/portTICK_PERIOD_MS);
   }
 }
 

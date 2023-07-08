@@ -249,7 +249,7 @@ void Hel0151::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool 
   _waitBusy("partialUpdate2", 300);
   IO.cmd(0xff);
 
-  vTaskDelay(HEL0151_PU_DELAY/portTICK_RATE_MS); 
+  vTaskDelay(HEL0151_PU_DELAY/portTICK_PERIOD_MS); 
 
   // update erase buffer
   _SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
@@ -266,7 +266,7 @@ void Hel0151::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool 
       IO.data(~data);
     }
   }
-  vTaskDelay(HEL0151_PU_DELAY/portTICK_RATE_MS); 
+  vTaskDelay(HEL0151_PU_DELAY/portTICK_PERIOD_MS); 
 }
 
 void Hel0151::_waitBusy(const char* message, uint16_t busy_time){
@@ -286,7 +286,7 @@ void Hel0151::_waitBusy(const char* message, uint16_t busy_time){
     }
   }
   } else {
-    vTaskDelay(busy_time/portTICK_RATE_MS); 
+    vTaskDelay(busy_time/portTICK_PERIOD_MS); 
   }
 }
 

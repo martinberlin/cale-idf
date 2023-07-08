@@ -354,7 +354,7 @@ void L58Touch::writeRegister8(uint8_t reg, uint8_t value)
     i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
     i2c_master_write_byte(cmd, value, ACK_CHECK_EN);
     i2c_master_stop(cmd);
-    i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 }
 
@@ -380,7 +380,7 @@ uint8_t L58Touch::readRegister8(uint8_t reg, uint8_t *data_buf)
 
     i2c_master_read_byte(cmd, data_buf, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 
 #if defined(FT6X36_DEBUG) && FT6X36_DEBUG == 1
@@ -404,7 +404,7 @@ void L58Touch::readBytes(uint8_t *data, int len)
     i2c_master_write_byte(cmd, L58_ADDR << 1 | I2C_MASTER_READ, ACK_CHECK_EN);
     i2c_master_read(cmd, data, len, (i2c_ack_type_t)ACK_VAL);
     i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 
     if (ret == ESP_OK)

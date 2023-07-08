@@ -194,7 +194,7 @@ void Gdew027w3::_wakeUp(){
   IO.cmd(0x82); //vcom_DC setting
   IO.data(0x08);   //0x28:-2.0V,0x12:-0.9V
 
-  vTaskDelay(2/portTICK_RATE_MS); // delay(2)
+  vTaskDelay(2/portTICK_PERIOD_MS); // delay(2)
 
   //WBmode:VBDF 17|D7 VBDW 97 VBDB 57   WBRmode:VBDF F7 VBDW 77 VBDB 37  VBDR B7
   IO.cmd(epd_vcom2.cmd);          // vcom and data interval
