@@ -13,6 +13,7 @@ set(srcs
 
     # DKE epapers (New)
     "models/dke/depg1020bn.cpp"
+	"models/dke/depg750bn.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"

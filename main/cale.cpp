@@ -28,13 +28,14 @@
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include "color/dke075z83.h" // DEPGO0750RW
+//#include "color/dke075z83.h" // DEPGO0750RW
+#include "dke/depg750bn.h" // DEPGO0750RW
 //#include <color/gdew0583z83.h>
 
 EpdSpi io;
 //Depg1020bn display(io);
 //Gdew075T7 display(io);
-Dke075Z83 display(io);
+Depg750bn display(io);
 //Gdew0583z83 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
