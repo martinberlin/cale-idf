@@ -63,7 +63,17 @@ class Depg750bn : public Epd
     void _waitBusy(const char* message);
     void _rotate(uint16_t& x, uint16_t& y, uint16_t& w, uint16_t& h);
     void cmd(uint8_t command);
-       // Command & data structs
-    static const epd_lut_159 lut_4_grays;
-    static const epd_init_3 GDOControl;
+    // Command & data structs
+
+    static const epd_init_4 epd_wakeup_power;
+    static const epd_init_1 epd_panel_setting;
+    static const epd_init_4 epd_resolution;
+
+
+    static const unsigned char lut_25_LUTBD_partial[];
+    static const uint8_t LUTDefault_VCOM[];
+    static const uint8_t LUTDefault_LUTWW[];
+    static const uint8_t LUTDefault_LUTBW[];
+    static const uint8_t LUTDefault_LUTWB[];
+    static const uint8_t LUTDefault_LUTBB[];
 };
