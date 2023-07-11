@@ -65,11 +65,6 @@ class Depg750bn : public Epd
     void cmd(uint8_t command);
     // Command & data structs
 
-    static const epd_init_4 epd_wakeup_power;
-    static const epd_init_1 epd_panel_setting;
-    static const epd_init_4 epd_resolution;
-
-
     static const unsigned char lut_25_LUTBD_partial[];
     static const uint8_t LUTDefault_VCOM[];
     static const uint8_t LUTDefault_LUTWW[];
