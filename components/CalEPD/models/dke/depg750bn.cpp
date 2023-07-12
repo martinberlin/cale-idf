@@ -138,28 +138,52 @@ void Depg750bn::_wakeUp(){
 
 void Depg750bn::update()
 {
-  uint64_t startTime = esp_timer_get_time();
   _using_partial_mode = false;
+
+  uint8_t xLineBytes = DEPG750BN_WIDTH/8;
+  uint8_t x1buf[xLineBytes];
   _wakeUp();
     // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
   uint16_t i = 0;
-  uint8_t xLineBytes = DEPG750BN_WIDTH/8;
-  uint8_t x1buf[xLineBytes];
+
 
   IO.cmd(0x10);
   printf("Sending a %d bytes buffer via SPI\n", (int)DEPG750BN_BUFFER_SIZE);
-
-  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
-  {
-	  IO.data(DEPG750BN_8PIX_WHITE);
+  //sending data line by line
+  for(uint16_t y =  1; y <= DEPG750BN_HEIGHT; y++) {
+    for(uint16_t x = 1; x <= xLineBytes; x++) {
+      x1buf[x-1] = DEPG750BN_8PIX_WHITE;
+      if (x==xLineBytes) { // Flush the X line buffer to SPI
+        IO.data(x1buf,sizeof(x1buf));
+      }
+      ++i;
+    }
   }
+  i = 0;
   IO.cmd(0x13);
-
-  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
-  {
-	  IO.data((i < sizeof(_mono_buffer)) ? _mono_buffer[i] : 0x00);
+  for(uint16_t y =  1; y <= DEPG750BN_HEIGHT; y++) {
+    for(uint16_t x = 1; x <= xLineBytes; x++) {
+      uint8_t data = _mono_buffer[i];
+      x1buf[x-1] = data;
+      if (x==xLineBytes) { // Flush the X line buffer to SPI
+        IO.data(x1buf,sizeof(x1buf));
+      }
+      ++i;
+    }
   }
   IO.cmd(0x12);
+  //Sending data byte by byte								//Clear display first
+//  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
+//  {
+//	  IO.data(DEPG750BN_8PIX_WHITE);
+//  }
+//  IO.cmd(0x13);
+//															//Then send display content
+//  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
+//  {
+//	  IO.data((i < sizeof(_mono_buffer)) ? _mono_buffer[i] : 0x00);
+//  }
+//  IO.cmd(0x12);
   _waitBusy("update");
   _sleep();
 
