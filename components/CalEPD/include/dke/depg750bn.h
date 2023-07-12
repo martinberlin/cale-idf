@@ -1,4 +1,4 @@
-// DKE product https://dke.top/products/dke-e-ink-103-color-displays-large-screen-display-102-inch-resolution-is-960x640
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +43,8 @@ class Depg750bn : public Epd
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 
+
+
   private:
     EpdSpi& IO;
 
@@ -50,10 +52,11 @@ class Depg750bn : public Epd
 
     bool _initial = true;
     bool _mono_mode = true;
-
+    uint16_t _setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye);
     void _setRamDataEntryMode(uint8_t em);
     void _SetRamArea(uint8_t Xstart, uint8_t Xend, uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1);
     void _SetRamPointer(uint8_t addrX, uint8_t addrY, uint8_t addrY1);
+    void _Init_PartialUpdate(void);
 
     void _wakeUp();
     void _PowerOn(void);

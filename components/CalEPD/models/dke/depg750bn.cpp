@@ -11,6 +11,11 @@
 #define ENABLE		1
 #define DISABLE		2
 
+#define T1 30 // charge balance pre-phase
+#define T2  5 // optional extension
+#define T3 30 // color change phase (b/w)
+#define T4  5 // optional extension for one color
+
 const uint8_t Depg750bn::LUTDefault_VCOM[] = {
     0x20,
     0x00,    0x00,    0x14,   0x00,     0x00,    0x01,
@@ -62,6 +67,9 @@ const uint8_t Depg750bn::LUTDefault_LUTBB[] = {
     0x00,    0x00,    0x00,    0x00,    0x00,    0x00,
 };
 
+const uint8_t Depg750bn::lut_25_LUTBD_partial[] = {
+    0x00, T1, T2, T3, T4, 1, // 00 00 00 00
+};
 
 
 // Constructor
@@ -160,9 +168,83 @@ void Depg750bn::update()
 
 void Depg750bn::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation)
 {
-  printf("Color epapers from Goodisplay do not support partial update. Full update triggered\n");
-  update();
+
+
+	if (using_rotation) _rotate(x, y, w, h);
+	if (x >= DEPG750BN_WIDTH) return;
+	if (y >= DEPG750BN_HEIGHT) return;
+	uint16_t xe = gx_uint16_min(DEPG750BN_WIDTH, x + w) - 1;
+	uint16_t ye = gx_uint16_min(DEPG750BN_HEIGHT, y + h) - 1;
+	// x &= 0xFFF8; // byte boundary, not needed here
+	uint16_t xs_bx = x / 8;
+	uint16_t xe_bx = (xe + 7) / 8;
+	if (!_using_partial_mode) _wakeUp();
+	_using_partial_mode = true;
+	_Init_PartialUpdate();
+	//for (uint16_t twice = 0; twice < 2; twice++) // done by N2OCP
+	{
+		// leave both controller buffers equal
+		IO.cmd(0x91); // partial in
+		_setPartialRamArea(x, y, xe, ye);
+		IO.cmd(0x13);
+		for (int16_t y1 = y; y1 <= ye; y1++)
+		{
+			for (int16_t x1 = xs_bx; x1 < xe_bx; x1++)
+			{
+				uint16_t idx = y1 * (DEPG750BN_WIDTH / 8) + x1;
+				uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00; // white is 0x00 in buffer
+				IO.data(~data); // white is 0xFF on device
+			}
+		}
+		IO.cmd(0x12);      //display refresh
+		_waitBusy("updateWindow");
+		IO.cmd(0x92); // partial out
+	} // leave both controller buffers equal
+	_waitBusy("updateWindow"); // don't stress this display
+
 }
+void Depg750bn::_Init_PartialUpdate(void)
+{
+	IO.cmd(0x00); 			//panel setting
+	IO.data(0x3f); 			// partial update LUT from registers
+    IO.cmd(0x82); 			// vcom_DC setting
+
+    IO.data (0x26); 		// -2.0V
+
+
+    IO.cmd(0x50); 			// VCOM AND DATA INTERVAL SETTING
+    IO.data(0x39);    		// LUTBD, N2OCP: copy new to old
+    IO.data(0x07);
+
+    IO.data(LUTDefault_VCOM, sizeof(LUTDefault_VCOM));
+    IO.data(LUTDefault_LUTWW, sizeof(LUTDefault_LUTWW));
+    IO.data(LUTDefault_LUTBW, sizeof(LUTDefault_LUTBW));
+    IO.data(LUTDefault_LUTWB, sizeof(LUTDefault_LUTWB));
+    IO.data(LUTDefault_LUTBB, sizeof(LUTDefault_LUTBB));
+
+    IO.cmd(0x25);
+    IO.data(lut_25_LUTBD_partial, sizeof(lut_25_LUTBD_partial));
+
+    _waitBusy("_Update_Part");
+}
+
+uint16_t Depg750bn::_setPartialRamArea(uint16_t x, uint16_t y, uint16_t xe, uint16_t ye)
+{
+    x &= 0xFFF8; 			// byte boundary
+    xe = (xe - 1) | 0x0007; // byte boundary - 1
+    IO.cmd(0x90); 			// partial window
+    IO.data(x / 256);
+    IO.data(x % 256);
+    IO.data(xe / 256);
+    IO.data(xe % 256);
+    IO.data(y / 256);
+    IO.data(y % 256);
+    IO.data(ye / 256);
+    IO.data(ye % 256);
+    IO.data(0x00);
+    return (7 + xe - x) / 8; // number of bytes to transfer per line
+}
+
 
 void Depg750bn::_waitBusy(const char* message){
   if (debug_enabled) {
