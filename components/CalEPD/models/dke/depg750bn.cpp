@@ -8,9 +8,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-#define ENABLE		1
-#define DISABLE		2
-
 #define T1 30 // charge balance pre-phase
 #define T2  5 // optional extension
 #define T3 30 // color change phase (b/w)
@@ -87,7 +84,7 @@ void Depg750bn::init(bool debug)
     debug_enabled = debug;
     if (debug_enabled) printf("Depg750bn::init(debug:%d)\n", debug);
     //Initialize SPI at 4MHz frequency. true for debug
-    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, ENABLE);
+    gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
 
     IO.init(4, debug);
     fillScreen(EPD_WHITE);
@@ -172,18 +169,7 @@ void Depg750bn::update()
     }
   }
   IO.cmd(0x12);
-  //Sending data byte by byte								//Clear display first
-//  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
-//  {
-//	  IO.data(DEPG750BN_8PIX_WHITE);
-//  }
-//  IO.cmd(0x13);
-//															//Then send display content
-//  for(uint32_t i =  0; i <= DEPG750BN_BUFFER_SIZE; i++)
-//  {
-//	  IO.data((i < sizeof(_mono_buffer)) ? _mono_buffer[i] : 0x00);
-//  }
-//  IO.cmd(0x12);
+
   _waitBusy("update");
   _sleep();
 
