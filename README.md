@@ -5,6 +5,8 @@
 * esp32 or S2 / S3 / C3 MCU versions in branch [develop](https://github.com/martinberlin/cale-idf/tree/develop)
 * Espressif IDF framework >= 4.2 (4.3 -> 4.4 ideally to support latest S3)
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
+* If you want to have a Web-Service to deliver the image we built our own one. Just [head to CALE.es](https://cale.es) and make an account.
+  This [video of UsefulElectronics](https://www.youtube.com/watch?v=7Sal9Ii7H2U) will help you to get started.
 
 ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
  **idf.py set-target esp32c3**
