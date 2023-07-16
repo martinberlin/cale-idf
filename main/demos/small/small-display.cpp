@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <stdlib.h>     /* srand, rand */
 // Should match with your epaper module, size
 
 // New small GOODISPLAY models
-#include "small/gdew0102I4FC.h"
+#include "small/gdew0102I3F.h"
 
 
 // Single SPI EPD
 EpdSpi io;
-Gdew0102I4FC display(io);
+Gdew0102I3F display(io);
 
 
 // FONT used for title / message body - Only after display library
@@ -22,6 +23,10 @@ extern "C"
 }
 void delay(uint32_t millis) { vTaskDelay(millis / portTICK_PERIOD_MS); }
 
+uint16_t randomNumber(uint16_t max) {
+  srand(esp_timer_get_time());
+  return rand()%max;
+}
 
 void demo(uint16_t bkcolor, uint16_t fgcolor)
 {
@@ -71,11 +76,21 @@ void app_main(void)
    // Test Epd class
    display.init(false);
    display.setFont(&Ubuntu_M12pt8b);
-   display.fillCircle(30,display.height()/2,30,EPD_BLACK);
+   //display.fillCircle(display.width()/2,display.height()/2,30,EPD_BLACK);
    display.update();
-   delay(1000);
-   display.fillScreen(EPD_WHITE);
-   //return; // Just clean display and draw a circle
+   
+   uint8_t radius = 8;
+   
+   for (auto y = 0; y<40; y+=2) {
+      int ranx = randomNumber(display.width()-(radius*2))+radius;
+      int rany = randomNumber(display.height()-(radius*2))+radius;
+      display.fillCircle(ranx,rany,radius,EPD_BLACK);
+      display.updateWindow(ranx-radius,rany-radius,radius*2,radius*2);
+      delay(10);
+   }
+   printf("Partial update test\n");
+   delay(2000);
+   return; // Just clean display and draw a circle
 
    display.setRotation(0);
    draw_content(display.getRotation());

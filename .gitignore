@@ -4,4 +4,7 @@ build
 sdkconfig
 sdkconfig.old
 dependencies.lock
-
+.project
+.cproject
+main/.cproject
+main/.project

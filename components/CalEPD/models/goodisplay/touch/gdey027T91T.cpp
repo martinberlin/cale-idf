@@ -375,7 +375,7 @@ void Gdey027T91T::_waitBusy(const char* message, uint16_t busy_time){
     }
   }
   } else {
-    vTaskDelay(busy_time/portTICK_RATE_MS); 
+    vTaskDelay(busy_time/portTICK_PERIOD_MS); 
   }
 }
 

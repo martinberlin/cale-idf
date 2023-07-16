@@ -202,7 +202,7 @@ void PlasticLogic::_powerOn(void) {
   IO.data(setPowerControl, sizeof(setPowerControl));
   _waitBusy("setPowerControl");
   // Resolve the wait for pump read
-  //vTaskDelay(140/portTICK_RATE_MS);       // Only because reading the value below is not working
+  //vTaskDelay(140/portTICK_PERIOD_MS);       // Only because reading the value below is not working
   uint8_t reg = 0x15|EPD_REGREAD;
   uint8_t regRead[2] = {reg, 0xFF};
 
@@ -226,7 +226,7 @@ void PlasticLogic::_waitBusy(const char* message, uint16_t busy_time){
     }
   }
   } else {
-    vTaskDelay(busy_time/portTICK_RATE_MS); 
+    vTaskDelay(busy_time/portTICK_PERIOD_MS); 
   }
 }
 
@@ -237,7 +237,7 @@ void PlasticLogic::_waitBusy(const char* message){
   int64_t time_since_boot = esp_timer_get_time();
 
   while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
-    vTaskDelay(1/portTICK_RATE_MS); 
+    vTaskDelay(1/portTICK_PERIOD_MS); 
 
     if (esp_timer_get_time()-time_since_boot>100000)
     {

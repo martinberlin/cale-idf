@@ -14,6 +14,7 @@ set(srcs
 
     # DKE epapers (New)
     "models/dke/depg1020bn.cpp"
+	"models/dke/depg750bn.cpp"
     # Other mixed brands mostly GOODISPLAY based or using their epapers
     "models/wave12i48.cpp"
     "models/gdew075HD.cpp"
@@ -34,7 +35,7 @@ set(srcs
     "models/heltec0151.cpp"
     
     # SMALL epapers
-    "models/small/gdew0102I4FC.cpp"
+    "models/small/gdew0102I3F.cpp"
     
     # 3 colors Goodisplay
     "models/color/gdeh0154z90.cpp"

@@ -153,7 +153,7 @@ void EpdSpi2Cs::waitForBusy()
     int64_t time_since_boot = esp_timer_get_time();
 
     while (gpio_get_level((gpio_num_t)CONFIG_EINK_BUSY) == 0){
-        vTaskDelay(10/portTICK_RATE_MS); 
+        vTaskDelay(10/portTICK_PERIOD_MS); 
 
         if (esp_timer_get_time()-time_since_boot>500000)
         {
@@ -207,7 +207,7 @@ void EpdSpi2Cs::data(const uint8_t *data, int len)
 
 void EpdSpi2Cs::reset(uint8_t millis=5) {
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 0);
-    vTaskDelay(millis / portTICK_RATE_MS);
+    vTaskDelay(millis / portTICK_PERIOD_MS);
     gpio_set_level((gpio_num_t)CONFIG_EINK_RST, 1);
-    vTaskDelay(millis / portTICK_RATE_MS);
+    vTaskDelay(millis / portTICK_PERIOD_MS);
 }

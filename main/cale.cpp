@@ -24,23 +24,23 @@
  */
 // 1 channel SPI epaper displays example:
 //#include <gdew075T7.h>
-#include "dke/depg1020bn.h"
+//#include "dke/depg1020bn.h"
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-//#include "color/dke075z83.h" // DEPGO0750RW
+#include "color/dke075z83.h" // DEPGO0750RW
 //#include <color/gdew0583z83.h>
 
 EpdSpi io;
-Depg1020bn display(io);
+//Depg1020bn display(io);
 //Gdew075T7 display(io);
-//Dke075Z83 display(io);
+Dke075Z83 display(io);
 //Gdew0583z83 display(io);
 // Plastic Logic test: Check cale-grayscale.cpp
 
 // Enable on HIGH for Laska ESPink
 
-#define GPIO_DISPLAY_POWER_ON GPIO_NUM_2
+#define GPIO_DISPLAY_POWER_ON GPIO_NUM_16
 // Multi-SPI 4 channels EPD only
 // Please note that in order to use this big buffer (160 Kb) on this display external memory should be used
 // Otherwise you will run out of DRAM very shortly!
