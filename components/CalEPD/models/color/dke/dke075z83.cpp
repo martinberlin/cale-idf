@@ -1,5 +1,5 @@
 //Controller: UC8179 (B/R/W)
-#include "color/dke075z83.h"
+#include "color/dke/dke075z83.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_log.h"

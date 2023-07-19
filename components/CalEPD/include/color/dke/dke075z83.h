@@ -1,4 +1,5 @@
-// 7.5 800*480 b/w/R DKE: UC8179
+// 7.5 800*480 b/w/R DKE: UC8179 Product link: https://www.dke.top/products/fast-refresh-no-flicker-880x528-big-75-inch-epaper-display-e-ink-screene-ink-display
+// Name is like this because it was the first and used same controler as 5.83z83 from GoodDisplay. Real model is: DEPG0750BNU790F32
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

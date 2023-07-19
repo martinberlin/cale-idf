@@ -28,7 +28,7 @@
 //#include <gdew042t2.h>
 //#include <gdew027w3.h>
 //#include <gdeh0213b73.h>
-#include "color/dke075z83.h" // DEPGO0750RW
+#include "color/dke/dke075z83.h" // DEPGO0750RW
 //#include <color/gdew0583z83.h>
 
 EpdSpi io;
