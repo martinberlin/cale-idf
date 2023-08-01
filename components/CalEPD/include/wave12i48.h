@@ -36,7 +36,7 @@ class Wave12I48 : public Epd
   public:
    
     Wave12I48(Epd4Spi& IO);
-    bool colors_supported = 1;
+    uint8_t colors_supported = 1;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color);  // Override GFX own drawPixel method
     
