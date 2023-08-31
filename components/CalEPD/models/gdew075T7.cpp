@@ -171,7 +171,7 @@ void Gdew075T7::_wakeUp()
 
   IO.cmd(0x50);  // VCOM AND DATA INTERVAL SETTING
   IO.data(0x29); // LUTKW, N2OCP: copy new to old
-  IO.data(0x07);
+  IO.data(0x17); // 07 was original, with 0x17 seems to work better (more black)
   IO.cmd(0x60);  // TCON SETTING
   IO.data(0x22);
 
