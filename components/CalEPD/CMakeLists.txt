@@ -24,6 +24,7 @@ set(srcs
     "models/gdew075T7Grays.cpp"
     "models/gdew075T8.cpp"
     "models/gdew0583t7.cpp"
+    "models/goodisplay/gdey0583T81.cpp"
     "models/gdew042t2.cpp"
     "models/gdew042t2Grays.cpp"
     "models/gdem029E97.cpp"
