@@ -1,5 +1,5 @@
-// 5.83 800*480 b/w Controller: UC8179
-
+// 5.83 648*480 b/w Controller: UC8179
+// https://www.good-display.com/product/440.html
 // IMPORTANT: Do not use this with epapers Waveshare labelled V2. Those use GD7965 (Check Gdew075 for that)
 // PREVIOUS Note: Controller seems also fully compatible with UC8179C -> Not true, wakeUp is different, lines test fails
 #include <stdio.h>

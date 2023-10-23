@@ -29,7 +29,7 @@ void Gdew075T8::init(bool debug)
   if (debug_enabled)
     printf("Gdew075T8::init(debug:%d)\n", debug);
   // Initialize SPI at 4MHz frequency. true for debug
-  IO.init(4, true);
+  IO.init(4, debug);
   fillScreen(EPD_WHITE);
   #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
     // Update the TWDT’s timeout period and panic configurations 
@@ -102,10 +102,6 @@ void Gdew075T8::update()
     for (uint16_t c = 0; c < GDEW075T8_BUFFER_SIZE; c++)
     {
       _send8pixel(_buffer[c]);
-
-      if (c%500==0) {
-        printf("%d ",c);
-      }
     }
     break;
 
