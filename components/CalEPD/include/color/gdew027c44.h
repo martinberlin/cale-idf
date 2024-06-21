@@ -32,8 +32,6 @@ class Gdew027c44 : public Epd
     
     // EPD tests 
     void init(bool debug = false);
-    void initFullUpdate();
-    void initPartialUpdate();
 
     void fillScreen(uint16_t color);
     void update();
@@ -60,11 +58,10 @@ class Gdew027c44 : public Epd
     static const epd_init_3 epd_soft_start;
     static const epd_init_1 epd_panel_setting;
     static const epd_init_1 epd_extra_setting;
-    static const epd_init_1 epd_vcom2;
-    // Partial LUT tables (Otherwise partial update lasts long)
-    static const epd_init_44 lut_20_vcomDC_partial;
-    static const epd_init_42 lut_21_ww_partial;
-    static const epd_init_42 lut_22_bw_partial;
-    static const epd_init_42 lut_23_wb_partial;
-    static const epd_init_42 lut_24_bb_partial;
+    // LUT init tables 
+    static const epd_init_44 lut_20_vcomDC;
+    static const epd_init_42 lut_21;
+    static const epd_init_42 lut_22_red;
+    static const epd_init_42 lut_23_white;
+    static const epd_init_42 lut_24_black;
 };
