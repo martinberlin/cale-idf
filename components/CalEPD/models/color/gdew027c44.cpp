@@ -13,7 +13,7 @@ DRAM_ATTR const epd_init_3 Gdew027c44::epd_soft_start={
 };
 
 DRAM_ATTR const epd_init_1 Gdew027c44::epd_extra_setting={
-0x16,{0x00},1
+0x16,{0xaf},1
 };
 // LUT from OTP 128x296
 DRAM_ATTR const epd_init_1 Gdew027c44::epd_panel_setting={
