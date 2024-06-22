@@ -40,6 +40,7 @@ class Depg1020bn : public Epd
     void setMonoMode(bool mode);
     void fillScreen(uint16_t color);
     void update();
+    void setRawBuf(uint32_t position, uint8_t value);
     // Partial update of rectangle from buffer to screen, does not power off
     void updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation = true);
 

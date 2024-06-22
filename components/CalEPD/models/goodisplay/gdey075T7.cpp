@@ -365,3 +365,7 @@ void Gdey075T7::drawPixel(int16_t x, int16_t y, uint16_t color)
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
   }
 }
+
+void Gdey075T7::setRawBuf(uint32_t position, uint8_t value) {
+  _buffer[position] = ~ value;
+}

@@ -150,14 +150,13 @@ void Gdew075T7::_wakeUp()
     IO.data(epd_wakeup_power.data[i]);
   }
 
+  IO.cmd(0x01); // POWER SETTING
+  IO.data(0x07);
+  IO.data(0x07); // VGH=20V,VGL=-20V
+  IO.data(0x3f); // VDH=15V
+  IO.data(0x3f); // VDL=-15V
   IO.cmd(0x04);
   _waitBusy("_wakeUp power on");
-
-  IO.cmd(epd_panel_setting_full.cmd);
-  for (int i = 0; i < epd_panel_setting_full.databytes; ++i)
-  {
-    IO.data(epd_panel_setting_full.data[i]);
-  }
 
   // Resolution setting
   IO.cmd(epd_resolution.cmd);
@@ -171,11 +170,12 @@ void Gdew075T7::_wakeUp()
 
   IO.cmd(0x50);  // VCOM AND DATA INTERVAL SETTING
   IO.data(0x29); // LUTKW, N2OCP: copy new to old
-  IO.data(0x07);
+  IO.data(0x17);
   IO.cmd(0x60);  // TCON SETTING
   IO.data(0x22);
 
-  initFullUpdate();
+  IO.cmd(epd_panel_setting_full.cmd);      // panel setting
+  IO.data(epd_panel_setting_full.data[0]); // full update LUT from OTP
 }
 
 void Gdew075T7::update()
@@ -369,4 +369,8 @@ void Gdew075T7::drawPixel(int16_t x, int16_t y, uint16_t color)
   {
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
   }
+}
+
+void Gdew075T7::setRawBuf(uint32_t position, uint8_t value) {
+  _buffer[position] = value;
 }

@@ -356,3 +356,7 @@ void Depg1020bn::setMonoMode(bool mode) {
   ESP_LOGE("WARNING", "4 gray mode NOT implemented/NOT working in this epaper");
   _mono_mode = mode;
 }
+
+void Depg1020bn::setRawBuf(uint32_t position, uint8_t value) {
+  _mono_buffer[position] = ~ value;
+}

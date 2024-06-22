@@ -51,7 +51,8 @@ class Gdey075T7 : public Epd
     void fillRawBufferPos(uint16_t index, uint8_t value);
     void fillRawBufferImage(uint8_t image[], uint16_t size);
     void update();
-
+    void setRawBuf(uint32_t position, uint8_t value);
+    
   private:
     EpdSpi& IO;
 

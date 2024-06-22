@@ -34,6 +34,21 @@ class Wave5i7Color : public Epd7Color
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void fillScreen(uint16_t color);
     void update();
+    void setRawBuf(uint32_t position, uint8_t value);
+    
+    void printerf(const char *format, ...) {
+      va_list args;
+      va_start(args, format);
+      char max_buffer[1024];
+      int size = vsnprintf(max_buffer, sizeof max_buffer, format, args);
+      va_end(args);
+
+      if (size < sizeof(max_buffer)) {
+          print(std::string(max_buffer));
+      } else {
+        ESP_LOGE("Epd::printerf", "max_buffer out of range. Increase max_buffer!");
+      }
+    }
 
   private:
     EpdSpi& IO;

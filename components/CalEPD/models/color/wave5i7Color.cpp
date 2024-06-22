@@ -227,3 +227,7 @@ void Wave5i7Color::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if (x & 1) _buffer[i] = (_buffer[i] & 0xF0) | pv;
     else _buffer[i] = (_buffer[i] & 0x0F) | (pv << 4);
 }
+
+void Wave5i7Color::setRawBuf(uint32_t position, uint8_t value) {
+  _buffer[position] = ~ value;
+}
