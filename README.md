@@ -298,6 +298,8 @@ Thanks to all the developers interested to test this. Special mentions for @IoTP
 If you like this component and it made your life easier please consider becoming a sponsor where you can donate as little as 2 u$ per month. Just click on:
 ❤ Sponsor  on the top right
 
+<code style="color:red">We are also launching a new [company called Marespa](https://www.marespa.es).es that will help EU citizens find an affordable apartment in Spain. With the price of Rent going through the roof in 2024, this might be the moment to make an investment, if you plan to work from the spanish coast. With this project we are also supporting our open source projects.</code>
+
 We are thankful for the support and contributions so far!
 
 ## Interesting projects using this library
