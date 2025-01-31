@@ -274,8 +274,6 @@ Again, if you know more about this than me, feel free to suggest a faster way. I
 If you want to drive parallel Eink for digital signage or any custom project we highly recommend you trying [FastEPD](https://github.com/bitbank2/FastEPD)
 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    width="168mm"
    height="40mm"
