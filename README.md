@@ -8,6 +8,11 @@
 * If you want to have a Web-Service to deliver the image we built our own one. Just [head to CALE.es](https://cale.es) and make an account.
   This [video of UsefulElectronics](https://www.youtube.com/watch?v=7Sal9Ii7H2U) will help you to get started.
 
+If you are using raw parallel Eink displays in your project we highly recommend trying this new component [FastEPD
+![FastEPD_github](https://github.com/user-attachments/assets/29af1b8d-c384-45ea-85ab-40a77b972fd4)](https://github.com/bitbank2/FastEPD)
+And our best selling Tindie product the [epdiy v7 epaper controller](https://www.tindie.com/search/?q=epdiy).
+
+
 ESP32C3 /S3 also works as a target. Please check also config-examples/C3-riscv-spi where is a PIN configuration that is prove to be working. Then just select one of the SPI examples, and do a:
  **idf.py set-target esp32c3**
 
