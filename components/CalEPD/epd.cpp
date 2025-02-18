@@ -139,7 +139,7 @@ void Epd::draw_centered_text(const GFXfont *font, int16_t x, int16_t y, uint16_t
     getTextBounds(text.c_str(), x, y, &text_x, &text_y, &text_w, &text_h);
     // Calculate the middle position
     
-    uint ty = (h/2)+y+(text_h/2);
+    uint16_t ty = (h/2)+y+(text_h/2);
     // Fix for big fonts (>100 pt)
     if (text_h > (height()/3) ) {
       text_x += (w-text_w)/2.2;
