@@ -7,6 +7,7 @@
 * An epaper display (see [Wiki](https://github.com/martinberlin/cale-idf/wiki) for supported models)
 * If you want to have a Web-Service to deliver the image we built our own one. Just [head to CALE.es](https://cale.es) and make an account.
   This [video of UsefulElectronics](https://www.youtube.com/watch?v=7Sal9Ii7H2U) will help you to get started.
+* [Check FastJsonDL](https://github.com/martinberlin/FastJsonDL) a JSON domain language to draw GFX on displays that could be sent from a webservice or from an AI agent (parallel einks but it could be easily ported here too)
 
 If you are using raw parallel Eink displays in your project we highly recommend trying this new component [FastEPD](https://github.com/bitbank2/FastEPD)
 
